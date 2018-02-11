@@ -22,13 +22,22 @@ pub enum Tag {
     ExtXByteRange(ExtXByteRange),
     ExtXDiscontinuity(ExtXDiscontinuity),
     ExtXKey(ExtXKey),
+    ExtXMap(ExtXMap),
+    ExtXProgramDateTime(ExtXProgramDateTime),
+    ExtXDateRange(ExtXDateRange),
     ExtXTargetDuration(ExtXTargetDuration),
     ExtXMediaSequence(ExtXMediaSequence),
     ExtXDiscontinuitySequence(ExtXDiscontinuitySequence),
     ExtXEndList(ExtXEndList),
     ExtXPlaylistType(ExtXPlaylistType),
     ExtXIFramesOnly(ExtXIFramesOnly),
+    ExtXMedia(ExtXMedia),
+    ExtXStreamInf(ExtXStreamInf),
+    ExtXIFrameStreamInf(ExtXIFrameStreamInf),
+    ExtXSessionData(ExtXSessionData),
+    ExtXSessionKey(ExtXSessionKey),
     ExtXIndependentSegments(ExtXIndependentSegments),
+    ExtXStart(ExtXStart),
 }
 impl fmt::Display for Tag {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
@@ -39,13 +48,22 @@ impl fmt::Display for Tag {
             Tag::ExtXByteRange(ref t) => t.fmt(f),
             Tag::ExtXDiscontinuity(ref t) => t.fmt(f),
             Tag::ExtXKey(ref t) => t.fmt(f),
+            Tag::ExtXMap(ref t) => t.fmt(f),
+            Tag::ExtXProgramDateTime(ref t) => t.fmt(f),
+            Tag::ExtXDateRange(ref t) => t.fmt(f),
             Tag::ExtXTargetDuration(ref t) => t.fmt(f),
             Tag::ExtXMediaSequence(ref t) => t.fmt(f),
             Tag::ExtXDiscontinuitySequence(ref t) => t.fmt(f),
             Tag::ExtXEndList(ref t) => t.fmt(f),
             Tag::ExtXPlaylistType(ref t) => t.fmt(f),
             Tag::ExtXIFramesOnly(ref t) => t.fmt(f),
+            Tag::ExtXMedia(ref t) => t.fmt(f),
+            Tag::ExtXStreamInf(ref t) => t.fmt(f),
+            Tag::ExtXIFrameStreamInf(ref t) => t.fmt(f),
+            Tag::ExtXSessionData(ref t) => t.fmt(f),
+            Tag::ExtXSessionKey(ref t) => t.fmt(f),
             Tag::ExtXIndependentSegments(ref t) => t.fmt(f),
+            Tag::ExtXStart(ref t) => t.fmt(f),
         }
     }
 }
@@ -64,8 +82,14 @@ impl FromStr for Tag {
             track!(s.parse().map(Tag::ExtXDiscontinuity))
         } else if s.starts_with(ExtXKey::PREFIX) {
             track!(s.parse().map(Tag::ExtXKey))
+        } else if s.starts_with(ExtXMap::PREFIX) {
+            track!(s.parse().map(Tag::ExtXMap))
+        } else if s.starts_with(ExtXProgramDateTime::PREFIX) {
+            track!(s.parse().map(Tag::ExtXProgramDateTime))
         } else if s.starts_with(ExtXTargetDuration::PREFIX) {
             track!(s.parse().map(Tag::ExtXTargetDuration))
+        } else if s.starts_with(ExtXDateRange::PREFIX) {
+            track!(s.parse().map(Tag::ExtXDateRange))
         } else if s.starts_with(ExtXMediaSequence::PREFIX) {
             track!(s.parse().map(Tag::ExtXMediaSequence))
         } else if s.starts_with(ExtXDiscontinuitySequence::PREFIX) {
@@ -76,8 +100,20 @@ impl FromStr for Tag {
             track!(s.parse().map(Tag::ExtXPlaylistType))
         } else if s.starts_with(ExtXIFramesOnly::PREFIX) {
             track!(s.parse().map(Tag::ExtXIFramesOnly))
+        } else if s.starts_with(ExtXMedia::PREFIX) {
+            track!(s.parse().map(Tag::ExtXMedia))
+        } else if s.starts_with(ExtXStreamInf::PREFIX) {
+            track!(s.parse().map(Tag::ExtXStreamInf))
+        } else if s.starts_with(ExtXIFrameStreamInf::PREFIX) {
+            track!(s.parse().map(Tag::ExtXIFrameStreamInf))
+        } else if s.starts_with(ExtXSessionData::PREFIX) {
+            track!(s.parse().map(Tag::ExtXSessionData))
+        } else if s.starts_with(ExtXSessionKey::PREFIX) {
+            track!(s.parse().map(Tag::ExtXSessionKey))
         } else if s.starts_with(ExtXIndependentSegments::PREFIX) {
             track!(s.parse().map(Tag::ExtXIndependentSegments))
+        } else if s.starts_with(ExtXStart::PREFIX) {
+            track!(s.parse().map(Tag::ExtXStart))
         } else {
             // TODO: ignore any unrecognized tags. (section-6.3.1)
             track_panic!(ErrorKind::InvalidInput, "Unknown tag: {:?}", s)
@@ -306,40 +342,95 @@ impl FromStr for EncryptionMethod {
     }
 }
 
-// TODO: https://tools.ietf.org/html/rfc8216#section-4.3.2.5
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct ExtXMap {}
+impl ExtXMap {
+    const PREFIX: &'static str = "#EXT-X-MAP:";
+}
+impl fmt::Display for ExtXMap {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "{}", Self::PREFIX)?;
+        unimplemented!()
+    }
+}
+impl FromStr for ExtXMap {
+    type Err = Error;
+    fn from_str(s: &str) -> Result<Self> {
+        track_assert!(s.starts_with(Self::PREFIX), ErrorKind::InvalidInput);
+        let attrs = AttributePairs::parse(s.split_at(Self::PREFIX.len()).1);
+        for attr in attrs {
+            let (key, value) = track!(attr)?;
+            match key {
+                "URI" => unimplemented!(),
+                "BYTERANGE" => unimplemented!(),
+                _ => {
+                    // [6.3.1] ignore any attribute/value pair with an unrecognized AttributeName.
+                }
+            }
+        }
+        Ok(ExtXMap {})
+    }
+}
 
-// TODO:
-// #[derive(Debug, Clone, PartialEq, Eq)]
-// pub struct ExtXProgramDateTime { date_time }
-// impl ExtXProgramDateTime {
-//     const PREFIX: &'static str = "#EXT-X-PROGRAM-DATE-TIME:";
-// }
-// impl fmt::Display for ExtXProgramDateTime {
-//     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-//         write!(f, "{}{}", Self::PREFIX, self.length)?;
-//         if let Some(offset) = self.offset {
-//             write!(f, "@{}", offset)?;
-//         }
-//         Ok(())
-//     }
-// }
-// impl FromStr for ExtXProgramDateTime {
-//     type Err = Error;
-//     fn from_str(s: &str) -> Result<Self> {
-//         track_assert!(s.starts_with(Self::PREFIX), ErrorKind::InvalidInput);
-//         let mut tokens = s.split_at(Self::PREFIX.len()).1.splitn(2, '@');
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct ExtXProgramDateTime {}
+impl ExtXProgramDateTime {
+    const PREFIX: &'static str = "#EXT-X-PROGRAM-DATE-TIME:";
+}
+impl fmt::Display for ExtXProgramDateTime {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "{}", Self::PREFIX)?;
+        unimplemented!()
+    }
+}
+impl FromStr for ExtXProgramDateTime {
+    type Err = Error;
+    fn from_str(s: &str) -> Result<Self> {
+        track_assert!(s.starts_with(Self::PREFIX), ErrorKind::InvalidInput);
+        let _date_time = s.split_at(Self::PREFIX.len()).1;
+        unimplemented!()
+    }
+}
 
-//         let length = may_invalid!(tokens.next().expect("Never fails").parse())?;
-//         let offset = if let Some(offset) = tokens.next() {
-//             Some(may_invalid!(offset.parse())?)
-//         } else {
-//             None
-//         };
-//         Ok(ExtXByteRange { length, offset })
-//     }
-// }
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct ExtXDateRange {}
+impl ExtXDateRange {
+    const PREFIX: &'static str = "#EXT-X-DATERANGE:";
+}
+impl fmt::Display for ExtXDateRange {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "{}", Self::PREFIX)?;
+        unimplemented!()
+    }
+}
+impl FromStr for ExtXDateRange {
+    type Err = Error;
+    fn from_str(s: &str) -> Result<Self> {
+        track_assert!(s.starts_with(Self::PREFIX), ErrorKind::InvalidInput);
+        let attrs = AttributePairs::parse(s.split_at(Self::PREFIX.len()).1);
+        for attr in attrs {
+            let (key, value) = track!(attr)?;
+            match key {
+                "ID" => unimplemented!(),
+                "CLASS" => unimplemented!(),
+                "START-DATE" => unimplemented!(),
+                "END-DATE" => unimplemented!(),
+                "DURATION" => unimplemented!(),
+                "PLANNED-DURATION" => unimplemented!(),
+                "SCTE35-CMD" => unimplemented!(),
+                "SCTE35-OUT" => unimplemented!(),
+                "SCTE35-IN" => unimplemented!(),
+                "END-ON-NEXT" => unimplemented!(),
+                _ => {
+                    // TODO: "X-<client-attribute>"
 
-// TODO: https://tools.ietf.org/html/rfc8216#section-4.3.2.7
+                    // [6.3.1] ignore any attribute/value pair with an unrecognized AttributeName.
+                }
+            }
+        }
+        Ok(ExtXDateRange {})
+    }
+}
 
 // TODO: he EXT-X-TARGETDURATION tag is REQUIRED.
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -493,15 +584,170 @@ impl FromStr for ExtXIFramesOnly {
     }
 }
 
-// TODO: https://tools.ietf.org/html/rfc8216#section-4.3.4.1
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct ExtXMedia {}
+impl ExtXMedia {
+    const PREFIX: &'static str = "#EXT-X-MEDIA:";
+}
+impl fmt::Display for ExtXMedia {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "{}", Self::PREFIX)?;
+        unimplemented!()
+    }
+}
+impl FromStr for ExtXMedia {
+    type Err = Error;
+    fn from_str(s: &str) -> Result<Self> {
+        track_assert!(s.starts_with(Self::PREFIX), ErrorKind::InvalidInput);
+        let attrs = AttributePairs::parse(s.split_at(Self::PREFIX.len()).1);
+        for attr in attrs {
+            let (key, value) = track!(attr)?;
+            match key {
+                "TYPE" => unimplemented!(),
+                "URI" => unimplemented!(),
+                "GROUP-ID" => unimplemented!(),
+                "LANGUAGE" => unimplemented!(),
+                "ASSOC-LANUGAGE" => unimplemented!(),
+                "NAME" => unimplemented!(),
+                "DEFAULT" => unimplemented!(),
+                "AUTOSELECT" => unimplemented!(),
+                "FORCED" => unimplemented!(),
+                "INSTREAM-ID" => unimplemented!(),
+                "CHARACTERISTICS" => unimplemented!(),
+                "CHANNELS" => unimplemented!(),
+                _ => {
+                    // TODO: "X-<client-attribute>"
 
-// TODO: https://tools.ietf.org/html/rfc8216#section-4.3.4.2
+                    // [6.3.1] ignore any attribute/value pair with an unrecognized AttributeName.
+                }
+            }
+        }
+        Ok(ExtXMedia {})
+    }
+}
 
-// TODO: https://tools.ietf.org/html/rfc8216#section-4.3.4.3
+// TODO:  The URI line is REQUIRED.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct ExtXStreamInf {}
+impl ExtXStreamInf {
+    const PREFIX: &'static str = "#EXT-X-STREAM-INF:";
+}
+impl fmt::Display for ExtXStreamInf {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "{}", Self::PREFIX)?;
+        unimplemented!()
+    }
+}
+impl FromStr for ExtXStreamInf {
+    type Err = Error;
+    fn from_str(s: &str) -> Result<Self> {
+        track_assert!(s.starts_with(Self::PREFIX), ErrorKind::InvalidInput);
+        let attrs = AttributePairs::parse(s.split_at(Self::PREFIX.len()).1);
+        for attr in attrs {
+            let (key, value) = track!(attr)?;
+            match key {
+                "BANDWIDTH" => unimplemented!(),
+                "AVERAGE-BANDWIDTH" => unimplemented!(),
+                "CODECS" => unimplemented!(),
+                "RESOLUTION" => unimplemented!(),
+                "FRAME-RATE" => unimplemented!(),
+                "HDCP-LEVEL" => unimplemented!(),
+                "AUDIO" => unimplemented!(),
+                "VIDEO" => unimplemented!(),
+                "SUBTITLES" => unimplemented!(),
+                "CLOSED-CAPTIONS" => unimplemented!(),
+                _ => {
+                    // [6.3.1] ignore any attribute/value pair with an unrecognized AttributeName.
+                }
+            }
+        }
+        Ok(ExtXStreamInf {})
+    }
+}
 
-// TODO: https://tools.ietf.org/html/rfc8216#section-4.3.4.4
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct ExtXIFrameStreamInf {}
+impl ExtXIFrameStreamInf {
+    const PREFIX: &'static str = "#EXT-X-I-FRAME-STREAM-INF:";
+}
+impl fmt::Display for ExtXIFrameStreamInf {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "{}", Self::PREFIX)?;
+        unimplemented!()
+    }
+}
+impl FromStr for ExtXIFrameStreamInf {
+    type Err = Error;
+    fn from_str(s: &str) -> Result<Self> {
+        track_assert!(s.starts_with(Self::PREFIX), ErrorKind::InvalidInput);
+        let attrs = AttributePairs::parse(s.split_at(Self::PREFIX.len()).1);
+        for attr in attrs {
+            let (key, value) = track!(attr)?;
+            match key {
+                "URI" => unimplemented!(),
+                _ => {
+                    // [6.3.1] ignore any attribute/value pair with an unrecognized AttributeName.
+                }
+            }
+        }
+        Ok(ExtXIFrameStreamInf {})
+    }
+}
 
-// TODO: https://tools.ietf.org/html/rfc8216#section-4.3.4.5
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct ExtXSessionData {}
+impl ExtXSessionData {
+    const PREFIX: &'static str = "#EXT-X-SESSION-DATA:";
+}
+impl fmt::Display for ExtXSessionData {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "{}", Self::PREFIX)?;
+        unimplemented!()
+    }
+}
+impl FromStr for ExtXSessionData {
+    type Err = Error;
+    fn from_str(s: &str) -> Result<Self> {
+        track_assert!(s.starts_with(Self::PREFIX), ErrorKind::InvalidInput);
+        let attrs = AttributePairs::parse(s.split_at(Self::PREFIX.len()).1);
+        for attr in attrs {
+            let (key, value) = track!(attr)?;
+            match key {
+                "DATA-ID" => unimplemented!(),
+                "VALUE" => unimplemented!(),
+                "URI" => unimplemented!(),
+                "LANUGAGE" => unimplemented!(),
+                _ => {
+                    // [6.3.1] ignore any attribute/value pair with an unrecognized AttributeName.
+                }
+            }
+        }
+        Ok(ExtXSessionData {})
+    }
+}
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct ExtXSessionKey {}
+impl ExtXSessionKey {
+    const PREFIX: &'static str = "#EXT-X-SESSION-KEY:";
+}
+impl fmt::Display for ExtXSessionKey {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "{}", Self::PREFIX)?;
+        unimplemented!()
+    }
+}
+impl FromStr for ExtXSessionKey {
+    type Err = Error;
+    fn from_str(s: &str) -> Result<Self> {
+        track_assert!(s.starts_with(Self::PREFIX), ErrorKind::InvalidInput);
+        let attrs = AttributePairs::parse(s.split_at(Self::PREFIX.len()).1);
+        for attr in attrs {
+            let (key, value) = track!(attr)?;
+        }
+        Ok(ExtXSessionKey {})
+    }
+}
 
 // 4.3.5.  Media or Master Playlist Tags
 // TODO: A tag that appears in both MUST have the same value; otherwise, clients SHOULD ignore the value in the Media Playlist(s).
@@ -525,4 +771,32 @@ impl FromStr for ExtXIndependentSegments {
     }
 }
 
-// TODO: https://tools.ietf.org/html/rfc8216#section-4.3.5.2
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct ExtXStart {}
+impl ExtXStart {
+    const PREFIX: &'static str = "#EXT-X-START:";
+}
+impl fmt::Display for ExtXStart {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "{}", Self::PREFIX)?;
+        unimplemented!()
+    }
+}
+impl FromStr for ExtXStart {
+    type Err = Error;
+    fn from_str(s: &str) -> Result<Self> {
+        track_assert!(s.starts_with(Self::PREFIX), ErrorKind::InvalidInput);
+        let attrs = AttributePairs::parse(s.split_at(Self::PREFIX.len()).1);
+        for attr in attrs {
+            let (key, value) = track!(attr)?;
+            match key {
+                "TIME-OFFSET" => unimplemented!(),
+                "PRECISE" => unimplemented!(),
+                _ => {
+                    // [6.3.1] ignore any attribute/value pair with an unrecognized AttributeName.
+                }
+            }
+        }
+        Ok(ExtXStart {})
+    }
+}
