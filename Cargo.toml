@@ -1,0 +1,7 @@
+[package]
+name = "hls_m3u8"
+version = "0.1.0"
+authors = ["Takeru Ohta <phjgt308@gmail.com>"]
+
+[dependencies]
+trackable = "0.2"
