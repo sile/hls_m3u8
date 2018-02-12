@@ -16,6 +16,116 @@ macro_rules! may_invalid {
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]
+pub enum MediaSegmentTag {
+    ExtInf(ExtInf),
+    ExtXByteRange(ExtXByteRange),
+    ExtXDateRange(ExtXDateRange),
+    ExtXDiscontinuity(ExtXDiscontinuity),
+    ExtXKey(ExtXKey),
+    ExtXMap(ExtXMap),
+    ExtXProgramDateTime(ExtXProgramDateTime),
+}
+impl MediaSegmentTag {
+    pub fn as_inf(&self) -> Option<&ExtInf> {
+        if let MediaSegmentTag::ExtInf(ref t) = *self {
+            Some(t)
+        } else {
+            None
+        }
+    }
+    pub fn as_byte_range(&self) -> Option<&ExtXByteRange> {
+        if let MediaSegmentTag::ExtXByteRange(ref t) = *self {
+            Some(t)
+        } else {
+            None
+        }
+    }
+    pub fn as_date_range(&self) -> Option<&ExtXDateRange> {
+        if let MediaSegmentTag::ExtXDateRange(ref t) = *self {
+            Some(t)
+        } else {
+            None
+        }
+    }
+    pub fn as_discontinuity(&self) -> Option<&ExtXDiscontinuity> {
+        if let MediaSegmentTag::ExtXDiscontinuity(ref t) = *self {
+            Some(t)
+        } else {
+            None
+        }
+    }
+    pub fn as_key(&self) -> Option<&ExtXKey> {
+        if let MediaSegmentTag::ExtXKey(ref t) = *self {
+            Some(t)
+        } else {
+            None
+        }
+    }
+    pub fn as_map(&self) -> Option<&ExtXMap> {
+        if let MediaSegmentTag::ExtXMap(ref t) = *self {
+            Some(t)
+        } else {
+            None
+        }
+    }
+    pub fn as_program_date_time(&self) -> Option<&ExtXProgramDateTime> {
+        if let MediaSegmentTag::ExtXProgramDateTime(ref t) = *self {
+            Some(t)
+        } else {
+            None
+        }
+    }
+}
+impl fmt::Display for MediaSegmentTag {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        match *self {
+            MediaSegmentTag::ExtInf(ref t) => t.fmt(f),
+            MediaSegmentTag::ExtXByteRange(ref t) => t.fmt(f),
+            MediaSegmentTag::ExtXDateRange(ref t) => t.fmt(f),
+            MediaSegmentTag::ExtXDiscontinuity(ref t) => t.fmt(f),
+            MediaSegmentTag::ExtXKey(ref t) => t.fmt(f),
+            MediaSegmentTag::ExtXMap(ref t) => t.fmt(f),
+            MediaSegmentTag::ExtXProgramDateTime(ref t) => t.fmt(f),
+        }
+    }
+}
+impl From<ExtInf> for MediaSegmentTag {
+    fn from(f: ExtInf) -> Self {
+        MediaSegmentTag::ExtInf(f)
+    }
+}
+impl From<ExtXByteRange> for MediaSegmentTag {
+    fn from(f: ExtXByteRange) -> Self {
+        MediaSegmentTag::ExtXByteRange(f)
+    }
+}
+impl From<ExtXDateRange> for MediaSegmentTag {
+    fn from(f: ExtXDateRange) -> Self {
+        MediaSegmentTag::ExtXDateRange(f)
+    }
+}
+impl From<ExtXDiscontinuity> for MediaSegmentTag {
+    fn from(f: ExtXDiscontinuity) -> Self {
+        MediaSegmentTag::ExtXDiscontinuity(f)
+    }
+}
+impl From<ExtXKey> for MediaSegmentTag {
+    fn from(f: ExtXKey) -> Self {
+        MediaSegmentTag::ExtXKey(f)
+    }
+}
+impl From<ExtXMap> for MediaSegmentTag {
+    fn from(f: ExtXMap) -> Self {
+        MediaSegmentTag::ExtXMap(f)
+    }
+}
+impl From<ExtXProgramDateTime> for MediaSegmentTag {
+    fn from(f: ExtXProgramDateTime) -> Self {
+        MediaSegmentTag::ExtXProgramDateTime(f)
+    }
+}
+
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub enum Tag {
     ExtM3u(ExtM3u),
     ExtXVersion(ExtXVersion),
