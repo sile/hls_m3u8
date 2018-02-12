@@ -4,7 +4,8 @@ use std::time::Duration;
 use trackable::error::ErrorKindExt;
 
 use {Error, ErrorKind, Result};
-use attribute::{AttributePairs, QuotedString};
+use attribute::{AttributePairs, DecimalFloatingPoint, DecimalInteger, DecimalResolution,
+                HexadecimalSequence, QuotedString, SignedDecimalFloatingPoint};
 use string::M3u8String;
 use version::ProtocolVersion;
 
@@ -265,14 +266,40 @@ impl FromStr for ExtXDiscontinuity {
 pub struct ExtXKey {
     pub method: EncryptionMethod,
     pub uri: Option<QuotedString>,
+    pub iv: Option<HexadecimalSequence>,
+    pub key_format: Option<QuotedString>,
+    pub key_format_versions: Option<QuotedString>,
 }
 impl ExtXKey {
     const PREFIX: &'static str = "#EXT-X-KEY:";
+
+    pub fn compatibility_version(&self) -> ProtocolVersion {
+        if self.key_format.is_some() | self.key_format_versions.is_some() {
+            ProtocolVersion::V5
+        } else if self.iv.is_some() {
+            ProtocolVersion::V2
+        } else {
+            ProtocolVersion::V1
+        }
+    }
 }
 impl fmt::Display for ExtXKey {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         write!(f, "{}", Self::PREFIX)?;
-        unimplemented!()
+        write!(f, "METHOD={}", self.method)?;
+        if let Some(ref x) = self.uri {
+            write!(f, ",URI={}", x)?;
+        }
+        if let Some(ref x) = self.iv {
+            write!(f, ",IV={}", x)?;
+        }
+        if let Some(ref x) = self.key_format {
+            write!(f, ",KEYFORMAT={}", x)?;
+        }
+        if let Some(ref x) = self.key_format_versions {
+            write!(f, ",KEYFORMATVERSIONS={}", x)?;
+        }
+        Ok(())
     }
 }
 impl FromStr for ExtXKey {
@@ -282,19 +309,34 @@ impl FromStr for ExtXKey {
 
         let mut method = None;
         let mut uri = None;
+        let mut iv = None;
+        let mut key_format = None;
+        let mut key_format_versions = None;
         let attrs = AttributePairs::parse(s.split_at(Self::PREFIX.len()).1);
         for attr in attrs {
             let (key, value) = track!(attr)?;
             match key {
                 "METHOD" => {
+                    track_assert_eq!(method, None, ErrorKind::InvalidInput);
                     method = Some(track!(value.parse())?);
                 }
                 "URI" => {
+                    track_assert_eq!(uri, None, ErrorKind::InvalidInput);
                     uri = Some(track!(value.parse())?);
                 }
-                "IV" => unimplemented!(),
-                "KEYFORMAT" => unimplemented!(),
-                "KEYFORMATVERSIONS" => unimplemented!(),
+                "IV" => {
+                    // TODO: validate length(128-bit)
+                    track_assert_eq!(iv, None, ErrorKind::InvalidInput);
+                    iv = Some(track!(value.parse())?);
+                }
+                "KEYFORMAT" => {
+                    track_assert_eq!(key_format, None, ErrorKind::InvalidInput);
+                    key_format = Some(track!(value.parse())?);
+                }
+                "KEYFORMATVERSIONS" => {
+                    track_assert_eq!(key_format_versions, None, ErrorKind::InvalidInput);
+                    key_format_versions = Some(track!(value.parse())?);
+                }
                 _ => {
                     // [6.3.1] ignore any attribute/value pair with an unrecognized AttributeName.
                 }
@@ -306,7 +348,13 @@ impl FromStr for ExtXKey {
         } else {
             track_assert!(uri.is_some(), ErrorKind::InvalidInput);
         };
-        Ok(ExtXKey { method, uri })
+        Ok(ExtXKey {
+            method,
+            uri,
+            iv,
+            key_format,
+            key_format_versions,
+        })
     }
 }
 
@@ -342,85 +390,209 @@ impl FromStr for EncryptionMethod {
     }
 }
 
+// TODO: move
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub enum SessionEncryptionMethod {
+    Aes128,
+    SampleAes,
+}
+impl fmt::Display for SessionEncryptionMethod {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        match *self {
+            SessionEncryptionMethod::Aes128 => "AES-128".fmt(f),
+            SessionEncryptionMethod::SampleAes => "SAMPLE-AES".fmt(f),
+        }
+    }
+}
+impl FromStr for SessionEncryptionMethod {
+    type Err = Error;
+    fn from_str(s: &str) -> Result<Self> {
+        match s {
+            "AES-128" => Ok(SessionEncryptionMethod::Aes128),
+            "SAMPLE-AES" => Ok(SessionEncryptionMethod::SampleAes),
+            _ => track_panic!(
+                ErrorKind::InvalidInput,
+                "Unknown encryption method: {:?}",
+                s
+            ),
+        }
+    }
+}
+
 #[derive(Debug, Clone, PartialEq, Eq)]
-pub struct ExtXMap {}
+pub struct ExtXMap {
+    pub uri: QuotedString,
+    pub byte_range: Option<QuotedString>, // TODO: `ByteRange` type
+}
 impl ExtXMap {
     const PREFIX: &'static str = "#EXT-X-MAP:";
 }
 impl fmt::Display for ExtXMap {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         write!(f, "{}", Self::PREFIX)?;
-        unimplemented!()
+        write!(f, "URI={}", self.uri)?;
+        if let Some(ref x) = self.byte_range {
+            write!(f, ",BYTERANGE={}", x)?;
+        }
+        Ok(())
     }
 }
 impl FromStr for ExtXMap {
     type Err = Error;
     fn from_str(s: &str) -> Result<Self> {
         track_assert!(s.starts_with(Self::PREFIX), ErrorKind::InvalidInput);
+
+        let mut uri = None;
+        let mut byte_range = None;
         let attrs = AttributePairs::parse(s.split_at(Self::PREFIX.len()).1);
         for attr in attrs {
             let (key, value) = track!(attr)?;
             match key {
-                "URI" => unimplemented!(),
-                "BYTERANGE" => unimplemented!(),
+                "URI" => {
+                    track_assert_eq!(uri, None, ErrorKind::InvalidInput);
+                    uri = Some(track!(value.parse())?);
+                }
+                "BYTERANGE" => {
+                    track_assert_eq!(byte_range, None, ErrorKind::InvalidInput);
+                    byte_range = Some(track!(value.parse())?);
+                }
                 _ => {
                     // [6.3.1] ignore any attribute/value pair with an unrecognized AttributeName.
                 }
             }
         }
-        Ok(ExtXMap {})
+
+        let uri = track_assert_some!(uri, ErrorKind::InvalidInput);
+        Ok(ExtXMap { uri, byte_range })
     }
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]
-pub struct ExtXProgramDateTime {}
+pub struct ExtXProgramDateTime {
+    pub date_time_msec: String, // TODO: `DateTime` type
+}
 impl ExtXProgramDateTime {
     const PREFIX: &'static str = "#EXT-X-PROGRAM-DATE-TIME:";
 }
 impl fmt::Display for ExtXProgramDateTime {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(f, "{}", Self::PREFIX)?;
-        unimplemented!()
+        write!(f, "{}{}", Self::PREFIX, self.date_time_msec)
     }
 }
 impl FromStr for ExtXProgramDateTime {
     type Err = Error;
     fn from_str(s: &str) -> Result<Self> {
         track_assert!(s.starts_with(Self::PREFIX), ErrorKind::InvalidInput);
-        let _date_time = s.split_at(Self::PREFIX.len()).1;
-        unimplemented!()
+        let date_time = s.split_at(Self::PREFIX.len()).1;
+        Ok(ExtXProgramDateTime {
+            date_time_msec: date_time.to_owned(),
+        })
     }
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]
-pub struct ExtXDateRange {}
+pub struct ExtXDateRange {
+    pub id: QuotedString,
+    pub class: Option<QuotedString>,
+    pub start_date: QuotedString, // TODO: `Date` type
+    pub end_date: Option<QuotedString>,
+    pub duration: Option<Duration>,
+    pub planned_duration: Option<Duration>,
+    pub scte35_cmd: Option<QuotedString>,
+    pub scte35_out: Option<QuotedString>,
+    pub scte35_in: Option<QuotedString>,
+    pub end_on_next: Option<Yes>,
+}
 impl ExtXDateRange {
     const PREFIX: &'static str = "#EXT-X-DATERANGE:";
 }
 impl fmt::Display for ExtXDateRange {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         write!(f, "{}", Self::PREFIX)?;
-        unimplemented!()
+        write!(f, "ID={}", self.id)?;
+        if let Some(ref x) = self.class {
+            write!(f, ",CLASS={}", x)?;
+        }
+        write!(f, ",START_DATE={}", self.start_date)?;
+        if let Some(ref x) = self.end_date {
+            write!(f, ",END_DATE={}", x)?;
+        }
+        if let Some(x) = self.duration {
+            write!(f, ",DURATION={}", DecimalFloatingPoint::from_duration(x))?;
+        }
+        if let Some(x) = self.planned_duration {
+            write!(
+                f,
+                ",PLANNED_DURATION={}",
+                DecimalFloatingPoint::from_duration(x)
+            )?;
+        }
+        if let Some(ref x) = self.scte35_cmd {
+            write!(f, ",SCTE35_CMD={}", x)?;
+        }
+        if let Some(ref x) = self.scte35_out {
+            write!(f, ",SCTE35_OUT={}", x)?;
+        }
+        if let Some(ref x) = self.scte35_in {
+            write!(f, ",SCTE35_IN={}", x)?;
+        }
+        if let Some(ref x) = self.end_on_next {
+            write!(f, ",END_ON_NEXT={}", x)?;
+        }
+        Ok(())
     }
 }
 impl FromStr for ExtXDateRange {
     type Err = Error;
     fn from_str(s: &str) -> Result<Self> {
         track_assert!(s.starts_with(Self::PREFIX), ErrorKind::InvalidInput);
+
+        let mut id = None;
+        let mut class = None;
+        let mut start_date = None;
+        let mut end_date = None;
+        let mut duration = None;
+        let mut planned_duration = None;
+        let mut scte35_cmd = None;
+        let mut scte35_out = None;
+        let mut scte35_in = None;
+        let mut end_on_next = None;
         let attrs = AttributePairs::parse(s.split_at(Self::PREFIX.len()).1);
         for attr in attrs {
             let (key, value) = track!(attr)?;
             match key {
-                "ID" => unimplemented!(),
-                "CLASS" => unimplemented!(),
-                "START-DATE" => unimplemented!(),
-                "END-DATE" => unimplemented!(),
-                "DURATION" => unimplemented!(),
-                "PLANNED-DURATION" => unimplemented!(),
-                "SCTE35-CMD" => unimplemented!(),
-                "SCTE35-OUT" => unimplemented!(),
-                "SCTE35-IN" => unimplemented!(),
-                "END-ON-NEXT" => unimplemented!(),
+                "ID" => {
+                    id = Some(track!(value.parse())?);
+                }
+                "CLASS" => {
+                    class = Some(track!(value.parse())?);
+                }
+                "START-DATE" => {
+                    start_date = Some(track!(value.parse())?);
+                }
+                "END-DATE" => {
+                    end_date = Some(track!(value.parse())?);
+                }
+                "DURATION" => {
+                    let seconds: DecimalFloatingPoint = track!(value.parse())?;
+                    duration = Some(seconds.to_duration());
+                }
+                "PLANNED-DURATION" => {
+                    let seconds: DecimalFloatingPoint = track!(value.parse())?;
+                    planned_duration = Some(seconds.to_duration());
+                }
+                "SCTE35-CMD" => {
+                    scte35_cmd = Some(track!(value.parse())?);
+                }
+                "SCTE35-OUT" => {
+                    scte35_out = Some(track!(value.parse())?);
+                }
+                "SCTE35-IN" => {
+                    scte35_in = Some(track!(value.parse())?);
+                }
+                "END-ON-NEXT" => {
+                    end_on_next = Some(track!(value.parse())?);
+                }
                 _ => {
                     // TODO: "X-<client-attribute>"
 
@@ -428,7 +600,27 @@ impl FromStr for ExtXDateRange {
                 }
             }
         }
-        Ok(ExtXDateRange {})
+
+        let id = track_assert_some!(id, ErrorKind::InvalidInput);
+        let start_date = track_assert_some!(start_date, ErrorKind::InvalidInput);
+        if end_on_next.is_some() {
+            track_assert!(class.is_some(), ErrorKind::InvalidInput);
+        }
+        // TODO: Other EXT-X-DATERANGE tags with the same CLASS
+        // attribute MUST NOT specify Date Ranges that overlap.
+
+        Ok(ExtXDateRange {
+            id,
+            class,
+            start_date,
+            end_date,
+            duration,
+            planned_duration,
+            scte35_cmd,
+            scte35_out,
+            scte35_in,
+            end_on_next,
+        })
     }
 }
 
@@ -584,168 +776,592 @@ impl FromStr for ExtXIFramesOnly {
     }
 }
 
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub enum MediaType {
+    Audio,
+    Video,
+    Subtitles,
+    ClosedCaptions,
+}
+impl fmt::Display for MediaType {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        match *self {
+            MediaType::Audio => "AUDIO".fmt(f),
+            MediaType::Video => "VIDEO".fmt(f),
+            MediaType::Subtitles => "SUBTITLES".fmt(f),
+            MediaType::ClosedCaptions => "CLOSED-CAPTIONS".fmt(f),
+        }
+    }
+}
+impl FromStr for MediaType {
+    type Err = Error;
+    fn from_str(s: &str) -> Result<Self> {
+        Ok(match s {
+            "AUDIO" => MediaType::Audio,
+            "VIDEO" => MediaType::Video,
+            "SUBTITLES" => MediaType::Subtitles,
+            "CLOSED-CAPTIONS" => MediaType::ClosedCaptions,
+            _ => track_panic!(ErrorKind::InvalidInput, "Unknown media type: {:?}", s),
+        })
+    }
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub enum YesOrNo {
+    Yes,
+    No,
+}
+impl fmt::Display for YesOrNo {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        match *self {
+            YesOrNo::Yes => "YES".fmt(f),
+            YesOrNo::No => "NO".fmt(f),
+        }
+    }
+}
+impl FromStr for YesOrNo {
+    type Err = Error;
+    fn from_str(s: &str) -> Result<Self> {
+        match s {
+            "YES" => Ok(YesOrNo::Yes),
+            "NO" => Ok(YesOrNo::No),
+            _ => track_panic!(
+                ErrorKind::InvalidInput,
+                "Unexpected enumerated-string: {:?}",
+                s
+            ),
+        }
+    }
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub struct Yes;
+impl fmt::Display for Yes {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        "YES".fmt(f)
+    }
+}
+impl FromStr for Yes {
+    type Err = Error;
+    fn from_str(s: &str) -> Result<Self> {
+        track_assert_eq!(s, "YES", ErrorKind::InvalidInput);
+        Ok(Yes)
+    }
+}
+
 #[derive(Debug, Clone, PartialEq, Eq)]
-pub struct ExtXMedia {}
+pub struct ExtXMedia {
+    media_type: MediaType,
+    uri: Option<QuotedString>,
+    group_id: QuotedString,
+    language: Option<QuotedString>,
+    assoc_language: Option<QuotedString>,
+    name: QuotedString,
+    default: YesOrNo,
+    autoselect: YesOrNo,
+    forced: Option<YesOrNo>,
+    instream_id: Option<QuotedString>, // TODO: `InStreamId` type
+    characteristics: Option<QuotedString>,
+    channels: Option<QuotedString>,
+}
 impl ExtXMedia {
     const PREFIX: &'static str = "#EXT-X-MEDIA:";
 }
 impl fmt::Display for ExtXMedia {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         write!(f, "{}", Self::PREFIX)?;
-        unimplemented!()
+        write!(f, "TYPE={}", self.media_type)?;
+        if let Some(ref x) = self.uri {
+            write!(f, ",URI={}", x)?;
+        }
+        write!(f, ",GROUP_ID={}", self.group_id)?;
+        if let Some(ref x) = self.language {
+            write!(f, ",LANGUAGE={}", x)?;
+        }
+        if let Some(ref x) = self.assoc_language {
+            write!(f, ",ASSOC-LANGUAGE={}", x)?;
+        }
+        write!(f, ",NAME={}", self.name)?;
+        if YesOrNo::Yes == self.default {
+            write!(f, ",DEFAULT={}", self.default)?;
+        }
+        if YesOrNo::Yes == self.autoselect {
+            write!(f, ",AUTOSELECT={}", self.autoselect)?;
+        }
+        if let Some(ref x) = self.forced {
+            write!(f, ",FORCED={}", x)?;
+        }
+        if let Some(ref x) = self.instream_id {
+            write!(f, ",INSTREAM-ID={}", x)?;
+        }
+        if let Some(ref x) = self.characteristics {
+            write!(f, ",CHARACTERISTICS={}", x)?;
+        }
+        if let Some(ref x) = self.channels {
+            write!(f, ",CHANNELS={}", x)?;
+        }
+        Ok(())
     }
 }
 impl FromStr for ExtXMedia {
     type Err = Error;
     fn from_str(s: &str) -> Result<Self> {
         track_assert!(s.starts_with(Self::PREFIX), ErrorKind::InvalidInput);
+
+        let mut media_type = None;
+        let mut uri = None;
+        let mut group_id = None;
+        let mut language = None;
+        let mut assoc_language = None;
+        let mut name = None;
+        let mut default = None;
+        let mut autoselect = None;
+        let mut forced = None;
+        let mut instream_id = None;
+        let mut characteristics = None;
+        let mut channels = None;
         let attrs = AttributePairs::parse(s.split_at(Self::PREFIX.len()).1);
         for attr in attrs {
             let (key, value) = track!(attr)?;
             match key {
-                "TYPE" => unimplemented!(),
-                "URI" => unimplemented!(),
-                "GROUP-ID" => unimplemented!(),
-                "LANGUAGE" => unimplemented!(),
-                "ASSOC-LANUGAGE" => unimplemented!(),
-                "NAME" => unimplemented!(),
-                "DEFAULT" => unimplemented!(),
-                "AUTOSELECT" => unimplemented!(),
-                "FORCED" => unimplemented!(),
-                "INSTREAM-ID" => unimplemented!(),
-                "CHARACTERISTICS" => unimplemented!(),
-                "CHANNELS" => unimplemented!(),
+                "TYPE" => media_type = Some(track!(value.parse())?),
+                "URI" => uri = Some(track!(value.parse())?),
+                "GROUP-ID" => group_id = Some(track!(value.parse())?),
+                "LANGUAGE" => language = Some(track!(value.parse())?),
+                "ASSOC-LANGUAGE" => assoc_language = Some(track!(value.parse())?),
+                "NAME" => name = Some(track!(value.parse())?),
+                "DEFAULT" => default = Some(track!(value.parse())?),
+                "AUTOSELECT" => autoselect = Some(track!(value.parse())?),
+                "FORCED" => forced = Some(track!(value.parse())?),
+                "INSTREAM-ID" => instream_id = Some(track!(value.parse())?),
+                "CHARACTERISTICS" => characteristics = Some(track!(value.parse())?),
+                "CHANNELS" => channels = Some(track!(value.parse())?),
                 _ => {
-                    // TODO: "X-<client-attribute>"
-
                     // [6.3.1] ignore any attribute/value pair with an unrecognized AttributeName.
                 }
             }
         }
-        Ok(ExtXMedia {})
+        let media_type = track_assert_some!(media_type, ErrorKind::InvalidInput);
+        let group_id = track_assert_some!(group_id, ErrorKind::InvalidInput);
+        let name = track_assert_some!(name, ErrorKind::InvalidInput);
+        if MediaType::ClosedCaptions == media_type {
+            track_assert_ne!(uri, None, ErrorKind::InvalidInput);
+            track_assert!(instream_id.is_some(), ErrorKind::InvalidInput);
+        } else {
+            track_assert!(instream_id.is_none(), ErrorKind::InvalidInput);
+        }
+        if MediaType::Subtitles != media_type {
+            track_assert_eq!(forced, None, ErrorKind::InvalidInput);
+        }
+        Ok(ExtXMedia {
+            media_type,
+            uri,
+            group_id,
+            language,
+            assoc_language,
+            name,
+            default: default.unwrap_or(YesOrNo::No),
+            autoselect: autoselect.unwrap_or(YesOrNo::No),
+            forced,
+            instream_id,
+            characteristics,
+            channels,
+        })
+    }
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub enum HdcpLevel {
+    Type0,
+    None,
+}
+impl fmt::Display for HdcpLevel {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        match *self {
+            HdcpLevel::Type0 => "TYPE-0".fmt(f),
+            HdcpLevel::None => "NONE".fmt(f),
+        }
+    }
+}
+impl FromStr for HdcpLevel {
+    type Err = Error;
+    fn from_str(s: &str) -> Result<Self> {
+        match s {
+            "TYPE-0" => Ok(HdcpLevel::Type0),
+            "NONE" => Ok(HdcpLevel::None),
+            _ => track_panic!(ErrorKind::InvalidInput, "Unknown HDCP level: {:?}", s),
+        }
+    }
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Hash)]
+pub enum ClosedCaptions {
+    GroupId(QuotedString),
+    None,
+}
+impl fmt::Display for ClosedCaptions {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        match *self {
+            ClosedCaptions::GroupId(ref x) => x.fmt(f),
+            ClosedCaptions::None => "NONE".fmt(f),
+        }
+    }
+}
+impl FromStr for ClosedCaptions {
+    type Err = Error;
+    fn from_str(s: &str) -> Result<Self> {
+        if s == "NONE" {
+            Ok(ClosedCaptions::None)
+        } else {
+            Ok(ClosedCaptions::GroupId(track!(s.parse())?))
+        }
     }
 }
 
 // TODO:  The URI line is REQUIRED.
 #[derive(Debug, Clone, PartialEq, Eq)]
-pub struct ExtXStreamInf {}
+pub struct ExtXStreamInf {
+    bandwidth: DecimalInteger,
+    average_bandwidth: Option<DecimalInteger>,
+    codecs: Option<QuotedString>,
+    resolution: Option<DecimalResolution>,
+
+    // TODO: rounded to three decimal places
+    frame_rate: Option<DecimalFloatingPoint>,
+    hdcp_level: Option<HdcpLevel>,
+    audio: Option<QuotedString>,
+    video: Option<QuotedString>,
+    subtitles: Option<QuotedString>,
+    closed_captions: Option<ClosedCaptions>,
+}
 impl ExtXStreamInf {
     const PREFIX: &'static str = "#EXT-X-STREAM-INF:";
 }
 impl fmt::Display for ExtXStreamInf {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         write!(f, "{}", Self::PREFIX)?;
-        unimplemented!()
+        write!(f, "BANDWIDTH={}", self.bandwidth)?;
+        if let Some(ref x) = self.average_bandwidth {
+            write!(f, ",AVERAGE-BANDWIDTH={}", x)?;
+        }
+        if let Some(ref x) = self.codecs {
+            write!(f, ",CODECS={}", x)?;
+        }
+        if let Some(ref x) = self.resolution {
+            write!(f, ",RESOLUTION={}", x)?;
+        }
+        if let Some(ref x) = self.frame_rate {
+            write!(f, ",FRAME-RATE={}", x)?;
+        }
+        if let Some(ref x) = self.hdcp_level {
+            write!(f, ",HDCP-LEVEL={}", x)?;
+        }
+        if let Some(ref x) = self.audio {
+            write!(f, ",AUDIO={}", x)?;
+        }
+        if let Some(ref x) = self.video {
+            write!(f, ",VIDEO={}", x)?;
+        }
+        if let Some(ref x) = self.subtitles {
+            write!(f, ",SUBTITLES={}", x)?;
+        }
+        if let Some(ref x) = self.closed_captions {
+            write!(f, ",CLOSED-CAPTIONS={}", x)?;
+        }
+        Ok(())
     }
 }
 impl FromStr for ExtXStreamInf {
     type Err = Error;
     fn from_str(s: &str) -> Result<Self> {
         track_assert!(s.starts_with(Self::PREFIX), ErrorKind::InvalidInput);
+
+        let mut bandwidth = None;
+        let mut average_bandwidth = None;
+        let mut codecs = None;
+        let mut resolution = None;
+        let mut frame_rate = None;
+        let mut hdcp_level = None;
+        let mut audio = None;
+        let mut video = None;
+        let mut subtitles = None;
+        let mut closed_captions = None;
         let attrs = AttributePairs::parse(s.split_at(Self::PREFIX.len()).1);
         for attr in attrs {
             let (key, value) = track!(attr)?;
             match key {
-                "BANDWIDTH" => unimplemented!(),
-                "AVERAGE-BANDWIDTH" => unimplemented!(),
-                "CODECS" => unimplemented!(),
-                "RESOLUTION" => unimplemented!(),
-                "FRAME-RATE" => unimplemented!(),
-                "HDCP-LEVEL" => unimplemented!(),
-                "AUDIO" => unimplemented!(),
-                "VIDEO" => unimplemented!(),
-                "SUBTITLES" => unimplemented!(),
-                "CLOSED-CAPTIONS" => unimplemented!(),
+                "BANDWIDTH" => bandwidth = Some(track!(value.parse())?),
+                "AVERAGE-BANDWIDTH" => average_bandwidth = Some(track!(value.parse())?),
+                "CODECS" => codecs = Some(track!(value.parse())?),
+                "RESOLUTION" => resolution = Some(track!(value.parse())?),
+                "FRAME-RATE" => frame_rate = Some(track!(value.parse())?),
+                "HDCP-LEVEL" => hdcp_level = Some(track!(value.parse())?),
+                "AUDIO" => {
+                    // TODO: It MUST match the value of the GROUP-ID attribute of an EXT-X-MEDIA tag
+                    audio = Some(track!(value.parse())?);
+                }
+                "VIDEO" => {
+                    // TODO: It MUST match the value of the GROUP-ID attribute of an EXT-X-MEDIA tag
+                    video = Some(track!(value.parse())?);
+                }
+                "SUBTITLES" => {
+                    // TODO: It MUST match the value of the GROUP-ID attribute of an EXT-X-MEDIA tag
+                    subtitles = Some(track!(value.parse())?);
+                }
+                "CLOSED-CAPTIONS" => {
+                    // TODO: validate
+                    closed_captions = Some(track!(value.parse())?);
+                }
                 _ => {
                     // [6.3.1] ignore any attribute/value pair with an unrecognized AttributeName.
                 }
             }
         }
-        Ok(ExtXStreamInf {})
+        let bandwidth = track_assert_some!(bandwidth, ErrorKind::InvalidInput);
+        Ok(ExtXStreamInf {
+            bandwidth,
+            average_bandwidth,
+            codecs,
+            resolution,
+            frame_rate,
+            hdcp_level,
+            audio,
+            video,
+            subtitles,
+            closed_captions,
+        })
     }
 }
 
+// TODO: That Playlist file MUST contain an EXT-X-I-FRAMES-ONLY tag.
 #[derive(Debug, Clone, PartialEq, Eq)]
-pub struct ExtXIFrameStreamInf {}
+pub struct ExtXIFrameStreamInf {
+    uri: QuotedString,
+    bandwidth: DecimalInteger,
+    average_bandwidth: Option<DecimalInteger>,
+    codecs: Option<QuotedString>,
+    resolution: Option<DecimalResolution>,
+    hdcp_level: Option<HdcpLevel>,
+    video: Option<QuotedString>,
+}
 impl ExtXIFrameStreamInf {
     const PREFIX: &'static str = "#EXT-X-I-FRAME-STREAM-INF:";
 }
 impl fmt::Display for ExtXIFrameStreamInf {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         write!(f, "{}", Self::PREFIX)?;
-        unimplemented!()
+        write!(f, "URI={}", self.uri)?;
+        write!(f, ",BANDWIDTH={}", self.bandwidth)?;
+        if let Some(ref x) = self.average_bandwidth {
+            write!(f, ",AVERAGE-BANDWIDTH={}", x)?;
+        }
+        if let Some(ref x) = self.codecs {
+            write!(f, ",CODECS={}", x)?;
+        }
+        if let Some(ref x) = self.resolution {
+            write!(f, ",RESOLUTION={}", x)?;
+        }
+        if let Some(ref x) = self.hdcp_level {
+            write!(f, ",HDCP-LEVEL={}", x)?;
+        }
+        if let Some(ref x) = self.video {
+            write!(f, ",VIDEO={}", x)?;
+        }
+        Ok(())
     }
 }
 impl FromStr for ExtXIFrameStreamInf {
     type Err = Error;
     fn from_str(s: &str) -> Result<Self> {
         track_assert!(s.starts_with(Self::PREFIX), ErrorKind::InvalidInput);
+
+        let mut uri = None;
+        let mut bandwidth = None;
+        let mut average_bandwidth = None;
+        let mut codecs = None;
+        let mut resolution = None;
+        let mut hdcp_level = None;
+        let mut video = None;
         let attrs = AttributePairs::parse(s.split_at(Self::PREFIX.len()).1);
         for attr in attrs {
             let (key, value) = track!(attr)?;
             match key {
-                "URI" => unimplemented!(),
+                "URI" => uri = Some(track!(value.parse())?),
+                "BANDWIDTH" => bandwidth = Some(track!(value.parse())?),
+                "AVERAGE-BANDWIDTH" => average_bandwidth = Some(track!(value.parse())?),
+                "CODECS" => codecs = Some(track!(value.parse())?),
+                "RESOLUTION" => resolution = Some(track!(value.parse())?),
+                "HDCP-LEVEL" => hdcp_level = Some(track!(value.parse())?),
+                "VIDEO" => {
+                    // TODO:
+                    video = Some(track!(value.parse())?);
+                }
                 _ => {
                     // [6.3.1] ignore any attribute/value pair with an unrecognized AttributeName.
                 }
             }
         }
-        Ok(ExtXIFrameStreamInf {})
+
+        let uri = track_assert_some!(uri, ErrorKind::InvalidInput);
+        let bandwidth = track_assert_some!(bandwidth, ErrorKind::InvalidInput);
+        Ok(ExtXIFrameStreamInf {
+            uri,
+            bandwidth,
+            average_bandwidth,
+            codecs,
+            resolution,
+            hdcp_level,
+            video,
+        })
     }
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]
-pub struct ExtXSessionData {}
+pub enum SessionData {
+    Value(QuotedString),
+    Uri(QuotedString),
+}
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct ExtXSessionData {
+    pub data_id: QuotedString,
+    pub data: SessionData,
+    pub language: Option<QuotedString>,
+}
 impl ExtXSessionData {
     const PREFIX: &'static str = "#EXT-X-SESSION-DATA:";
 }
 impl fmt::Display for ExtXSessionData {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         write!(f, "{}", Self::PREFIX)?;
-        unimplemented!()
+        write!(f, "DATA-ID={}", self.data_id)?;
+        match self.data {
+            SessionData::Value(ref x) => write!(f, ",VALUE={}", x)?,
+            SessionData::Uri(ref x) => write!(f, ",URI={}", x)?,
+        }
+        if let Some(ref x) = self.language {
+            write!(f, ",LANGUAGE={}", x)?;
+        }
+        Ok(())
     }
 }
 impl FromStr for ExtXSessionData {
     type Err = Error;
     fn from_str(s: &str) -> Result<Self> {
         track_assert!(s.starts_with(Self::PREFIX), ErrorKind::InvalidInput);
+
+        let mut data_id = None;
+        let mut session_value = None;
+        let mut uri = None;
+        let mut language = None;
         let attrs = AttributePairs::parse(s.split_at(Self::PREFIX.len()).1);
         for attr in attrs {
             let (key, value) = track!(attr)?;
             match key {
-                "DATA-ID" => unimplemented!(),
-                "VALUE" => unimplemented!(),
-                "URI" => unimplemented!(),
-                "LANUGAGE" => unimplemented!(),
+                "DATA-ID" => data_id = Some(track!(value.parse())?),
+                "VALUE" => session_value = Some(track!(value.parse())?),
+                "URI" => uri = Some(track!(value.parse())?),
+                "LANGUAGE" => language = Some(track!(value.parse())?),
                 _ => {
                     // [6.3.1] ignore any attribute/value pair with an unrecognized AttributeName.
                 }
             }
         }
-        Ok(ExtXSessionData {})
+
+        let data_id = track_assert_some!(data_id, ErrorKind::InvalidInput);
+        let data = if let Some(value) = session_value {
+            track_assert_eq!(uri, None, ErrorKind::InvalidInput);
+            SessionData::Value(value)
+        } else if let Some(uri) = uri {
+            SessionData::Uri(uri)
+        } else {
+            track_panic!(ErrorKind::InvalidInput);
+        };
+        Ok(ExtXSessionData {
+            data_id,
+            data,
+            language,
+        })
     }
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]
-pub struct ExtXSessionKey {}
+pub struct ExtXSessionKey {
+    pub method: SessionEncryptionMethod,
+    pub uri: QuotedString,
+    pub iv: Option<HexadecimalSequence>,
+    pub key_format: Option<QuotedString>,
+    pub key_format_versions: Option<QuotedString>,
+}
 impl ExtXSessionKey {
     const PREFIX: &'static str = "#EXT-X-SESSION-KEY:";
 }
 impl fmt::Display for ExtXSessionKey {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         write!(f, "{}", Self::PREFIX)?;
-        unimplemented!()
+        write!(f, "METHOD={}", self.method)?;
+        write!(f, ",URI={}", self.uri)?;
+        if let Some(ref x) = self.iv {
+            write!(f, ",IV={}", x)?;
+        }
+        if let Some(ref x) = self.key_format {
+            write!(f, ",KEYFORMAT={}", x)?;
+        }
+        if let Some(ref x) = self.key_format_versions {
+            write!(f, ",KEYFORMATVERSIONS={}", x)?;
+        }
+        Ok(())
     }
 }
 impl FromStr for ExtXSessionKey {
     type Err = Error;
     fn from_str(s: &str) -> Result<Self> {
         track_assert!(s.starts_with(Self::PREFIX), ErrorKind::InvalidInput);
+
+        let mut method = None;
+        let mut uri = None;
+        let mut iv = None;
+        let mut key_format = None;
+        let mut key_format_versions = None;
         let attrs = AttributePairs::parse(s.split_at(Self::PREFIX.len()).1);
         for attr in attrs {
             let (key, value) = track!(attr)?;
+            match key {
+                "METHOD" => {
+                    track_assert_eq!(method, None, ErrorKind::InvalidInput);
+                    method = Some(track!(value.parse())?);
+                }
+                "URI" => {
+                    track_assert_eq!(uri, None, ErrorKind::InvalidInput);
+                    uri = Some(track!(value.parse())?);
+                }
+                "IV" => {
+                    // TODO: validate length(128-bit)
+                    track_assert_eq!(iv, None, ErrorKind::InvalidInput);
+                    iv = Some(track!(value.parse())?);
+                }
+                "KEYFORMAT" => {
+                    track_assert_eq!(key_format, None, ErrorKind::InvalidInput);
+                    key_format = Some(track!(value.parse())?);
+                }
+                "KEYFORMATVERSIONS" => {
+                    track_assert_eq!(key_format_versions, None, ErrorKind::InvalidInput);
+                    key_format_versions = Some(track!(value.parse())?);
+                }
+                _ => {
+                    // [6.3.1] ignore any attribute/value pair with an unrecognized AttributeName.
+                }
+            }
         }
-        Ok(ExtXSessionKey {})
+        let method = track_assert_some!(method, ErrorKind::InvalidInput);
+        let uri = track_assert_some!(uri, ErrorKind::InvalidInput);
+        Ok(ExtXSessionKey {
+            method,
+            uri,
+            iv,
+            key_format,
+            key_format_versions,
+        })
     }
 }
 
@@ -772,31 +1388,46 @@ impl FromStr for ExtXIndependentSegments {
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]
-pub struct ExtXStart {}
+pub struct ExtXStart {
+    pub time_offset: SignedDecimalFloatingPoint,
+    pub precise: YesOrNo,
+}
 impl ExtXStart {
     const PREFIX: &'static str = "#EXT-X-START:";
 }
 impl fmt::Display for ExtXStart {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         write!(f, "{}", Self::PREFIX)?;
-        unimplemented!()
+        write!(f, "TIME-OFFSET={}", self.time_offset)?;
+        if self.precise == YesOrNo::Yes {
+            write!(f, ",PRECISE={}", self.precise)?;
+        }
+        Ok(())
     }
 }
 impl FromStr for ExtXStart {
     type Err = Error;
     fn from_str(s: &str) -> Result<Self> {
         track_assert!(s.starts_with(Self::PREFIX), ErrorKind::InvalidInput);
+
+        let mut time_offset = None;
+        let mut precise = None;
         let attrs = AttributePairs::parse(s.split_at(Self::PREFIX.len()).1);
         for attr in attrs {
             let (key, value) = track!(attr)?;
             match key {
-                "TIME-OFFSET" => unimplemented!(),
-                "PRECISE" => unimplemented!(),
+                "TIME-OFFSET" => time_offset = Some(track!(value.parse())?),
+                "PRECISE" => precise = Some(track!(value.parse())?),
                 _ => {
                     // [6.3.1] ignore any attribute/value pair with an unrecognized AttributeName.
                 }
             }
         }
-        Ok(ExtXStart {})
+
+        let time_offset = track_assert_some!(time_offset, ErrorKind::InvalidInput);
+        Ok(ExtXStart {
+            time_offset,
+            precise: precise.unwrap_or(YesOrNo::No),
+        })
     }
 }
