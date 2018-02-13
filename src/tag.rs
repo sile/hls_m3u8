@@ -15,6 +15,15 @@ macro_rules! may_invalid {
     }
 }
 
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum TagKind {
+    Basic,
+    MediaSegment,
+    MediaPlaylist,
+    MasterPlaylist,
+    MediaOrMasterPlaylist,
+}
+
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum MediaSegmentTag {
     ExtInf(ExtInf),
@@ -150,6 +159,32 @@ pub enum Tag {
     ExtXIndependentSegments(ExtXIndependentSegments),
     ExtXStart(ExtXStart),
 }
+impl Tag {
+    pub fn kind(&self) -> TagKind {
+        match *self {
+            Tag::ExtM3u(_) | Tag::ExtXVersion(_) => TagKind::Basic,
+            Tag::ExtInf(_)
+            | Tag::ExtXByteRange(_)
+            | Tag::ExtXDiscontinuity(_)
+            | Tag::ExtXKey(_)
+            | Tag::ExtXMap(_)
+            | Tag::ExtXProgramDateTime(_)
+            | Tag::ExtXDateRange(_) => TagKind::MediaSegment,
+            Tag::ExtXTargetDuration(_)
+            | Tag::ExtXMediaSequence(_)
+            | Tag::ExtXDiscontinuitySequence(_)
+            | Tag::ExtXEndList(_)
+            | Tag::ExtXPlaylistType(_)
+            | Tag::ExtXIFramesOnly(_) => TagKind::MediaPlaylist,
+            Tag::ExtXMedia(_)
+            | Tag::ExtXStreamInf(_)
+            | Tag::ExtXIFrameStreamInf(_)
+            | Tag::ExtXSessionData(_)
+            | Tag::ExtXSessionKey(_) => TagKind::MasterPlaylist,
+            Tag::ExtXIndependentSegments(_) | Tag::ExtXStart(_) => TagKind::MediaOrMasterPlaylist,
+        }
+    }
+}
 impl fmt::Display for Tag {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         match *self {
@@ -255,10 +290,17 @@ impl FromStr for ExtM3u {
 // TODO:  A Playlist file MUST NOT contain more than one EXT-X-VERSION tag
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct ExtXVersion {
-    pub version: ProtocolVersion,
+    version: ProtocolVersion,
 }
 impl ExtXVersion {
     const PREFIX: &'static str = "#EXT-X-VERSION:";
+
+    pub fn new(version: ProtocolVersion) -> Self {
+        ExtXVersion { version }
+    }
+    pub fn value(&self) -> ProtocolVersion {
+        self.version
+    }
 }
 impl fmt::Display for ExtXVersion {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
