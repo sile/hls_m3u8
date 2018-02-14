@@ -17,9 +17,8 @@ pub mod segment {
     //! Media segment.
     pub use super::media_segment::{MediaSegment, MediaSegmentBuilder};
 }
-pub mod tag;
-pub mod value;
-pub mod version;
+pub mod tag; // TODO: s/tag/tags/
+pub mod types;
 
 mod attribute;
 mod error;
@@ -27,7 +26,6 @@ mod line;
 mod master_playlist;
 mod media_playlist;
 mod media_segment;
-mod string;
 
 /// This crate specific `Result` type.
 pub type Result<T> = std::result::Result<T, Error>;

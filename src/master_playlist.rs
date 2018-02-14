@@ -5,7 +5,7 @@ use {Error, ErrorKind, Result};
 use line::{Line, Lines};
 use tag::{ExtM3u, ExtXIFrameStreamInf, ExtXIndependentSegments, ExtXMedia, ExtXSessionData,
           ExtXSessionKey, ExtXStart, ExtXStreamInf, ExtXVersion, Tag};
-use version::ProtocolVersion;
+use types::ProtocolVersion;
 
 #[derive(Debug, Clone)]
 pub struct ExtXStreamInfWithUri {

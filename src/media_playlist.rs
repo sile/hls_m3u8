@@ -7,7 +7,7 @@ use media_segment::{MediaSegment, MediaSegmentBuilder};
 use tag::{ExtM3u, ExtXDiscontinuitySequence, ExtXEndList, ExtXIFramesOnly,
           ExtXIndependentSegments, ExtXMediaSequence, ExtXPlaylistType, ExtXStart,
           ExtXTargetDuration, ExtXVersion, Tag};
-use version::ProtocolVersion;
+use types::ProtocolVersion;
 
 // TODO: There MUST NOT be more than one Media Playlist tag of each type in any Media Playlist.
 // TODO: A Media Playlist tag MUST NOT appear in a Master Playlist.

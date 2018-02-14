@@ -9,8 +9,6 @@ use trackable::error::ErrorKindExt;
 use {Error, ErrorKind, Result};
 use attribute::{AttributePairs, DecimalFloatingPoint, DecimalInteger, DecimalResolution,
                 HexadecimalSequence, QuotedString, SignedDecimalFloatingPoint};
-use string::M3u8String;
-use version::ProtocolVersion;
 
 macro_rules! may_invalid {
     ($expr:expr) => {
@@ -29,8 +27,11 @@ macro_rules! impl_from {
 }
 
 pub use self::basic::{ExtM3u, ExtXVersion};
+pub use self::media_segment::{ExtInf, ExtXByteRange, ExtXDateRange, ExtXDiscontinuity, ExtXKey,
+                              ExtXMap, ExtXProgramDateTime};
 
 mod basic;
+mod media_segment;
 
 /// [4.3.1. Basic Tags]
 ///
@@ -54,6 +55,7 @@ pub enum MediaSegmentTag {
     ExtXMap(ExtXMap),
     ExtXProgramDateTime(ExtXProgramDateTime),
 }
+// TODO: delete
 impl MediaSegmentTag {
     pub fn as_inf(&self) -> Option<&ExtInf> {
         if let MediaSegmentTag::ExtInf(ref t) = *self {
@@ -118,41 +120,13 @@ impl fmt::Display for MediaSegmentTag {
         }
     }
 }
-impl From<ExtInf> for MediaSegmentTag {
-    fn from(f: ExtInf) -> Self {
-        MediaSegmentTag::ExtInf(f)
-    }
-}
-impl From<ExtXByteRange> for MediaSegmentTag {
-    fn from(f: ExtXByteRange) -> Self {
-        MediaSegmentTag::ExtXByteRange(f)
-    }
-}
-impl From<ExtXDateRange> for MediaSegmentTag {
-    fn from(f: ExtXDateRange) -> Self {
-        MediaSegmentTag::ExtXDateRange(f)
-    }
-}
-impl From<ExtXDiscontinuity> for MediaSegmentTag {
-    fn from(f: ExtXDiscontinuity) -> Self {
-        MediaSegmentTag::ExtXDiscontinuity(f)
-    }
-}
-impl From<ExtXKey> for MediaSegmentTag {
-    fn from(f: ExtXKey) -> Self {
-        MediaSegmentTag::ExtXKey(f)
-    }
-}
-impl From<ExtXMap> for MediaSegmentTag {
-    fn from(f: ExtXMap) -> Self {
-        MediaSegmentTag::ExtXMap(f)
-    }
-}
-impl From<ExtXProgramDateTime> for MediaSegmentTag {
-    fn from(f: ExtXProgramDateTime) -> Self {
-        MediaSegmentTag::ExtXProgramDateTime(f)
-    }
-}
+impl_from!(MediaSegmentTag, ExtInf);
+impl_from!(MediaSegmentTag, ExtXByteRange);
+impl_from!(MediaSegmentTag, ExtXDateRange);
+impl_from!(MediaSegmentTag, ExtXDiscontinuity);
+impl_from!(MediaSegmentTag, ExtXKey);
+impl_from!(MediaSegmentTag, ExtXMap);
+impl_from!(MediaSegmentTag, ExtXProgramDateTime);
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum Tag {
@@ -258,465 +232,6 @@ impl FromStr for Tag {
             // TODO: ignore any unrecognized tags. (section-6.3.1)
             track_panic!(ErrorKind::InvalidInput, "Unknown tag: {:?}", s)
         }
-    }
-}
-
-// TODO: This tag is REQUIRED for each Media Segment
-// TODO: if the compatibility version number is less than 3, durations MUST be integers.
-#[derive(Debug, Clone, PartialEq, Eq)]
-pub struct ExtInf {
-    pub duration: Duration,
-    pub title: Option<M3u8String>,
-}
-impl ExtInf {
-    const PREFIX: &'static str = "#EXTINF:";
-
-    // TODO: pub fn required_version(&self) -> ProtocolVersion;
-}
-impl fmt::Display for ExtInf {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(f, "{}", Self::PREFIX)?;
-
-        let duration = (self.duration.as_secs() as f64)
-            + (self.duration.subsec_nanos() as f64 / 1_000_000_000.0);
-        write!(f, "{}", duration)?;
-
-        if let Some(ref title) = self.title {
-            write!(f, ",{}", title)?;
-        }
-        Ok(())
-    }
-}
-impl FromStr for ExtInf {
-    type Err = Error;
-    fn from_str(s: &str) -> Result<Self> {
-        track_assert!(s.starts_with(Self::PREFIX), ErrorKind::InvalidInput);
-        let mut tokens = s.split_at(Self::PREFIX.len()).1.splitn(2, ',');
-
-        let duration: f64 = may_invalid!(tokens.next().expect("Never fails").parse())?;
-        let duration = Duration::new(duration as u64, (duration.fract() * 1_000_000_000.0) as u32);
-
-        let title = if let Some(title) = tokens.next() {
-            Some(track!(M3u8String::new(title))?)
-        } else {
-            None
-        };
-        Ok(ExtInf { duration, title })
-    }
-}
-
-// TODO: If o is not present, a previous Media Segment MUST appear in the Playlist file
-// TDOO: Use of the EXT-X-BYTERANGE tag REQUIRES a compatibility version number of 4 or greater.
-#[derive(Debug, Clone, PartialEq, Eq)]
-pub struct ExtXByteRange {
-    pub length: usize,
-    pub offset: Option<usize>,
-}
-impl ExtXByteRange {
-    const PREFIX: &'static str = "#EXT-X-BYTERANGE:";
-}
-impl fmt::Display for ExtXByteRange {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(f, "{}{}", Self::PREFIX, self.length)?;
-        if let Some(offset) = self.offset {
-            write!(f, "@{}", offset)?;
-        }
-        Ok(())
-    }
-}
-impl FromStr for ExtXByteRange {
-    type Err = Error;
-    fn from_str(s: &str) -> Result<Self> {
-        track_assert!(s.starts_with(Self::PREFIX), ErrorKind::InvalidInput);
-        let mut tokens = s.split_at(Self::PREFIX.len()).1.splitn(2, '@');
-
-        let length = may_invalid!(tokens.next().expect("Never fails").parse())?;
-        let offset = if let Some(offset) = tokens.next() {
-            Some(may_invalid!(offset.parse())?)
-        } else {
-            None
-        };
-        Ok(ExtXByteRange { length, offset })
-    }
-}
-
-#[derive(Debug, Clone, PartialEq, Eq)]
-pub struct ExtXDiscontinuity;
-impl ExtXDiscontinuity {
-    const PREFIX: &'static str = "#EXT-X-DISCONTINUITY";
-}
-impl fmt::Display for ExtXDiscontinuity {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        Self::PREFIX.fmt(f)
-    }
-}
-impl FromStr for ExtXDiscontinuity {
-    type Err = Error;
-    fn from_str(s: &str) -> Result<Self> {
-        track_assert_eq!(s, Self::PREFIX, ErrorKind::InvalidInput);
-        Ok(ExtXDiscontinuity)
-    }
-}
-
-#[derive(Debug, Clone, PartialEq, Eq)]
-pub struct ExtXKey {
-    pub method: EncryptionMethod,
-    pub uri: Option<QuotedString>,
-    pub iv: Option<HexadecimalSequence>,
-    pub key_format: Option<QuotedString>,
-    pub key_format_versions: Option<QuotedString>,
-}
-impl ExtXKey {
-    const PREFIX: &'static str = "#EXT-X-KEY:";
-
-    pub fn compatibility_version(&self) -> ProtocolVersion {
-        if self.key_format.is_some() | self.key_format_versions.is_some() {
-            ProtocolVersion::V5
-        } else if self.iv.is_some() {
-            ProtocolVersion::V2
-        } else {
-            ProtocolVersion::V1
-        }
-    }
-}
-impl fmt::Display for ExtXKey {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(f, "{}", Self::PREFIX)?;
-        write!(f, "METHOD={}", self.method)?;
-        if let Some(ref x) = self.uri {
-            write!(f, ",URI={}", x)?;
-        }
-        if let Some(ref x) = self.iv {
-            write!(f, ",IV={}", x)?;
-        }
-        if let Some(ref x) = self.key_format {
-            write!(f, ",KEYFORMAT={}", x)?;
-        }
-        if let Some(ref x) = self.key_format_versions {
-            write!(f, ",KEYFORMATVERSIONS={}", x)?;
-        }
-        Ok(())
-    }
-}
-impl FromStr for ExtXKey {
-    type Err = Error;
-    fn from_str(s: &str) -> Result<Self> {
-        track_assert!(s.starts_with(Self::PREFIX), ErrorKind::InvalidInput);
-
-        let mut method = None;
-        let mut uri = None;
-        let mut iv = None;
-        let mut key_format = None;
-        let mut key_format_versions = None;
-        let attrs = AttributePairs::parse(s.split_at(Self::PREFIX.len()).1);
-        for attr in attrs {
-            let (key, value) = track!(attr)?;
-            match key {
-                "METHOD" => {
-                    track_assert_eq!(method, None, ErrorKind::InvalidInput);
-                    method = Some(track!(value.parse())?);
-                }
-                "URI" => {
-                    track_assert_eq!(uri, None, ErrorKind::InvalidInput);
-                    uri = Some(track!(value.parse())?);
-                }
-                "IV" => {
-                    // TODO: validate length(128-bit)
-                    track_assert_eq!(iv, None, ErrorKind::InvalidInput);
-                    iv = Some(track!(value.parse())?);
-                }
-                "KEYFORMAT" => {
-                    track_assert_eq!(key_format, None, ErrorKind::InvalidInput);
-                    key_format = Some(track!(value.parse())?);
-                }
-                "KEYFORMATVERSIONS" => {
-                    track_assert_eq!(key_format_versions, None, ErrorKind::InvalidInput);
-                    key_format_versions = Some(track!(value.parse())?);
-                }
-                _ => {
-                    // [6.3.1] ignore any attribute/value pair with an unrecognized AttributeName.
-                }
-            }
-        }
-        let method = track_assert_some!(method, ErrorKind::InvalidInput);
-        if let EncryptionMethod::None = method {
-            track_assert_eq!(uri, None, ErrorKind::InvalidInput);
-        } else {
-            track_assert!(uri.is_some(), ErrorKind::InvalidInput);
-        };
-        Ok(ExtXKey {
-            method,
-            uri,
-            iv,
-            key_format,
-            key_format_versions,
-        })
-    }
-}
-
-// TODO: move
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub enum EncryptionMethod {
-    None,
-    Aes128,
-    SampleAes,
-}
-impl fmt::Display for EncryptionMethod {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        match *self {
-            EncryptionMethod::None => "NONE".fmt(f),
-            EncryptionMethod::Aes128 => "AES-128".fmt(f),
-            EncryptionMethod::SampleAes => "SAMPLE-AES".fmt(f),
-        }
-    }
-}
-impl FromStr for EncryptionMethod {
-    type Err = Error;
-    fn from_str(s: &str) -> Result<Self> {
-        match s {
-            "NONE" => Ok(EncryptionMethod::None),
-            "AES-128" => Ok(EncryptionMethod::Aes128),
-            "SAMPLE-AES" => Ok(EncryptionMethod::SampleAes),
-            _ => track_panic!(
-                ErrorKind::InvalidInput,
-                "Unknown encryption method: {:?}",
-                s
-            ),
-        }
-    }
-}
-
-// TODO: move
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub enum SessionEncryptionMethod {
-    Aes128,
-    SampleAes,
-}
-impl fmt::Display for SessionEncryptionMethod {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        match *self {
-            SessionEncryptionMethod::Aes128 => "AES-128".fmt(f),
-            SessionEncryptionMethod::SampleAes => "SAMPLE-AES".fmt(f),
-        }
-    }
-}
-impl FromStr for SessionEncryptionMethod {
-    type Err = Error;
-    fn from_str(s: &str) -> Result<Self> {
-        match s {
-            "AES-128" => Ok(SessionEncryptionMethod::Aes128),
-            "SAMPLE-AES" => Ok(SessionEncryptionMethod::SampleAes),
-            _ => track_panic!(
-                ErrorKind::InvalidInput,
-                "Unknown encryption method: {:?}",
-                s
-            ),
-        }
-    }
-}
-
-#[derive(Debug, Clone, PartialEq, Eq)]
-pub struct ExtXMap {
-    pub uri: QuotedString,
-    pub byte_range: Option<QuotedString>, // TODO: `ByteRange` type
-}
-impl ExtXMap {
-    const PREFIX: &'static str = "#EXT-X-MAP:";
-}
-impl fmt::Display for ExtXMap {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(f, "{}", Self::PREFIX)?;
-        write!(f, "URI={}", self.uri)?;
-        if let Some(ref x) = self.byte_range {
-            write!(f, ",BYTERANGE={}", x)?;
-        }
-        Ok(())
-    }
-}
-impl FromStr for ExtXMap {
-    type Err = Error;
-    fn from_str(s: &str) -> Result<Self> {
-        track_assert!(s.starts_with(Self::PREFIX), ErrorKind::InvalidInput);
-
-        let mut uri = None;
-        let mut byte_range = None;
-        let attrs = AttributePairs::parse(s.split_at(Self::PREFIX.len()).1);
-        for attr in attrs {
-            let (key, value) = track!(attr)?;
-            match key {
-                "URI" => {
-                    track_assert_eq!(uri, None, ErrorKind::InvalidInput);
-                    uri = Some(track!(value.parse())?);
-                }
-                "BYTERANGE" => {
-                    track_assert_eq!(byte_range, None, ErrorKind::InvalidInput);
-                    byte_range = Some(track!(value.parse())?);
-                }
-                _ => {
-                    // [6.3.1] ignore any attribute/value pair with an unrecognized AttributeName.
-                }
-            }
-        }
-
-        let uri = track_assert_some!(uri, ErrorKind::InvalidInput);
-        Ok(ExtXMap { uri, byte_range })
-    }
-}
-
-#[derive(Debug, Clone, PartialEq, Eq)]
-pub struct ExtXProgramDateTime {
-    pub date_time_msec: String, // TODO: `DateTime` type
-}
-impl ExtXProgramDateTime {
-    const PREFIX: &'static str = "#EXT-X-PROGRAM-DATE-TIME:";
-}
-impl fmt::Display for ExtXProgramDateTime {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(f, "{}{}", Self::PREFIX, self.date_time_msec)
-    }
-}
-impl FromStr for ExtXProgramDateTime {
-    type Err = Error;
-    fn from_str(s: &str) -> Result<Self> {
-        track_assert!(s.starts_with(Self::PREFIX), ErrorKind::InvalidInput);
-        let date_time = s.split_at(Self::PREFIX.len()).1;
-        Ok(ExtXProgramDateTime {
-            date_time_msec: date_time.to_owned(),
-        })
-    }
-}
-
-#[derive(Debug, Clone, PartialEq, Eq)]
-pub struct ExtXDateRange {
-    pub id: QuotedString,
-    pub class: Option<QuotedString>,
-    pub start_date: QuotedString, // TODO: `Date` type
-    pub end_date: Option<QuotedString>,
-    pub duration: Option<Duration>,
-    pub planned_duration: Option<Duration>,
-    pub scte35_cmd: Option<QuotedString>,
-    pub scte35_out: Option<QuotedString>,
-    pub scte35_in: Option<QuotedString>,
-    pub end_on_next: Option<Yes>,
-}
-impl ExtXDateRange {
-    const PREFIX: &'static str = "#EXT-X-DATERANGE:";
-}
-impl fmt::Display for ExtXDateRange {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(f, "{}", Self::PREFIX)?;
-        write!(f, "ID={}", self.id)?;
-        if let Some(ref x) = self.class {
-            write!(f, ",CLASS={}", x)?;
-        }
-        write!(f, ",START_DATE={}", self.start_date)?;
-        if let Some(ref x) = self.end_date {
-            write!(f, ",END_DATE={}", x)?;
-        }
-        if let Some(x) = self.duration {
-            write!(f, ",DURATION={}", DecimalFloatingPoint::from_duration(x))?;
-        }
-        if let Some(x) = self.planned_duration {
-            write!(
-                f,
-                ",PLANNED_DURATION={}",
-                DecimalFloatingPoint::from_duration(x)
-            )?;
-        }
-        if let Some(ref x) = self.scte35_cmd {
-            write!(f, ",SCTE35_CMD={}", x)?;
-        }
-        if let Some(ref x) = self.scte35_out {
-            write!(f, ",SCTE35_OUT={}", x)?;
-        }
-        if let Some(ref x) = self.scte35_in {
-            write!(f, ",SCTE35_IN={}", x)?;
-        }
-        if let Some(ref x) = self.end_on_next {
-            write!(f, ",END_ON_NEXT={}", x)?;
-        }
-        Ok(())
-    }
-}
-impl FromStr for ExtXDateRange {
-    type Err = Error;
-    fn from_str(s: &str) -> Result<Self> {
-        track_assert!(s.starts_with(Self::PREFIX), ErrorKind::InvalidInput);
-
-        let mut id = None;
-        let mut class = None;
-        let mut start_date = None;
-        let mut end_date = None;
-        let mut duration = None;
-        let mut planned_duration = None;
-        let mut scte35_cmd = None;
-        let mut scte35_out = None;
-        let mut scte35_in = None;
-        let mut end_on_next = None;
-        let attrs = AttributePairs::parse(s.split_at(Self::PREFIX.len()).1);
-        for attr in attrs {
-            let (key, value) = track!(attr)?;
-            match key {
-                "ID" => {
-                    id = Some(track!(value.parse())?);
-                }
-                "CLASS" => {
-                    class = Some(track!(value.parse())?);
-                }
-                "START-DATE" => {
-                    start_date = Some(track!(value.parse())?);
-                }
-                "END-DATE" => {
-                    end_date = Some(track!(value.parse())?);
-                }
-                "DURATION" => {
-                    let seconds: DecimalFloatingPoint = track!(value.parse())?;
-                    duration = Some(seconds.to_duration());
-                }
-                "PLANNED-DURATION" => {
-                    let seconds: DecimalFloatingPoint = track!(value.parse())?;
-                    planned_duration = Some(seconds.to_duration());
-                }
-                "SCTE35-CMD" => {
-                    scte35_cmd = Some(track!(value.parse())?);
-                }
-                "SCTE35-OUT" => {
-                    scte35_out = Some(track!(value.parse())?);
-                }
-                "SCTE35-IN" => {
-                    scte35_in = Some(track!(value.parse())?);
-                }
-                "END-ON-NEXT" => {
-                    end_on_next = Some(track!(value.parse())?);
-                }
-                _ => {
-                    // TODO: "X-<client-attribute>"
-
-                    // [6.3.1] ignore any attribute/value pair with an unrecognized AttributeName.
-                }
-            }
-        }
-
-        let id = track_assert_some!(id, ErrorKind::InvalidInput);
-        let start_date = track_assert_some!(start_date, ErrorKind::InvalidInput);
-        if end_on_next.is_some() {
-            track_assert!(class.is_some(), ErrorKind::InvalidInput);
-        }
-        // TODO: Other EXT-X-DATERANGE tags with the same CLASS
-        // attribute MUST NOT specify Date Ranges that overlap.
-
-        Ok(ExtXDateRange {
-            id,
-            class,
-            start_date,
-            end_date,
-            duration,
-            planned_duration,
-            scte35_cmd,
-            scte35_out,
-            scte35_in,
-            end_on_next,
-        })
     }
 }
 
@@ -927,21 +442,6 @@ impl FromStr for YesOrNo {
                 s
             ),
         }
-    }
-}
-
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct Yes;
-impl fmt::Display for Yes {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        "YES".fmt(f)
-    }
-}
-impl FromStr for Yes {
-    type Err = Error;
-    fn from_str(s: &str) -> Result<Self> {
-        track_assert_eq!(s, "YES", ErrorKind::InvalidInput);
-        Ok(Yes)
     }
 }
 
@@ -1525,5 +1025,34 @@ impl FromStr for ExtXStart {
             time_offset,
             precise: precise.unwrap_or(YesOrNo::No),
         })
+    }
+}
+
+// TODO: move
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub enum SessionEncryptionMethod {
+    Aes128,
+    SampleAes,
+}
+impl fmt::Display for SessionEncryptionMethod {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        match *self {
+            SessionEncryptionMethod::Aes128 => "AES-128".fmt(f),
+            SessionEncryptionMethod::SampleAes => "SAMPLE-AES".fmt(f),
+        }
+    }
+}
+impl FromStr for SessionEncryptionMethod {
+    type Err = Error;
+    fn from_str(s: &str) -> Result<Self> {
+        match s {
+            "AES-128" => Ok(SessionEncryptionMethod::Aes128),
+            "SAMPLE-AES" => Ok(SessionEncryptionMethod::SampleAes),
+            _ => track_panic!(
+                ErrorKind::InvalidInput,
+                "Unknown encryption method: {:?}",
+                s
+            ),
+        }
     }
 }

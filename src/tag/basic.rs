@@ -2,7 +2,7 @@ use std::fmt;
 use std::str::FromStr;
 
 use {Error, ErrorKind, Result};
-use version::ProtocolVersion;
+use types::ProtocolVersion;
 
 /// [4.3.1.1. EXTM3U]
 ///
