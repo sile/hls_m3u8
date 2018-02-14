@@ -40,7 +40,7 @@ pub struct ExtXVersion {
 impl ExtXVersion {
     pub(crate) const PREFIX: &'static str = "#EXT-X-VERSION:";
 
-    /// Makes a new `ExtXVersion` instance.
+    /// Makes a new `ExtXVersion` tag.
     pub fn new(version: ProtocolVersion) -> Self {
         ExtXVersion { version }
     }
@@ -72,7 +72,6 @@ impl FromStr for ExtXVersion {
 
 #[cfg(test)]
 mod test {
-    use version::ProtocolVersion;
     use super::*;
 
     #[test]
@@ -85,7 +84,7 @@ mod test {
     #[test]
     fn ext_x_version() {
         let tag = ExtXVersion::new(ProtocolVersion::V6);
-        assert_eq!("#EXT-X-VERSION::6".parse::<ExtXVersion>().ok(), Some(tag));
+        assert_eq!("#EXT-X-VERSION:6".parse().ok(), Some(tag));
         assert_eq!(tag.to_string(), "#EXT-X-VERSION:6");
         assert_eq!(tag.version(), ProtocolVersion::V6);
         assert_eq!(tag.requires_version(), ProtocolVersion::V1);
