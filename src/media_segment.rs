@@ -4,10 +4,11 @@ use std::iter;
 use {ErrorKind, Result};
 use tag::{ExtInf, ExtXByteRange, ExtXDateRange, ExtXDiscontinuity, ExtXKey, ExtXMap,
           ExtXProgramDateTime, MediaSegmentTag};
+use types::SingleLineString;
 
 #[derive(Debug, Clone)]
 pub struct MediaSegmentBuilder {
-    uri: Option<String>,
+    uri: Option<SingleLineString>,
     ext_inf: Option<ExtInf>,
     ext_x_byterange: Option<ExtXByteRange>,
     ext_x_daterange: Option<ExtXDateRange>,
@@ -29,7 +30,7 @@ impl MediaSegmentBuilder {
             ext_x_program_date_time: None,
         }
     }
-    pub fn uri(&mut self, uri: String) -> &mut Self {
+    pub fn uri(&mut self, uri: SingleLineString) -> &mut Self {
         self.uri = Some(uri);
         self
     }
@@ -62,7 +63,7 @@ impl MediaSegmentBuilder {
 
 #[derive(Debug, Clone)]
 pub struct MediaSegment {
-    pub uri: String, // TODO
+    pub uri: SingleLineString,
     pub ext_inf: ExtInf,
     pub tags: Vec<MediaSegmentTag>,
 }

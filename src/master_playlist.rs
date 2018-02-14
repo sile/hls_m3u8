@@ -2,9 +2,9 @@ use std::fmt;
 use std::str::FromStr;
 
 use {Error, ErrorKind, Result};
-use line::{Line, Lines};
+use line::{Line, Lines, Tag};
 use tag::{ExtM3u, ExtXIFrameStreamInf, ExtXIndependentSegments, ExtXMedia, ExtXSessionData,
-          ExtXSessionKey, ExtXStart, ExtXStreamInf, ExtXVersion, Tag};
+          ExtXSessionKey, ExtXStart, ExtXStreamInf, ExtXVersion};
 use types::ProtocolVersion;
 
 #[derive(Debug, Clone)]
@@ -132,16 +132,14 @@ impl FromStr for MasterPlaylist {
                             track_assert_eq!(start, None, ErrorKind::InvalidInput);
                             start = Some(t);
                         }
+                        Tag::Unknown(_) => {
+                            // [6.3.1. General Client Responsibilities]
+                            // > ignore any unrecognized tags.
+                        }
                     }
                 }
                 Line::Uri(uri) => {
-                    let (line, inf) = track_assert_some!(last_stream_inf, ErrorKind::InvalidInput);
-                    track_assert_eq!(line + 1, i, ErrorKind::InvalidInput);
-                    stream_infs.push(ExtXStreamInfWithUri {
-                        inf,
-                        uri: uri.to_owned(),
-                    });
-                    last_stream_inf = None;
+                    track_panic!(ErrorKind::InvalidInput, "Unexpected URI: {:?}", uri);
                 }
             }
         }

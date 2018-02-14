@@ -368,8 +368,8 @@ impl fmt::Display for ExtXStreamInf {
 impl FromStr for ExtXStreamInf {
     type Err = Error;
     fn from_str(s: &str) -> Result<Self> {
-        let mut lines = s.splitn(2, '\n'); // TODO:
-        let first_line = lines.next().expect("Never fails");
+        let mut lines = s.splitn(2, '\n');
+        let first_line = lines.next().expect("Never fails").trim_right_matches('\r');
         let second_line = track_assert_some!(lines.next(), ErrorKind::InvalidInput);
 
         track_assert!(

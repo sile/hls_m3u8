@@ -1,19 +1,10 @@
-use {ErrorKind, Result};
-use tag::Tag;
+use std::fmt;
+use std::str::FromStr;
 
-// [rfc8216#section-4.1]
-// > Playlist files MUST be encoded in UTF-8 [RFC3629].  They MUST NOT
-// > contain any Byte Order Mark (BOM); clients SHOULD fail to parse
-// > Playlists that contain a BOM or do not parse as UTF-8.  Playlist
-// > files MUST NOT contain UTF-8 control characters (U+0000 to U+001F and
-// > U+007F to U+009F), with the exceptions of CR (U+000D) and LF
-// > (U+000A).  All character sequences MUST be normalized according to
-// > Unicode normalization form "NFC" [UNICODE].  Note that US-ASCII
-// > [US_ASCII] conforms to these rules.
-// >
-// > Lines in a Playlist file are terminated by either a single line feed
-// > character or a carriage return character followed by a line feed
-// > character.
+use {Error, ErrorKind, Result};
+use tag;
+use types::SingleLineString;
+
 #[derive(Debug)]
 pub struct Lines<'a> {
     input: &'a str,
@@ -27,9 +18,17 @@ impl<'a> Lines<'a> {
         let mut end = self.input.len();
         let mut next_start = self.input.len();
         let mut adjust = 0;
+        let mut next_line_of_ext_x_stream_inf = false;
         for (i, c) in self.input.char_indices() {
             match c {
                 '\n' => {
+                    if !next_line_of_ext_x_stream_inf
+                        && self.input.starts_with(tag::ExtXStreamInf::PREFIX)
+                    {
+                        next_line_of_ext_x_stream_inf = true;
+                        adjust = 0;
+                        continue;
+                    }
                     next_start = i + 1;
                     end = i - adjust;
                     break;
@@ -37,10 +36,8 @@ impl<'a> Lines<'a> {
                 '\r' => {
                     adjust = 1;
                 }
-                '\u{00}'...'\u{1F}' | '\u{7F}'...'\u{9f}' => {
-                    track_panic!(ErrorKind::InvalidInput);
-                }
                 _ => {
+                    track_assert!(!c.is_control(), ErrorKind::InvalidInput);
                     adjust = 0;
                 }
             }
@@ -53,7 +50,8 @@ impl<'a> Lines<'a> {
         } else if raw_line.starts_with("#") {
             Line::Comment(raw_line)
         } else {
-            Line::Uri(raw_line)
+            let uri = track!(SingleLineString::new(raw_line))?;
+            Line::Uri(uri)
         };
         self.input = &self.input[next_start..];
         Ok(line)
@@ -77,22 +75,113 @@ pub enum Line<'a> {
     Blank,
     Comment(&'a str),
     Tag(Tag),
-
-    // TODO:
-    Uri(&'a str),
+    Uri(SingleLineString),
 }
 
-// TODO
-// #[cfg(test)]
-// mod test {
-//     use super::*;
-
-//     #[test]
-//     fn it_works() {
-//         let mut lines = Lines::new("foo\nbar\r\nbaz");
-//         assert_eq!(lines.next().and_then(|x| x.ok()), Some("foo"));
-//         assert_eq!(lines.next().and_then(|x| x.ok()), Some("bar"));
-//         assert_eq!(lines.next().and_then(|x| x.ok()), Some("baz"));
-//         assert_eq!(lines.next().and_then(|x| x.ok()), None);
-//     }
-// }
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub enum Tag {
+    ExtM3u(tag::ExtM3u),
+    ExtXVersion(tag::ExtXVersion),
+    ExtInf(tag::ExtInf),
+    ExtXByteRange(tag::ExtXByteRange),
+    ExtXDiscontinuity(tag::ExtXDiscontinuity),
+    ExtXKey(tag::ExtXKey),
+    ExtXMap(tag::ExtXMap),
+    ExtXProgramDateTime(tag::ExtXProgramDateTime),
+    ExtXDateRange(tag::ExtXDateRange),
+    ExtXTargetDuration(tag::ExtXTargetDuration),
+    ExtXMediaSequence(tag::ExtXMediaSequence),
+    ExtXDiscontinuitySequence(tag::ExtXDiscontinuitySequence),
+    ExtXEndList(tag::ExtXEndList),
+    ExtXPlaylistType(tag::ExtXPlaylistType),
+    ExtXIFramesOnly(tag::ExtXIFramesOnly),
+    ExtXMedia(tag::ExtXMedia),
+    ExtXStreamInf(tag::ExtXStreamInf),
+    ExtXIFrameStreamInf(tag::ExtXIFrameStreamInf),
+    ExtXSessionData(tag::ExtXSessionData),
+    ExtXSessionKey(tag::ExtXSessionKey),
+    ExtXIndependentSegments(tag::ExtXIndependentSegments),
+    ExtXStart(tag::ExtXStart),
+    Unknown(SingleLineString),
+}
+impl fmt::Display for Tag {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        match *self {
+            Tag::ExtM3u(ref t) => t.fmt(f),
+            Tag::ExtXVersion(ref t) => t.fmt(f),
+            Tag::ExtInf(ref t) => t.fmt(f),
+            Tag::ExtXByteRange(ref t) => t.fmt(f),
+            Tag::ExtXDiscontinuity(ref t) => t.fmt(f),
+            Tag::ExtXKey(ref t) => t.fmt(f),
+            Tag::ExtXMap(ref t) => t.fmt(f),
+            Tag::ExtXProgramDateTime(ref t) => t.fmt(f),
+            Tag::ExtXDateRange(ref t) => t.fmt(f),
+            Tag::ExtXTargetDuration(ref t) => t.fmt(f),
+            Tag::ExtXMediaSequence(ref t) => t.fmt(f),
+            Tag::ExtXDiscontinuitySequence(ref t) => t.fmt(f),
+            Tag::ExtXEndList(ref t) => t.fmt(f),
+            Tag::ExtXPlaylistType(ref t) => t.fmt(f),
+            Tag::ExtXIFramesOnly(ref t) => t.fmt(f),
+            Tag::ExtXMedia(ref t) => t.fmt(f),
+            Tag::ExtXStreamInf(ref t) => t.fmt(f),
+            Tag::ExtXIFrameStreamInf(ref t) => t.fmt(f),
+            Tag::ExtXSessionData(ref t) => t.fmt(f),
+            Tag::ExtXSessionKey(ref t) => t.fmt(f),
+            Tag::ExtXIndependentSegments(ref t) => t.fmt(f),
+            Tag::ExtXStart(ref t) => t.fmt(f),
+            Tag::Unknown(ref t) => t.fmt(f),
+        }
+    }
+}
+impl FromStr for Tag {
+    type Err = Error;
+    fn from_str(s: &str) -> Result<Self> {
+        if s.starts_with(tag::ExtM3u::PREFIX) {
+            track!(s.parse().map(Tag::ExtM3u))
+        } else if s.starts_with(tag::ExtXVersion::PREFIX) {
+            track!(s.parse().map(Tag::ExtXVersion))
+        } else if s.starts_with(tag::ExtInf::PREFIX) {
+            track!(s.parse().map(Tag::ExtInf))
+        } else if s.starts_with(tag::ExtXByteRange::PREFIX) {
+            track!(s.parse().map(Tag::ExtXByteRange))
+        } else if s.starts_with(tag::ExtXDiscontinuity::PREFIX) {
+            track!(s.parse().map(Tag::ExtXDiscontinuity))
+        } else if s.starts_with(tag::ExtXKey::PREFIX) {
+            track!(s.parse().map(Tag::ExtXKey))
+        } else if s.starts_with(tag::ExtXMap::PREFIX) {
+            track!(s.parse().map(Tag::ExtXMap))
+        } else if s.starts_with(tag::ExtXProgramDateTime::PREFIX) {
+            track!(s.parse().map(Tag::ExtXProgramDateTime))
+        } else if s.starts_with(tag::ExtXTargetDuration::PREFIX) {
+            track!(s.parse().map(Tag::ExtXTargetDuration))
+        } else if s.starts_with(tag::ExtXDateRange::PREFIX) {
+            track!(s.parse().map(Tag::ExtXDateRange))
+        } else if s.starts_with(tag::ExtXMediaSequence::PREFIX) {
+            track!(s.parse().map(Tag::ExtXMediaSequence))
+        } else if s.starts_with(tag::ExtXDiscontinuitySequence::PREFIX) {
+            track!(s.parse().map(Tag::ExtXDiscontinuitySequence))
+        } else if s.starts_with(tag::ExtXEndList::PREFIX) {
+            track!(s.parse().map(Tag::ExtXEndList))
+        } else if s.starts_with(tag::ExtXPlaylistType::PREFIX) {
+            track!(s.parse().map(Tag::ExtXPlaylistType))
+        } else if s.starts_with(tag::ExtXIFramesOnly::PREFIX) {
+            track!(s.parse().map(Tag::ExtXIFramesOnly))
+        } else if s.starts_with(tag::ExtXMedia::PREFIX) {
+            track!(s.parse().map(Tag::ExtXMedia))
+        } else if s.starts_with(tag::ExtXStreamInf::PREFIX) {
+            track!(s.parse().map(Tag::ExtXStreamInf))
+        } else if s.starts_with(tag::ExtXIFrameStreamInf::PREFIX) {
+            track!(s.parse().map(Tag::ExtXIFrameStreamInf))
+        } else if s.starts_with(tag::ExtXSessionData::PREFIX) {
+            track!(s.parse().map(Tag::ExtXSessionData))
+        } else if s.starts_with(tag::ExtXSessionKey::PREFIX) {
+            track!(s.parse().map(Tag::ExtXSessionKey))
+        } else if s.starts_with(tag::ExtXIndependentSegments::PREFIX) {
+            track!(s.parse().map(Tag::ExtXIndependentSegments))
+        } else if s.starts_with(tag::ExtXStart::PREFIX) {
+            track!(s.parse().map(Tag::ExtXStart))
+        } else {
+            track!(SingleLineString::new(s)).map(Tag::Unknown)
+        }
+    }
+}

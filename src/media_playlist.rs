@@ -2,11 +2,11 @@ use std::fmt;
 use std::str::FromStr;
 
 use {Error, ErrorKind, Result};
-use line::{Line, Lines};
+use line::{Line, Lines, Tag};
 use media_segment::{MediaSegment, MediaSegmentBuilder};
 use tag::{ExtM3u, ExtXDiscontinuitySequence, ExtXEndList, ExtXIFramesOnly,
           ExtXIndependentSegments, ExtXMediaSequence, ExtXPlaylistType, ExtXStart,
-          ExtXTargetDuration, ExtXVersion, Tag};
+          ExtXTargetDuration, ExtXVersion};
 use types::ProtocolVersion;
 
 // TODO: There MUST NOT be more than one Media Playlist tag of each type in any Media Playlist.
@@ -167,10 +167,14 @@ impl FromStr for MediaPlaylist {
                             track_assert_eq!(start, None, ErrorKind::InvalidInput);
                             start = Some(t);
                         }
+                        Tag::Unknown(_) => {
+                            // [6.3.1. General Client Responsibilities]
+                            // > ignore any unrecognized tags.
+                        }
                     }
                 }
                 Line::Uri(uri) => {
-                    segment.uri(uri.to_owned());
+                    segment.uri(uri);
                     segments.push(track!(segment.finish())?);
                     segment = MediaSegmentBuilder::new();
                 }
