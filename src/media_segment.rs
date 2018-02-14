@@ -4,7 +4,7 @@ use std::iter;
 use {ErrorKind, Result};
 use tag::{ExtInf, ExtXByteRange, ExtXDateRange, ExtXDiscontinuity, ExtXKey, ExtXMap,
           ExtXProgramDateTime, MediaSegmentTag};
-use types::SingleLineString;
+use types::{ProtocolVersion, SingleLineString};
 
 #[derive(Debug, Clone)]
 pub struct MediaSegmentBuilder {
@@ -78,13 +78,17 @@ impl fmt::Display for MediaSegment {
     }
 }
 impl MediaSegment {
+    pub fn requires_version(&self) -> ProtocolVersion {
+        // TODO:
+        ProtocolVersion::V1
+    }
     pub fn uri(&self) -> &str {
         &self.uri
     }
     pub fn inf(&self) -> &ExtInf {
         &self.ext_inf
     }
-    pub fn byte_range(&self) -> Option<&ExtXByteRange> {
+    pub fn byte_range_tag(&self) -> Option<&ExtXByteRange> {
         self.tags.iter().filter_map(|t| t.as_byte_range()).nth(0)
     }
     pub fn date_range(&self) -> Option<&ExtXDateRange> {

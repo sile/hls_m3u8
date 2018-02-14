@@ -1,74 +1,274 @@
 use std::fmt;
+use std::iter;
 use std::str::FromStr;
+use std::time::Duration;
 
 use {Error, ErrorKind, Result};
 use line::{Line, Lines, Tag};
 use media_segment::{MediaSegment, MediaSegmentBuilder};
 use tag::{ExtM3u, ExtXDiscontinuitySequence, ExtXEndList, ExtXIFramesOnly,
           ExtXIndependentSegments, ExtXMediaSequence, ExtXPlaylistType, ExtXStart,
-          ExtXTargetDuration, ExtXVersion};
+          ExtXTargetDuration, ExtXVersion, MediaPlaylistTag};
 use types::ProtocolVersion;
 
-// TODO: There MUST NOT be more than one Media Playlist tag of each type in any Media Playlist.
-// TODO: A Media Playlist tag MUST NOT appear in a Master Playlist.
+/// Media playlist builder.
+#[derive(Debug, Clone)]
+pub struct MediaPlaylistBuilder {
+    version: Option<ProtocolVersion>,
+    target_duration_tag: Option<ExtXTargetDuration>,
+    media_sequence_tag: Option<ExtXMediaSequence>,
+    discontinuity_sequence_tag: Option<ExtXDiscontinuitySequence>,
+    playlist_type_tag: Option<ExtXPlaylistType>,
+    i_frames_only_tag: Option<ExtXIFramesOnly>,
+    independent_segments_tag: Option<ExtXIndependentSegments>,
+    start_tag: Option<ExtXStart>,
+    end_list_tag: Option<ExtXEndList>,
+    segments: Vec<MediaSegment>,
+}
+impl MediaPlaylistBuilder {
+    /// Makes a new `MediaPlaylistBuilder` instance.
+    pub fn new() -> Self {
+        MediaPlaylistBuilder {
+            version: None,
+            target_duration_tag: None,
+            media_sequence_tag: None,
+            discontinuity_sequence_tag: None,
+            playlist_type_tag: None,
+            i_frames_only_tag: None,
+            independent_segments_tag: None,
+            start_tag: None,
+            end_list_tag: None,
+            segments: Vec::new(),
+        }
+    }
+
+    /// Sets the protocol compatibility version of the resulting playlist.
+    ///
+    /// If the resulting playlist has tags which requires a compatibility version greater than `version`,
+    /// `finish()` method will fail with an `ErrorKind::InvalidInput` error.
+    ///
+    /// The default is the maximum version among the tags in the playlist.
+    pub fn version(&mut self, version: ProtocolVersion) -> &mut Self {
+        self.version = Some(version);
+        self
+    }
+
+    /// Sets the given tag to the resulting playlist.
+    pub fn tag<T: Into<MediaPlaylistTag>>(&mut self, tag: T) -> &mut Self {
+        match tag.into() {
+            MediaPlaylistTag::ExtXTargetDuration(t) => self.target_duration_tag = Some(t),
+            MediaPlaylistTag::ExtXMediaSequence(t) => self.media_sequence_tag = Some(t),
+            MediaPlaylistTag::ExtXDiscontinuitySequence(t) => {
+                self.discontinuity_sequence_tag = Some(t)
+            }
+            MediaPlaylistTag::ExtXPlaylistType(t) => self.playlist_type_tag = Some(t),
+            MediaPlaylistTag::ExtXIFramesOnly(t) => self.i_frames_only_tag = Some(t),
+            MediaPlaylistTag::ExtXIndependentSegments(t) => self.independent_segments_tag = Some(t),
+            MediaPlaylistTag::ExtXStart(t) => self.start_tag = Some(t),
+            MediaPlaylistTag::ExtXEndList(t) => self.end_list_tag = Some(t),
+        }
+        self
+    }
+
+    /// Adds a media segment to the resulting playlist.
+    pub fn segment(&mut self, segment: MediaSegment) -> &mut Self {
+        self.segments.push(segment);
+        self
+    }
+
+    /// Builds a `MediaPlaylist` instance.
+    pub fn finish(self) -> Result<MediaPlaylist> {
+        let required_version = self.required_version();
+        let specified_version = self.version.unwrap_or(required_version);
+        track_assert!(
+            required_version <= specified_version,
+            ErrorKind::InvalidInput,
+            "required_version:{}, specified_version:{}",
+            required_version,
+            specified_version,
+        );
+
+        let target_duration_tag =
+            track_assert_some!(self.target_duration_tag, ErrorKind::InvalidInput);
+        track!(self.validate_media_segments(target_duration_tag.duration()))?;
+
+        Ok(MediaPlaylist {
+            version_tag: ExtXVersion::new(specified_version),
+            target_duration_tag,
+            media_sequence_tag: self.media_sequence_tag,
+            discontinuity_sequence_tag: self.discontinuity_sequence_tag,
+            playlist_type_tag: self.playlist_type_tag,
+            i_frames_only_tag: self.i_frames_only_tag,
+            independent_segments_tag: self.independent_segments_tag,
+            start_tag: self.start_tag,
+            end_list_tag: self.end_list_tag,
+            segments: self.segments,
+        })
+    }
+
+    fn validate_media_segments(&self, target_duration: Duration) -> Result<()> {
+        let target_duration_seconds = target_duration.as_secs();
+
+        let mut last_range_uri = None;
+        for s in &self.segments {
+            // CHECK: `#EXT-X-TARGETDURATION`
+            let segment_duration = s.inf().duration();
+            let segment_duration_seconds = if segment_duration.subsec_nanos() < 500_000_000 {
+                segment_duration.as_secs()
+            } else {
+                segment_duration.as_secs() + 1
+            };
+            track_assert!(
+                segment_duration_seconds <= target_duration_seconds,
+                ErrorKind::InvalidInput,
+                "Too large segment duration: segment_duration={}, target_duration={}, uri={:?}",
+                segment_duration_seconds,
+                target_duration_seconds,
+                s.uri()
+            );
+
+            // CHECK: `#EXT-X-BYTE-RANGE`
+            if let Some(tag) = s.byte_range_tag() {
+                if tag.range().start.is_none() {
+                    let last_uri = track_assert_some!(last_range_uri, ErrorKind::InvalidInput);
+                    track_assert_eq!(last_uri, s.uri(), ErrorKind::InvalidInput);
+                } else {
+                    last_range_uri = Some(s.uri());
+                }
+            } else {
+                last_range_uri = None;
+            }
+        }
+        Ok(())
+    }
+
+    fn required_version(&self) -> ProtocolVersion {
+        iter::empty()
+            .chain(
+                self.target_duration_tag
+                    .iter()
+                    .map(|t| t.requires_version()),
+            )
+            .chain(self.media_sequence_tag.iter().map(|t| t.requires_version()))
+            .chain(
+                self.discontinuity_sequence_tag
+                    .iter()
+                    .map(|t| t.requires_version()),
+            )
+            .chain(self.playlist_type_tag.iter().map(|t| t.requires_version()))
+            .chain(self.i_frames_only_tag.iter().map(|t| t.requires_version()))
+            .chain(
+                self.independent_segments_tag
+                    .iter()
+                    .map(|t| t.requires_version()),
+            )
+            .chain(self.start_tag.iter().map(|t| t.requires_version()))
+            .chain(self.end_list_tag.iter().map(|t| t.requires_version()))
+            .chain(self.segments.iter().map(|s| s.requires_version()))
+            .max()
+            .expect("Never fails")
+    }
+}
+impl Default for MediaPlaylistBuilder {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
+/// Media playlist.
 #[derive(Debug, Clone)]
 pub struct MediaPlaylist {
-    pub version: ExtXVersion,
+    version_tag: ExtXVersion,
+    target_duration_tag: ExtXTargetDuration,
+    media_sequence_tag: Option<ExtXMediaSequence>,
+    discontinuity_sequence_tag: Option<ExtXDiscontinuitySequence>,
+    playlist_type_tag: Option<ExtXPlaylistType>,
+    i_frames_only_tag: Option<ExtXIFramesOnly>,
+    independent_segments_tag: Option<ExtXIndependentSegments>,
+    start_tag: Option<ExtXStart>,
+    end_list_tag: Option<ExtXEndList>,
+    segments: Vec<MediaSegment>,
+}
+impl MediaPlaylist {
+    /// Returns the `EXT-X-VERSION` tag contained in the playlist.
+    pub fn version_tag(&self) -> ExtXVersion {
+        self.version_tag
+    }
 
-    // TODO:  The EXTINF duration of each Media Segment in the Playlist
-    // file, when rounded to the nearest integer, MUST be less than or equal
-    // to the target duration
-    pub target_duration: ExtXTargetDuration,
+    /// Returns the `EXT-X-TARGETDURATION` tag contained in the playlist.
+    pub fn target_duration_tag(&self) -> ExtXTargetDuration {
+        self.target_duration_tag
+    }
 
-    // TODO: The EXT-X-MEDIA-SEQUENCE tag MUST appear before the first Media
-    // Segment in the Playlist.
-    pub media_sequence: Option<ExtXMediaSequence>,
+    /// Returns the `EXT-X-MEDIA-SEQUENCE` tag contained in the playlist.
+    pub fn media_sequence_tag(&self) -> Option<ExtXMediaSequence> {
+        self.media_sequence_tag
+    }
 
-    // TODO: The EXT-X-DISCONTINUITY-SEQUENCE tag MUST appear before the first
-    // Media Segment in the Playlist.
-    //
-    // TODO: The EXT-X-DISCONTINUITY-SEQUENCE tag MUST appear before any EXT-
-    // X-DISCONTINUITY tag.
-    pub discontinuity_sequence: Option<ExtXDiscontinuitySequence>,
+    /// Returns the `EXT-X-DISCONTINUITY-SEQUENCE` tag contained in the playlist.
+    pub fn discontinuity_sequence_tag(&self) -> Option<ExtXDiscontinuitySequence> {
+        self.discontinuity_sequence_tag
+    }
 
-    pub playlist_type: Option<ExtXPlaylistType>,
-    pub i_frames_only: Option<ExtXIFramesOnly>,
-    pub independent_segments: Option<ExtXIndependentSegments>,
-    pub start: Option<ExtXStart>,
+    /// Returns the `EXT-X-PLAYLIST-TYPE` tag contained in the playlist.
+    pub fn playlist_type_tag(&self) -> Option<ExtXPlaylistType> {
+        self.playlist_type_tag
+    }
 
-    pub segments: Vec<MediaSegment>,
+    /// Returns the `EXT-X-I-FRAMES-ONLY` tag contained in the playlist.
+    pub fn i_frames_only_tag(&self) -> Option<ExtXIFramesOnly> {
+        self.i_frames_only_tag
+    }
 
-    pub end_list: Option<ExtXEndList>,
+    /// Returns the `EXT-X-INDEPENDENT-SEGMENTS` tag contained in the playlist.
+    pub fn independent_segments_tag(&self) -> Option<ExtXIndependentSegments> {
+        self.independent_segments_tag
+    }
+
+    /// Returns the `EXT-X-START` tag contained in the playlist.
+    pub fn start_tag(&self) -> Option<ExtXStart> {
+        self.start_tag
+    }
+
+    /// Returns the `EXT-X-ENDLIST` tag contained in the playlist.
+    pub fn end_list_tag(&self) -> Option<ExtXEndList> {
+        self.end_list_tag
+    }
+
+    /// Returns the media segments contained in the playlist.
+    pub fn segments(&self) -> &[MediaSegment] {
+        &self.segments
+    }
 }
 impl fmt::Display for MediaPlaylist {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         writeln!(f, "{}", ExtM3u)?;
-        if self.version.version() != ProtocolVersion::V1 {
-            writeln!(f, "{}", self.version)?;
+        if self.version_tag.version() != ProtocolVersion::V1 {
+            writeln!(f, "{}", self.version_tag)?;
         }
-        writeln!(f, "{}", self.target_duration)?;
-        if let Some(ref t) = self.media_sequence {
+        writeln!(f, "{}", self.target_duration_tag)?;
+        if let Some(ref t) = self.media_sequence_tag {
             writeln!(f, "{}", t)?;
         }
-        if let Some(ref t) = self.discontinuity_sequence {
+        if let Some(ref t) = self.discontinuity_sequence_tag {
             writeln!(f, "{}", t)?;
         }
-        if let Some(ref t) = self.playlist_type {
+        if let Some(ref t) = self.playlist_type_tag {
             writeln!(f, "{}", t)?;
         }
-        if let Some(ref t) = self.i_frames_only {
+        if let Some(ref t) = self.i_frames_only_tag {
             writeln!(f, "{}", t)?;
         }
-        if let Some(ref t) = self.independent_segments {
+        if let Some(ref t) = self.independent_segments_tag {
             writeln!(f, "{}", t)?;
         }
-        if let Some(ref t) = self.start {
+        if let Some(ref t) = self.start_tag {
             writeln!(f, "{}", t)?;
         }
         for segment in &self.segments {
             writeln!(f, "{}", segment)?;
         }
-        if let Some(ref t) = self.end_list {
+        if let Some(ref t) = self.end_list_tag {
             writeln!(f, "{}", t)?;
         }
         Ok(())
@@ -77,18 +277,11 @@ impl fmt::Display for MediaPlaylist {
 impl FromStr for MediaPlaylist {
     type Err = Error;
     fn from_str(s: &str) -> Result<Self> {
-        let mut version = None;
-        let mut target_duration = None;
-        let mut media_sequence = None;
-        let mut discontinuity_sequence = None;
-        let mut playlist_type = None;
-        let mut i_frames_only = None;
-        let mut independent_segments = None;
-        let mut start = None;
-        let mut end_list = None;
-
+        let mut builder = MediaPlaylistBuilder::new();
         let mut segment = MediaSegmentBuilder::new();
         let mut segments = Vec::new();
+        let mut has_partial_segment = false;
+        let mut has_discontinuity_tag = false;
         for (i, line) in Lines::new(s).enumerate() {
             match track!(line)? {
                 Line::Blank | Line::Comment(_) => {}
@@ -98,59 +291,81 @@ impl FromStr for MediaPlaylist {
                         continue;
                     }
                     match tag {
-                        Tag::ExtM3u(_) => unreachable!(),
+                        Tag::ExtM3u(_) => track_panic!(ErrorKind::InvalidInput),
                         Tag::ExtXVersion(t) => {
-                            track_assert_eq!(version, None, ErrorKind::InvalidInput);
-                            version = Some(t);
+                            track_assert_eq!(builder.version, None, ErrorKind::InvalidInput);
+                            builder.version(t.version());
                         }
                         Tag::ExtInf(t) => {
+                            has_partial_segment = true;
                             segment.tag(t);
                         }
                         Tag::ExtXByteRange(t) => {
-                            // TODO: If o is not present, a previous Media Segment MUST appear in the
-                            // Playlist file and MUST be a sub-range of the same media resource, or
-                            // the Media Segment is undefined and the client MUST fail to parse the
-                            // Playlist.
+                            has_partial_segment = true;
                             segment.tag(t);
                         }
                         Tag::ExtXDiscontinuity(t) => {
+                            has_discontinuity_tag = true;
+                            has_partial_segment = true;
                             segment.tag(t);
                         }
                         Tag::ExtXKey(t) => {
+                            has_partial_segment = true;
                             segment.tag(t);
                         }
                         Tag::ExtXMap(t) => {
+                            has_partial_segment = true;
                             segment.tag(t);
                         }
                         Tag::ExtXProgramDateTime(t) => {
+                            has_partial_segment = true;
                             segment.tag(t);
                         }
                         Tag::ExtXDateRange(t) => {
+                            has_partial_segment = true;
                             segment.tag(t);
                         }
                         Tag::ExtXTargetDuration(t) => {
-                            track_assert_eq!(target_duration, None, ErrorKind::InvalidInput);
-                            target_duration = Some(t);
+                            track_assert_eq!(
+                                builder.target_duration_tag,
+                                None,
+                                ErrorKind::InvalidInput
+                            );
+                            builder.tag(t);
                         }
                         Tag::ExtXMediaSequence(t) => {
-                            track_assert_eq!(media_sequence, None, ErrorKind::InvalidInput);
-                            media_sequence = Some(t);
+                            track_assert_eq!(
+                                builder.media_sequence_tag,
+                                None,
+                                ErrorKind::InvalidInput
+                            );
+                            track_assert!(builder.segments.is_empty(), ErrorKind::InvalidInput);
+                            builder.tag(t);
                         }
                         Tag::ExtXDiscontinuitySequence(t) => {
-                            track_assert_eq!(discontinuity_sequence, None, ErrorKind::InvalidInput);
-                            discontinuity_sequence = Some(t);
+                            track_assert!(builder.segments.is_empty(), ErrorKind::InvalidInput);
+                            track_assert!(!has_discontinuity_tag, ErrorKind::InvalidInput);
+                            builder.tag(t);
                         }
                         Tag::ExtXEndList(t) => {
-                            track_assert_eq!(end_list, None, ErrorKind::InvalidInput);
-                            end_list = Some(t);
+                            track_assert_eq!(builder.end_list_tag, None, ErrorKind::InvalidInput);
+                            builder.tag(t);
                         }
                         Tag::ExtXPlaylistType(t) => {
-                            track_assert_eq!(playlist_type, None, ErrorKind::InvalidInput);
-                            playlist_type = Some(t);
+                            track_assert_eq!(
+                                builder.playlist_type_tag,
+                                None,
+                                ErrorKind::InvalidInput
+                            );
+                            builder.tag(t);
                         }
                         Tag::ExtXIFramesOnly(t) => {
-                            track_assert_eq!(i_frames_only, None, ErrorKind::InvalidInput);
-                            i_frames_only = Some(t);
+                            track_assert_eq!(
+                                builder.i_frames_only_tag,
+                                None,
+                                ErrorKind::InvalidInput
+                            );
+                            builder.tag(t);
                         }
                         Tag::ExtXMedia(_)
                         | Tag::ExtXStreamInf(_)
@@ -160,12 +375,16 @@ impl FromStr for MediaPlaylist {
                             track_panic!(ErrorKind::InvalidInput, "{}", tag)
                         }
                         Tag::ExtXIndependentSegments(t) => {
-                            track_assert_eq!(independent_segments, None, ErrorKind::InvalidInput);
-                            independent_segments = Some(t);
+                            track_assert_eq!(
+                                builder.independent_segments_tag,
+                                None,
+                                ErrorKind::InvalidInput
+                            );
+                            builder.tag(t);
                         }
                         Tag::ExtXStart(t) => {
-                            track_assert_eq!(start, None, ErrorKind::InvalidInput);
-                            start = Some(t);
+                            track_assert_eq!(builder.start_tag, None, ErrorKind::InvalidInput);
+                            builder.tag(t);
                         }
                         Tag::Unknown(_) => {
                             // [6.3.1. General Client Responsibilities]
@@ -177,23 +396,11 @@ impl FromStr for MediaPlaylist {
                     segment.uri(uri);
                     segments.push(track!(segment.finish())?);
                     segment = MediaSegmentBuilder::new();
+                    has_partial_segment = false;
                 }
             }
         }
-
-        let target_duration = track_assert_some!(target_duration, ErrorKind::InvalidInput);
-        // TODO: check compatibility
-        Ok(MediaPlaylist {
-            version: version.unwrap_or_else(|| ExtXVersion::new(ProtocolVersion::V1)),
-            target_duration,
-            media_sequence,
-            discontinuity_sequence,
-            playlist_type,
-            i_frames_only,
-            independent_segments,
-            start,
-            segments,
-            end_list,
-        })
+        track_assert!(!has_partial_segment, ErrorKind::InvalidInput);
+        track!(builder.finish())
     }
 }
