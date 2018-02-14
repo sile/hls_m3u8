@@ -1,7 +1,6 @@
 //! [4.3. Playlist Tags]
 //!
 //! [4.3. Playlist Tags]: https://tools.ietf.org/html/rfc8216#section-4.3
-use std::fmt;
 use trackable::error::ErrorKindExt;
 
 use {ErrorKind, Result};
@@ -41,7 +40,7 @@ mod media_segment;
 ///
 /// See also [4.3.5. Media or Master Playlist Tags]
 ///
-/// [4.3.4. Master Playlist Tags] https://tools.ietf.org/html/rfc8216#section-4.3.4
+/// [4.3.4. Master Playlist Tags]: https://tools.ietf.org/html/rfc8216#section-4.3.4
 /// [4.3.5. Media or Master Playlist Tags]: https://tools.ietf.org/html/rfc8216#section-4.3.5
 #[allow(missing_docs)]
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -66,7 +65,7 @@ impl_from!(MasterPlaylistTag, ExtXStart);
 ///
 /// See also [4.3.5. Media or Master Playlist Tags]
 ///
-/// [4.3.3. Media Playlist Tags] https://tools.ietf.org/html/rfc8216#section-4.3.3
+/// [4.3.3. Media Playlist Tags]: https://tools.ietf.org/html/rfc8216#section-4.3.3
 /// [4.3.5. Media or Master Playlist Tags]: https://tools.ietf.org/html/rfc8216#section-4.3.5
 #[allow(missing_docs)]
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -89,6 +88,9 @@ impl_from!(MediaPlaylistTag, ExtXIFramesOnly);
 impl_from!(MediaPlaylistTag, ExtXIndependentSegments);
 impl_from!(MediaPlaylistTag, ExtXStart);
 
+/// [4.3.2. Media Segment Tags]
+///
+/// [4.3.2. Media Segment Tags]: https://tools.ietf.org/html/rfc8216#section-4.3.2
 #[allow(missing_docs)]
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum MediaSegmentTag {
@@ -99,72 +101,6 @@ pub enum MediaSegmentTag {
     ExtXKey(ExtXKey),
     ExtXMap(ExtXMap),
     ExtXProgramDateTime(ExtXProgramDateTime),
-}
-// TODO: delete
-#[allow(missing_docs)]
-impl MediaSegmentTag {
-    pub fn as_inf(&self) -> Option<&ExtInf> {
-        if let MediaSegmentTag::ExtInf(ref t) = *self {
-            Some(t)
-        } else {
-            None
-        }
-    }
-    pub fn as_byte_range(&self) -> Option<&ExtXByteRange> {
-        if let MediaSegmentTag::ExtXByteRange(ref t) = *self {
-            Some(t)
-        } else {
-            None
-        }
-    }
-    pub fn as_date_range(&self) -> Option<&ExtXDateRange> {
-        if let MediaSegmentTag::ExtXDateRange(ref t) = *self {
-            Some(t)
-        } else {
-            None
-        }
-    }
-    pub fn as_discontinuity(&self) -> Option<&ExtXDiscontinuity> {
-        if let MediaSegmentTag::ExtXDiscontinuity(ref t) = *self {
-            Some(t)
-        } else {
-            None
-        }
-    }
-    pub fn as_key(&self) -> Option<&ExtXKey> {
-        if let MediaSegmentTag::ExtXKey(ref t) = *self {
-            Some(t)
-        } else {
-            None
-        }
-    }
-    pub fn as_map(&self) -> Option<&ExtXMap> {
-        if let MediaSegmentTag::ExtXMap(ref t) = *self {
-            Some(t)
-        } else {
-            None
-        }
-    }
-    pub fn as_program_date_time(&self) -> Option<&ExtXProgramDateTime> {
-        if let MediaSegmentTag::ExtXProgramDateTime(ref t) = *self {
-            Some(t)
-        } else {
-            None
-        }
-    }
-}
-impl fmt::Display for MediaSegmentTag {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        match *self {
-            MediaSegmentTag::ExtInf(ref t) => t.fmt(f),
-            MediaSegmentTag::ExtXByteRange(ref t) => t.fmt(f),
-            MediaSegmentTag::ExtXDateRange(ref t) => t.fmt(f),
-            MediaSegmentTag::ExtXDiscontinuity(ref t) => t.fmt(f),
-            MediaSegmentTag::ExtXKey(ref t) => t.fmt(f),
-            MediaSegmentTag::ExtXMap(ref t) => t.fmt(f),
-            MediaSegmentTag::ExtXProgramDateTime(ref t) => t.fmt(f),
-        }
-    }
 }
 impl_from!(MediaSegmentTag, ExtInf);
 impl_from!(MediaSegmentTag, ExtXByteRange);

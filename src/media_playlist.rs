@@ -112,7 +112,7 @@ impl MediaPlaylistBuilder {
         let mut last_range_uri = None;
         for s in &self.segments {
             // CHECK: `#EXT-X-TARGETDURATION`
-            let segment_duration = s.inf().duration();
+            let segment_duration = s.inf_tag().duration();
             let segment_duration_seconds = if segment_duration.subsec_nanos() < 500_000_000 {
                 segment_duration.as_secs()
             } else {
@@ -279,7 +279,6 @@ impl FromStr for MediaPlaylist {
     fn from_str(s: &str) -> Result<Self> {
         let mut builder = MediaPlaylistBuilder::new();
         let mut segment = MediaSegmentBuilder::new();
-        let mut segments = Vec::new();
         let mut has_partial_segment = false;
         let mut has_discontinuity_tag = false;
         for (i, line) in Lines::new(s).enumerate() {
@@ -394,7 +393,7 @@ impl FromStr for MediaPlaylist {
                 }
                 Line::Uri(uri) => {
                     segment.uri(uri);
-                    segments.push(track!(segment.finish())?);
+                    builder.segment(track!(segment.finish())?);
                     segment = MediaSegmentBuilder::new();
                     has_partial_segment = false;
                 }

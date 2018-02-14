@@ -13,11 +13,8 @@ extern crate trackable;
 pub use error::{Error, ErrorKind};
 pub use master_playlist::{MasterPlaylist, MasterPlaylistBuilder};
 pub use media_playlist::{MediaPlaylist, MediaPlaylistBuilder};
+pub use media_segment::{MediaSegment, MediaSegmentBuilder};
 
-pub mod segment {
-    //! Media segment.
-    pub use super::media_segment::{MediaSegment, MediaSegmentBuilder};
-}
 pub mod tag; // TODO: s/tag/tags/
 pub mod types;
 
