@@ -1,64 +1,304 @@
+use std::collections::HashSet;
+use std::iter;
 use std::fmt;
 use std::str::FromStr;
 
 use {Error, ErrorKind, Result};
 use line::{Line, Lines, Tag};
 use tag::{ExtM3u, ExtXIFrameStreamInf, ExtXIndependentSegments, ExtXMedia, ExtXSessionData,
-          ExtXSessionKey, ExtXStart, ExtXStreamInf, ExtXVersion};
-use types::ProtocolVersion;
+          ExtXSessionKey, ExtXStart, ExtXStreamInf, ExtXVersion, MasterPlaylistTag};
+use types::{ClosedCaptions, MediaType, ProtocolVersion, QuotedString};
 
+/// Master playlist builder.
 #[derive(Debug, Clone)]
-pub struct ExtXStreamInfWithUri {
-    pub inf: ExtXStreamInf,
-    pub uri: String,
+pub struct MasterPlaylistBuilder {
+    version: Option<ProtocolVersion>,
+    independent_segments_tag: Option<ExtXIndependentSegments>,
+    start_tag: Option<ExtXStart>,
+    media_tags: Vec<ExtXMedia>,
+    stream_inf_tags: Vec<ExtXStreamInf>,
+    i_frame_stream_inf_tags: Vec<ExtXIFrameStreamInf>,
+    session_data_tags: Vec<ExtXSessionData>,
+    session_key_tags: Vec<ExtXSessionKey>,
+}
+impl MasterPlaylistBuilder {
+    /// Makes a new `MasterPlaylistBuilder` instance.
+    pub fn new() -> Self {
+        MasterPlaylistBuilder {
+            version: None,
+            independent_segments_tag: None,
+            start_tag: None,
+            media_tags: Vec::new(),
+            stream_inf_tags: Vec::new(),
+            i_frame_stream_inf_tags: Vec::new(),
+            session_data_tags: Vec::new(),
+            session_key_tags: Vec::new(),
+        }
+    }
+
+    /// Sets the protocol compatibility version of the resulting playlist.
+    ///
+    /// If the resulting playlist has tags which requires a compatibility version greater than `version`,
+    /// `finish()` method will fail with an `ErrorKind::InvalidInput` error.
+    ///
+    /// The default is the maximum version among the tags in the playlist.
+    pub fn version(&mut self, version: ProtocolVersion) -> &mut Self {
+        self.version = Some(version);
+        self
+    }
+
+    /// Adds the given tag to the resulting playlist.
+    ///
+    /// If it is forbidden to have multiple instance of the tag, the existing one will be overwritten.
+    pub fn tag<T: Into<MasterPlaylistTag>>(&mut self, tag: T) -> &mut Self {
+        match tag.into() {
+            MasterPlaylistTag::ExtXIndependentSegments(t) => {
+                self.independent_segments_tag = Some(t);
+            }
+            MasterPlaylistTag::ExtXStart(t) => self.start_tag = Some(t),
+            MasterPlaylistTag::ExtXMedia(t) => self.media_tags.push(t),
+            MasterPlaylistTag::ExtXStreamInf(t) => self.stream_inf_tags.push(t),
+            MasterPlaylistTag::ExtXIFrameStreamInf(t) => self.i_frame_stream_inf_tags.push(t),
+            MasterPlaylistTag::ExtXSessionData(t) => self.session_data_tags.push(t),
+            MasterPlaylistTag::ExtXSessionKey(t) => self.session_key_tags.push(t),
+        }
+        self
+    }
+
+    /// Builds a `MasterPlaylist` instance.
+    pub fn finish(self) -> Result<MasterPlaylist> {
+        let required_version = self.required_version();
+        let specified_version = self.version.unwrap_or(required_version);
+        track_assert!(
+            required_version <= specified_version,
+            ErrorKind::InvalidInput,
+            "required_version:{}, specified_version:{}",
+            required_version,
+            specified_version,
+        );
+
+        track!(self.validate_stream_inf_tags())?;
+        track!(self.validate_i_frame_stream_inf_tags())?;
+        track!(self.validate_session_data_tags())?;
+        track!(self.validate_session_key_tags())?;
+
+        Ok(MasterPlaylist {
+            version_tag: ExtXVersion::new(specified_version),
+            independent_segments_tag: self.independent_segments_tag,
+            start_tag: self.start_tag,
+            media_tags: self.media_tags,
+            stream_inf_tags: self.stream_inf_tags,
+            i_frame_stream_inf_tags: self.i_frame_stream_inf_tags,
+            session_data_tags: self.session_data_tags,
+            session_key_tags: self.session_key_tags,
+        })
+    }
+
+    fn required_version(&self) -> ProtocolVersion {
+        iter::empty()
+            .chain(
+                self.independent_segments_tag
+                    .iter()
+                    .map(|t| t.requires_version()),
+            )
+            .chain(self.start_tag.iter().map(|t| t.requires_version()))
+            .chain(self.media_tags.iter().map(|t| t.requires_version()))
+            .chain(self.stream_inf_tags.iter().map(|t| t.requires_version()))
+            .chain(
+                self.i_frame_stream_inf_tags
+                    .iter()
+                    .map(|t| t.requires_version()),
+            )
+            .chain(self.session_data_tags.iter().map(|t| t.requires_version()))
+            .chain(self.session_key_tags.iter().map(|t| t.requires_version()))
+            .max()
+            .expect("Never fails")
+    }
+
+    fn validate_stream_inf_tags(&self) -> Result<()> {
+        let mut has_none_closed_captions = false;
+        for t in &self.stream_inf_tags {
+            if let Some(group_id) = t.audio() {
+                track_assert!(
+                    self.check_media_group(MediaType::Audio, group_id),
+                    ErrorKind::InvalidInput,
+                    "Unmatched audio group: {:?}",
+                    group_id
+                );
+            }
+            if let Some(group_id) = t.video() {
+                track_assert!(
+                    self.check_media_group(MediaType::Video, group_id),
+                    ErrorKind::InvalidInput,
+                    "Unmatched video group: {:?}",
+                    group_id
+                );
+            }
+            if let Some(group_id) = t.subtitles() {
+                track_assert!(
+                    self.check_media_group(MediaType::Subtitles, group_id),
+                    ErrorKind::InvalidInput,
+                    "Unmatched subtitles group: {:?}",
+                    group_id
+                );
+            }
+            match t.closed_captions() {
+                Some(&ClosedCaptions::GroupId(ref group_id)) => {
+                    track_assert!(
+                        self.check_media_group(MediaType::ClosedCaptions, group_id),
+                        ErrorKind::InvalidInput,
+                        "Unmatched closed-captions group: {:?}",
+                        group_id
+                    );
+                }
+                Some(&ClosedCaptions::None) => {
+                    has_none_closed_captions = true;
+                }
+                None => {}
+            }
+        }
+        if has_none_closed_captions {
+            track_assert!(
+                self.stream_inf_tags
+                    .iter()
+                    .all(|t| t.closed_captions() == Some(&ClosedCaptions::None)),
+                ErrorKind::InvalidInput
+            );
+        }
+        Ok(())
+    }
+
+    fn validate_i_frame_stream_inf_tags(&self) -> Result<()> {
+        for t in &self.i_frame_stream_inf_tags {
+            if let Some(group_id) = t.video() {
+                track_assert!(
+                    self.check_media_group(MediaType::Video, group_id),
+                    ErrorKind::InvalidInput,
+                    "Unmatched video group: {:?}",
+                    group_id
+                );
+            }
+        }
+        Ok(())
+    }
+
+    fn validate_session_data_tags(&self) -> Result<()> {
+        let mut set = HashSet::new();
+        for t in &self.session_data_tags {
+            track_assert!(
+                set.insert((t.data_id(), t.language())),
+                ErrorKind::InvalidInput,
+                "Conflict: {}",
+                t
+            );
+        }
+        Ok(())
+    }
+
+    fn validate_session_key_tags(&self) -> Result<()> {
+        let mut set = HashSet::new();
+        for t in &self.session_key_tags {
+            track_assert!(
+                set.insert(t.key()),
+                ErrorKind::InvalidInput,
+                "Conflict: {}",
+                t
+            );
+        }
+        Ok(())
+    }
+
+    fn check_media_group(&self, media_type: MediaType, group_id: &QuotedString) -> bool {
+        self.media_tags
+            .iter()
+            .find(|t| t.media_type() == media_type && t.group_id() == group_id)
+            .is_some()
+    }
+}
+impl Default for MasterPlaylistBuilder {
+    fn default() -> Self {
+        Self::new()
+    }
 }
 
+/// Master playlist.
 #[derive(Debug, Clone)]
 pub struct MasterPlaylist {
-    pub version: ExtXVersion,
-    pub media_tags: Vec<ExtXMedia>,
-    pub stream_infs: Vec<ExtXStreamInfWithUri>,
-    pub i_frame_stream_infs: Vec<ExtXIFrameStreamInf>,
+    version_tag: ExtXVersion,
+    independent_segments_tag: Option<ExtXIndependentSegments>,
+    start_tag: Option<ExtXStart>,
+    media_tags: Vec<ExtXMedia>,
+    stream_inf_tags: Vec<ExtXStreamInf>,
+    i_frame_stream_inf_tags: Vec<ExtXIFrameStreamInf>,
+    session_data_tags: Vec<ExtXSessionData>,
+    session_key_tags: Vec<ExtXSessionKey>,
+}
+impl MasterPlaylist {
+    /// Returns the `EXT-X-VERSION` tag contained in the playlist.
+    pub fn version_tag(&self) -> ExtXVersion {
+        self.version_tag
+    }
 
-    // TODO: A Playlist MUST NOT contain more than one EXT-X-
-    // SESSION-DATA tag with the same DATA-ID attribute and the same
-    // LANGUAGE attribute.
-    pub session_data_tags: Vec<ExtXSessionData>,
+    /// Returns the `EXT-X-INDEPENDENT-SEGMENTS` tag contained in the playlist.
+    pub fn independent_segments_tag(&self) -> Option<ExtXIndependentSegments> {
+        self.independent_segments_tag
+    }
 
-    // TODO: A Master Playlist MUST NOT contain more than one EXT-X-SESSION-KEY
-    // tag with the same METHOD, URI, IV, KEYFORMAT, and KEYFORMATVERSIONS
-    // attribute values.
-    pub session_keys: Vec<ExtXSessionKey>,
+    /// Returns the `EXT-X-START` tag contained in the playlist.
+    pub fn start_tag(&self) -> Option<ExtXStart> {
+        self.start_tag
+    }
 
-    pub independent_segments: Option<ExtXIndependentSegments>,
-    pub start: Option<ExtXStart>,
+    /// Returns the `EXT-X-MEDIA` tags contained in the playlist.
+    pub fn media_tags(&self) -> &[ExtXMedia] {
+        &self.media_tags
+    }
+
+    /// Returns the `EXT-X-STREAM-INF` tags contained in the playlist.
+    pub fn stream_inf_tags(&self) -> &[ExtXStreamInf] {
+        &self.stream_inf_tags
+    }
+
+    /// Returns the `EXT-X-I-FRAME-STREAM-INF` tags contained in the playlist.
+    pub fn i_fream_stream_inf_tags(&self) -> &[ExtXIFrameStreamInf] {
+        &self.i_frame_stream_inf_tags
+    }
+
+    /// Returns the `EXT-X-SESSION-DATA` tags contained in the playlist.
+    pub fn session_data_tags(&self) -> &[ExtXSessionData] {
+        &self.session_data_tags
+    }
+
+    /// Returns the `EXT-X-SESSION-KEY` tags contained in the playlist.
+    pub fn session_key_tags(&self) -> &[ExtXSessionKey] {
+        &self.session_key_tags
+    }
 }
 impl fmt::Display for MasterPlaylist {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         writeln!(f, "{}", ExtM3u)?;
-        if self.version.version() != ProtocolVersion::V1 {
-            writeln!(f, "{}", self.version)?;
+        if self.version_tag.version() != ProtocolVersion::V1 {
+            writeln!(f, "{}", self.version_tag)?;
         }
         for t in &self.media_tags {
             writeln!(f, "{}", t)?;
         }
-        for t in &self.stream_infs {
-            writeln!(f, "{}", t.inf)?;
-            writeln!(f, "{}", t.uri)?;
+        for t in &self.stream_inf_tags {
+            writeln!(f, "{}", t)?;
         }
-        for t in &self.i_frame_stream_infs {
+        for t in &self.i_frame_stream_inf_tags {
             writeln!(f, "{}", t)?;
         }
         for t in &self.session_data_tags {
             writeln!(f, "{}", t)?;
         }
-        for t in &self.session_keys {
+        for t in &self.session_key_tags {
             writeln!(f, "{}", t)?;
         }
-        if let Some(ref t) = self.independent_segments {
+        if let Some(ref t) = self.independent_segments_tag {
             writeln!(f, "{}", t)?;
         }
-        if let Some(ref t) = self.start {
+        if let Some(ref t) = self.start_tag {
             writeln!(f, "{}", t)?;
         }
         Ok(())
@@ -67,16 +307,7 @@ impl fmt::Display for MasterPlaylist {
 impl FromStr for MasterPlaylist {
     type Err = Error;
     fn from_str(s: &str) -> Result<Self> {
-        let mut version = None;
-        let mut media_tags = Vec::new();
-        let mut stream_infs = Vec::new();
-        let mut i_frame_stream_infs = Vec::new();
-        let mut session_data_tags = Vec::new();
-        let mut session_keys = Vec::new();
-        let mut independent_segments = None;
-        let mut start = None;
-
-        let mut last_stream_inf = None;
+        let mut builder = MasterPlaylistBuilder::new();
         for (i, line) in Lines::new(s).enumerate() {
             match track!(line)? {
                 Line::Blank | Line::Comment(_) => {}
@@ -86,10 +317,12 @@ impl FromStr for MasterPlaylist {
                         continue;
                     }
                     match tag {
-                        Tag::ExtM3u(_) => unreachable!(),
+                        Tag::ExtM3u(_) => {
+                            track_panic!(ErrorKind::InvalidInput);
+                        }
                         Tag::ExtXVersion(t) => {
-                            track_assert_eq!(version, None, ErrorKind::InvalidInput);
-                            version = Some(t);
+                            track_assert_eq!(builder.version, None, ErrorKind::InvalidInput);
+                            builder.version(t.version());
                         }
                         Tag::ExtInf(_)
                         | Tag::ExtXByteRange(_)
@@ -107,30 +340,31 @@ impl FromStr for MasterPlaylist {
                             track_panic!(ErrorKind::InvalidInput, "{}", tag)
                         }
                         Tag::ExtXMedia(t) => {
-                            media_tags.push(t);
+                            builder.tag(t);
                         }
                         Tag::ExtXStreamInf(t) => {
-                            // TODO: It MUST match the value of the GROUP-ID attribute of an EXT-X-MEDIA tag
-                            track_assert_eq!(last_stream_inf, None, ErrorKind::InvalidInput);
-                            last_stream_inf = Some((i, t));
+                            builder.tag(t);
                         }
                         Tag::ExtXIFrameStreamInf(t) => {
-                            // TODO: It MUST match the value of the GROUP-ID attribute of an EXT-X-MEDIA tag
-                            i_frame_stream_infs.push(t);
+                            builder.tag(t);
                         }
                         Tag::ExtXSessionData(t) => {
-                            session_data_tags.push(t);
+                            builder.tag(t);
                         }
                         Tag::ExtXSessionKey(t) => {
-                            session_keys.push(t);
+                            builder.tag(t);
                         }
                         Tag::ExtXIndependentSegments(t) => {
-                            track_assert_eq!(independent_segments, None, ErrorKind::InvalidInput);
-                            independent_segments = Some(t);
+                            track_assert_eq!(
+                                builder.independent_segments_tag,
+                                None,
+                                ErrorKind::InvalidInput
+                            );
+                            builder.tag(t);
                         }
                         Tag::ExtXStart(t) => {
-                            track_assert_eq!(start, None, ErrorKind::InvalidInput);
-                            start = Some(t);
+                            track_assert_eq!(builder.start_tag, None, ErrorKind::InvalidInput);
+                            builder.tag(t);
                         }
                         Tag::Unknown(_) => {
                             // [6.3.1. General Client Responsibilities]
@@ -143,17 +377,6 @@ impl FromStr for MasterPlaylist {
                 }
             }
         }
-
-        // TODO: check compatibility
-        Ok(MasterPlaylist {
-            version: version.unwrap_or_else(|| ExtXVersion::new(ProtocolVersion::V1)),
-            media_tags,
-            stream_infs,
-            i_frame_stream_infs,
-            session_data_tags,
-            session_keys,
-            independent_segments,
-            start,
-        })
+        track!(builder.finish())
     }
 }

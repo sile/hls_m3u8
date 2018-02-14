@@ -37,6 +37,31 @@ mod media_or_master_playlist;
 mod media_playlist;
 mod media_segment;
 
+/// [4.3.4. Master Playlist Tags]
+///
+/// See also [4.3.5. Media or Master Playlist Tags]
+///
+/// [4.3.4. Master Playlist Tags] https://tools.ietf.org/html/rfc8216#section-4.3.4
+/// [4.3.5. Media or Master Playlist Tags]: https://tools.ietf.org/html/rfc8216#section-4.3.5
+#[allow(missing_docs)]
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub enum MasterPlaylistTag {
+    ExtXMedia(ExtXMedia),
+    ExtXStreamInf(ExtXStreamInf),
+    ExtXIFrameStreamInf(ExtXIFrameStreamInf),
+    ExtXSessionData(ExtXSessionData),
+    ExtXSessionKey(ExtXSessionKey),
+    ExtXIndependentSegments(ExtXIndependentSegments),
+    ExtXStart(ExtXStart),
+}
+impl_from!(MasterPlaylistTag, ExtXMedia);
+impl_from!(MasterPlaylistTag, ExtXStreamInf);
+impl_from!(MasterPlaylistTag, ExtXIFrameStreamInf);
+impl_from!(MasterPlaylistTag, ExtXSessionData);
+impl_from!(MasterPlaylistTag, ExtXSessionKey);
+impl_from!(MasterPlaylistTag, ExtXIndependentSegments);
+impl_from!(MasterPlaylistTag, ExtXStart);
+
 #[allow(missing_docs)]
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum MediaSegmentTag {

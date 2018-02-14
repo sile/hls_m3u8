@@ -11,7 +11,7 @@ extern crate chrono;
 extern crate trackable;
 
 pub use error::{Error, ErrorKind};
-pub use master_playlist::MasterPlaylist;
+pub use master_playlist::{MasterPlaylist, MasterPlaylistBuilder};
 pub use media_playlist::MediaPlaylist;
 
 pub mod segment {
