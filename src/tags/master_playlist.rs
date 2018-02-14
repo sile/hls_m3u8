@@ -7,11 +7,155 @@ use types::{ClosedCaptions, DecimalFloatingPoint, DecimalResolution, DecryptionK
             InStreamId, MediaType, ProtocolVersion, QuotedString, SessionData, SingleLineString};
 use super::{parse_yes_or_no, parse_u64};
 
+/// `ExtXMedia` builder.
+#[derive(Debug, Clone)]
+pub struct ExtXMediaBuilder {
+    media_type: Option<MediaType>,
+    uri: Option<QuotedString>,
+    group_id: Option<QuotedString>,
+    language: Option<QuotedString>,
+    assoc_language: Option<QuotedString>,
+    name: Option<QuotedString>,
+    default: bool,
+    autoselect: Option<bool>,
+    forced: Option<bool>,
+    instream_id: Option<InStreamId>,
+    characteristics: Option<QuotedString>,
+    channels: Option<QuotedString>,
+}
+impl ExtXMediaBuilder {
+    /// Makes a `ExtXMediaBuilder` instance.
+    pub fn new() -> Self {
+        ExtXMediaBuilder {
+            media_type: None,
+            uri: None,
+            group_id: None,
+            language: None,
+            assoc_language: None,
+            name: None,
+            default: false,
+            autoselect: None,
+            forced: None,
+            instream_id: None,
+            characteristics: None,
+            channels: None,
+        }
+    }
+
+    /// Sets the media type of the rendition.
+    pub fn media_type(&mut self, media_type: MediaType) -> &mut Self {
+        self.media_type = Some(media_type);
+        self
+    }
+
+    /// Sets the identifier that specifies the group to which the rendition belongs.
+    pub fn group_id(&mut self, group_id: QuotedString) -> &mut Self {
+        self.group_id = Some(group_id);
+        self
+    }
+
+    /// Sets a human-readable description of the rendition.
+    pub fn name(&mut self, name: QuotedString) -> &mut Self {
+        self.name = Some(name);
+        self
+    }
+
+    /// Sets the URI that identifies the media playlist.
+    pub fn uri(&mut self, uri: QuotedString) -> &mut Self {
+        self.uri = Some(uri);
+        self
+    }
+
+    /// Sets the name of the primary language used in the rendition.
+    pub fn language(&mut self, language: QuotedString) -> &mut Self {
+        self.language = Some(language);
+        self
+    }
+
+    /// Sets the name of a language associated with the rendition.
+    pub fn assoc_language(&mut self, language: QuotedString) -> &mut Self {
+        self.assoc_language = Some(language);
+        self
+    }
+
+    /// Sets the value of the `default` flag.
+    pub fn default(&mut self, b: bool) -> &mut Self {
+        self.default = b;
+        self
+    }
+
+    /// Sets the value of the `autoselect` flag.
+    pub fn autoselect(&mut self, b: bool) -> &mut Self {
+        self.autoselect = Some(b);
+        self
+    }
+
+    /// Sets the value of the `forced` flag.
+    pub fn forced(&mut self, b: bool) -> &mut Self {
+        self.forced = Some(b);
+        self
+    }
+
+    /// Sets the identifier that specifies a rendition within the segments in the media playlist.
+    pub fn instream_id(&mut self, id: InStreamId) -> &mut Self {
+        self.instream_id = Some(id);
+        self
+    }
+
+    /// Sets the string that represents uniform type identifiers (UTI).
+    pub fn characteristics(&mut self, characteristics: QuotedString) -> &mut Self {
+        self.characteristics = Some(characteristics);
+        self
+    }
+
+    /// Sets the string that represents the parameters of the rendition.
+    pub fn channels(&mut self, channels: QuotedString) -> &mut Self {
+        self.channels = Some(channels);
+        self
+    }
+
+    /// Builds a `ExtXMedia` instance.
+    pub fn finish(self) -> Result<ExtXMedia> {
+        let media_type = track_assert_some!(self.media_type, ErrorKind::InvalidInput);
+        let group_id = track_assert_some!(self.group_id, ErrorKind::InvalidInput);
+        let name = track_assert_some!(self.name, ErrorKind::InvalidInput);
+        if MediaType::ClosedCaptions == media_type {
+            track_assert_ne!(self.uri, None, ErrorKind::InvalidInput);
+            track_assert!(self.instream_id.is_some(), ErrorKind::InvalidInput);
+        } else {
+            track_assert!(self.instream_id.is_none(), ErrorKind::InvalidInput);
+        }
+        if self.default && self.autoselect.is_some() {
+            track_assert_eq!(self.autoselect, Some(true), ErrorKind::InvalidInput);
+        }
+        if MediaType::Subtitles != media_type {
+            track_assert_eq!(self.forced, None, ErrorKind::InvalidInput);
+        }
+        Ok(ExtXMedia {
+            media_type,
+            uri: self.uri,
+            group_id,
+            language: self.language,
+            assoc_language: self.assoc_language,
+            name,
+            default: self.default,
+            autoselect: self.autoselect.unwrap_or(false),
+            forced: self.forced.unwrap_or(false),
+            instream_id: self.instream_id,
+            characteristics: self.characteristics,
+            channels: self.channels,
+        })
+    }
+}
+impl Default for ExtXMediaBuilder {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 /// [4.3.4.1. EXT-X-MEDIA]
 ///
 /// [4.3.4.1. EXT-X-MEDIA]: https://tools.ietf.org/html/rfc8216#section-4.3.4.1
-///
-/// TODO: Add `ExtXMediaBuilder`
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub struct ExtXMedia {
     media_type: MediaType,
@@ -164,72 +308,55 @@ impl FromStr for ExtXMedia {
     fn from_str(s: &str) -> Result<Self> {
         track_assert!(s.starts_with(Self::PREFIX), ErrorKind::InvalidInput);
 
-        let mut media_type = None;
-        let mut uri = None;
-        let mut group_id = None;
-        let mut language = None;
-        let mut assoc_language = None;
-        let mut name = None;
-        let mut default = false;
-        let mut autoselect = None;
-        let mut forced = None;
-        let mut instream_id = None;
-        let mut characteristics = None;
-        let mut channels = None;
+        let mut builder = ExtXMediaBuilder::new();
         let attrs = AttributePairs::parse(s.split_at(Self::PREFIX.len()).1);
         for attr in attrs {
             let (key, value) = track!(attr)?;
             match key {
-                "TYPE" => media_type = Some(track!(value.parse())?),
-                "URI" => uri = Some(track!(value.parse())?),
-                "GROUP-ID" => group_id = Some(track!(value.parse())?),
-                "LANGUAGE" => language = Some(track!(value.parse())?),
-                "ASSOC-LANGUAGE" => assoc_language = Some(track!(value.parse())?),
-                "NAME" => name = Some(track!(value.parse())?),
-                "DEFAULT" => default = track!(parse_yes_or_no(value))?,
-                "AUTOSELECT" => autoselect = Some(track!(parse_yes_or_no(value))?),
-                "FORCED" => forced = Some(track!(parse_yes_or_no(value))?),
+                "TYPE" => {
+                    builder.media_type(track!(value.parse())?);
+                }
+                "URI" => {
+                    builder.uri(track!(value.parse())?);
+                }
+                "GROUP-ID" => {
+                    builder.group_id(track!(value.parse())?);
+                }
+                "LANGUAGE" => {
+                    builder.language(track!(value.parse())?);
+                }
+                "ASSOC-LANGUAGE" => {
+                    builder.assoc_language(track!(value.parse())?);
+                }
+                "NAME" => {
+                    builder.name(track!(value.parse())?);
+                }
+                "DEFAULT" => {
+                    builder.default(track!(parse_yes_or_no(value))?);
+                }
+                "AUTOSELECT" => {
+                    builder.autoselect(track!(parse_yes_or_no(value))?);
+                }
+                "FORCED" => {
+                    builder.forced(track!(parse_yes_or_no(value))?);
+                }
                 "INSTREAM-ID" => {
                     let s: QuotedString = track!(value.parse())?;
-                    instream_id = Some(track!(s.parse())?);
+                    builder.instream_id(track!(s.parse())?);
                 }
-                "CHARACTERISTICS" => characteristics = Some(track!(value.parse())?),
-                "CHANNELS" => channels = Some(track!(value.parse())?),
+                "CHARACTERISTICS" => {
+                    builder.characteristics(track!(value.parse())?);
+                }
+                "CHANNELS" => {
+                    builder.channels(track!(value.parse())?);
+                }
                 _ => {
                     // [6.3.1. General Client Responsibilities]
                     // > ignore any attribute/value pair with an unrecognized AttributeName.
                 }
             }
         }
-        let media_type = track_assert_some!(media_type, ErrorKind::InvalidInput);
-        let group_id = track_assert_some!(group_id, ErrorKind::InvalidInput);
-        let name = track_assert_some!(name, ErrorKind::InvalidInput);
-        if MediaType::ClosedCaptions == media_type {
-            track_assert_ne!(uri, None, ErrorKind::InvalidInput);
-            track_assert!(instream_id.is_some(), ErrorKind::InvalidInput);
-        } else {
-            track_assert!(instream_id.is_none(), ErrorKind::InvalidInput);
-        }
-        if default && autoselect.is_some() {
-            track_assert_eq!(autoselect, Some(true), ErrorKind::InvalidInput);
-        }
-        if MediaType::Subtitles != media_type {
-            track_assert_eq!(forced, None, ErrorKind::InvalidInput);
-        }
-        Ok(ExtXMedia {
-            media_type,
-            uri,
-            group_id,
-            language,
-            assoc_language,
-            name,
-            default,
-            autoselect: autoselect.unwrap_or(false),
-            forced: forced.unwrap_or(false),
-            instream_id,
-            characteristics,
-            channels,
-        })
+        track!(builder.finish())
     }
 }
 
