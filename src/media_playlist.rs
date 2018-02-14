@@ -6,9 +6,9 @@ use std::time::Duration;
 use {Error, ErrorKind, Result};
 use line::{Line, Lines, Tag};
 use media_segment::{MediaSegment, MediaSegmentBuilder};
-use tag::{ExtM3u, ExtXDiscontinuitySequence, ExtXEndList, ExtXIFramesOnly,
-          ExtXIndependentSegments, ExtXMediaSequence, ExtXPlaylistType, ExtXStart,
-          ExtXTargetDuration, ExtXVersion, MediaPlaylistTag};
+use tags::{ExtM3u, ExtXDiscontinuitySequence, ExtXEndList, ExtXIFramesOnly,
+           ExtXIndependentSegments, ExtXMediaSequence, ExtXPlaylistType, ExtXStart,
+           ExtXTargetDuration, ExtXVersion, MediaPlaylistTag};
 use types::ProtocolVersion;
 
 /// Media playlist builder.

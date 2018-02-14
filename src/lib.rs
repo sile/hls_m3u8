@@ -15,7 +15,7 @@ pub use master_playlist::{MasterPlaylist, MasterPlaylistBuilder};
 pub use media_playlist::{MediaPlaylist, MediaPlaylistBuilder};
 pub use media_segment::{MediaSegment, MediaSegmentBuilder};
 
-pub mod tag; // TODO: s/tag/tags/
+pub mod tags;
 pub mod types;
 
 mod attribute;

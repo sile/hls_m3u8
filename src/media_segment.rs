@@ -2,8 +2,8 @@ use std::fmt;
 use std::iter;
 
 use {ErrorKind, Result};
-use tag::{ExtInf, ExtXByteRange, ExtXDateRange, ExtXDiscontinuity, ExtXKey, ExtXMap,
-          ExtXProgramDateTime, MediaSegmentTag};
+use tags::{ExtInf, ExtXByteRange, ExtXDateRange, ExtXDiscontinuity, ExtXKey, ExtXMap,
+           ExtXProgramDateTime, MediaSegmentTag};
 use types::{ProtocolVersion, SingleLineString};
 
 /// Media segment builder.

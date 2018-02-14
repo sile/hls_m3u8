@@ -5,8 +5,8 @@ use std::str::FromStr;
 
 use {Error, ErrorKind, Result};
 use line::{Line, Lines, Tag};
-use tag::{ExtM3u, ExtXIFrameStreamInf, ExtXIndependentSegments, ExtXMedia, ExtXSessionData,
-          ExtXSessionKey, ExtXStart, ExtXStreamInf, ExtXVersion, MasterPlaylistTag};
+use tags::{ExtM3u, ExtXIFrameStreamInf, ExtXIndependentSegments, ExtXMedia, ExtXSessionData,
+           ExtXSessionKey, ExtXStart, ExtXStreamInf, ExtXVersion, MasterPlaylistTag};
 use types::{ClosedCaptions, MediaType, ProtocolVersion, QuotedString};
 
 /// Master playlist builder.
