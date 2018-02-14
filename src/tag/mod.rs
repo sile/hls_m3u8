@@ -229,3 +229,11 @@ impl FromStr for Tag {
         }
     }
 }
+
+fn parse_yes_or_no(s: &str) -> Result<bool> {
+    match s {
+        "YES" => Ok(true),
+        "NO" => Ok(false),
+        _ => track_panic!(ErrorKind::InvalidInput, "Unexpected value: {:?}", s),
+    }
+}

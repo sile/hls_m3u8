@@ -4,8 +4,9 @@ use std::str::FromStr;
 use {Error, ErrorKind, Result};
 use attribute::{AttributePairs, DecimalFloatingPoint, DecimalInteger, DecimalResolution,
                 QuotedString};
-use types::{ClosedCaptions, DecryptionKey, HdcpLevel, InStreamId, M3u8String, MediaType,
-            ProtocolVersion, SessionData, YesOrNo};
+use types::{ClosedCaptions, DecryptionKey, HdcpLevel, InStreamId, MediaType, ProtocolVersion,
+            SessionData, SingleLineString};
+use super::parse_yes_or_no;
 
 /// [4.3.4.1. EXT-X-MEDIA]
 ///
@@ -20,9 +21,9 @@ pub struct ExtXMedia {
     language: Option<QuotedString>,
     assoc_language: Option<QuotedString>,
     name: QuotedString,
-    default: YesOrNo,
-    autoselect: YesOrNo,
-    forced: YesOrNo,
+    default: bool,
+    autoselect: bool,
+    forced: bool,
     instream_id: Option<InStreamId>,
     characteristics: Option<QuotedString>,
     channels: Option<QuotedString>,
@@ -39,9 +40,9 @@ impl ExtXMedia {
             language: None,
             assoc_language: None,
             name,
-            default: YesOrNo::No,
-            autoselect: YesOrNo::No,
-            forced: YesOrNo::No,
+            default: false,
+            autoselect: false,
+            forced: false,
             instream_id: None,
             characteristics: None,
             channels: None,
@@ -79,18 +80,18 @@ impl ExtXMedia {
     }
 
     /// Returns whether this is the default rendition.
-    pub fn default(&self) -> YesOrNo {
+    pub fn default(&self) -> bool {
         self.default
     }
 
     /// Returns whether the client may choose to
     /// play this rendition in the absence of explicit user preference.
-    pub fn autoselect(&self) -> YesOrNo {
+    pub fn autoselect(&self) -> bool {
         self.autoselect
     }
 
     /// Returns whether the rendition contains content that is considered essential to play.
-    pub fn forced(&self) -> YesOrNo {
+    pub fn forced(&self) -> bool {
         self.forced
     }
 
@@ -138,13 +139,13 @@ impl fmt::Display for ExtXMedia {
             write!(f, ",ASSOC-LANGUAGE={}", x)?;
         }
         write!(f, ",NAME={}", self.name)?;
-        if YesOrNo::Yes == self.default {
+        if self.default {
             write!(f, ",DEFAULT=YES")?;
         }
-        if YesOrNo::Yes == self.autoselect {
+        if self.autoselect {
             write!(f, ",AUTOSELECT=YES")?;
         }
-        if YesOrNo::Yes == self.forced {
+        if self.forced {
             write!(f, ",FORCED=YES")?;
         }
         if let Some(ref x) = self.instream_id {
@@ -170,7 +171,7 @@ impl FromStr for ExtXMedia {
         let mut language = None;
         let mut assoc_language = None;
         let mut name = None;
-        let mut default = None;
+        let mut default = false;
         let mut autoselect = None;
         let mut forced = None;
         let mut instream_id = None;
@@ -186,9 +187,9 @@ impl FromStr for ExtXMedia {
                 "LANGUAGE" => language = Some(track!(value.parse())?),
                 "ASSOC-LANGUAGE" => assoc_language = Some(track!(value.parse())?),
                 "NAME" => name = Some(track!(value.parse())?),
-                "DEFAULT" => default = Some(track!(value.parse())?),
-                "AUTOSELECT" => autoselect = Some(track!(value.parse())?),
-                "FORCED" => forced = Some(track!(value.parse())?),
+                "DEFAULT" => default = track!(parse_yes_or_no(value))?,
+                "AUTOSELECT" => autoselect = Some(track!(parse_yes_or_no(value))?),
+                "FORCED" => forced = Some(track!(parse_yes_or_no(value))?),
                 "INSTREAM-ID" => {
                     let s: QuotedString = track!(value.parse())?;
                     instream_id = Some(track!(s.as_str().parse())?);
@@ -210,8 +211,8 @@ impl FromStr for ExtXMedia {
         } else {
             track_assert!(instream_id.is_none(), ErrorKind::InvalidInput);
         }
-        if default == Some(YesOrNo::Yes) && autoselect.is_some() {
-            track_assert_eq!(autoselect, Some(YesOrNo::Yes), ErrorKind::InvalidInput);
+        if default && autoselect.is_some() {
+            track_assert_eq!(autoselect, Some(true), ErrorKind::InvalidInput);
         }
         if MediaType::Subtitles != media_type {
             track_assert_eq!(forced, None, ErrorKind::InvalidInput);
@@ -223,9 +224,9 @@ impl FromStr for ExtXMedia {
             language,
             assoc_language,
             name,
-            default: default.unwrap_or(YesOrNo::No),
-            autoselect: autoselect.unwrap_or(YesOrNo::No),
-            forced: forced.unwrap_or(YesOrNo::No),
+            default,
+            autoselect: autoselect.unwrap_or(false),
+            forced: forced.unwrap_or(false),
             instream_id,
             characteristics,
             channels,
@@ -238,7 +239,7 @@ impl FromStr for ExtXMedia {
 /// [4.3.4.2. EXT-X-STREAM-INF]: https://tools.ietf.org/html/rfc8216#section-4.3.4.2
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct ExtXStreamInf {
-    uri: M3u8String,
+    uri: SingleLineString,
     bandwidth: DecimalInteger,
     average_bandwidth: Option<DecimalInteger>,
     codecs: Option<QuotedString>,
@@ -254,7 +255,7 @@ impl ExtXStreamInf {
     pub(crate) const PREFIX: &'static str = "#EXT-X-STREAM-INF:";
 
     /// Makes a new `ExtXStreamInf` tag.
-    pub fn new(uri: M3u8String, bandwidth: DecimalInteger) -> Self {
+    pub fn new(uri: SingleLineString, bandwidth: DecimalInteger) -> Self {
         ExtXStreamInf {
             uri,
             bandwidth,
@@ -271,7 +272,7 @@ impl ExtXStreamInf {
     }
 
     /// Returns the URI that identifies the associated media playlist.
-    pub fn uri(&self) -> &M3u8String {
+    pub fn uri(&self) -> &SingleLineString {
         &self.uri
     }
 
@@ -376,7 +377,7 @@ impl FromStr for ExtXStreamInf {
             first_line.starts_with(Self::PREFIX),
             ErrorKind::InvalidInput
         );
-        let uri = track!(M3u8String::new(second_line))?;
+        let uri = track!(SingleLineString::new(second_line))?;
         let mut bandwidth = None;
         let mut average_bandwidth = None;
         let mut codecs = None;
@@ -722,7 +723,7 @@ mod test {
 
     #[test]
     fn ext_x_stream_inf() {
-        let tag = ExtXStreamInf::new(M3u8String::new("foo").unwrap(), DecimalInteger(1000));
+        let tag = ExtXStreamInf::new(SingleLineString::new("foo").unwrap(), DecimalInteger(1000));
         let text = "#EXT-X-STREAM-INF:BANDWIDTH=1000\nfoo";
         assert_eq!(text.parse().ok(), Some(tag.clone()));
         assert_eq!(tag.to_string(), text);

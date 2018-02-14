@@ -7,51 +7,47 @@ use trackable::error::ErrorKindExt;
 use {Error, ErrorKind, Result};
 use attribute::{AttributePairs, HexadecimalSequence, QuotedString};
 
-// TODO: rename
+/// String that represents a single line in a playlist file.
+///
+/// See: [4.1. Definition of a Playlist]
+///
+/// [4.1. Definition of a Playlist]: https://tools.ietf.org/html/rfc8216#section-4.1
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
-pub struct M3u8String(String);
-impl M3u8String {
+pub struct SingleLineString(String);
+impl SingleLineString {
+    /// Makes a new `SingleLineString` instance.
+    ///
+    /// # Errors
+    ///
+    /// If the given string contains any control characters,
+    /// this function will return an error which has the kind `ErrorKind::InvalidInput`.
     pub fn new<T: Into<String>>(s: T) -> Result<Self> {
-        // TODO: validate
-        Ok(M3u8String(s.into()))
-    }
-    pub unsafe fn new_unchecked<T: Into<String>>(s: T) -> Self {
-        M3u8String(s.into())
+        let s = s.into();
+        track_assert!(!s.chars().any(|c| c.is_control()), ErrorKind::InvalidInput);
+        Ok(SingleLineString(s))
     }
 }
-impl Deref for M3u8String {
+impl Deref for SingleLineString {
     type Target = str;
     fn deref(&self) -> &Self::Target {
         &self.0
     }
 }
-impl AsRef<str> for M3u8String {
+impl AsRef<str> for SingleLineString {
     fn as_ref(&self) -> &str {
         &self.0
     }
 }
-impl fmt::Display for M3u8String {
+impl fmt::Display for SingleLineString {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         self.0.fmt(f)
     }
 }
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct Yes;
-impl fmt::Display for Yes {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        "YES".fmt(f)
-    }
-}
-impl FromStr for Yes {
-    type Err = Error;
-    fn from_str(s: &str) -> Result<Self> {
-        track_assert_eq!(s, "YES", ErrorKind::InvalidInput);
-        Ok(Yes)
-    }
-}
-
-// https://tools.ietf.org/html/rfc8216#section-7
+/// [7. Protocol Version Compatibility]
+///
+/// [7. Protocol Version Compatibility]: https://tools.ietf.org/html/rfc8216#section-7
+#[allow(missing_docs)]
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub enum ProtocolVersion {
     V1,
@@ -92,6 +88,12 @@ impl FromStr for ProtocolVersion {
     }
 }
 
+/// Byte range.
+///
+/// See: [4.3.2.2. EXT-X-BYTERANGE]
+///
+/// [4.3.2.2. EXT-X-BYTERANGE]: https://tools.ietf.org/html/rfc8216#section-4.3.2.2
+#[allow(missing_docs)]
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct ByteRange {
     pub length: usize,
@@ -125,16 +127,22 @@ impl FromStr for ByteRange {
     }
 }
 
+/// Decryption key.
+///
+/// See: [4.3.2.4. EXT-X-KEY]
+///
+/// [4.3.2.4. EXT-X-KEY]: https://tools.ietf.org/html/rfc8216#section-4.3.2.4
+#[allow(missing_docs)]
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub struct DecryptionKey {
     pub method: EncryptionMethod,
     pub uri: QuotedString,
-    pub iv: Option<HexadecimalSequence>,
+    pub iv: Option<HexadecimalSequence>, // TODO: iv
     pub key_format: Option<QuotedString>,
     pub key_format_versions: Option<QuotedString>,
 }
 impl DecryptionKey {
-    pub fn requires_version(&self) -> ProtocolVersion {
+    pub(crate) fn requires_version(&self) -> ProtocolVersion {
         if self.key_format.is_some() | self.key_format_versions.is_some() {
             ProtocolVersion::V5
         } else if self.iv.is_some() {
@@ -172,29 +180,14 @@ impl FromStr for DecryptionKey {
         for attr in attrs {
             let (key, value) = track!(attr)?;
             match key {
-                "METHOD" => {
-                    track_assert_eq!(method, None, ErrorKind::InvalidInput);
-                    method = Some(track!(value.parse())?);
-                }
-                "URI" => {
-                    track_assert_eq!(uri, None, ErrorKind::InvalidInput);
-                    uri = Some(track!(value.parse())?);
-                }
-                "IV" => {
-                    // TODO: validate length(128-bit)
-                    track_assert_eq!(iv, None, ErrorKind::InvalidInput);
-                    iv = Some(track!(value.parse())?);
-                }
-                "KEYFORMAT" => {
-                    track_assert_eq!(key_format, None, ErrorKind::InvalidInput);
-                    key_format = Some(track!(value.parse())?);
-                }
-                "KEYFORMATVERSIONS" => {
-                    track_assert_eq!(key_format_versions, None, ErrorKind::InvalidInput);
-                    key_format_versions = Some(track!(value.parse())?);
-                }
+                "METHOD" => method = Some(track!(value.parse())?),
+                "URI" => uri = Some(track!(value.parse())?),
+                "IV" => iv = Some(track!(value.parse())?),
+                "KEYFORMAT" => key_format = Some(track!(value.parse())?),
+                "KEYFORMATVERSIONS" => key_format_versions = Some(track!(value.parse())?),
                 _ => {
-                    // [6.3.1] ignore any attribute/value pair with an unrecognized AttributeName.
+                    // [6.3.1. General Client Responsibilities]
+                    // > ignore any attribute/value pair with an unrecognized AttributeName.
                 }
             }
         }
@@ -210,6 +203,12 @@ impl FromStr for DecryptionKey {
     }
 }
 
+/// Encryption method.
+///
+/// See: [4.3.2.4. EXT-X-KEY]
+///
+/// [4.3.2.4. EXT-X-KEY]: https://tools.ietf.org/html/rfc8216#section-4.3.2.4
+#[allow(missing_docs)]
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum EncryptionMethod {
     Aes128,
@@ -238,6 +237,12 @@ impl FromStr for EncryptionMethod {
     }
 }
 
+/// Playlist type.
+///
+/// See: [4.3.3.5. EXT-X-PLAYLIST-TYPE]
+///
+/// [4.3.3.5. EXT-X-PLAYLIST-TYPE]: https://tools.ietf.org/html/rfc8216#section-4.3.3.5
+#[allow(missing_docs)]
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum PlaylistType {
     Event,
@@ -262,6 +267,12 @@ impl FromStr for PlaylistType {
     }
 }
 
+/// Media type.
+///
+/// See: [4.3.4.1. EXT-X-MEDIA]
+///
+/// [4.3.4.1. EXT-X-MEDIA]: https://tools.ietf.org/html/rfc8216#section-4.3.4.1
+#[allow(missing_docs)]
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum MediaType {
     Audio,
@@ -292,35 +303,12 @@ impl FromStr for MediaType {
     }
 }
 
-// TODO: remove
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub enum YesOrNo {
-    Yes,
-    No,
-}
-impl fmt::Display for YesOrNo {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        match *self {
-            YesOrNo::Yes => "YES".fmt(f),
-            YesOrNo::No => "NO".fmt(f),
-        }
-    }
-}
-impl FromStr for YesOrNo {
-    type Err = Error;
-    fn from_str(s: &str) -> Result<Self> {
-        match s {
-            "YES" => Ok(YesOrNo::Yes),
-            "NO" => Ok(YesOrNo::No),
-            _ => track_panic!(
-                ErrorKind::InvalidInput,
-                "Unexpected enumerated-string: {:?}",
-                s
-            ),
-        }
-    }
-}
-
+/// Identifier of a rendition within the segments in a media playlist.
+///
+/// See: [4.3.4.1. EXT-X-MEDIA]
+///
+/// [4.3.4.1. EXT-X-MEDIA]: https://tools.ietf.org/html/rfc8216#section-4.3.4.1
+#[allow(missing_docs)]
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum InStreamId {
     Cc1,
@@ -472,6 +460,12 @@ impl FromStr for InStreamId {
     }
 }
 
+/// HDCP level.
+///
+/// See: [4.3.4.2. EXT-X-STREAM-INF]
+///
+/// [4.3.4.2. EXT-X-STREAM-INF]: https://tools.ietf.org/html/rfc8216#section-4.3.4.2
+#[allow(missing_docs)]
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum HdcpLevel {
     Type0,
@@ -496,6 +490,12 @@ impl FromStr for HdcpLevel {
     }
 }
 
+/// The identifier of a closed captions group or its absence.
+///
+/// See: [4.3.4.2. EXT-X-STREAM-INF]
+///
+/// [4.3.4.2. EXT-X-STREAM-INF]: https://tools.ietf.org/html/rfc8216#section-4.3.4.2
+#[allow(missing_docs)]
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub enum ClosedCaptions {
     GroupId(QuotedString),
@@ -520,8 +520,25 @@ impl FromStr for ClosedCaptions {
     }
 }
 
+/// Session data.
+///
+/// See: [4.3.4.4. EXT-X-SESSION-DATA]
+///
+/// [4.3.4.4. EXT-X-SESSION-DATA]: https://tools.ietf.org/html/rfc8216#section-4.3.4.4
+#[allow(missing_docs)]
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub enum SessionData {
     Value(QuotedString),
     Uri(QuotedString),
+}
+
+#[cfg(test)]
+mod test {
+    use super::*;
+
+    #[test]
+    fn single_line_string() {
+        assert!(SingleLineString::new("foo").is_ok());
+        assert!(SingleLineString::new("b\rar").is_err());
+    }
 }

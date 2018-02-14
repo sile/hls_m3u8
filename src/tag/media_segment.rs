@@ -7,7 +7,7 @@ use trackable::error::ErrorKindExt;
 
 use {Error, ErrorKind, Result};
 use attribute::{AttributePairs, DecimalFloatingPoint, QuotedString};
-use types::{ByteRange, DecryptionKey, M3u8String, ProtocolVersion, Yes};
+use types::{ByteRange, DecryptionKey, ProtocolVersion, SingleLineString};
 
 /// [4.3.2.1. EXTINF]
 ///
@@ -15,7 +15,7 @@ use types::{ByteRange, DecryptionKey, M3u8String, ProtocolVersion, Yes};
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub struct ExtInf {
     duration: Duration,
-    title: Option<M3u8String>,
+    title: Option<SingleLineString>,
 }
 impl ExtInf {
     pub(crate) const PREFIX: &'static str = "#EXTINF:";
@@ -29,7 +29,7 @@ impl ExtInf {
     }
 
     /// Makes a new `ExtInf` tag with the given title.
-    pub fn with_title(duration: Duration, title: M3u8String) -> Self {
+    pub fn with_title(duration: Duration, title: SingleLineString) -> Self {
         ExtInf {
             duration,
             title: Some(title),
@@ -42,7 +42,7 @@ impl ExtInf {
     }
 
     /// Returns the title of the associated media segment.
-    pub fn title(&self) -> Option<&M3u8String> {
+    pub fn title(&self) -> Option<&SingleLineString> {
         self.title.as_ref()
     }
 
@@ -80,7 +80,7 @@ impl FromStr for ExtInf {
         let duration = seconds.to_duration();
 
         let title = if let Some(title) = tokens.next() {
-            Some(track!(M3u8String::new(title))?)
+            Some(track!(SingleLineString::new(title))?)
         } else {
             None
         };
@@ -355,7 +355,7 @@ pub struct ExtXDateRange {
     pub scte35_cmd: Option<QuotedString>,
     pub scte35_out: Option<QuotedString>,
     pub scte35_in: Option<QuotedString>,
-    pub end_on_next: Option<Yes>,
+    pub end_on_next: bool,
     pub client_attributes: BTreeMap<String, String>,
 }
 impl ExtXDateRange {
@@ -375,11 +375,11 @@ impl fmt::Display for ExtXDateRange {
         }
         write!(
             f,
-            ",START_DATE={:?}",
+            ",START-DATE={:?}",
             self.start_date.format("%Y-%m-%d").to_string()
         )?;
         if let Some(ref x) = self.end_date {
-            write!(f, ",END_DATE={:?}", x.format("%Y-%m-%d").to_string())?;
+            write!(f, ",END-DATE={:?}", x.format("%Y-%m-%d").to_string())?;
         }
         if let Some(x) = self.duration {
             write!(f, ",DURATION={}", DecimalFloatingPoint::from_duration(x))?;
@@ -387,21 +387,21 @@ impl fmt::Display for ExtXDateRange {
         if let Some(x) = self.planned_duration {
             write!(
                 f,
-                ",PLANNED_DURATION={}",
+                ",PLANNED-DURATION={}",
                 DecimalFloatingPoint::from_duration(x)
             )?;
         }
         if let Some(ref x) = self.scte35_cmd {
-            write!(f, ",SCTE35_CMD={}", x)?;
+            write!(f, ",SCTE35-CMD={}", x)?;
         }
         if let Some(ref x) = self.scte35_out {
-            write!(f, ",SCTE35_OUT={}", x)?;
+            write!(f, ",SCTE35-OUT={}", x)?;
         }
         if let Some(ref x) = self.scte35_in {
-            write!(f, ",SCTE35_IN={}", x)?;
+            write!(f, ",SCTE35-IN={}", x)?;
         }
-        if let Some(ref x) = self.end_on_next {
-            write!(f, ",END_ON_NEXT={}", x)?;
+        if self.end_on_next {
+            write!(f, ",END-ON-NEXT=YES",)?;
         }
         for (k, v) in &self.client_attributes {
             write!(f, ",{}={}", k, v)?;
@@ -423,7 +423,7 @@ impl FromStr for ExtXDateRange {
         let mut scte35_cmd = None;
         let mut scte35_out = None;
         let mut scte35_in = None;
-        let mut end_on_next = None;
+        let mut end_on_next = false;
         let mut client_attributes = BTreeMap::new();
         let attrs = AttributePairs::parse(s.split_at(Self::PREFIX.len()).1);
         for attr in attrs {
@@ -456,7 +456,10 @@ impl FromStr for ExtXDateRange {
                 "SCTE35-CMD" => scte35_cmd = Some(track!(value.parse())?),
                 "SCTE35-OUT" => scte35_out = Some(track!(value.parse())?),
                 "SCTE35-IN" => scte35_in = Some(track!(value.parse())?),
-                "END-ON-NEXT" => end_on_next = Some(track!(value.parse())?),
+                "END-ON-NEXT" => {
+                    track_assert_eq!(value, "YES", ErrorKind::InvalidInput);
+                    end_on_next = true;
+                }
                 _ => {
                     if key.starts_with("X-") {
                         client_attributes.insert(key.split_at(2).1.to_owned(), value.to_owned());
@@ -470,7 +473,7 @@ impl FromStr for ExtXDateRange {
 
         let id = track_assert_some!(id, ErrorKind::InvalidInput);
         let start_date = track_assert_some!(start_date, ErrorKind::InvalidInput);
-        if end_on_next.is_some() {
+        if end_on_next {
             track_assert!(class.is_some(), ErrorKind::InvalidInput);
         }
         Ok(ExtXDateRange {
@@ -504,7 +507,10 @@ mod test {
         assert_eq!(tag.to_string(), "#EXTINF:5");
         assert_eq!(tag.requires_version(), ProtocolVersion::V1);
 
-        let tag = ExtInf::with_title(Duration::from_secs(5), M3u8String::new("foo").unwrap());
+        let tag = ExtInf::with_title(
+            Duration::from_secs(5),
+            SingleLineString::new("foo").unwrap(),
+        );
         assert_eq!("#EXTINF:5,foo".parse().ok(), Some(tag.clone()));
         assert_eq!(tag.to_string(), "#EXTINF:5,foo");
         assert_eq!(tag.requires_version(), ProtocolVersion::V1);

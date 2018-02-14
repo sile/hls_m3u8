@@ -3,7 +3,8 @@ use std::str::FromStr;
 
 use {Error, ErrorKind, Result};
 use attribute::{AttributePairs, SignedDecimalFloatingPoint};
-use types::{ProtocolVersion, YesOrNo};
+use types::ProtocolVersion;
+use super::parse_yes_or_no;
 
 /// [4.3.5.1. EXT-X-INDEPENDENT-SEGMENTS]
 ///
@@ -37,7 +38,7 @@ impl FromStr for ExtXIndependentSegments {
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct ExtXStart {
     time_offset: SignedDecimalFloatingPoint,
-    precise: YesOrNo,
+    precise: bool,
 }
 impl ExtXStart {
     pub(crate) const PREFIX: &'static str = "#EXT-X-START:";
@@ -46,12 +47,12 @@ impl ExtXStart {
     pub fn new(time_offset: SignedDecimalFloatingPoint) -> Self {
         ExtXStart {
             time_offset,
-            precise: YesOrNo::No,
+            precise: false,
         }
     }
 
     /// Makes a new `ExtXStart` tag with the given `precise` flag.
-    pub fn with_precise(time_offset: SignedDecimalFloatingPoint, precise: YesOrNo) -> Self {
+    pub fn with_precise(time_offset: SignedDecimalFloatingPoint, precise: bool) -> Self {
         ExtXStart {
             time_offset,
             precise,
@@ -65,7 +66,7 @@ impl ExtXStart {
 
     /// Returns whether clients should not render media stream whose presentation times are
     /// prior to the specified time offset.
-    pub fn precise(&self) -> YesOrNo {
+    pub fn precise(&self) -> bool {
         self.precise
     }
 
@@ -78,8 +79,8 @@ impl fmt::Display for ExtXStart {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         write!(f, "{}", Self::PREFIX)?;
         write!(f, "TIME-OFFSET={}", self.time_offset)?;
-        if self.precise == YesOrNo::Yes {
-            write!(f, ",PRECISE={}", self.precise)?;
+        if self.precise {
+            write!(f, ",PRECISE=YES")?;
         }
         Ok(())
     }
@@ -90,13 +91,13 @@ impl FromStr for ExtXStart {
         track_assert!(s.starts_with(Self::PREFIX), ErrorKind::InvalidInput);
 
         let mut time_offset = None;
-        let mut precise = None;
+        let mut precise = false;
         let attrs = AttributePairs::parse(s.split_at(Self::PREFIX.len()).1);
         for attr in attrs {
             let (key, value) = track!(attr)?;
             match key {
                 "TIME-OFFSET" => time_offset = Some(track!(value.parse())?),
-                "PRECISE" => precise = Some(track!(value.parse())?),
+                "PRECISE" => precise = track!(parse_yes_or_no(value))?,
                 _ => {
                     // [6.3.1. General Client Responsibilities]
                     // > ignore any attribute/value pair with an unrecognized AttributeName.
@@ -107,7 +108,7 @@ impl FromStr for ExtXStart {
         let time_offset = track_assert_some!(time_offset, ErrorKind::InvalidInput);
         Ok(ExtXStart {
             time_offset,
-            precise: precise.unwrap_or(YesOrNo::No),
+            precise,
         })
     }
 }
