@@ -5,8 +5,6 @@ use std::fmt;
 use std::str::FromStr;
 
 use {Error, ErrorKind, Result};
-use attribute::{AttributePairs, SignedDecimalFloatingPoint};
-use types::YesOrNo;
 
 macro_rules! may_invalid {
     ($expr:expr) => {
@@ -27,6 +25,7 @@ macro_rules! impl_from {
 pub use self::basic::{ExtM3u, ExtXVersion};
 pub use self::master_playlist::{ExtXIFrameStreamInf, ExtXMedia, ExtXSessionData, ExtXSessionKey,
                                 ExtXStreamInf};
+pub use self::media_or_master_playlist::{ExtXIndependentSegments, ExtXStart};
 pub use self::media_playlist::{ExtXDiscontinuitySequence, ExtXEndList, ExtXIFramesOnly,
                                ExtXMediaSequence, ExtXPlaylistType, ExtXTargetDuration};
 pub use self::media_segment::{ExtInf, ExtXByteRange, ExtXDateRange, ExtXDiscontinuity, ExtXKey,
@@ -34,6 +33,7 @@ pub use self::media_segment::{ExtInf, ExtXByteRange, ExtXDateRange, ExtXDisconti
 
 mod basic;
 mod master_playlist;
+mod media_or_master_playlist;
 mod media_playlist;
 mod media_segment;
 
@@ -227,72 +227,5 @@ impl FromStr for Tag {
             // TODO: ignore any unrecognized tags. (section-6.3.1)
             track_panic!(ErrorKind::InvalidInput, "Unknown tag: {:?}", s)
         }
-    }
-}
-
-// 4.3.5.  Media or Master Playlist Tags
-// TODO: A tag that appears in both MUST have the same value; otherwise, clients SHOULD ignore the value in the Media Playlist(s).
-// TODO: These tags MUST NOT appear more than once in a Playlist.
-
-#[derive(Debug, Clone, PartialEq, Eq)]
-pub struct ExtXIndependentSegments;
-impl ExtXIndependentSegments {
-    const PREFIX: &'static str = "#EXT-X-INDEPENDENT-SEGMENTS";
-}
-impl fmt::Display for ExtXIndependentSegments {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        Self::PREFIX.fmt(f)
-    }
-}
-impl FromStr for ExtXIndependentSegments {
-    type Err = Error;
-    fn from_str(s: &str) -> Result<Self> {
-        track_assert_eq!(s, Self::PREFIX, ErrorKind::InvalidInput);
-        Ok(ExtXIndependentSegments)
-    }
-}
-
-#[derive(Debug, Clone, PartialEq, Eq)]
-pub struct ExtXStart {
-    pub time_offset: SignedDecimalFloatingPoint,
-    pub precise: YesOrNo,
-}
-impl ExtXStart {
-    const PREFIX: &'static str = "#EXT-X-START:";
-}
-impl fmt::Display for ExtXStart {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(f, "{}", Self::PREFIX)?;
-        write!(f, "TIME-OFFSET={}", self.time_offset)?;
-        if self.precise == YesOrNo::Yes {
-            write!(f, ",PRECISE={}", self.precise)?;
-        }
-        Ok(())
-    }
-}
-impl FromStr for ExtXStart {
-    type Err = Error;
-    fn from_str(s: &str) -> Result<Self> {
-        track_assert!(s.starts_with(Self::PREFIX), ErrorKind::InvalidInput);
-
-        let mut time_offset = None;
-        let mut precise = None;
-        let attrs = AttributePairs::parse(s.split_at(Self::PREFIX.len()).1);
-        for attr in attrs {
-            let (key, value) = track!(attr)?;
-            match key {
-                "TIME-OFFSET" => time_offset = Some(track!(value.parse())?),
-                "PRECISE" => precise = Some(track!(value.parse())?),
-                _ => {
-                    // [6.3.1] ignore any attribute/value pair with an unrecognized AttributeName.
-                }
-            }
-        }
-
-        let time_offset = track_assert_some!(time_offset, ErrorKind::InvalidInput);
-        Ok(ExtXStart {
-            time_offset,
-            precise: precise.unwrap_or(YesOrNo::No),
-        })
     }
 }

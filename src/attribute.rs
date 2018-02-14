@@ -195,7 +195,7 @@ impl FromStr for DecimalFloatingPoint {
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, PartialOrd)]
-pub struct SignedDecimalFloatingPoint(f64);
+pub struct SignedDecimalFloatingPoint(pub f64);
 impl Eq for SignedDecimalFloatingPoint {}
 impl fmt::Display for SignedDecimalFloatingPoint {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
