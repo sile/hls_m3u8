@@ -43,7 +43,7 @@ pub struct MediaPlaylist {
 impl fmt::Display for MediaPlaylist {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         writeln!(f, "{}", ExtM3u)?;
-        if self.version.value() != ProtocolVersion::V1 {
+        if self.version.version() != ProtocolVersion::V1 {
             writeln!(f, "{}", self.version)?;
         }
         writeln!(f, "{}", self.target_duration)?;

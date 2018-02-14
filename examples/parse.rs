@@ -5,8 +5,7 @@ extern crate trackable;
 
 use std::io::{self, Read};
 use clap::{App, Arg};
-use hls_m3u8::master_playlist::MasterPlaylist;
-use hls_m3u8::media_playlist::MediaPlaylist;
+use hls_m3u8::{MasterPlaylist, MediaPlaylist};
 use trackable::error::Failure;
 
 fn main() {

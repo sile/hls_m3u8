@@ -36,7 +36,7 @@ pub struct MasterPlaylist {
 impl fmt::Display for MasterPlaylist {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         writeln!(f, "{}", ExtM3u)?;
-        if self.version.value() != ProtocolVersion::V1 {
+        if self.version.version() != ProtocolVersion::V1 {
             writeln!(f, "{}", self.version)?;
         }
         for t in &self.media_tags {

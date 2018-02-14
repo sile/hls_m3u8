@@ -1,3 +1,6 @@
+//! [4.3. Playlist Tags]
+//!
+//! [4.3. Playlist Tags]: https://tools.ietf.org/html/rfc8216#section-4.3
 use std::fmt;
 use std::str::FromStr;
 use std::time::Duration;
@@ -15,14 +18,31 @@ macro_rules! may_invalid {
     }
 }
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
-pub enum TagKind {
-    Basic,
-    MediaSegment,
-    MediaPlaylist,
-    MasterPlaylist,
-    MediaOrMasterPlaylist,
+macro_rules! impl_from {
+    ($to:ident, $from:ident) => {
+        impl From<$from> for $to {
+            fn from(f: $from) -> Self {
+                $to::$from(f)
+            }
+        }
+    }
 }
+
+pub use self::basic::{ExtM3u, ExtXVersion};
+
+mod basic;
+
+/// [4.3.1. Basic Tags]
+///
+/// [4.3.1. Basic Tags]: https://tools.ietf.org/html/rfc8216#section-4.3.1
+#[allow(missing_docs)]
+#[derive(Debug, Clone, PartialEq, Eq, Hash)]
+pub enum BasicTag {
+    ExtM3u(ExtM3u),
+    ExtXVersion(ExtXVersion),
+}
+impl_from!(BasicTag, ExtM3u);
+impl_from!(BasicTag, ExtXVersion);
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum MediaSegmentTag {
@@ -159,32 +179,6 @@ pub enum Tag {
     ExtXIndependentSegments(ExtXIndependentSegments),
     ExtXStart(ExtXStart),
 }
-impl Tag {
-    pub fn kind(&self) -> TagKind {
-        match *self {
-            Tag::ExtM3u(_) | Tag::ExtXVersion(_) => TagKind::Basic,
-            Tag::ExtInf(_)
-            | Tag::ExtXByteRange(_)
-            | Tag::ExtXDiscontinuity(_)
-            | Tag::ExtXKey(_)
-            | Tag::ExtXMap(_)
-            | Tag::ExtXProgramDateTime(_)
-            | Tag::ExtXDateRange(_) => TagKind::MediaSegment,
-            Tag::ExtXTargetDuration(_)
-            | Tag::ExtXMediaSequence(_)
-            | Tag::ExtXDiscontinuitySequence(_)
-            | Tag::ExtXEndList(_)
-            | Tag::ExtXPlaylistType(_)
-            | Tag::ExtXIFramesOnly(_) => TagKind::MediaPlaylist,
-            Tag::ExtXMedia(_)
-            | Tag::ExtXStreamInf(_)
-            | Tag::ExtXIFrameStreamInf(_)
-            | Tag::ExtXSessionData(_)
-            | Tag::ExtXSessionKey(_) => TagKind::MasterPlaylist,
-            Tag::ExtXIndependentSegments(_) | Tag::ExtXStart(_) => TagKind::MediaOrMasterPlaylist,
-        }
-    }
-}
 impl fmt::Display for Tag {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         match *self {
@@ -264,56 +258,6 @@ impl FromStr for Tag {
             // TODO: ignore any unrecognized tags. (section-6.3.1)
             track_panic!(ErrorKind::InvalidInput, "Unknown tag: {:?}", s)
         }
-    }
-}
-
-// TODO: MediaSegmentTag
-
-#[derive(Debug, Clone, PartialEq, Eq)]
-pub struct ExtM3u;
-impl ExtM3u {
-    const PREFIX: &'static str = "#EXTM3U";
-}
-impl fmt::Display for ExtM3u {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        Self::PREFIX.fmt(f)
-    }
-}
-impl FromStr for ExtM3u {
-    type Err = Error;
-    fn from_str(s: &str) -> Result<Self> {
-        track_assert_eq!(s, Self::PREFIX, ErrorKind::InvalidInput);
-        Ok(ExtM3u)
-    }
-}
-
-// TODO:  A Playlist file MUST NOT contain more than one EXT-X-VERSION tag
-#[derive(Debug, Clone, PartialEq, Eq)]
-pub struct ExtXVersion {
-    version: ProtocolVersion,
-}
-impl ExtXVersion {
-    const PREFIX: &'static str = "#EXT-X-VERSION:";
-
-    pub fn new(version: ProtocolVersion) -> Self {
-        ExtXVersion { version }
-    }
-    pub fn value(&self) -> ProtocolVersion {
-        self.version
-    }
-}
-impl fmt::Display for ExtXVersion {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(f, "{}{}", Self::PREFIX, self.version)
-    }
-}
-impl FromStr for ExtXVersion {
-    type Err = Error;
-    fn from_str(s: &str) -> Result<Self> {
-        track_assert!(s.starts_with(Self::PREFIX), ErrorKind::InvalidInput);
-        let suffix = s.split_at(Self::PREFIX.len()).1;
-        let version = track!(suffix.parse())?;
-        Ok(ExtXVersion { version })
     }
 }
 
