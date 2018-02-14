@@ -161,7 +161,8 @@ impl DecimalFloatingPoint {
     }
 
     pub(crate) fn from_duration(duration: Duration) -> Self {
-        let n = (duration.as_secs() as f64) + (duration.subsec_nanos() as f64 / 1_000_000_000.0);
+        let n =
+            (duration.as_secs() as f64) + (f64::from(duration.subsec_nanos()) / 1_000_000_000.0);
         DecimalFloatingPoint(n)
     }
 }

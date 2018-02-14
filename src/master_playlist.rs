@@ -211,8 +211,7 @@ impl MasterPlaylistBuilder {
     fn check_media_group(&self, media_type: MediaType, group_id: &QuotedString) -> bool {
         self.media_tags
             .iter()
-            .find(|t| t.media_type() == media_type && t.group_id() == group_id)
-            .is_some()
+            .any(|t| t.media_type() == media_type && t.group_id() == group_id)
     }
 }
 impl Default for MasterPlaylistBuilder {

@@ -61,7 +61,7 @@ impl fmt::Display for ExtInf {
         write!(f, "{}", Self::PREFIX)?;
 
         let duration = (self.duration.as_secs() as f64)
-            + (self.duration.subsec_nanos() as f64 / 1_000_000_000.0);
+            + (f64::from(self.duration.subsec_nanos()) / 1_000_000_000.0);
         write!(f, "{}", duration)?;
 
         if let Some(ref title) = self.title {
@@ -205,10 +205,7 @@ impl FromStr for ExtXKey {
         track_assert!(s.starts_with(Self::PREFIX), ErrorKind::InvalidInput);
         let suffix = s.split_at(Self::PREFIX.len()).1;
 
-        if AttributePairs::parse(suffix)
-            .find(|a| a.as_ref().ok() == Some(&("METHOD", "NONE")))
-            .is_some()
-        {
+        if AttributePairs::parse(suffix).any(|a| a.as_ref().ok() == Some(&("METHOD", "NONE"))) {
             for attr in AttributePairs::parse(suffix) {
                 let (key, _) = track!(attr)?;
                 track_assert_ne!(key, "URI", ErrorKind::InvalidInput);

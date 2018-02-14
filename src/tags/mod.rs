@@ -43,6 +43,7 @@ mod media_segment;
 /// [4.3.4. Master Playlist Tags]: https://tools.ietf.org/html/rfc8216#section-4.3.4
 /// [4.3.5. Media or Master Playlist Tags]: https://tools.ietf.org/html/rfc8216#section-4.3.5
 #[allow(missing_docs)]
+#[cfg_attr(feature = "cargo-clippy", allow(large_enum_variant))]
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum MasterPlaylistTag {
     ExtXMedia(ExtXMedia),
@@ -92,6 +93,7 @@ impl_from!(MediaPlaylistTag, ExtXStart);
 ///
 /// [4.3.2. Media Segment Tags]: https://tools.ietf.org/html/rfc8216#section-4.3.2
 #[allow(missing_docs)]
+#[cfg_attr(feature = "cargo-clippy", allow(large_enum_variant))]
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum MediaSegmentTag {
     ExtInf(ExtInf),
