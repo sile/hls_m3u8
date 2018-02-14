@@ -5,6 +5,7 @@ use std::str::FromStr;
 use trackable::error::ErrorKindExt;
 
 use {Error, ErrorKind, Result};
+use attribute::{AttributePairs, HexadecimalSequence, QuotedString};
 
 // TODO: rename
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
@@ -121,5 +122,118 @@ impl FromStr for ByteRange {
             length: track!(length.parse().map_err(|e| ErrorKind::InvalidInput.cause(e)))?,
             start,
         })
+    }
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Hash)]
+pub struct DecryptionKey {
+    pub method: EncryptionMethod,
+    pub uri: QuotedString,
+    pub iv: Option<HexadecimalSequence>,
+    pub key_format: Option<QuotedString>,
+    pub key_format_versions: Option<QuotedString>,
+}
+impl DecryptionKey {
+    pub fn requires_version(&self) -> ProtocolVersion {
+        if self.key_format.is_some() | self.key_format_versions.is_some() {
+            ProtocolVersion::V5
+        } else if self.iv.is_some() {
+            ProtocolVersion::V2
+        } else {
+            ProtocolVersion::V1
+        }
+    }
+}
+impl fmt::Display for DecryptionKey {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "METHOD={}", self.method)?;
+        write!(f, ",URI={}", self.uri)?;
+        if let Some(ref x) = self.iv {
+            write!(f, ",IV={}", x)?;
+        }
+        if let Some(ref x) = self.key_format {
+            write!(f, ",KEYFORMAT={}", x)?;
+        }
+        if let Some(ref x) = self.key_format_versions {
+            write!(f, ",KEYFORMATVERSIONS={}", x)?;
+        }
+        Ok(())
+    }
+}
+impl FromStr for DecryptionKey {
+    type Err = Error;
+    fn from_str(s: &str) -> Result<Self> {
+        let mut method = None;
+        let mut uri = None;
+        let mut iv = None;
+        let mut key_format = None;
+        let mut key_format_versions = None;
+        let attrs = AttributePairs::parse(s);
+        for attr in attrs {
+            let (key, value) = track!(attr)?;
+            match key {
+                "METHOD" => {
+                    track_assert_eq!(method, None, ErrorKind::InvalidInput);
+                    method = Some(track!(value.parse())?);
+                }
+                "URI" => {
+                    track_assert_eq!(uri, None, ErrorKind::InvalidInput);
+                    uri = Some(track!(value.parse())?);
+                }
+                "IV" => {
+                    // TODO: validate length(128-bit)
+                    track_assert_eq!(iv, None, ErrorKind::InvalidInput);
+                    iv = Some(track!(value.parse())?);
+                }
+                "KEYFORMAT" => {
+                    track_assert_eq!(key_format, None, ErrorKind::InvalidInput);
+                    key_format = Some(track!(value.parse())?);
+                }
+                "KEYFORMATVERSIONS" => {
+                    track_assert_eq!(key_format_versions, None, ErrorKind::InvalidInput);
+                    key_format_versions = Some(track!(value.parse())?);
+                }
+                _ => {
+                    // [6.3.1] ignore any attribute/value pair with an unrecognized AttributeName.
+                }
+            }
+        }
+        let method = track_assert_some!(method, ErrorKind::InvalidInput);
+        let uri = track_assert_some!(uri, ErrorKind::InvalidInput);
+        Ok(DecryptionKey {
+            method,
+            uri,
+            iv,
+            key_format,
+            key_format_versions,
+        })
+    }
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub enum EncryptionMethod {
+    Aes128,
+    SampleAes,
+}
+impl fmt::Display for EncryptionMethod {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        match *self {
+            EncryptionMethod::Aes128 => "AES-128".fmt(f),
+            EncryptionMethod::SampleAes => "SAMPLE-AES".fmt(f),
+        }
+    }
+}
+impl FromStr for EncryptionMethod {
+    type Err = Error;
+    fn from_str(s: &str) -> Result<Self> {
+        match s {
+            "AES-128" => Ok(EncryptionMethod::Aes128),
+            "SAMPLE-AES" => Ok(EncryptionMethod::SampleAes),
+            _ => track_panic!(
+                ErrorKind::InvalidInput,
+                "Unknown encryption method: {:?}",
+                s
+            ),
+        }
     }
 }

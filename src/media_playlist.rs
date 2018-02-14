@@ -107,6 +107,10 @@ impl FromStr for MediaPlaylist {
                             segment.tag(t);
                         }
                         Tag::ExtXByteRange(t) => {
+                            // TODO: If o is not present, a previous Media Segment MUST appear in the
+                            // Playlist file and MUST be a sub-range of the same media resource, or
+                            // the Media Segment is undefined and the client MUST fail to parse the
+                            // Playlist.
                             segment.tag(t);
                         }
                         Tag::ExtXDiscontinuity(t) => {

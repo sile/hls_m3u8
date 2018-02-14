@@ -33,18 +33,7 @@ pub use self::media_segment::{ExtInf, ExtXByteRange, ExtXDateRange, ExtXDisconti
 mod basic;
 mod media_segment;
 
-/// [4.3.1. Basic Tags]
-///
-/// [4.3.1. Basic Tags]: https://tools.ietf.org/html/rfc8216#section-4.3.1
 #[allow(missing_docs)]
-#[derive(Debug, Clone, PartialEq, Eq, Hash)]
-pub enum BasicTag {
-    ExtM3u(ExtM3u),
-    ExtXVersion(ExtXVersion),
-}
-impl_from!(BasicTag, ExtM3u);
-impl_from!(BasicTag, ExtXVersion);
-
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum MediaSegmentTag {
     ExtInf(ExtInf),
@@ -56,6 +45,7 @@ pub enum MediaSegmentTag {
     ExtXProgramDateTime(ExtXProgramDateTime),
 }
 // TODO: delete
+#[allow(missing_docs)]
 impl MediaSegmentTag {
     pub fn as_inf(&self) -> Option<&ExtInf> {
         if let MediaSegmentTag::ExtInf(ref t) = *self {

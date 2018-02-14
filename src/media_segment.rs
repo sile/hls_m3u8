@@ -12,7 +12,7 @@ pub struct MediaSegmentBuilder {
     ext_x_byterange: Option<ExtXByteRange>,
     ext_x_daterange: Option<ExtXDateRange>,
     ext_x_discontinuity: Option<ExtXDiscontinuity>,
-    ext_x_key: Option<ExtXKey>,
+    ext_x_key: Option<ExtXKey>, // TODO: vec
     ext_x_map: Option<ExtXMap>,
     ext_x_program_date_time: Option<ExtXProgramDateTime>,
 }

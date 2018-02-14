@@ -68,8 +68,18 @@ impl<'a> Iterator for AttributePairs<'a> {
     }
 }
 
+// TODO: export and rename
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub struct QuotedString(String);
+impl QuotedString {
+    pub fn new<T: Into<String>>(s: T) -> Result<Self> {
+        // TODO: validate
+        Ok(QuotedString(s.into()))
+    }
+    pub fn as_str(&self) -> &str {
+        &self.0
+    }
+}
 impl fmt::Display for QuotedString {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         write!(f, "{:?}", self.0)
@@ -97,6 +107,11 @@ impl FromStr for QuotedString {
 
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub struct HexadecimalSequence(Vec<u8>);
+impl HexadecimalSequence {
+    pub fn new<T: Into<Vec<u8>>>(v: T) -> Self {
+        HexadecimalSequence(v.into())
+    }
+}
 impl fmt::Display for HexadecimalSequence {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         write!(f, "0x")?;

@@ -6,6 +6,7 @@
 //!
 //! TODO
 #![warn(missing_docs)]
+extern crate chrono;
 #[macro_use]
 extern crate trackable;
 

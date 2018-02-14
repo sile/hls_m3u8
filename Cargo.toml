@@ -4,6 +4,7 @@ version = "0.1.0"
 authors = ["Takeru Ohta <phjgt308@gmail.com>"]
 
 [dependencies]
+chrono = "0.4"
 trackable = "0.2"
 
 [dev-dependencies]
