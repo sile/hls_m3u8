@@ -1,11 +1,12 @@
 //! Miscellaneous types.
 use std::fmt;
 use std::ops::Deref;
-use std::str::FromStr;
+use std::str::{self, FromStr};
+use std::time::Duration;
 use trackable::error::ErrorKindExt;
 
 use {Error, ErrorKind, Result};
-use attribute::{AttributePairs, HexadecimalSequence, QuotedString};
+use attribute::AttributePairs;
 
 /// String that represents a single line in a playlist file.
 ///
@@ -41,6 +42,301 @@ impl AsRef<str> for SingleLineString {
 impl fmt::Display for SingleLineString {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         self.0.fmt(f)
+    }
+}
+
+/// Quoted string.
+///
+/// See: [4.2. Attribute Lists]
+///
+/// [4.2. Attribute Lists]: https://tools.ietf.org/html/rfc8216#section-4.2
+#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
+pub struct QuotedString(String);
+impl QuotedString {
+    /// Makes a new `QuotedString` instance.
+    ///
+    /// # Errors
+    ///
+    /// If the given string contains any control characters or double-quote character,
+    /// this function will return an error which has the kind `ErrorKind::InvalidInput`.
+    pub fn new<T: Into<String>>(s: T) -> Result<Self> {
+        let s = s.into();
+        track_assert!(
+            !s.chars().any(|c| c.is_control() || c == '"'),
+            ErrorKind::InvalidInput
+        );
+        Ok(QuotedString(s))
+    }
+}
+impl Deref for QuotedString {
+    type Target = str;
+    fn deref(&self) -> &Self::Target {
+        &self.0
+    }
+}
+impl AsRef<str> for QuotedString {
+    fn as_ref(&self) -> &str {
+        &self.0
+    }
+}
+impl fmt::Display for QuotedString {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "{:?}", self.0)
+    }
+}
+impl FromStr for QuotedString {
+    type Err = Error;
+    fn from_str(s: &str) -> Result<Self> {
+        let len = s.len();
+        let bytes = s.as_bytes();
+        track_assert!(len >= 2, ErrorKind::InvalidInput);
+        track_assert_eq!(bytes[0], b'"', ErrorKind::InvalidInput);
+        track_assert_eq!(bytes[len - 1], b'"', ErrorKind::InvalidInput);
+
+        let s = unsafe { str::from_utf8_unchecked(&bytes[1..len - 1]) };
+        track!(QuotedString::new(s))
+    }
+}
+
+/// Decimal resolution.
+///
+/// See: [4.2. Attribute Lists]
+///
+/// [4.2. Attribute Lists]: https://tools.ietf.org/html/rfc8216#section-4.2
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub struct DecimalResolution {
+    /// Horizontal pixel dimension.
+    pub width: usize,
+
+    /// Vertical pixel dimension.
+    pub height: usize,
+}
+impl fmt::Display for DecimalResolution {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "{}x{}", self.width, self.height)
+    }
+}
+impl FromStr for DecimalResolution {
+    type Err = Error;
+    fn from_str(s: &str) -> Result<Self> {
+        let mut tokens = s.splitn(2, 'x');
+        let width = tokens.next().expect("Never fails");
+        let height = track_assert_some!(tokens.next(), ErrorKind::InvalidInput);
+        Ok(DecimalResolution {
+            width: track!(width.parse().map_err(|e| ErrorKind::InvalidInput.cause(e)))?,
+            height: track!(height.parse().map_err(|e| ErrorKind::InvalidInput.cause(e)))?,
+        })
+    }
+}
+
+/// Non-negative decimal floating-point number.
+///
+/// See: [4.2. Attribute Lists]
+///
+/// [4.2. Attribute Lists]: https://tools.ietf.org/html/rfc8216#section-4.2
+#[derive(Debug, Clone, Copy, PartialEq, PartialOrd)]
+pub struct DecimalFloatingPoint(f64);
+impl DecimalFloatingPoint {
+    /// Makes a new `DecimalFloatingPoint` instance.
+    ///
+    /// # Errors
+    ///
+    /// The given value must have a positive sign and be finite,
+    /// otherwise this function will return an error that has the kind `ErrorKind::InvalidInput`.
+    pub fn new(n: f64) -> Result<Self> {
+        track_assert!(n.is_sign_positive(), ErrorKind::InvalidInput);
+        track_assert!(n.is_finite(), ErrorKind::InvalidInput);
+        Ok(DecimalFloatingPoint(n))
+    }
+
+    /// Converts `DecimalFloatingPoint` to `f64`.
+    pub fn as_f64(&self) -> f64 {
+        self.0
+    }
+
+    pub(crate) fn to_duration(&self) -> Duration {
+        let secs = self.0 as u64;
+        let nanos = (self.0.fract() * 1_000_000_000.0) as u32;
+        Duration::new(secs, nanos)
+    }
+
+    pub(crate) fn from_duration(duration: Duration) -> Self {
+        let n = (duration.as_secs() as f64) + (duration.subsec_nanos() as f64 / 1_000_000_000.0);
+        DecimalFloatingPoint(n)
+    }
+}
+impl From<u32> for DecimalFloatingPoint {
+    fn from(f: u32) -> Self {
+        DecimalFloatingPoint(f64::from(f))
+    }
+}
+impl Eq for DecimalFloatingPoint {}
+impl fmt::Display for DecimalFloatingPoint {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        self.0.fmt(f)
+    }
+}
+impl FromStr for DecimalFloatingPoint {
+    type Err = Error;
+    fn from_str(s: &str) -> Result<Self> {
+        track_assert!(
+            s.chars().all(|c| c.is_digit(10) || c == '.'),
+            ErrorKind::InvalidInput
+        );
+        let n = track!(s.parse().map_err(|e| ErrorKind::InvalidInput.cause(e)))?;
+        Ok(DecimalFloatingPoint(n))
+    }
+}
+
+/// Signed decimal floating-point number.
+///
+/// See: [4.2. Attribute Lists]
+///
+/// [4.2. Attribute Lists]: https://tools.ietf.org/html/rfc8216#section-4.2
+#[derive(Debug, Clone, Copy, PartialEq, PartialOrd)]
+pub struct SignedDecimalFloatingPoint(f64);
+impl SignedDecimalFloatingPoint {
+    /// Makes a new `SignedDecimalFloatingPoint` instance.
+    ///
+    /// # Errors
+    ///
+    /// The given value must be finite,
+    /// otherwise this function will return an error that has the kind `ErrorKind::InvalidInput`.
+    pub fn new(n: f64) -> Result<Self> {
+        track_assert!(n.is_finite(), ErrorKind::InvalidInput);
+        Ok(SignedDecimalFloatingPoint(n))
+    }
+
+    /// Converts `DecimalFloatingPoint` to `f64`.
+    pub fn as_f64(&self) -> f64 {
+        self.0
+    }
+}
+impl From<i32> for SignedDecimalFloatingPoint {
+    fn from(f: i32) -> Self {
+        SignedDecimalFloatingPoint(f64::from(f))
+    }
+}
+impl Eq for SignedDecimalFloatingPoint {}
+impl fmt::Display for SignedDecimalFloatingPoint {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        self.0.fmt(f)
+    }
+}
+impl FromStr for SignedDecimalFloatingPoint {
+    type Err = Error;
+    fn from_str(s: &str) -> Result<Self> {
+        track_assert!(
+            s.chars().all(|c| c.is_digit(10) || c == '.' || c == '-'),
+            ErrorKind::InvalidInput
+        );
+        let n = track!(s.parse().map_err(|e| ErrorKind::InvalidInput.cause(e)))?;
+        Ok(SignedDecimalFloatingPoint(n))
+    }
+}
+
+/// Hexadecimal sequence.
+///
+/// See: [4.2. Attribute Lists]
+///
+/// [4.2. Attribute Lists]: https://tools.ietf.org/html/rfc8216#section-4.2
+#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
+pub struct HexadecimalSequence(Vec<u8>);
+impl HexadecimalSequence {
+    /// Makes a new `HexadecimalSequence` instance.
+    pub fn new<T: Into<Vec<u8>>>(v: T) -> Self {
+        HexadecimalSequence(v.into())
+    }
+
+    /// Converts into the underlying byte sequence.
+    pub fn into_bytes(self) -> Vec<u8> {
+        self.0
+    }
+}
+impl Deref for HexadecimalSequence {
+    type Target = [u8];
+    fn deref(&self) -> &Self::Target {
+        &self.0
+    }
+}
+impl AsRef<[u8]> for HexadecimalSequence {
+    fn as_ref(&self) -> &[u8] {
+        &self.0
+    }
+}
+impl fmt::Display for HexadecimalSequence {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "0x")?;
+        for b in &self.0 {
+            write!(f, "{:02x}", b)?;
+        }
+        Ok(())
+    }
+}
+impl FromStr for HexadecimalSequence {
+    type Err = Error;
+    fn from_str(s: &str) -> Result<Self> {
+        track_assert!(
+            s.starts_with("0x") || s.starts_with("0X"),
+            ErrorKind::InvalidInput
+        );
+        track_assert!(s.len() % 2 == 0, ErrorKind::InvalidInput);
+
+        let mut v = Vec::with_capacity(s.len() / 2 - 1);
+        for c in s.as_bytes().chunks(2).skip(1) {
+            let d = track!(str::from_utf8(c).map_err(|e| ErrorKind::InvalidInput.cause(e)))?;
+            let b =
+                track!(u8::from_str_radix(d, 16).map_err(|e| ErrorKind::InvalidInput.cause(e)))?;
+            v.push(b);
+        }
+        Ok(HexadecimalSequence(v))
+    }
+}
+
+/// Initialization vector.
+///
+/// See: [4.3.2.4. EXT-X-KEY]
+///
+/// [4.3.2.4. EXT-X-KEY]: https://tools.ietf.org/html/rfc8216#section-4.3.2.4
+#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
+pub struct InitializationVector(pub [u8; 16]);
+impl Deref for InitializationVector {
+    type Target = [u8];
+    fn deref(&self) -> &Self::Target {
+        &self.0
+    }
+}
+impl AsRef<[u8]> for InitializationVector {
+    fn as_ref(&self) -> &[u8] {
+        &self.0
+    }
+}
+impl fmt::Display for InitializationVector {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "0x")?;
+        for b in &self.0 {
+            write!(f, "{:02x}", b)?;
+        }
+        Ok(())
+    }
+}
+impl FromStr for InitializationVector {
+    type Err = Error;
+    fn from_str(s: &str) -> Result<Self> {
+        track_assert!(
+            s.starts_with("0x") || s.starts_with("0X"),
+            ErrorKind::InvalidInput
+        );
+        track_assert_eq!(s.len() - 2, 32, ErrorKind::InvalidInput);
+
+        let mut v = [0; 16];
+        for (i, c) in s.as_bytes().chunks(2).skip(1).enumerate() {
+            let d = track!(str::from_utf8(c).map_err(|e| ErrorKind::InvalidInput.cause(e)))?;
+            let b =
+                track!(u8::from_str_radix(d, 16).map_err(|e| ErrorKind::InvalidInput.cause(e)))?;
+            v[i] = b;
+        }
+        Ok(InitializationVector(v))
     }
 }
 
@@ -137,7 +433,7 @@ impl FromStr for ByteRange {
 pub struct DecryptionKey {
     pub method: EncryptionMethod,
     pub uri: QuotedString,
-    pub iv: Option<HexadecimalSequence>, // TODO: iv
+    pub iv: Option<InitializationVector>,
     pub key_format: Option<QuotedString>,
     pub key_format_versions: Option<QuotedString>,
 }

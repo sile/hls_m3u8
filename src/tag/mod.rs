@@ -3,6 +3,7 @@
 //! [4.3. Playlist Tags]: https://tools.ietf.org/html/rfc8216#section-4.3
 use std::fmt;
 use std::str::FromStr;
+use trackable::error::ErrorKindExt;
 
 use {Error, ErrorKind, Result};
 
@@ -236,4 +237,9 @@ fn parse_yes_or_no(s: &str) -> Result<bool> {
         "NO" => Ok(false),
         _ => track_panic!(ErrorKind::InvalidInput, "Unexpected value: {:?}", s),
     }
+}
+
+fn parse_u64(s: &str) -> Result<u64> {
+    let n = track!(s.parse().map_err(|e| ErrorKind::InvalidInput.cause(e)))?;
+    Ok(n)
 }

@@ -2,11 +2,10 @@ use std::fmt;
 use std::str::FromStr;
 
 use {Error, ErrorKind, Result};
-use attribute::{AttributePairs, DecimalFloatingPoint, DecimalInteger, DecimalResolution,
-                QuotedString};
-use types::{ClosedCaptions, DecryptionKey, HdcpLevel, InStreamId, MediaType, ProtocolVersion,
-            SessionData, SingleLineString};
-use super::parse_yes_or_no;
+use attribute::AttributePairs;
+use types::{ClosedCaptions, DecimalFloatingPoint, DecimalResolution, DecryptionKey, HdcpLevel,
+            InStreamId, MediaType, ProtocolVersion, QuotedString, SessionData, SingleLineString};
+use super::{parse_yes_or_no, parse_u64};
 
 /// [4.3.4.1. EXT-X-MEDIA]
 ///
@@ -192,7 +191,7 @@ impl FromStr for ExtXMedia {
                 "FORCED" => forced = Some(track!(parse_yes_or_no(value))?),
                 "INSTREAM-ID" => {
                     let s: QuotedString = track!(value.parse())?;
-                    instream_id = Some(track!(s.as_str().parse())?);
+                    instream_id = Some(track!(s.parse())?);
                 }
                 "CHARACTERISTICS" => characteristics = Some(track!(value.parse())?),
                 "CHANNELS" => channels = Some(track!(value.parse())?),
@@ -240,8 +239,8 @@ impl FromStr for ExtXMedia {
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct ExtXStreamInf {
     uri: SingleLineString,
-    bandwidth: DecimalInteger,
-    average_bandwidth: Option<DecimalInteger>,
+    bandwidth: u64,
+    average_bandwidth: Option<u64>,
     codecs: Option<QuotedString>,
     resolution: Option<DecimalResolution>,
     frame_rate: Option<DecimalFloatingPoint>,
@@ -255,7 +254,7 @@ impl ExtXStreamInf {
     pub(crate) const PREFIX: &'static str = "#EXT-X-STREAM-INF:";
 
     /// Makes a new `ExtXStreamInf` tag.
-    pub fn new(uri: SingleLineString, bandwidth: DecimalInteger) -> Self {
+    pub fn new(uri: SingleLineString, bandwidth: u64) -> Self {
         ExtXStreamInf {
             uri,
             bandwidth,
@@ -277,12 +276,12 @@ impl ExtXStreamInf {
     }
 
     /// Returns the peak segment bit rate of the variant stream.
-    pub fn bandwidth(&self) -> DecimalInteger {
+    pub fn bandwidth(&self) -> u64 {
         self.bandwidth
     }
 
     /// Returns the average segment bit rate of the variant stream.
-    pub fn average_bandwidth(&self) -> Option<DecimalInteger> {
+    pub fn average_bandwidth(&self) -> Option<u64> {
         self.average_bandwidth
     }
 
@@ -392,8 +391,8 @@ impl FromStr for ExtXStreamInf {
         for attr in attrs {
             let (key, value) = track!(attr)?;
             match key {
-                "BANDWIDTH" => bandwidth = Some(track!(value.parse())?),
-                "AVERAGE-BANDWIDTH" => average_bandwidth = Some(track!(value.parse())?),
+                "BANDWIDTH" => bandwidth = Some(track!(parse_u64(value))?),
+                "AVERAGE-BANDWIDTH" => average_bandwidth = Some(track!(parse_u64(value))?),
                 "CODECS" => codecs = Some(track!(value.parse())?),
                 "RESOLUTION" => resolution = Some(track!(value.parse())?),
                 "FRAME-RATE" => frame_rate = Some(track!(value.parse())?),
@@ -431,8 +430,8 @@ impl FromStr for ExtXStreamInf {
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub struct ExtXIFrameStreamInf {
     uri: QuotedString,
-    bandwidth: DecimalInteger,
-    average_bandwidth: Option<DecimalInteger>,
+    bandwidth: u64,
+    average_bandwidth: Option<u64>,
     codecs: Option<QuotedString>,
     resolution: Option<DecimalResolution>,
     hdcp_level: Option<HdcpLevel>,
@@ -442,7 +441,7 @@ impl ExtXIFrameStreamInf {
     pub(crate) const PREFIX: &'static str = "#EXT-X-I-FRAME-STREAM-INF:";
 
     /// Makes a new `ExtXIFrameStreamInf` tag.
-    pub fn new(uri: QuotedString, bandwidth: DecimalInteger) -> Self {
+    pub fn new(uri: QuotedString, bandwidth: u64) -> Self {
         ExtXIFrameStreamInf {
             uri,
             bandwidth,
@@ -460,12 +459,12 @@ impl ExtXIFrameStreamInf {
     }
 
     /// Returns the peak segment bit rate of the variant stream.
-    pub fn bandwidth(&self) -> DecimalInteger {
+    pub fn bandwidth(&self) -> u64 {
         self.bandwidth
     }
 
     /// Returns the average segment bit rate of the variant stream.
-    pub fn average_bandwidth(&self) -> Option<DecimalInteger> {
+    pub fn average_bandwidth(&self) -> Option<u64> {
         self.average_bandwidth
     }
 
@@ -534,8 +533,8 @@ impl FromStr for ExtXIFrameStreamInf {
             let (key, value) = track!(attr)?;
             match key {
                 "URI" => uri = Some(track!(value.parse())?),
-                "BANDWIDTH" => bandwidth = Some(track!(value.parse())?),
-                "AVERAGE-BANDWIDTH" => average_bandwidth = Some(track!(value.parse())?),
+                "BANDWIDTH" => bandwidth = Some(track!(parse_u64(value))?),
+                "AVERAGE-BANDWIDTH" => average_bandwidth = Some(track!(parse_u64(value))?),
                 "CODECS" => codecs = Some(track!(value.parse())?),
                 "RESOLUTION" => resolution = Some(track!(value.parse())?),
                 "HDCP-LEVEL" => hdcp_level = Some(track!(value.parse())?),
@@ -708,8 +707,7 @@ impl FromStr for ExtXSessionKey {
 
 #[cfg(test)]
 mod test {
-    use attribute::HexadecimalSequence;
-    use types::EncryptionMethod;
+    use types::{EncryptionMethod, InitializationVector};
     use super::*;
 
     #[test]
@@ -723,7 +721,7 @@ mod test {
 
     #[test]
     fn ext_x_stream_inf() {
-        let tag = ExtXStreamInf::new(SingleLineString::new("foo").unwrap(), DecimalInteger(1000));
+        let tag = ExtXStreamInf::new(SingleLineString::new("foo").unwrap(), 1000);
         let text = "#EXT-X-STREAM-INF:BANDWIDTH=1000\nfoo";
         assert_eq!(text.parse().ok(), Some(tag.clone()));
         assert_eq!(tag.to_string(), text);
@@ -732,7 +730,7 @@ mod test {
 
     #[test]
     fn ext_x_i_frame_stream_inf() {
-        let tag = ExtXIFrameStreamInf::new(quoted_string("foo"), DecimalInteger(1000));
+        let tag = ExtXIFrameStreamInf::new(quoted_string("foo"), 1000);
         let text = r#"#EXT-X-I-FRAME-STREAM-INF:URI="foo",BANDWIDTH=1000"#;
         assert_eq!(text.parse().ok(), Some(tag.clone()));
         assert_eq!(tag.to_string(), text);
@@ -773,11 +771,14 @@ mod test {
         let tag = ExtXSessionKey::new(DecryptionKey {
             method: EncryptionMethod::Aes128,
             uri: quoted_string("foo"),
-            iv: Some(HexadecimalSequence::new(vec![0, 1, 2])),
+            iv: Some(InitializationVector([
+                0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15
+            ])),
             key_format: None,
             key_format_versions: None,
         });
-        let text = r#"#EXT-X-SESSION-KEY:METHOD=AES-128,URI="foo",IV=0x000102"#;
+        let text =
+            r#"#EXT-X-SESSION-KEY:METHOD=AES-128,URI="foo",IV=0x000102030405060708090a0b0c0d0e0f"#;
         assert_eq!(text.parse().ok(), Some(tag.clone()));
         assert_eq!(tag.to_string(), text);
         assert_eq!(tag.requires_version(), ProtocolVersion::V2);

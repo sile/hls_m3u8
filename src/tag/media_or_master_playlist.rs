@@ -2,8 +2,8 @@ use std::fmt;
 use std::str::FromStr;
 
 use {Error, ErrorKind, Result};
-use attribute::{AttributePairs, SignedDecimalFloatingPoint};
-use types::ProtocolVersion;
+use attribute::AttributePairs;
+use types::{ProtocolVersion, SignedDecimalFloatingPoint};
 use super::parse_yes_or_no;
 
 /// [4.3.5.1. EXT-X-INDEPENDENT-SEGMENTS]
@@ -128,13 +128,13 @@ mod test {
 
     #[test]
     fn ext_x_start() {
-        let tag = ExtXStart::new(SignedDecimalFloatingPoint(-1.23));
+        let tag = ExtXStart::new(SignedDecimalFloatingPoint::new(-1.23).unwrap());
         let text = "#EXT-X-START:TIME-OFFSET=-1.23";
         assert_eq!(text.parse().ok(), Some(tag));
         assert_eq!(tag.to_string(), text);
         assert_eq!(tag.requires_version(), ProtocolVersion::V1);
 
-        let tag = ExtXStart::with_precise(SignedDecimalFloatingPoint(1.23), YesOrNo::Yes);
+        let tag = ExtXStart::with_precise(SignedDecimalFloatingPoint::new(1.23).unwrap(), true);
         let text = "#EXT-X-START:TIME-OFFSET=1.23,PRECISE=YES";
         assert_eq!(text.parse().ok(), Some(tag));
         assert_eq!(tag.to_string(), text);

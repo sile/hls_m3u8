@@ -6,8 +6,9 @@ use chrono::{DateTime, FixedOffset, NaiveDate};
 use trackable::error::ErrorKindExt;
 
 use {Error, ErrorKind, Result};
-use attribute::{AttributePairs, DecimalFloatingPoint, QuotedString};
-use types::{ByteRange, DecryptionKey, ProtocolVersion, SingleLineString};
+use attribute::AttributePairs;
+use types::{ByteRange, DecimalFloatingPoint, DecryptionKey, ProtocolVersion, QuotedString,
+            SingleLineString};
 
 /// [4.3.2.1. EXTINF]
 ///
@@ -434,14 +435,14 @@ impl FromStr for ExtXDateRange {
                 "START-DATE" => {
                     let s: QuotedString = track!(value.parse())?;
                     start_date = Some(track!(
-                        NaiveDate::parse_from_str(s.as_str(), "%Y-%m-%d")
+                        NaiveDate::parse_from_str(&s, "%Y-%m-%d")
                             .map_err(|e| ErrorKind::InvalidInput.cause(e))
                     )?);
                 }
                 "END-DATE" => {
                     let s: QuotedString = track!(value.parse())?;
                     end_date = Some(track!(
-                        NaiveDate::parse_from_str(s.as_str(), "%Y-%m-%d")
+                        NaiveDate::parse_from_str(&s, "%Y-%m-%d")
                             .map_err(|e| ErrorKind::InvalidInput.cause(e))
                     )?);
                 }
@@ -496,8 +497,7 @@ impl FromStr for ExtXDateRange {
 mod test {
     use std::time::Duration;
 
-    use attribute::HexadecimalSequence;
-    use types::EncryptionMethod;
+    use types::{EncryptionMethod, InitializationVector};
     use super::*;
 
     #[test]
@@ -571,11 +571,13 @@ mod test {
         let tag = ExtXKey::new(DecryptionKey {
             method: EncryptionMethod::Aes128,
             uri: QuotedString::new("foo").unwrap(),
-            iv: Some(HexadecimalSequence::new(vec![0, 1, 2])),
+            iv: Some(InitializationVector([
+                0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15
+            ])),
             key_format: None,
             key_format_versions: None,
         });
-        let text = r#"#EXT-X-KEY:METHOD=AES-128,URI="foo",IV=0x000102"#;
+        let text = r#"#EXT-X-KEY:METHOD=AES-128,URI="foo",IV=0x000102030405060708090a0b0c0d0e0f"#;
         assert_eq!(text.parse().ok(), Some(tag.clone()));
         assert_eq!(tag.to_string(), text);
         assert_eq!(tag.requires_version(), ProtocolVersion::V2);
@@ -583,11 +585,13 @@ mod test {
         let tag = ExtXKey::new(DecryptionKey {
             method: EncryptionMethod::Aes128,
             uri: QuotedString::new("foo").unwrap(),
-            iv: Some(HexadecimalSequence::new(vec![0, 1, 2])),
+            iv: Some(InitializationVector([
+                0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15
+            ])),
             key_format: Some(QuotedString::new("baz").unwrap()),
             key_format_versions: None,
         });
-        let text = r#"#EXT-X-KEY:METHOD=AES-128,URI="foo",IV=0x000102,KEYFORMAT="baz""#;
+        let text = r#"#EXT-X-KEY:METHOD=AES-128,URI="foo",IV=0x000102030405060708090a0b0c0d0e0f,KEYFORMAT="baz""#;
         assert_eq!(text.parse().ok(), Some(tag.clone()));
         assert_eq!(tag.to_string(), text);
         assert_eq!(tag.requires_version(), ProtocolVersion::V5);
