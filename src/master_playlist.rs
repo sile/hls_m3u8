@@ -110,10 +110,12 @@ impl FromStr for MasterPlaylist {
                             media_tags.push(t);
                         }
                         Tag::ExtXStreamInf(t) => {
+                            // TODO: It MUST match the value of the GROUP-ID attribute of an EXT-X-MEDIA tag
                             track_assert_eq!(last_stream_inf, None, ErrorKind::InvalidInput);
                             last_stream_inf = Some((i, t));
                         }
                         Tag::ExtXIFrameStreamInf(t) => {
+                            // TODO: It MUST match the value of the GROUP-ID attribute of an EXT-X-MEDIA tag
                             i_frame_stream_infs.push(t);
                         }
                         Tag::ExtXSessionData(t) => {

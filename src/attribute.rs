@@ -141,8 +141,9 @@ impl FromStr for HexadecimalSequence {
     }
 }
 
+// TODO: delete
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
-pub struct DecimalInteger(u64);
+pub struct DecimalInteger(pub u64);
 impl fmt::Display for DecimalInteger {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         write!(f, "{}", self.0)
@@ -167,6 +168,9 @@ impl DecimalFloatingPoint {
     pub fn from_duration(duration: Duration) -> Self {
         let n = (duration.as_secs() as f64) + (duration.subsec_nanos() as f64 / 1_000_000_000.0);
         DecimalFloatingPoint(n)
+    }
+    pub fn as_f64(&self) -> f64 {
+        self.0
     }
 }
 impl Eq for DecimalFloatingPoint {}

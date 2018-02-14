@@ -283,14 +283,8 @@ impl FromStr for ExtXMap {
         for attr in attrs {
             let (key, value) = track!(attr)?;
             match key {
-                "URI" => {
-                    track_assert_eq!(uri, None, ErrorKind::InvalidInput);
-                    uri = Some(track!(value.parse())?);
-                }
-                "BYTERANGE" => {
-                    track_assert_eq!(range, None, ErrorKind::InvalidInput);
-                    range = Some(track!(value.parse())?);
-                }
+                "URI" => uri = Some(track!(value.parse())?),
+                "BYTERANGE" => range = Some(track!(value.parse())?),
                 _ => {
                     // [6.3.1. General Client Responsibilities]
                     // > ignore any attribute/value pair with an unrecognized AttributeName.
@@ -435,12 +429,8 @@ impl FromStr for ExtXDateRange {
         for attr in attrs {
             let (key, value) = track!(attr)?;
             match key {
-                "ID" => {
-                    id = Some(track!(value.parse())?);
-                }
-                "CLASS" => {
-                    class = Some(track!(value.parse())?);
-                }
+                "ID" => id = Some(track!(value.parse())?),
+                "CLASS" => class = Some(track!(value.parse())?),
                 "START-DATE" => {
                     let s: QuotedString = track!(value.parse())?;
                     start_date = Some(track!(
@@ -463,18 +453,10 @@ impl FromStr for ExtXDateRange {
                     let seconds: DecimalFloatingPoint = track!(value.parse())?;
                     planned_duration = Some(seconds.to_duration());
                 }
-                "SCTE35-CMD" => {
-                    scte35_cmd = Some(track!(value.parse())?);
-                }
-                "SCTE35-OUT" => {
-                    scte35_out = Some(track!(value.parse())?);
-                }
-                "SCTE35-IN" => {
-                    scte35_in = Some(track!(value.parse())?);
-                }
-                "END-ON-NEXT" => {
-                    end_on_next = Some(track!(value.parse())?);
-                }
+                "SCTE35-CMD" => scte35_cmd = Some(track!(value.parse())?),
+                "SCTE35-OUT" => scte35_out = Some(track!(value.parse())?),
+                "SCTE35-IN" => scte35_in = Some(track!(value.parse())?),
+                "END-ON-NEXT" => end_on_next = Some(track!(value.parse())?),
                 _ => {
                     if key.starts_with("X-") {
                         client_attributes.insert(key.split_at(2).1.to_owned(), value.to_owned());
