@@ -1,11 +1,10 @@
 #[macro_use]
 extern crate trackable;
 
-// pub mod playlist;
-// pub mod master_playlist;
 pub use error::{Error, ErrorKind};
 
 pub mod attribute;
+pub mod master_playlist;
 pub mod media_playlist;
 pub mod media_segment;
 pub mod string;

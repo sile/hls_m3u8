@@ -5,6 +5,7 @@ extern crate trackable;
 
 use std::io::{self, Read};
 use clap::{App, Arg};
+use hls_m3u8::master_playlist::MasterPlaylist;
 use hls_m3u8::media_playlist::MediaPlaylist;
 use trackable::error::Failure;
 
@@ -30,7 +31,10 @@ fn main() {
             let playlist: MediaPlaylist = track_try_unwrap!(m3u8.parse());
             println!("{}", playlist);
         }
-        "master" => unimplemented!(),
+        "master" => {
+            let playlist: MasterPlaylist = track_try_unwrap!(m3u8.parse());
+            println!("{}", playlist);
+        }
         _ => unreachable!(),
     }
 }
