@@ -4,7 +4,22 @@
 //!
 //! # Examples
 //!
-//! TODO
+//! ```
+//! use hls_m3u8::MediaPlaylist;
+//!
+//! let m3u8 = "#EXTM3U
+//! #EXT-X-TARGETDURATION:10
+//! #EXT-X-VERSION:3
+//! #EXTINF:9.009,
+//! http://media.example.com/first.ts
+//! #EXTINF:9.009,
+//! http://media.example.com/second.ts
+//! #EXTINF:3.003,
+//! http://media.example.com/third.ts
+//! #EXT-X-ENDLIST";
+//!
+//! assert!(m3u8.parse::<MediaPlaylist>().is_ok());
+//! ```
 #![warn(missing_docs)]
 extern crate chrono;
 #[macro_use]
