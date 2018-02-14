@@ -237,3 +237,27 @@ impl FromStr for EncryptionMethod {
         }
     }
 }
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub enum PlaylistType {
+    Event,
+    Vod,
+}
+impl fmt::Display for PlaylistType {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        match *self {
+            PlaylistType::Event => write!(f, "EVENT"),
+            PlaylistType::Vod => write!(f, "VOD"),
+        }
+    }
+}
+impl FromStr for PlaylistType {
+    type Err = Error;
+    fn from_str(s: &str) -> Result<Self> {
+        match s {
+            "EVENT" => Ok(PlaylistType::Event),
+            "VOD" => Ok(PlaylistType::Vod),
+            _ => track_panic!(ErrorKind::InvalidInput, "Unknown playlist type: {:?}", s),
+        }
+    }
+}

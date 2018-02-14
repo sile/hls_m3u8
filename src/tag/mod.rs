@@ -3,8 +3,6 @@
 //! [4.3. Playlist Tags]: https://tools.ietf.org/html/rfc8216#section-4.3
 use std::fmt;
 use std::str::FromStr;
-use std::time::Duration;
-use trackable::error::ErrorKindExt;
 
 use {Error, ErrorKind, Result};
 use attribute::{AttributePairs, DecimalFloatingPoint, DecimalInteger, DecimalResolution,
@@ -27,10 +25,13 @@ macro_rules! impl_from {
 }
 
 pub use self::basic::{ExtM3u, ExtXVersion};
+pub use self::media_playlist::{ExtXDiscontinuitySequence, ExtXEndList, ExtXIFramesOnly,
+                               ExtXMediaSequence, ExtXPlaylistType, ExtXTargetDuration};
 pub use self::media_segment::{ExtInf, ExtXByteRange, ExtXDateRange, ExtXDiscontinuity, ExtXKey,
                               ExtXMap, ExtXProgramDateTime};
 
 mod basic;
+mod media_playlist;
 mod media_segment;
 
 #[allow(missing_docs)]
@@ -118,6 +119,7 @@ impl_from!(MediaSegmentTag, ExtXKey);
 impl_from!(MediaSegmentTag, ExtXMap);
 impl_from!(MediaSegmentTag, ExtXProgramDateTime);
 
+#[allow(missing_docs)]
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum Tag {
     ExtM3u(ExtM3u),
@@ -222,158 +224,6 @@ impl FromStr for Tag {
             // TODO: ignore any unrecognized tags. (section-6.3.1)
             track_panic!(ErrorKind::InvalidInput, "Unknown tag: {:?}", s)
         }
-    }
-}
-
-// TODO: he EXT-X-TARGETDURATION tag is REQUIRED.
-#[derive(Debug, Clone, PartialEq, Eq)]
-pub struct ExtXTargetDuration {
-    pub duration: Duration,
-}
-impl ExtXTargetDuration {
-    const PREFIX: &'static str = "#EXT-X-TARGETDURATION:";
-}
-impl fmt::Display for ExtXTargetDuration {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(f, "{}{}", Self::PREFIX, self.duration.as_secs())
-    }
-}
-impl FromStr for ExtXTargetDuration {
-    type Err = Error;
-    fn from_str(s: &str) -> Result<Self> {
-        track_assert!(s.starts_with(Self::PREFIX), ErrorKind::InvalidInput);
-        let duration = may_invalid!(s.split_at(Self::PREFIX.len()).1.parse())?;
-        Ok(ExtXTargetDuration {
-            duration: Duration::from_secs(duration),
-        })
-    }
-}
-
-// TODO: The EXT-X-MEDIA-SEQUENCE tag MUST appear before the first Media Segment in the Playlist.
-#[derive(Debug, Clone, PartialEq, Eq)]
-pub struct ExtXMediaSequence {
-    pub seq_num: u64,
-}
-impl ExtXMediaSequence {
-    const PREFIX: &'static str = "#EXT-X-MEDIA-SEQUENCE:";
-}
-impl fmt::Display for ExtXMediaSequence {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(f, "{}{}", Self::PREFIX, self.seq_num)
-    }
-}
-impl FromStr for ExtXMediaSequence {
-    type Err = Error;
-    fn from_str(s: &str) -> Result<Self> {
-        track_assert!(s.starts_with(Self::PREFIX), ErrorKind::InvalidInput);
-        let seq_num = may_invalid!(s.split_at(Self::PREFIX.len()).1.parse())?;
-        Ok(ExtXMediaSequence { seq_num })
-    }
-}
-
-// TODO: The EXT-X-DISCONTINUITY-SEQUENCE tag MUST appear before the first Media Segment in the Playlist.
-// TODO: The EXT-X-DISCONTINUITY-SEQUENCE tag MUST appear before any EXT-X-DISCONTINUITY tag.
-#[derive(Debug, Clone, PartialEq, Eq)]
-pub struct ExtXDiscontinuitySequence {
-    pub seq_num: u64,
-}
-impl ExtXDiscontinuitySequence {
-    const PREFIX: &'static str = "#EXT-X-DISCONTINUITY-SEQUENCE:";
-}
-impl fmt::Display for ExtXDiscontinuitySequence {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(f, "{}{}", Self::PREFIX, self.seq_num)
-    }
-}
-impl FromStr for ExtXDiscontinuitySequence {
-    type Err = Error;
-    fn from_str(s: &str) -> Result<Self> {
-        track_assert!(s.starts_with(Self::PREFIX), ErrorKind::InvalidInput);
-        let seq_num = may_invalid!(s.split_at(Self::PREFIX.len()).1.parse())?;
-        Ok(ExtXDiscontinuitySequence { seq_num })
-    }
-}
-
-#[derive(Debug, Clone, PartialEq, Eq)]
-pub struct ExtXEndList;
-impl ExtXEndList {
-    const PREFIX: &'static str = "#EXT-X-ENDLIST";
-}
-impl fmt::Display for ExtXEndList {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        Self::PREFIX.fmt(f)
-    }
-}
-impl FromStr for ExtXEndList {
-    type Err = Error;
-    fn from_str(s: &str) -> Result<Self> {
-        track_assert_eq!(s, Self::PREFIX, ErrorKind::InvalidInput);
-        Ok(ExtXEndList)
-    }
-}
-
-#[derive(Debug, Clone, PartialEq, Eq)]
-pub struct ExtXPlaylistType {
-    pub playlist_type: PlaylistType,
-}
-impl ExtXPlaylistType {
-    const PREFIX: &'static str = "#EXT-X-PLAYLIST-TYPE:";
-}
-impl fmt::Display for ExtXPlaylistType {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(f, "{}{}", Self::PREFIX, self.playlist_type)
-    }
-}
-impl FromStr for ExtXPlaylistType {
-    type Err = Error;
-    fn from_str(s: &str) -> Result<Self> {
-        track_assert!(s.starts_with(Self::PREFIX), ErrorKind::InvalidInput);
-        let playlist_type = may_invalid!(s.split_at(Self::PREFIX.len()).1.parse())?;
-        Ok(ExtXPlaylistType { playlist_type })
-    }
-}
-
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
-pub enum PlaylistType {
-    Event,
-    Vod,
-}
-impl fmt::Display for PlaylistType {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        match *self {
-            PlaylistType::Event => write!(f, "EVENT"),
-            PlaylistType::Vod => write!(f, "VOD"),
-        }
-    }
-}
-impl FromStr for PlaylistType {
-    type Err = Error;
-    fn from_str(s: &str) -> Result<Self> {
-        match s {
-            "EVENT" => Ok(PlaylistType::Event),
-            "VOD" => Ok(PlaylistType::Vod),
-            _ => track_panic!(ErrorKind::InvalidInput, "Unknown playlist type: {:?}", s),
-        }
-    }
-}
-
-// TODO: Media resources containing I-frame segments MUST begin with ...
-// TODO: Use of the EXT-X-I-FRAMES-ONLY REQUIRES a compatibility version number of 4 or greater.
-#[derive(Debug, Clone, PartialEq, Eq)]
-pub struct ExtXIFramesOnly;
-impl ExtXIFramesOnly {
-    const PREFIX: &'static str = "#EXT-X-I-FRAMES-ONLY";
-}
-impl fmt::Display for ExtXIFramesOnly {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        Self::PREFIX.fmt(f)
-    }
-}
-impl FromStr for ExtXIFramesOnly {
-    type Err = Error;
-    fn from_str(s: &str) -> Result<Self> {
-        track_assert_eq!(s, Self::PREFIX, ErrorKind::InvalidInput);
-        Ok(ExtXIFramesOnly)
     }
 }
 
