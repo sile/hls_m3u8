@@ -2,6 +2,16 @@
 name = "hls_m3u8"
 version = "0.1.0"
 authors = ["Takeru Ohta <phjgt308@gmail.com>"]
+description = "HLS m3u8 parser/generator"
+homepage = "https://github.com/sile/hls_m3u8"
+repository = "https://github.com/sile/hls_m3u8"
+readme = "README.md"
+license = "MIT"
+keywords = ["hls", "m3u8"]
+
+[badges]
+travis-ci = {repository = "sile/hls_m3u8"}
+codecov = {repository = "sile/hls_m3u8"}
 
 [dependencies]
 chrono = "0.4"
