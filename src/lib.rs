@@ -22,7 +22,6 @@
 //! ```
 #![warn(missing_docs)]
 #![cfg_attr(feature = "cargo-clippy", allow(const_static_lifetime))]
-extern crate chrono;
 #[macro_use]
 extern crate trackable;
 

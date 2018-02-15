@@ -139,8 +139,8 @@ impl MediaSegment {
     }
 
     /// Returns the `EXT-X-PROGRAM-DATE-TIME` tag associated with the media segment.
-    pub fn program_date_time_tag(&self) -> Option<ExtXProgramDateTime> {
-        self.program_date_time_tag
+    pub fn program_date_time_tag(&self) -> Option<&ExtXProgramDateTime> {
+        self.program_date_time_tag.as_ref()
     }
 
     /// Returns the `EXT-X-MAP` tag associated with the media segment.

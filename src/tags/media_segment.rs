@@ -2,7 +2,6 @@ use std::collections::BTreeMap;
 use std::fmt;
 use std::str::FromStr;
 use std::time::Duration;
-use chrono::{DateTime, FixedOffset, NaiveDate};
 use trackable::error::ErrorKindExt;
 
 use {Error, ErrorKind, Result};
@@ -298,21 +297,21 @@ impl FromStr for ExtXMap {
 /// [4.3.2.6. EXT-X-PROGRAM-DATE-TIME]
 ///
 /// [4.3.2.6. EXT-X-PROGRAM-DATE-TIME]: https://tools.ietf.org/html/rfc8216#section-4.3.2.6
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+#[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub struct ExtXProgramDateTime {
-    date_time: DateTime<FixedOffset>,
+    date_time: SingleLineString,
 }
 impl ExtXProgramDateTime {
     pub(crate) const PREFIX: &'static str = "#EXT-X-PROGRAM-DATE-TIME:";
 
     /// Makes a new `ExtXProgramDateTime` tag.
-    pub fn new(date_time: DateTime<FixedOffset>) -> Self {
+    pub fn new(date_time: SingleLineString) -> Self {
         ExtXProgramDateTime { date_time }
     }
 
-    /// Returns the `DateTime` of the first sample of the associated media segment.
-    pub fn date_time(&self) -> DateTime<FixedOffset> {
-        self.date_time
+    /// Returns the date-time of the first sample of the associated media segment.
+    pub fn date_time(&self) -> &SingleLineString {
+        &self.date_time
     }
 
     /// Returns the protocol compatibility version that this tag requires.
@@ -322,7 +321,7 @@ impl ExtXProgramDateTime {
 }
 impl fmt::Display for ExtXProgramDateTime {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(f, "{}{}", Self::PREFIX, self.date_time.to_rfc3339())
+        write!(f, "{}{}", Self::PREFIX, self.date_time)
     }
 }
 impl FromStr for ExtXProgramDateTime {
@@ -331,7 +330,7 @@ impl FromStr for ExtXProgramDateTime {
         track_assert!(s.starts_with(Self::PREFIX), ErrorKind::InvalidInput);
         let suffix = s.split_at(Self::PREFIX.len()).1;
         Ok(ExtXProgramDateTime {
-            date_time: track!(suffix.parse().map_err(|e| ErrorKind::InvalidInput.cause(e)))?,
+            date_time: track!(SingleLineString::new(suffix))?,
         })
     }
 }
@@ -346,8 +345,8 @@ impl FromStr for ExtXProgramDateTime {
 pub struct ExtXDateRange {
     pub id: QuotedString,
     pub class: Option<QuotedString>,
-    pub start_date: NaiveDate,
-    pub end_date: Option<NaiveDate>,
+    pub start_date: QuotedString,
+    pub end_date: Option<QuotedString>,
     pub duration: Option<Duration>,
     pub planned_duration: Option<Duration>,
     pub scte35_cmd: Option<QuotedString>,
@@ -371,13 +370,9 @@ impl fmt::Display for ExtXDateRange {
         if let Some(ref x) = self.class {
             write!(f, ",CLASS={}", x)?;
         }
-        write!(
-            f,
-            ",START-DATE={:?}",
-            self.start_date.format("%Y-%m-%d").to_string()
-        )?;
+        write!(f, ",START-DATE={}", self.start_date)?;
         if let Some(ref x) = self.end_date {
-            write!(f, ",END-DATE={:?}", x.format("%Y-%m-%d").to_string())?;
+            write!(f, ",END-DATE={}", x)?;
         }
         if let Some(x) = self.duration {
             write!(f, ",DURATION={}", DecimalFloatingPoint::from_duration(x))?;
@@ -429,20 +424,8 @@ impl FromStr for ExtXDateRange {
             match key {
                 "ID" => id = Some(track!(value.parse())?),
                 "CLASS" => class = Some(track!(value.parse())?),
-                "START-DATE" => {
-                    let s: QuotedString = track!(value.parse())?;
-                    start_date = Some(track!(
-                        NaiveDate::parse_from_str(&s, "%Y-%m-%d")
-                            .map_err(|e| ErrorKind::InvalidInput.cause(e))
-                    )?);
-                }
-                "END-DATE" => {
-                    let s: QuotedString = track!(value.parse())?;
-                    end_date = Some(track!(
-                        NaiveDate::parse_from_str(&s, "%Y-%m-%d")
-                            .map_err(|e| ErrorKind::InvalidInput.cause(e))
-                    )?);
-                }
+                "START-DATE" => start_date = Some(track!(value.parse())?),
+                "END-DATE" => end_date = Some(track!(value.parse())?),
                 "DURATION" => {
                     let seconds: DecimalFloatingPoint = track!(value.parse())?;
                     duration = Some(seconds.to_duration());
