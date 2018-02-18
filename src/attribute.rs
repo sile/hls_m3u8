@@ -41,11 +41,22 @@ impl<'a> AttributePairs<'a> {
     }
 
     fn parse_raw_value(&mut self) -> &'a str {
-        let (value_end, next) = if let Some(i) = self.input.bytes().position(|c| c == b',') {
-            (i, i + 1)
-        } else {
-            (self.input.len(), self.input.len())
-        };
+        let mut in_quote = false;
+        let mut value_end = self.input.len();
+        let mut next = self.input.len();
+        for (i, c) in self.input.bytes().enumerate() {
+            match c {
+                b'"' => {
+                    in_quote = !in_quote;
+                }
+                b',' if !in_quote => {
+                    value_end = i;
+                    next = i + 1;
+                    break;
+                }
+                _ => {}
+            }
+        }
         let (value, _) = self.input.split_at(value_end);
         let (_, rest) = self.input.split_at(next);
         self.input = rest;
@@ -72,5 +83,22 @@ impl<'a> Iterator for AttributePairs<'a> {
             Ok((key, value))
         }();
         Some(result)
+    }
+}
+
+#[cfg(test)]
+mod test {
+    use super::*;
+
+    #[test]
+    fn it_works() {
+        let mut pairs = AttributePairs::parse("FOO=BAR,BAR=\"baz,qux\",ABC=12.3");
+        assert_eq!(pairs.next().map(|x| x.ok()), Some(Some(("FOO", "BAR"))));
+        assert_eq!(
+            pairs.next().map(|x| x.ok()),
+            Some(Some(("BAR", "\"baz,qux\"")))
+        );
+        assert_eq!(pairs.next().map(|x| x.ok()), Some(Some(("ABC", "12.3"))));
+        assert_eq!(pairs.next().map(|x| x.ok()), None)
     }
 }
