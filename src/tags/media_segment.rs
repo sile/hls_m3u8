@@ -264,7 +264,7 @@ impl fmt::Display for ExtXMap {
         write!(f, "{}", Self::PREFIX)?;
         write!(f, "URI={}", self.uri)?;
         if let Some(ref x) = self.range {
-            write!(f, ",BYTERANGE={}", x)?;
+            write!(f, ",BYTERANGE=\"{}\"", x)?;
         }
         Ok(())
     }
@@ -281,7 +281,10 @@ impl FromStr for ExtXMap {
             let (key, value) = track!(attr)?;
             match key {
                 "URI" => uri = Some(track!(value.parse())?),
-                "BYTERANGE" => range = Some(track!(value.parse())?),
+                "BYTERANGE" => {
+                    let s: QuotedString = track!(value.parse())?;
+                    range = Some(track!(s.parse())?);
+                }
                 _ => {
                     // [6.3.1. General Client Responsibilities]
                     // > ignore any attribute/value pair with an unrecognized AttributeName.
