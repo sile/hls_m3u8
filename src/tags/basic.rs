@@ -13,7 +13,7 @@ impl ExtM3u {
     pub(crate) const PREFIX: &'static str = "#EXTM3U";
 
     /// Returns the protocol compatibility version that this tag requires.
-    pub fn requires_version(&self) -> ProtocolVersion {
+    pub fn requires_version(self) -> ProtocolVersion {
         ProtocolVersion::V1
     }
 }
@@ -46,12 +46,12 @@ impl ExtXVersion {
     }
 
     /// Returns the protocol compatibility version of the playlist containing this tag.
-    pub fn version(&self) -> ProtocolVersion {
+    pub fn version(self) -> ProtocolVersion {
         self.version
     }
 
     /// Returns the protocol compatibility version that this tag requires.
-    pub fn requires_version(&self) -> ProtocolVersion {
+    pub fn requires_version(self) -> ProtocolVersion {
         ProtocolVersion::V1
     }
 }

@@ -150,11 +150,11 @@ impl DecimalFloatingPoint {
     }
 
     /// Converts `DecimalFloatingPoint` to `f64`.
-    pub fn as_f64(&self) -> f64 {
+    pub fn as_f64(self) -> f64 {
         self.0
     }
 
-    pub(crate) fn to_duration(&self) -> Duration {
+    pub(crate) fn to_duration(self) -> Duration {
         let secs = self.0 as u64;
         let nanos = (self.0.fract() * 1_000_000_000.0) as u32;
         Duration::new(secs, nanos)
@@ -209,7 +209,7 @@ impl SignedDecimalFloatingPoint {
     }
 
     /// Converts `DecimalFloatingPoint` to `f64`.
-    pub fn as_f64(&self) -> f64 {
+    pub fn as_f64(self) -> f64 {
         self.0
     }
 }

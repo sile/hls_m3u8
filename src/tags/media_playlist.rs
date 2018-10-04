@@ -66,12 +66,12 @@ impl ExtXMediaSequence {
     }
 
     /// Returns the sequence number of the first media segment that appears in the associated playlist.
-    pub fn seq_num(&self) -> u64 {
+    pub fn seq_num(self) -> u64 {
         self.seq_num
     }
 
     /// Returns the protocol compatibility version that this tag requires.
-    pub fn requires_version(&self) -> ProtocolVersion {
+    pub fn requires_version(self) -> ProtocolVersion {
         ProtocolVersion::V1
     }
 }
@@ -106,12 +106,12 @@ impl ExtXDiscontinuitySequence {
 
     /// Returns the discontinuity sequence number of
     /// the first media segment that appears in the associated playlist.
-    pub fn seq_num(&self) -> u64 {
+    pub fn seq_num(self) -> u64 {
         self.seq_num
     }
 
     /// Returns the protocol compatibility version that this tag requires.
-    pub fn requires_version(&self) -> ProtocolVersion {
+    pub fn requires_version(self) -> ProtocolVersion {
         ProtocolVersion::V1
     }
 }
@@ -138,7 +138,7 @@ impl ExtXEndList {
     pub(crate) const PREFIX: &'static str = "#EXT-X-ENDLIST";
 
     /// Returns the protocol compatibility version that this tag requires.
-    pub fn requires_version(&self) -> ProtocolVersion {
+    pub fn requires_version(self) -> ProtocolVersion {
         ProtocolVersion::V1
     }
 }
@@ -171,12 +171,12 @@ impl ExtXPlaylistType {
     }
 
     /// Returns the type of the associated media playlist.
-    pub fn playlist_type(&self) -> PlaylistType {
+    pub fn playlist_type(self) -> PlaylistType {
         self.playlist_type
     }
 
     /// Returns the protocol compatibility version that this tag requires.
-    pub fn requires_version(&self) -> ProtocolVersion {
+    pub fn requires_version(self) -> ProtocolVersion {
         ProtocolVersion::V1
     }
 }
@@ -203,7 +203,7 @@ impl ExtXIFramesOnly {
     pub(crate) const PREFIX: &'static str = "#EXT-X-I-FRAMES-ONLY";
 
     /// Returns the protocol compatibility version that this tag requires.
-    pub fn requires_version(&self) -> ProtocolVersion {
+    pub fn requires_version(self) -> ProtocolVersion {
         ProtocolVersion::V4
     }
 }

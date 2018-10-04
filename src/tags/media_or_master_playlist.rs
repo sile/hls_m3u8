@@ -15,7 +15,7 @@ impl ExtXIndependentSegments {
     pub(crate) const PREFIX: &'static str = "#EXT-X-INDEPENDENT-SEGMENTS";
 
     /// Returns the protocol compatibility version that this tag requires.
-    pub fn requires_version(&self) -> ProtocolVersion {
+    pub fn requires_version(self) -> ProtocolVersion {
         ProtocolVersion::V1
     }
 }

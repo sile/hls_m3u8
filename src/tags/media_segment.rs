@@ -137,7 +137,7 @@ impl ExtXDiscontinuity {
     pub(crate) const PREFIX: &'static str = "#EXT-X-DISCONTINUITY";
 
     /// Returns the protocol compatibility version that this tag requires.
-    pub fn requires_version(&self) -> ProtocolVersion {
+    pub fn requires_version(self) -> ProtocolVersion {
         ProtocolVersion::V1
     }
 }
