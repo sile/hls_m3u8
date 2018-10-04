@@ -27,7 +27,7 @@ extern crate trackable;
 
 pub use error::{Error, ErrorKind};
 pub use master_playlist::{MasterPlaylist, MasterPlaylistBuilder};
-pub use media_playlist::{MediaPlaylist, MediaPlaylistBuilder};
+pub use media_playlist::{MediaPlaylist, MediaPlaylistBuilder, MediaPlaylistOptions};
 pub use media_segment::{MediaSegment, MediaSegmentBuilder};
 
 pub mod tags;

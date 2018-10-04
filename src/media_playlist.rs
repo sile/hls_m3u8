@@ -26,6 +26,7 @@ pub struct MediaPlaylistBuilder {
     start_tag: Option<ExtXStart>,
     end_list_tag: Option<ExtXEndList>,
     segments: Vec<MediaSegment>,
+    options: MediaPlaylistOptions,
 }
 impl MediaPlaylistBuilder {
     /// Makes a new `MediaPlaylistBuilder` instance.
@@ -41,6 +42,7 @@ impl MediaPlaylistBuilder {
             start_tag: None,
             end_list_tag: None,
             segments: Vec::new(),
+            options: MediaPlaylistOptions::new(),
         }
     }
 
@@ -78,6 +80,14 @@ impl MediaPlaylistBuilder {
         self
     }
 
+    /// Sets the options that will be associated to the resulting playlist.
+    ///
+    /// The default value is `MediaPlaylistOptions::default()`.
+    pub fn options(&mut self, options: MediaPlaylistOptions) -> &mut Self {
+        self.options = options;
+        self
+    }
+
     /// Builds a `MediaPlaylist` instance.
     pub fn finish(self) -> Result<MediaPlaylist> {
         let required_version = self.required_version();
@@ -109,23 +119,23 @@ impl MediaPlaylistBuilder {
     }
 
     fn validate_media_segments(&self, target_duration: Duration) -> Result<()> {
-        let target_duration_seconds = target_duration.as_secs();
-
         let mut last_range_uri = None;
         for s in &self.segments {
             // CHECK: `#EXT-X-TARGETDURATION`
-            let segment_duration = s.inf_tag().duration();
-            let segment_duration_seconds = if segment_duration.subsec_nanos() < 500_000_000 {
-                segment_duration.as_secs()
+            let mut segment_duration = s.inf_tag().duration();
+            let rounded_segment_duration = if segment_duration.subsec_nanos() < 500_000_000 {
+                Duration::from_secs(segment_duration.as_secs())
             } else {
-                segment_duration.as_secs() + 1
+                Duration::from_secs(segment_duration.as_secs() + 1)
             };
+            let max_segment_duration = target_duration + self.options.allowable_excess_duration;
             track_assert!(
-                segment_duration_seconds <= target_duration_seconds,
+                rounded_segment_duration <= max_segment_duration,
                 ErrorKind::InvalidInput,
-                "Too large segment duration: segment_duration={}, target_duration={}, uri={:?}",
-                segment_duration_seconds,
-                target_duration_seconds,
+                "Too large segment duration: actual={:?}, max={:?}, target_duration={:?}, uri={:?}",
+                segment_duration,
+                max_segment_duration,
+                target_duration,
                 s.uri()
             );
 
@@ -276,11 +286,47 @@ impl fmt::Display for MediaPlaylist {
 impl FromStr for MediaPlaylist {
     type Err = Error;
     fn from_str(s: &str) -> Result<Self> {
+        track!(MediaPlaylistOptions::new().parse(s))
+    }
+}
+
+/// Media playlist options.
+#[derive(Debug, Clone)]
+pub struct MediaPlaylistOptions {
+    allowable_excess_duration: Duration,
+}
+impl MediaPlaylistOptions {
+    /// Makes a new `MediaPlaylistOptions` with the default settings.
+    pub fn new() -> Self {
+        MediaPlaylistOptions {
+            allowable_excess_duration: Duration::from_secs(0),
+        }
+    }
+
+    /// Sets the allowable excess duration of each media segment in the associated playlist.
+    ///
+    /// If there is a media segment of which duration exceeds
+    /// `#EXT-X-TARGETDURATION + allowable_excess_duration`,
+    /// the invocation of `MediaPlaylistBuilder::finish()` method will fail.
+    ///
+    /// The default value is `Duration::from_secs(0)`.
+    pub fn allowable_excess_segment_duration(
+        &mut self,
+        allowable_excess_duration: Duration,
+    ) -> &mut Self {
+        self.allowable_excess_duration = allowable_excess_duration;
+        self
+    }
+
+    /// Parses the given M3U8 text with the specified settings.
+    pub fn parse(&self, m3u8: &str) -> Result<MediaPlaylist> {
         let mut builder = MediaPlaylistBuilder::new();
+        builder.options(self.clone());
+
         let mut segment = MediaSegmentBuilder::new();
         let mut has_partial_segment = false;
         let mut has_discontinuity_tag = false;
-        for (i, line) in Lines::new(s).enumerate() {
+        for (i, line) in Lines::new(m3u8).enumerate() {
             match track!(line)? {
                 Line::Blank | Line::Comment(_) => {}
                 Line::Tag(tag) => {
@@ -400,5 +446,48 @@ impl FromStr for MediaPlaylist {
         }
         track_assert!(!has_partial_segment, ErrorKind::InvalidInput);
         track!(builder.finish())
+    }
+}
+impl Default for MediaPlaylistOptions {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn too_large_segment_duration_test() {
+        let m3u8 = "#EXTM3U\n\
+                    #EXT-X-TARGETDURATION:8\n\
+                    #EXT-X-VERSION:3\n\
+                    #EXTINF:9.009,\n\
+                    http://media.example.com/first.ts\n\
+                    #EXTINF:9.509,\n\
+                    http://media.example.com/second.ts\n\
+                    #EXTINF:3.003,\n\
+                    http://media.example.com/third.ts\n\
+                    #EXT-X-ENDLIST";
+
+        // Error (allowable segment duration = target duration = 8)
+        assert!(m3u8.parse::<MediaPlaylist>().is_err());
+
+        // Error (allowable segment duration = 9)
+        assert!(
+            MediaPlaylistOptions::new()
+                .allowable_excess_segment_duration(Duration::from_secs(1))
+                .parse(m3u8)
+                .is_err()
+        );
+
+        // Ok (allowable segment duration = 10)
+        assert!(
+            MediaPlaylistOptions::new()
+                .allowable_excess_segment_duration(Duration::from_secs(2))
+                .parse(m3u8)
+                .is_ok()
+        );
     }
 }
