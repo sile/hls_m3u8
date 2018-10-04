@@ -4,10 +4,11 @@ use std::str::FromStr;
 use std::time::Duration;
 use trackable::error::ErrorKindExt;
 
-use {Error, ErrorKind, Result};
 use attribute::AttributePairs;
-use types::{ByteRange, DecimalFloatingPoint, DecryptionKey, ProtocolVersion, QuotedString,
-            SingleLineString};
+use types::{
+    ByteRange, DecimalFloatingPoint, DecryptionKey, ProtocolVersion, QuotedString, SingleLineString,
+};
+use {Error, ErrorKind, Result};
 
 /// [4.3.2.1. EXTINF]
 ///
@@ -480,8 +481,8 @@ impl FromStr for ExtXDateRange {
 mod test {
     use std::time::Duration;
 
-    use types::{EncryptionMethod, InitializationVector};
     use super::*;
+    use types::{EncryptionMethod, InitializationVector};
 
     #[test]
     fn extinf() {
@@ -555,7 +556,7 @@ mod test {
             method: EncryptionMethod::Aes128,
             uri: QuotedString::new("foo").unwrap(),
             iv: Some(InitializationVector([
-                0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15
+                0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15,
             ])),
             key_format: None,
             key_format_versions: None,
@@ -569,7 +570,7 @@ mod test {
             method: EncryptionMethod::Aes128,
             uri: QuotedString::new("foo").unwrap(),
             iv: Some(InitializationVector([
-                0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15
+                0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15,
             ])),
             key_format: Some(QuotedString::new("baz").unwrap()),
             key_format_versions: None,

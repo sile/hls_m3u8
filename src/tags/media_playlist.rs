@@ -3,8 +3,8 @@ use std::str::FromStr;
 use std::time::Duration;
 use trackable::error::ErrorKindExt;
 
-use {Error, ErrorKind, Result};
 use types::{PlaylistType, ProtocolVersion};
+use {Error, ErrorKind, Result};
 
 /// [4.3.3.1. EXT-X-TARGETDURATION]
 ///

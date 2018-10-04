@@ -1,10 +1,12 @@
 use std::fmt;
 use std::iter;
 
-use {ErrorKind, Result};
-use tags::{ExtInf, ExtXByteRange, ExtXDateRange, ExtXDiscontinuity, ExtXKey, ExtXMap,
-           ExtXProgramDateTime, MediaSegmentTag};
+use tags::{
+    ExtInf, ExtXByteRange, ExtXDateRange, ExtXDiscontinuity, ExtXKey, ExtXMap, ExtXProgramDateTime,
+    MediaSegmentTag,
+};
 use types::{ProtocolVersion, SingleLineString};
+use {ErrorKind, Result};
 
 /// Media segment builder.
 #[derive(Debug, Clone)]
@@ -165,8 +167,7 @@ impl MediaSegment {
                 self.program_date_time_tag
                     .iter()
                     .map(|t| t.requires_version()),
-            )
-            .chain(iter::once(self.inf_tag.requires_version()))
+            ).chain(iter::once(self.inf_tag.requires_version()))
             .max()
             .expect("Never fails")
     }

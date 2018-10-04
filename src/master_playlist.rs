@@ -1,13 +1,15 @@
 use std::collections::HashSet;
-use std::iter;
 use std::fmt;
+use std::iter;
 use std::str::FromStr;
 
-use {Error, ErrorKind, Result};
 use line::{Line, Lines, Tag};
-use tags::{ExtM3u, ExtXIFrameStreamInf, ExtXIndependentSegments, ExtXMedia, ExtXSessionData,
-           ExtXSessionKey, ExtXStart, ExtXStreamInf, ExtXVersion, MasterPlaylistTag};
+use tags::{
+    ExtM3u, ExtXIFrameStreamInf, ExtXIndependentSegments, ExtXMedia, ExtXSessionData,
+    ExtXSessionKey, ExtXStart, ExtXStreamInf, ExtXVersion, MasterPlaylistTag,
+};
 use types::{ClosedCaptions, MediaType, ProtocolVersion, QuotedString};
+use {Error, ErrorKind, Result};
 
 /// Master playlist builder.
 #[derive(Debug, Clone)]
@@ -100,16 +102,14 @@ impl MasterPlaylistBuilder {
                 self.independent_segments_tag
                     .iter()
                     .map(|t| t.requires_version()),
-            )
-            .chain(self.start_tag.iter().map(|t| t.requires_version()))
+            ).chain(self.start_tag.iter().map(|t| t.requires_version()))
             .chain(self.media_tags.iter().map(|t| t.requires_version()))
             .chain(self.stream_inf_tags.iter().map(|t| t.requires_version()))
             .chain(
                 self.i_frame_stream_inf_tags
                     .iter()
                     .map(|t| t.requires_version()),
-            )
-            .chain(self.session_data_tags.iter().map(|t| t.requires_version()))
+            ).chain(self.session_data_tags.iter().map(|t| t.requires_version()))
             .chain(self.session_key_tags.iter().map(|t| t.requires_version()))
             .max()
             .expect("Never fails")

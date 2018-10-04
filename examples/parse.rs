@@ -3,9 +3,9 @@ extern crate hls_m3u8;
 #[macro_use]
 extern crate trackable;
 
-use std::io::{self, Read};
 use clap::{App, Arg};
 use hls_m3u8::{MasterPlaylist, MediaPlaylist};
+use std::io::{self, Read};
 use trackable::error::Failure;
 
 fn main() {
@@ -16,8 +16,7 @@ fn main() {
                 .takes_value(true)
                 .default_value("media")
                 .possible_values(&["media", "master"]),
-        )
-        .get_matches();
+        ).get_matches();
     let mut m3u8 = String::new();
     track_try_unwrap!(
         io::stdin()

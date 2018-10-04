@@ -1,9 +1,9 @@
 use std::fmt;
 use std::str::FromStr;
 
-use {Error, ErrorKind, Result};
 use tags;
 use types::SingleLineString;
+use {Error, ErrorKind, Result};
 
 #[derive(Debug)]
 pub struct Lines<'a> {

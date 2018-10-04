@@ -1,10 +1,10 @@
 use std::fmt;
 use std::str::FromStr;
 
-use {Error, ErrorKind, Result};
+use super::parse_yes_or_no;
 use attribute::AttributePairs;
 use types::{ProtocolVersion, SignedDecimalFloatingPoint};
-use super::parse_yes_or_no;
+use {Error, ErrorKind, Result};
 
 /// [4.3.5.1. EXT-X-INDEPENDENT-SEGMENTS]
 ///

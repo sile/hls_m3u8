@@ -1,8 +1,8 @@
 use std::fmt;
 use std::str::FromStr;
 
-use {Error, ErrorKind, Result};
 use types::ProtocolVersion;
+use {Error, ErrorKind, Result};
 
 /// [4.3.1.1. EXTM3U]
 ///

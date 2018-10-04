@@ -3,13 +3,15 @@ use std::iter;
 use std::str::FromStr;
 use std::time::Duration;
 
-use {Error, ErrorKind, Result};
 use line::{Line, Lines, Tag};
 use media_segment::{MediaSegment, MediaSegmentBuilder};
-use tags::{ExtM3u, ExtXDiscontinuitySequence, ExtXEndList, ExtXIFramesOnly,
-           ExtXIndependentSegments, ExtXMediaSequence, ExtXPlaylistType, ExtXStart,
-           ExtXTargetDuration, ExtXVersion, MediaPlaylistTag};
+use tags::{
+    ExtM3u, ExtXDiscontinuitySequence, ExtXEndList, ExtXIFramesOnly, ExtXIndependentSegments,
+    ExtXMediaSequence, ExtXPlaylistType, ExtXStart, ExtXTargetDuration, ExtXVersion,
+    MediaPlaylistTag,
+};
 use types::ProtocolVersion;
+use {Error, ErrorKind, Result};
 
 /// Media playlist builder.
 #[derive(Debug, Clone)]
@@ -148,21 +150,18 @@ impl MediaPlaylistBuilder {
                 self.target_duration_tag
                     .iter()
                     .map(|t| t.requires_version()),
-            )
-            .chain(self.media_sequence_tag.iter().map(|t| t.requires_version()))
+            ).chain(self.media_sequence_tag.iter().map(|t| t.requires_version()))
             .chain(
                 self.discontinuity_sequence_tag
                     .iter()
                     .map(|t| t.requires_version()),
-            )
-            .chain(self.playlist_type_tag.iter().map(|t| t.requires_version()))
+            ).chain(self.playlist_type_tag.iter().map(|t| t.requires_version()))
             .chain(self.i_frames_only_tag.iter().map(|t| t.requires_version()))
             .chain(
                 self.independent_segments_tag
                     .iter()
                     .map(|t| t.requires_version()),
-            )
-            .chain(self.start_tag.iter().map(|t| t.requires_version()))
+            ).chain(self.start_tag.iter().map(|t| t.requires_version()))
             .chain(self.end_list_tag.iter().map(|t| t.requires_version()))
             .chain(self.segments.iter().map(|s| s.requires_version()))
             .max()

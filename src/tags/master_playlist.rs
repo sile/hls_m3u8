@@ -1,11 +1,13 @@
 use std::fmt;
 use std::str::FromStr;
 
-use {Error, ErrorKind, Result};
+use super::{parse_u64, parse_yes_or_no};
 use attribute::AttributePairs;
-use types::{ClosedCaptions, DecimalFloatingPoint, DecimalResolution, DecryptionKey, HdcpLevel,
-            InStreamId, MediaType, ProtocolVersion, QuotedString, SessionData, SingleLineString};
-use super::{parse_yes_or_no, parse_u64};
+use types::{
+    ClosedCaptions, DecimalFloatingPoint, DecimalResolution, DecryptionKey, HdcpLevel, InStreamId,
+    MediaType, ProtocolVersion, QuotedString, SessionData, SingleLineString,
+};
+use {Error, ErrorKind, Result};
 
 /// `ExtXMedia` builder.
 #[derive(Debug, Clone)]
@@ -834,8 +836,8 @@ impl FromStr for ExtXSessionKey {
 
 #[cfg(test)]
 mod test {
-    use types::{EncryptionMethod, InitializationVector};
     use super::*;
+    use types::{EncryptionMethod, InitializationVector};
 
     #[test]
     fn ext_x_media() {
@@ -899,7 +901,7 @@ mod test {
             method: EncryptionMethod::Aes128,
             uri: quoted_string("foo"),
             iv: Some(InitializationVector([
-                0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15
+                0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15,
             ])),
             key_format: None,
             key_format_versions: None,
