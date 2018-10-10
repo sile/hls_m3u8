@@ -175,7 +175,7 @@ impl MediaPlaylistBuilder {
             .chain(self.end_list_tag.iter().map(|t| t.requires_version()))
             .chain(self.segments.iter().map(|s| s.requires_version()))
             .max()
-            .expect("Never fails")
+            .unwrap_or(ProtocolVersion::V1)
     }
 }
 impl Default for MediaPlaylistBuilder {
@@ -489,5 +489,11 @@ mod tests {
                 .parse(m3u8)
                 .is_ok()
         );
+    }
+
+    #[test]
+    fn empty_m3u8_parse_test() {
+        let m3u8 = "";
+        assert!(m3u8.parse::<MediaPlaylist>().is_err());
     }
 }
