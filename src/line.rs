@@ -90,6 +90,8 @@ pub enum Tag {
     ExtXKey(tags::ExtXKey),
     ExtXMap(tags::ExtXMap),
     ExtXProgramDateTime(tags::ExtXProgramDateTime),
+    ExtXCueOut(tags::ExtXCueOut),
+    ExtXCueIn(tags::ExtXCueIn),
     ExtXDateRange(tags::ExtXDateRange),
     ExtXTargetDuration(tags::ExtXTargetDuration),
     ExtXMediaSequence(tags::ExtXMediaSequence),
@@ -117,6 +119,8 @@ impl fmt::Display for Tag {
             Tag::ExtXKey(ref t) => t.fmt(f),
             Tag::ExtXMap(ref t) => t.fmt(f),
             Tag::ExtXProgramDateTime(ref t) => t.fmt(f),
+            Tag::ExtXCueOut(ref t) => t.fmt(f),
+            Tag::ExtXCueIn(ref t) => t.fmt(f),
             Tag::ExtXDateRange(ref t) => t.fmt(f),
             Tag::ExtXTargetDuration(ref t) => t.fmt(f),
             Tag::ExtXMediaSequence(ref t) => t.fmt(f),
@@ -154,6 +158,10 @@ impl FromStr for Tag {
             track!(s.parse().map(Tag::ExtXMap))
         } else if s.starts_with(tags::ExtXProgramDateTime::PREFIX) {
             track!(s.parse().map(Tag::ExtXProgramDateTime))
+        } else if s.starts_with(tags::ExtXCueOut::PREFIX) {
+            track!(s.parse().map(Tag::ExtXCueOut))
+        } else if s.starts_with(tags::ExtXCueIn::PREFIX) {
+            track!(s.parse().map(Tag::ExtXCueIn))
         } else if s.starts_with(tags::ExtXTargetDuration::PREFIX) {
             track!(s.parse().map(Tag::ExtXTargetDuration))
         } else if s.starts_with(tags::ExtXDateRange::PREFIX) {

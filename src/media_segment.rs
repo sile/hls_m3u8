@@ -2,8 +2,8 @@ use std::fmt;
 use std::iter;
 
 use tags::{
-    ExtInf, ExtXByteRange, ExtXDateRange, ExtXDiscontinuity, ExtXKey, ExtXMap, ExtXProgramDateTime,
-    MediaSegmentTag,
+    ExtInf, ExtXByteRange, ExtXCueIn, ExtXCueOut, ExtXDateRange, ExtXDiscontinuity, ExtXKey,
+    ExtXMap, ExtXProgramDateTime, MediaSegmentTag,
 };
 use types::{ProtocolVersion, SingleLineString};
 use {ErrorKind, Result};
@@ -17,6 +17,8 @@ pub struct MediaSegmentBuilder {
     date_range_tag: Option<ExtXDateRange>,
     discontinuity_tag: Option<ExtXDiscontinuity>,
     program_date_time_tag: Option<ExtXProgramDateTime>,
+    cue_out_tag: Option<ExtXCueOut>,
+    cue_in_tag: Option<ExtXCueIn>,
     inf_tag: Option<ExtInf>,
     uri: Option<SingleLineString>,
 }
@@ -30,6 +32,8 @@ impl MediaSegmentBuilder {
             date_range_tag: None,
             discontinuity_tag: None,
             program_date_time_tag: None,
+            cue_out_tag: None,
+            cue_in_tag: None,
             inf_tag: None,
             uri: None,
         }
@@ -51,6 +55,8 @@ impl MediaSegmentBuilder {
             MediaSegmentTag::ExtXKey(t) => self.key_tags.push(t),
             MediaSegmentTag::ExtXMap(t) => self.map_tag = Some(t),
             MediaSegmentTag::ExtXProgramDateTime(t) => self.program_date_time_tag = Some(t),
+            MediaSegmentTag::ExtXCueOut(t) => self.cue_out_tag = Some(t),
+            MediaSegmentTag::ExtXCueIn(t) => self.cue_in_tag = Some(t),
         }
         self
     }
@@ -66,6 +72,8 @@ impl MediaSegmentBuilder {
             date_range_tag: self.date_range_tag,
             discontinuity_tag: self.discontinuity_tag,
             program_date_time_tag: self.program_date_time_tag,
+            cue_out_tag: self.cue_out_tag,
+            cue_in_tag: self.cue_in_tag,
             inf_tag,
             uri,
         })
@@ -86,6 +94,8 @@ pub struct MediaSegment {
     date_range_tag: Option<ExtXDateRange>,
     discontinuity_tag: Option<ExtXDiscontinuity>,
     program_date_time_tag: Option<ExtXProgramDateTime>,
+    cue_out_tag: Option<ExtXCueOut>,
+    cue_in_tag: Option<ExtXCueIn>,
     inf_tag: ExtInf,
     uri: SingleLineString,
 }
@@ -107,6 +117,12 @@ impl fmt::Display for MediaSegment {
             writeln!(f, "{}", t)?;
         }
         if let Some(ref t) = self.program_date_time_tag {
+            writeln!(f, "{}", t)?;
+        }
+        if let Some(ref t) = self.cue_out_tag {
+            writeln!(f, "{}", t)?;
+        }
+        if let Some(ref t) = self.cue_in_tag {
             writeln!(f, "{}", t)?;
         }
         writeln!(f, "{}", self.inf_tag)?;
@@ -145,6 +161,14 @@ impl MediaSegment {
         self.program_date_time_tag.as_ref()
     }
 
+    /// Returns the `EXT-X-CUE-OUT` tag associated with the media segment.
+    pub fn cue_out_tag(&self) -> Option<&ExtXCueOut> {
+        self.cue_out_tag.as_ref()
+    }
+    /// Returns the `EXT-X-CUE-IN` tag associated with the media segment.
+    pub fn cue_in_tag(&self) -> Option<&ExtXCueIn> {
+        self.cue_in_tag.as_ref()
+    }
     /// Returns the `EXT-X-MAP` tag associated with the media segment.
     pub fn map_tag(&self) -> Option<&ExtXMap> {
         self.map_tag.as_ref()

@@ -339,6 +339,71 @@ impl FromStr for ExtXProgramDateTime {
     }
 }
 
+/// [EXT-X-CUE-OUT]
+#[derive(Debug, Clone, PartialEq, Eq, Hash)]
+pub struct ExtXCueOut {
+    ///seconds in ad pod
+    duration: Duration,
+}
+impl ExtXCueOut {
+    pub(crate) const PREFIX: &'static str = "#EXT-X-CUE-OUT:";
+
+    /// Makes a new `ExtXCueOut` tag.
+    pub fn new(duration: Duration) -> Self {
+        let duration = Duration::from_secs(duration.as_secs());
+        ExtXCueOut { duration }
+    }
+
+    /// Returns the date-time of the first sample of the associated media segment.
+    pub fn duration(&self) -> &Duration {
+        &self.duration
+    }
+
+    /// Returns the protocol compatibility version that this tag requires.
+    pub fn requires_version(&self) -> ProtocolVersion {
+        ProtocolVersion::V1
+    }
+}
+impl fmt::Display for ExtXCueOut {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "{}{}", Self::PREFIX, self.duration.as_secs())
+    }
+}
+impl FromStr for ExtXCueOut {
+    type Err = Error;
+    fn from_str(s: &str) -> Result<Self> {
+        track_assert!(s.starts_with(Self::PREFIX), ErrorKind::InvalidInput);
+        let duration = may_invalid!(s.split_at(Self::PREFIX.len()).1.parse())?;
+        Ok(ExtXCueOut {
+            duration: Duration::from_secs(duration),
+        })
+    }
+}
+///CUE-IN
+///
+
+#[derive(Debug, Clone, PartialEq, Eq, Hash)]
+pub struct ExtXCueIn;
+impl ExtXCueIn {
+    pub(crate) const PREFIX: &'static str = "#EXT-X-CUE-IN";
+
+    /// Returns the protocol compatibility version that this tag requires.
+    pub fn requires_version(self) -> ProtocolVersion {
+        ProtocolVersion::V1
+    }
+}
+impl fmt::Display for ExtXCueIn {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        Self::PREFIX.fmt(f)
+    }
+}
+impl FromStr for ExtXCueIn {
+    type Err = Error;
+    fn from_str(s: &str) -> Result<Self> {
+        track_assert_eq!(s, Self::PREFIX, ErrorKind::InvalidInput);
+        Ok(ExtXCueIn)
+    }
+}
 /// [4.3.2.7.  EXT-X-DATERANGE]
 ///
 /// [4.3.2.7.  EXT-X-DATERANGE]: https://tools.ietf.org/html/rfc8216#section-4.3.2.7
@@ -439,7 +504,10 @@ impl FromStr for ExtXDateRange {
                     planned_duration = Some(seconds.to_duration());
                 }
                 "SCTE35-CMD" => scte35_cmd = Some(track!(value.parse())?),
-                "SCTE35-OUT" => scte35_out = Some(track!(value.parse())?),
+                "SCTE35-OUT" => {
+                    scte35_out = Some(QuotedString::new(value.to_string())?);
+                    // scte35_out = Some(track!(value.parse())?),
+                }
                 "SCTE35-IN" => scte35_in = Some(track!(value.parse())?),
                 "END-ON-NEXT" => {
                     track_assert_eq!(value, "YES", ErrorKind::InvalidInput);
@@ -602,13 +670,28 @@ mod test {
         assert_eq!(tag.to_string(), text);
         assert_eq!(tag.requires_version(), ProtocolVersion::V6);
     }
-
     #[test]
     fn ext_x_program_date_time() {
         let text = "#EXT-X-PROGRAM-DATE-TIME:2010-02-19T14:54:23.031+08:00";
         assert!(text.parse::<ExtXProgramDateTime>().is_ok());
 
         let tag = text.parse::<ExtXProgramDateTime>().unwrap();
+        assert_eq!(tag.to_string(), text);
+        assert_eq!(tag.requires_version(), ProtocolVersion::V1);
+    }
+    #[test]
+    fn ext_x_cue_out() {
+        let tag = ExtXCueOut::new(Duration::from_secs(24));
+        let text = "#EXT-X-CUE-OUT:24";
+        assert_eq!(text.parse().ok(), Some(tag));
+        assert_eq!(tag.to_string(), text);
+        assert_eq!(tag.requires_version(), ProtocolVersion::V1);
+    }
+    #[test]
+    fn ext_x_cue_in() {
+        let tag = ExtXCueIn::new();
+        let text = "#EXT-X-CUE-OUT";
+        assert_eq!(text.parse().ok(), Some(tag));
         assert_eq!(tag.to_string(), text);
         assert_eq!(tag.requires_version(), ProtocolVersion::V1);
     }

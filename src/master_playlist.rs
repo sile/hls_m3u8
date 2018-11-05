@@ -329,6 +329,8 @@ impl FromStr for MasterPlaylist {
                         | Tag::ExtXKey(_)
                         | Tag::ExtXMap(_)
                         | Tag::ExtXProgramDateTime(_)
+                        | Tag::ExtXCueOut(_)
+                        | Tag::ExtXCueIn(_)
                         | Tag::ExtXDateRange(_)
                         | Tag::ExtXTargetDuration(_)
                         | Tag::ExtXMediaSequence(_)

@@ -56,7 +56,6 @@ impl MediaPlaylistBuilder {
         self.version = Some(version);
         self
     }
-
     /// Sets the given tag to the resulting playlist.
     pub fn tag<T: Into<MediaPlaylistTag>>(&mut self, tag: T) -> &mut Self {
         match tag.into() {
@@ -362,6 +361,14 @@ impl MediaPlaylistOptions {
                             segment.tag(t);
                         }
                         Tag::ExtXProgramDateTime(t) => {
+                            has_partial_segment = true;
+                            segment.tag(t);
+                        }
+                        Tag::ExtXCueOut(t) => {
+                            has_partial_segment = true;
+                            segment.tag(t);
+                        }
+                        Tag::ExtXCueIn(t) => {
                             has_partial_segment = true;
                             segment.tag(t);
                         }

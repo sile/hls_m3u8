@@ -31,7 +31,8 @@ pub use self::media_playlist::{
     ExtXTargetDuration,
 };
 pub use self::media_segment::{
-    ExtInf, ExtXByteRange, ExtXDateRange, ExtXDiscontinuity, ExtXKey, ExtXMap, ExtXProgramDateTime,
+    ExtInf, ExtXByteRange, ExtXCueIn, ExtXCueOut, ExtXDateRange, ExtXDiscontinuity, ExtXKey,
+    ExtXMap, ExtXProgramDateTime,
 };
 
 mod basic;
@@ -107,6 +108,8 @@ pub enum MediaSegmentTag {
     ExtXKey(ExtXKey),
     ExtXMap(ExtXMap),
     ExtXProgramDateTime(ExtXProgramDateTime),
+    ExtXCueOut(ExtXCueOut),
+    ExtXCueIn(ExtXCueIn),
 }
 impl_from!(MediaSegmentTag, ExtInf);
 impl_from!(MediaSegmentTag, ExtXByteRange);
@@ -115,6 +118,8 @@ impl_from!(MediaSegmentTag, ExtXDiscontinuity);
 impl_from!(MediaSegmentTag, ExtXKey);
 impl_from!(MediaSegmentTag, ExtXMap);
 impl_from!(MediaSegmentTag, ExtXProgramDateTime);
+impl_from!(MediaSegmentTag, ExtXCueOut);
+impl_from!(MediaSegmentTag, ExtXCueIn);
 
 fn parse_yes_or_no(s: &str) -> Result<bool> {
     match s {
