@@ -373,10 +373,9 @@ impl FromStr for ExtXCueOut {
     type Err = Error;
     fn from_str(s: &str) -> Result<Self> {
         track_assert!(s.starts_with(Self::PREFIX), ErrorKind::InvalidInput);
-        let duration = may_invalid!(s.split_at(Self::PREFIX.len()).1.parse())?;
-        Ok(ExtXCueOut {
-            duration: Duration::from_secs(duration),
-        })
+        let seconds: DecimalFloatingPoint = may_invalid!(s.split_at(Self::PREFIX.len()).1.parse())?;
+        let duration = seconds.to_duration();
+        Ok(ExtXCueOut { duration })
     }
 }
 ///CUE-IN
