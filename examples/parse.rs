@@ -16,13 +16,12 @@ fn main() {
                 .takes_value(true)
                 .default_value("media")
                 .possible_values(&["media", "master"]),
-        ).get_matches();
+        )
+        .get_matches();
     let mut m3u8 = String::new();
-    track_try_unwrap!(
-        io::stdin()
-            .read_to_string(&mut m3u8)
-            .map_err(Failure::from_error)
-    );
+    track_try_unwrap!(io::stdin()
+        .read_to_string(&mut m3u8)
+        .map_err(Failure::from_error));
 
     match matches.value_of("M3U8_TYPE").unwrap() {
         "media" => {

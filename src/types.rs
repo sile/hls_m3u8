@@ -411,9 +411,9 @@ impl FromStr for ByteRange {
         let mut tokens = s.splitn(2, '@');
         let length = tokens.next().expect("Never fails");
         let start = if let Some(start) = tokens.next() {
-            Some(track!(
-                start.parse().map_err(|e| ErrorKind::InvalidInput.cause(e))
-            )?)
+            Some(track!(start
+                .parse()
+                .map_err(|e| ErrorKind::InvalidInput.cause(e)))?)
         } else {
             None
         };

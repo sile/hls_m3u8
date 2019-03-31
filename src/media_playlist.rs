@@ -160,18 +160,21 @@ impl MediaPlaylistBuilder {
                 self.target_duration_tag
                     .iter()
                     .map(|t| t.requires_version()),
-            ).chain(self.media_sequence_tag.iter().map(|t| t.requires_version()))
+            )
+            .chain(self.media_sequence_tag.iter().map(|t| t.requires_version()))
             .chain(
                 self.discontinuity_sequence_tag
                     .iter()
                     .map(|t| t.requires_version()),
-            ).chain(self.playlist_type_tag.iter().map(|t| t.requires_version()))
+            )
+            .chain(self.playlist_type_tag.iter().map(|t| t.requires_version()))
             .chain(self.i_frames_only_tag.iter().map(|t| t.requires_version()))
             .chain(
                 self.independent_segments_tag
                     .iter()
                     .map(|t| t.requires_version()),
-            ).chain(self.start_tag.iter().map(|t| t.requires_version()))
+            )
+            .chain(self.start_tag.iter().map(|t| t.requires_version()))
             .chain(self.end_list_tag.iter().map(|t| t.requires_version()))
             .chain(self.segments.iter().map(|s| s.requires_version()))
             .max()
@@ -475,20 +478,16 @@ mod tests {
         assert!(m3u8.parse::<MediaPlaylist>().is_err());
 
         // Error (allowable segment duration = 9)
-        assert!(
-            MediaPlaylistOptions::new()
-                .allowable_excess_segment_duration(Duration::from_secs(1))
-                .parse(m3u8)
-                .is_err()
-        );
+        assert!(MediaPlaylistOptions::new()
+            .allowable_excess_segment_duration(Duration::from_secs(1))
+            .parse(m3u8)
+            .is_err());
 
         // Ok (allowable segment duration = 10)
-        assert!(
-            MediaPlaylistOptions::new()
-                .allowable_excess_segment_duration(Duration::from_secs(2))
-                .parse(m3u8)
-                .is_ok()
-        );
+        assert!(MediaPlaylistOptions::new()
+            .allowable_excess_segment_duration(Duration::from_secs(2))
+            .parse(m3u8)
+            .is_ok());
     }
 
     #[test]

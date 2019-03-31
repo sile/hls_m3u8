@@ -102,14 +102,16 @@ impl MasterPlaylistBuilder {
                 self.independent_segments_tag
                     .iter()
                     .map(|t| t.requires_version()),
-            ).chain(self.start_tag.iter().map(|t| t.requires_version()))
+            )
+            .chain(self.start_tag.iter().map(|t| t.requires_version()))
             .chain(self.media_tags.iter().map(|t| t.requires_version()))
             .chain(self.stream_inf_tags.iter().map(|t| t.requires_version()))
             .chain(
                 self.i_frame_stream_inf_tags
                     .iter()
                     .map(|t| t.requires_version()),
-            ).chain(self.session_data_tags.iter().map(|t| t.requires_version()))
+            )
+            .chain(self.session_data_tags.iter().map(|t| t.requires_version()))
             .chain(self.session_key_tags.iter().map(|t| t.requires_version()))
             .max()
             .expect("Never fails")
