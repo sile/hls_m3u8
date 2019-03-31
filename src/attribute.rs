@@ -1,7 +1,6 @@
+use crate::{ErrorKind, Result};
 use std::collections::HashSet;
 use std::str;
-
-use {ErrorKind, Result};
 
 #[derive(Debug)]
 pub struct AttributePairs<'a> {

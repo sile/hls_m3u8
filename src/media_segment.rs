@@ -1,12 +1,11 @@
-use std::fmt;
-use std::iter;
-
-use tags::{
+use crate::tags::{
     ExtInf, ExtXByteRange, ExtXDateRange, ExtXDiscontinuity, ExtXKey, ExtXMap, ExtXProgramDateTime,
     MediaSegmentTag,
 };
-use types::{ProtocolVersion, SingleLineString};
-use {ErrorKind, Result};
+use crate::types::{ProtocolVersion, SingleLineString};
+use crate::{ErrorKind, Result};
+use std::fmt;
+use std::iter;
 
 /// Media segment builder.
 #[derive(Debug, Clone)]

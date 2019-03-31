@@ -1,12 +1,11 @@
 //! Miscellaneous types.
+use crate::attribute::AttributePairs;
+use crate::{Error, ErrorKind, Result};
 use std::fmt;
 use std::ops::Deref;
 use std::str::{self, FromStr};
 use std::time::Duration;
 use trackable::error::ErrorKindExt;
-
-use attribute::AttributePairs;
-use {Error, ErrorKind, Result};
 
 /// String that represents a single line in a playlist file.
 ///

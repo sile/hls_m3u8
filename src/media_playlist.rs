@@ -1,17 +1,16 @@
-use std::fmt;
-use std::iter;
-use std::str::FromStr;
-use std::time::Duration;
-
-use line::{Line, Lines, Tag};
-use media_segment::{MediaSegment, MediaSegmentBuilder};
-use tags::{
+use crate::line::{Line, Lines, Tag};
+use crate::media_segment::{MediaSegment, MediaSegmentBuilder};
+use crate::tags::{
     ExtM3u, ExtXDiscontinuitySequence, ExtXEndList, ExtXIFramesOnly, ExtXIndependentSegments,
     ExtXMediaSequence, ExtXPlaylistType, ExtXStart, ExtXTargetDuration, ExtXVersion,
     MediaPlaylistTag,
 };
-use types::ProtocolVersion;
-use {Error, ErrorKind, Result};
+use crate::types::ProtocolVersion;
+use crate::{Error, ErrorKind, Result};
+use std::fmt;
+use std::iter;
+use std::str::FromStr;
+use std::time::Duration;
 
 /// Media playlist builder.
 #[derive(Debug, Clone)]
@@ -122,7 +121,7 @@ impl MediaPlaylistBuilder {
         let mut last_range_uri = None;
         for s in &self.segments {
             // CHECK: `#EXT-X-TARGETDURATION`
-            let mut segment_duration = s.inf_tag().duration();
+            let segment_duration = s.inf_tag().duration();
             let rounded_segment_duration = if segment_duration.subsec_nanos() < 500_000_000 {
                 Duration::from_secs(segment_duration.as_secs())
             } else {

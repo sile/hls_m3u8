@@ -1,8 +1,7 @@
+use crate::types::ProtocolVersion;
+use crate::{Error, ErrorKind, Result};
 use std::fmt;
 use std::str::FromStr;
-
-use types::ProtocolVersion;
-use {Error, ErrorKind, Result};
 
 /// [4.3.1.1. EXTM3U]
 ///

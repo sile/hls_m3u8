@@ -1,10 +1,9 @@
+use crate::types::{PlaylistType, ProtocolVersion};
+use crate::{Error, ErrorKind, Result};
 use std::fmt;
 use std::str::FromStr;
 use std::time::Duration;
 use trackable::error::ErrorKindExt;
-
-use types::{PlaylistType, ProtocolVersion};
-use {Error, ErrorKind, Result};
 
 /// [4.3.3.1. EXT-X-TARGETDURATION]
 ///

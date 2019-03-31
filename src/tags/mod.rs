@@ -1,9 +1,8 @@
 //! [4.3. Playlist Tags]
 //!
 //! [4.3. Playlist Tags]: https://tools.ietf.org/html/rfc8216#section-4.3
+use crate::{ErrorKind, Result};
 use trackable::error::ErrorKindExt;
-
-use {ErrorKind, Result};
 
 macro_rules! may_invalid {
     ($expr:expr) => {

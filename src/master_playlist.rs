@@ -1,15 +1,14 @@
+use crate::line::{Line, Lines, Tag};
+use crate::tags::{
+    ExtM3u, ExtXIFrameStreamInf, ExtXIndependentSegments, ExtXMedia, ExtXSessionData,
+    ExtXSessionKey, ExtXStart, ExtXStreamInf, ExtXVersion, MasterPlaylistTag,
+};
+use crate::types::{ClosedCaptions, MediaType, ProtocolVersion, QuotedString};
+use crate::{Error, ErrorKind, Result};
 use std::collections::HashSet;
 use std::fmt;
 use std::iter;
 use std::str::FromStr;
-
-use line::{Line, Lines, Tag};
-use tags::{
-    ExtM3u, ExtXIFrameStreamInf, ExtXIndependentSegments, ExtXMedia, ExtXSessionData,
-    ExtXSessionKey, ExtXStart, ExtXStreamInf, ExtXVersion, MasterPlaylistTag,
-};
-use types::{ClosedCaptions, MediaType, ProtocolVersion, QuotedString};
-use {Error, ErrorKind, Result};
 
 /// Master playlist builder.
 #[derive(Debug, Clone)]

@@ -1,13 +1,12 @@
-use std::fmt;
-use std::str::FromStr;
-
 use super::{parse_u64, parse_yes_or_no};
-use attribute::AttributePairs;
-use types::{
+use crate::attribute::AttributePairs;
+use crate::types::{
     ClosedCaptions, DecimalFloatingPoint, DecimalResolution, DecryptionKey, HdcpLevel, InStreamId,
     MediaType, ProtocolVersion, QuotedString, SessionData, SingleLineString,
 };
-use {Error, ErrorKind, Result};
+use crate::{Error, ErrorKind, Result};
+use std::fmt;
+use std::str::FromStr;
 
 /// `ExtXMedia` builder.
 #[derive(Debug, Clone)]
@@ -498,7 +497,7 @@ impl FromStr for ExtXStreamInf {
     type Err = Error;
     fn from_str(s: &str) -> Result<Self> {
         let mut lines = s.splitn(2, '\n');
-        let first_line = lines.next().expect("Never fails").trim_right_matches('\r');
+        let first_line = lines.next().expect("Never fails").trim_end_matches('\r');
         let second_line = track_assert_some!(lines.next(), ErrorKind::InvalidInput);
 
         track_assert!(
@@ -837,7 +836,7 @@ impl FromStr for ExtXSessionKey {
 #[cfg(test)]
 mod test {
     use super::*;
-    use types::{EncryptionMethod, InitializationVector};
+    use crate::types::{EncryptionMethod, InitializationVector};
 
     #[test]
     fn ext_x_media() {

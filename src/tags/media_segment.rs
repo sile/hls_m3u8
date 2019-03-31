@@ -1,14 +1,13 @@
+use crate::attribute::AttributePairs;
+use crate::types::{
+    ByteRange, DecimalFloatingPoint, DecryptionKey, ProtocolVersion, QuotedString, SingleLineString,
+};
+use crate::{Error, ErrorKind, Result};
 use std::collections::BTreeMap;
 use std::fmt;
 use std::str::FromStr;
 use std::time::Duration;
 use trackable::error::ErrorKindExt;
-
-use attribute::AttributePairs;
-use types::{
-    ByteRange, DecimalFloatingPoint, DecryptionKey, ProtocolVersion, QuotedString, SingleLineString,
-};
-use {Error, ErrorKind, Result};
 
 /// [4.3.2.1. EXTINF]
 ///
@@ -479,10 +478,9 @@ impl FromStr for ExtXDateRange {
 
 #[cfg(test)]
 mod test {
-    use std::time::Duration;
-
     use super::*;
-    use types::{EncryptionMethod, InitializationVector};
+    use crate::types::{EncryptionMethod, InitializationVector};
+    use std::time::Duration;
 
     #[test]
     fn extinf() {
