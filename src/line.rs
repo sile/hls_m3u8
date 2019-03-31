@@ -69,7 +69,7 @@ impl<'a> Iterator for Lines<'a> {
     }
 }
 
-#[cfg_attr(feature = "cargo-clippy", allow(large_enum_variant))]
+#[allow(clippy::large_enum_variant)]
 #[derive(Debug, PartialEq, Eq)]
 pub enum Line<'a> {
     Blank,
@@ -78,7 +78,7 @@ pub enum Line<'a> {
     Uri(SingleLineString),
 }
 
-#[cfg_attr(feature = "cargo-clippy", allow(large_enum_variant))]
+#[allow(clippy::large_enum_variant)]
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum Tag {
     ExtM3u(tags::ExtM3u),

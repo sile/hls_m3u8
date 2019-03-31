@@ -21,7 +21,6 @@
 //! assert!(m3u8.parse::<MediaPlaylist>().is_ok());
 //! ```
 #![warn(missing_docs)]
-#![cfg_attr(feature = "cargo-clippy", allow(const_static_lifetime))]
 #[macro_use]
 extern crate trackable;
 
