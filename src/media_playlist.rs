@@ -277,7 +277,7 @@ impl fmt::Display for MediaPlaylist {
             writeln!(f, "{}", t)?;
         }
         for segment in &self.segments {
-            writeln!(f, "{}", segment)?;
+            write!(f, "{}", segment)?;
         }
         if let Some(ref t) = self.end_list_tag {
             writeln!(f, "{}", t)?;
