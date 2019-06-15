@@ -108,7 +108,7 @@ impl fmt::Display for MediaSegment {
         if let Some(ref t) = self.program_date_time_tag {
             writeln!(f, "{}", t)?;
         }
-        writeln!(f, "{}", self.inf_tag)?;
+        writeln!(f, "{},", self.inf_tag)?;
         writeln!(f, "{}", self.uri)?;
         Ok(())
     }
