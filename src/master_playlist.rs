@@ -260,7 +260,7 @@ impl MasterPlaylist {
     }
 
     /// Returns the `EXT-X-I-FRAME-STREAM-INF` tags contained in the playlist.
-    pub fn i_fream_stream_inf_tags(&self) -> &[ExtXIFrameStreamInf] {
+    pub fn i_frame_stream_inf_tags(&self) -> &[ExtXIFrameStreamInf] {
         &self.i_frame_stream_inf_tags
     }
 
