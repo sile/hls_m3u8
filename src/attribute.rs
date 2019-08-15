@@ -24,7 +24,7 @@ impl<'a> AttributePairs<'a> {
                     self.input = rest;
                     return Ok(key);
                 }
-                b'A'...b'Z' | b'0'...b'9' | b'-' => {}
+                b'A'..=b'Z' | b'0'..=b'9' | b'-' => {}
                 _ => track_panic!(
                     ErrorKind::InvalidInput,
                     "Malformed attribute name: {:?}",
