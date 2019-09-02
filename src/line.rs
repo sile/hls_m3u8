@@ -1,13 +1,14 @@
-use crate::tags;
-use crate::types::SingleLineString;
-use crate::{Error, ErrorKind, Result};
 use std::fmt;
 use std::str::FromStr;
+
+use crate::tags;
+use crate::{Error, ErrorKind, Result};
 
 #[derive(Debug)]
 pub struct Lines<'a> {
     input: &'a str,
 }
+
 impl<'a> Lines<'a> {
     pub fn new(input: &'a str) -> Self {
         Lines { input }
@@ -49,13 +50,13 @@ impl<'a> Lines<'a> {
         } else if raw_line.starts_with('#') {
             Line::Comment(raw_line)
         } else {
-            let uri = track!(SingleLineString::new(raw_line))?;
-            Line::Uri(uri)
+            Line::Uri(raw_line.to_string())
         };
         self.input = &self.input[next_start..];
         Ok(line)
     }
 }
+
 impl<'a> Iterator for Lines<'a> {
     type Item = Result<Line<'a>>;
     fn next(&mut self) -> Option<Self::Item> {
@@ -75,7 +76,7 @@ pub enum Line<'a> {
     Blank,
     Comment(&'a str),
     Tag(Tag),
-    Uri(SingleLineString),
+    Uri(String),
 }
 
 #[allow(clippy::large_enum_variant)]
@@ -103,8 +104,9 @@ pub enum Tag {
     ExtXSessionKey(tags::ExtXSessionKey),
     ExtXIndependentSegments(tags::ExtXIndependentSegments),
     ExtXStart(tags::ExtXStart),
-    Unknown(SingleLineString),
+    Unknown(String),
 }
+
 impl fmt::Display for Tag {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         match *self {
@@ -182,7 +184,7 @@ impl FromStr for Tag {
         } else if s.starts_with(tags::ExtXStart::PREFIX) {
             track!(s.parse().map(Tag::ExtXStart))
         } else {
-            track!(SingleLineString::new(s)).map(Tag::Unknown)
+            Ok(Tag::Unknown(s.to_string()))
         }
     }
 }

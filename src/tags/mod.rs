@@ -1,8 +1,6 @@
 //! [4.3. Playlist Tags]
 //!
 //! [4.3. Playlist Tags]: https://tools.ietf.org/html/rfc8216#section-4.3
-use crate::{ErrorKind, Result};
-use trackable::error::ErrorKindExt;
 
 macro_rules! may_invalid {
     ($expr:expr) => {
@@ -20,24 +18,52 @@ macro_rules! impl_from {
     };
 }
 
-pub use self::basic::{ExtM3u, ExtXVersion};
-pub use self::master_playlist::{
-    ExtXIFrameStreamInf, ExtXMedia, ExtXSessionData, ExtXSessionKey, ExtXStreamInf,
-};
-pub use self::media_or_master_playlist::{ExtXIndependentSegments, ExtXStart};
-pub use self::media_playlist::{
-    ExtXDiscontinuitySequence, ExtXEndList, ExtXIFramesOnly, ExtXMediaSequence, ExtXPlaylistType,
-    ExtXTargetDuration,
-};
-pub use self::media_segment::{
-    ExtInf, ExtXByteRange, ExtXDateRange, ExtXDiscontinuity, ExtXKey, ExtXMap, ExtXProgramDateTime,
-};
+// new mods:
+mod byte_range;
+mod date_range;
+mod discontinuity;
+mod discontinuity_sequence;
+mod end_list;
+mod iframe_stream_inf;
+mod iframes_only;
+mod independent_segments;
+mod inf;
+mod key;
+mod m3u;
+mod map;
+mod media;
+mod media_sequence;
+mod playlist_type;
+mod program_date_time;
+mod session_data;
+mod session_key;
+mod start;
+mod stream_inf;
+mod target_duration;
+mod version;
 
-mod basic;
-mod master_playlist;
-mod media_or_master_playlist;
-mod media_playlist;
-mod media_segment;
+pub use byte_range::*;
+pub use date_range::*;
+pub use discontinuity::*;
+pub use discontinuity_sequence::*;
+pub use end_list::*;
+pub use iframe_stream_inf::*;
+pub use iframes_only::*;
+pub use independent_segments::*;
+pub use inf::*;
+pub use key::*;
+pub use m3u::*;
+pub use map::*;
+pub use media::*;
+pub use media_sequence::*;
+pub use playlist_type::*;
+pub use program_date_time::*;
+pub use session_data::*;
+pub use session_key::*;
+pub use start::*;
+pub use stream_inf::*;
+pub use target_duration::*;
+pub use version::*;
 
 /// [4.3.4. Master Playlist Tags]
 ///
@@ -57,6 +83,7 @@ pub enum MasterPlaylistTag {
     ExtXIndependentSegments(ExtXIndependentSegments),
     ExtXStart(ExtXStart),
 }
+
 impl_from!(MasterPlaylistTag, ExtXMedia);
 impl_from!(MasterPlaylistTag, ExtXStreamInf);
 impl_from!(MasterPlaylistTag, ExtXIFrameStreamInf);
@@ -83,6 +110,7 @@ pub enum MediaPlaylistTag {
     ExtXIndependentSegments(ExtXIndependentSegments),
     ExtXStart(ExtXStart),
 }
+
 impl_from!(MediaPlaylistTag, ExtXTargetDuration);
 impl_from!(MediaPlaylistTag, ExtXMediaSequence);
 impl_from!(MediaPlaylistTag, ExtXDiscontinuitySequence);
@@ -107,6 +135,7 @@ pub enum MediaSegmentTag {
     ExtXMap(ExtXMap),
     ExtXProgramDateTime(ExtXProgramDateTime),
 }
+
 impl_from!(MediaSegmentTag, ExtInf);
 impl_from!(MediaSegmentTag, ExtXByteRange);
 impl_from!(MediaSegmentTag, ExtXDateRange);
@@ -114,16 +143,3 @@ impl_from!(MediaSegmentTag, ExtXDiscontinuity);
 impl_from!(MediaSegmentTag, ExtXKey);
 impl_from!(MediaSegmentTag, ExtXMap);
 impl_from!(MediaSegmentTag, ExtXProgramDateTime);
-
-fn parse_yes_or_no(s: &str) -> Result<bool> {
-    match s {
-        "YES" => Ok(true),
-        "NO" => Ok(false),
-        _ => track_panic!(ErrorKind::InvalidInput, "Unexpected value: {:?}", s),
-    }
-}
-
-fn parse_u64(s: &str) -> Result<u64> {
-    let n = track!(s.parse().map_err(|e| ErrorKind::InvalidInput.cause(e)))?;
-    Ok(n)
-}

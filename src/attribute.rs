@@ -1,88 +1,97 @@
-use crate::{ErrorKind, Result};
-use std::collections::HashSet;
-use std::str;
+use std::collections::HashMap;
+use std::str::FromStr;
 
-#[derive(Debug)]
-pub struct AttributePairs<'a> {
-    input: &'a str,
-    visited_keys: HashSet<&'a str>,
-}
-impl<'a> AttributePairs<'a> {
-    pub fn parse(input: &'a str) -> Self {
-        AttributePairs {
-            input,
-            visited_keys: HashSet::new(),
-        }
-    }
+use shrinkwraprs::Shrinkwrap;
 
-    fn parse_name(&mut self) -> Result<&'a str> {
-        for i in 0..self.input.len() {
-            match self.input.as_bytes()[i] {
-                b'=' => {
-                    let (key, _) = self.input.split_at(i);
-                    let (_, rest) = self.input.split_at(i + 1);
-                    self.input = rest;
-                    return Ok(key);
-                }
-                b'A'..=b'Z' | b'0'..=b'9' | b'-' => {}
-                _ => track_panic!(
-                    ErrorKind::InvalidInput,
-                    "Malformed attribute name: {:?}",
-                    self.input
-                ),
-            }
-        }
-        track_panic!(
-            ErrorKind::InvalidInput,
-            "No attribute value: {:?}",
-            self.input
-        );
-    }
+use crate::error::{Error, ErrorKind};
 
-    fn parse_raw_value(&mut self) -> &'a str {
-        let mut in_quote = false;
-        let mut value_end = self.input.len();
-        let mut next = self.input.len();
-        for (i, c) in self.input.bytes().enumerate() {
-            match c {
-                b'"' => {
-                    in_quote = !in_quote;
-                }
-                b',' if !in_quote => {
-                    value_end = i;
-                    next = i + 1;
-                    break;
-                }
-                _ => {}
-            }
-        }
-        let (value, _) = self.input.split_at(value_end);
-        let (_, rest) = self.input.split_at(next);
-        self.input = rest;
-        value
+#[derive(Shrinkwrap, Clone, Debug, Default, Eq, PartialEq)]
+pub(crate) struct AttributePairs(HashMap<String, String>);
+
+impl IntoIterator for AttributePairs {
+    type Item = (String, String);
+    type IntoIter = ::std::collections::hash_map::IntoIter<String, String>;
+
+    fn into_iter(self) -> Self::IntoIter {
+        self.0.into_iter()
     }
 }
-impl<'a> Iterator for AttributePairs<'a> {
-    type Item = Result<(&'a str, &'a str)>;
-    fn next(&mut self) -> Option<Self::Item> {
-        if self.input.is_empty() {
-            return None;
+
+#[allow(dead_code)]
+impl AttributePairs {
+    pub fn new() -> Self {
+        Self::default()
+    }
+
+    pub fn insert<K, V>(&mut self, key: K, value: V) -> Option<String>
+    where
+        K: ToString,
+        V: ToString,
+    {
+        self.0.insert(key.to_string(), value.to_string())
+    }
+}
+
+impl FromStr for AttributePairs {
+    type Err = Error;
+
+    fn from_str(value: &str) -> Result<Self, Self::Err> {
+        let mut result = HashMap::new();
+
+        for line in split(value) {
+            let t = line
+                .trim()
+                .split("=")
+                .map(|x| x.to_string())
+                .collect::<Vec<_>>();
+
+            let (key, value) = {
+                if t.len() != 2 {
+                    Err(ErrorKind::InvalidInput)?
+                } else {
+                    (t[0].clone(), t[1].clone())
+                }
+            };
+
+            result.insert(key.to_string(), value.to_string());
         }
 
-        let result = || -> Result<(&'a str, &'a str)> {
-            let key = track!(self.parse_name())?;
-            track_assert!(
-                self.visited_keys.insert(key),
-                ErrorKind::InvalidInput,
-                "Duplicate attribute key: {:?}",
-                key
-            );
-
-            let value = self.parse_raw_value();
-            Ok((key, value))
-        }();
-        Some(result)
+        Ok(Self(result))
     }
+}
+
+pub fn split(value: &str) -> Vec<String> {
+    let mut result = vec![];
+
+    let mut inside_quotes = false;
+    let mut temp_string = String::new();
+
+    for c in value.chars() {
+        match c {
+            '"' => {
+                if inside_quotes {
+                    inside_quotes = false;
+                } else {
+                    inside_quotes = true;
+                }
+                temp_string.push(c);
+            }
+            ',' => {
+                if !inside_quotes {
+                    result.push(temp_string);
+                    temp_string = String::new();
+                } else {
+                    temp_string.push(c);
+                }
+            }
+            _ => {
+                temp_string.push(c);
+            }
+        }
+    }
+    result.push(temp_string);
+
+    result
 }
 
 #[cfg(test)]
@@ -90,14 +99,37 @@ mod test {
     use super::*;
 
     #[test]
-    fn it_works() {
-        let mut pairs = AttributePairs::parse("FOO=BAR,BAR=\"baz,qux\",ABC=12.3");
-        assert_eq!(pairs.next().map(|x| x.ok()), Some(Some(("FOO", "BAR"))));
-        assert_eq!(
-            pairs.next().map(|x| x.ok()),
-            Some(Some(("BAR", "\"baz,qux\"")))
-        );
-        assert_eq!(pairs.next().map(|x| x.ok()), Some(Some(("ABC", "12.3"))));
-        assert_eq!(pairs.next().map(|x| x.ok()), None)
+    fn test_parser() {
+        let pairs = ("FOO=BAR,BAR=\"baz,qux\",ABC=12.3")
+            .parse::<AttributePairs>()
+            .unwrap();
+
+        let mut iterator = pairs.iter();
+        assert!(iterator.any(|(k, v)| (k, v) == (&"FOO".to_string(), &"BAR".to_string())));
+
+        let mut iterator = pairs.iter();
+        assert!(iterator.any(|(k, v)| (k, v) == (&"BAR".to_string(), &"\"baz,qux\"".to_string())));
+
+        let mut iterator = pairs.iter();
+        assert!(iterator.any(|(k, v)| (k, v) == (&"ABC".to_string(), &"12.3".to_string())));
+    }
+
+    #[test]
+    fn test_malformed_input() {
+        let result = ("FOO=,Bar==,,=12,ABC=12").parse::<AttributePairs>();
+        assert!(result.is_err());
+    }
+
+    #[test]
+    fn test_iterator() {
+        let mut attrs = AttributePairs::new();
+        attrs.insert("key_01".to_string(), "value_01".to_string());
+        attrs.insert("key_02".to_string(), "value_02".to_string());
+
+        let mut iterator = attrs.iter();
+        assert!(iterator.any(|(k, v)| (k, v) == (&"key_01".to_string(), &"value_01".to_string())));
+
+        let mut iterator = attrs.iter();
+        assert!(iterator.any(|(k, v)| (k, v) == (&"key_02".to_string(), &"value_02".to_string())));
     }
 }

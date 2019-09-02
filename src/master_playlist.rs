@@ -3,8 +3,9 @@ use crate::tags::{
     ExtM3u, ExtXIFrameStreamInf, ExtXIndependentSegments, ExtXMedia, ExtXSessionData,
     ExtXSessionKey, ExtXStart, ExtXStreamInf, ExtXVersion, MasterPlaylistTag,
 };
-use crate::types::{ClosedCaptions, MediaType, ProtocolVersion, QuotedString};
+use crate::types::{ClosedCaptions, MediaType, ProtocolVersion};
 use crate::{Error, ErrorKind, Result};
+use std::borrow::Cow;
 use std::collections::HashSet;
 use std::fmt;
 use std::iter;
@@ -22,6 +23,7 @@ pub struct MasterPlaylistBuilder {
     session_data_tags: Vec<ExtXSessionData>,
     session_key_tags: Vec<ExtXSessionKey>,
 }
+
 impl MasterPlaylistBuilder {
     /// Makes a new `MasterPlaylistBuilder` instance.
     pub fn new() -> Self {
@@ -100,69 +102,75 @@ impl MasterPlaylistBuilder {
             .chain(
                 self.independent_segments_tag
                     .iter()
-                    .map(|t| t.requires_version()),
+                    .map(|t| t.required_version()),
             )
-            .chain(self.start_tag.iter().map(|t| t.requires_version()))
-            .chain(self.media_tags.iter().map(|t| t.requires_version()))
-            .chain(self.stream_inf_tags.iter().map(|t| t.requires_version()))
+            .chain(self.start_tag.iter().map(|t| t.required_version()))
+            .chain(self.media_tags.iter().map(|t| t.required_version()))
+            .chain(self.stream_inf_tags.iter().map(|t| t.required_version()))
             .chain(
                 self.i_frame_stream_inf_tags
                     .iter()
-                    .map(|t| t.requires_version()),
+                    .map(|t| t.required_version()),
             )
-            .chain(self.session_data_tags.iter().map(|t| t.requires_version()))
-            .chain(self.session_key_tags.iter().map(|t| t.requires_version()))
+            .chain(self.session_data_tags.iter().map(|t| t.required_version()))
+            .chain(self.session_key_tags.iter().map(|t| t.required_version()))
             .max()
             .expect("Never fails")
     }
 
+    // TODO: this function became broken with Cow's
     fn validate_stream_inf_tags(&self) -> Result<()> {
         let mut has_none_closed_captions = false;
         for t in &self.stream_inf_tags {
-            if let Some(group_id) = t.audio() {
+            if let Some(value) = &t.audio() {
                 track_assert!(
-                    self.check_media_group(MediaType::Audio, group_id),
+                    self.check_media_group(MediaType::Audio, value),
                     ErrorKind::InvalidInput,
                     "Unmatched audio group: {:?}",
-                    group_id
+                    value
                 );
             }
-            if let Some(group_id) = t.video() {
+
+            if let Some(value) = &t.video() {
                 track_assert!(
-                    self.check_media_group(MediaType::Video, group_id),
+                    self.check_media_group(MediaType::Video, value),
                     ErrorKind::InvalidInput,
                     "Unmatched video group: {:?}",
-                    group_id
+                    value
                 );
             }
-            if let Some(group_id) = t.subtitles() {
+
+            if let Some(value) = &t.subtitles() {
                 track_assert!(
-                    self.check_media_group(MediaType::Subtitles, group_id),
+                    self.check_media_group(MediaType::Subtitles, value),
                     ErrorKind::InvalidInput,
                     "Unmatched subtitles group: {:?}",
-                    group_id
+                    value
                 );
             }
-            match t.closed_captions() {
-                Some(&ClosedCaptions::GroupId(ref group_id)) => {
-                    track_assert!(
-                        self.check_media_group(MediaType::ClosedCaptions, group_id),
-                        ErrorKind::InvalidInput,
-                        "Unmatched closed-captions group: {:?}",
-                        group_id
-                    );
+
+            if let Some(value) = t.closed_captions() {
+                match &value.into_owned() {
+                    ClosedCaptions::GroupId(ref group_id) => {
+                        track_assert!(
+                            self.check_media_group(MediaType::ClosedCaptions, group_id),
+                            ErrorKind::InvalidInput,
+                            "Unmatched closed-captions group: {:?}",
+                            group_id
+                        );
+                    }
+                    ClosedCaptions::None => {
+                        has_none_closed_captions = true;
+                    }
                 }
-                Some(&ClosedCaptions::None) => {
-                    has_none_closed_captions = true;
-                }
-                None => {}
             }
         }
+
         if has_none_closed_captions {
             track_assert!(
                 self.stream_inf_tags
                     .iter()
-                    .all(|t| t.closed_captions() == Some(&ClosedCaptions::None)),
+                    .all(|t| t.closed_captions() == Some(Cow::Owned(ClosedCaptions::None))),
                 ErrorKind::InvalidInput
             );
         }
@@ -173,10 +181,10 @@ impl MasterPlaylistBuilder {
         for t in &self.i_frame_stream_inf_tags {
             if let Some(group_id) = t.video() {
                 track_assert!(
-                    self.check_media_group(MediaType::Video, group_id),
+                    self.check_media_group(MediaType::Video, &group_id),
                     ErrorKind::InvalidInput,
                     "Unmatched video group: {:?}",
-                    group_id
+                    &group_id
                 );
             }
         }
@@ -209,12 +217,15 @@ impl MasterPlaylistBuilder {
         Ok(())
     }
 
-    fn check_media_group(&self, media_type: MediaType, group_id: &QuotedString) -> bool {
-        self.media_tags
-            .iter()
-            .any(|t| t.media_type() == media_type && t.group_id() == group_id)
+    fn check_media_group<T: ToString>(&self, media_type: MediaType, group_id: T) -> bool {
+        // let group_id = Cow::Borrowed(group_id.to_string().as_str());
+
+        self.media_tags.iter().any(|t| {
+            t.media_type() == media_type && t.group_id().into_owned() == group_id.to_string()
+        })
     }
 }
+
 impl Default for MasterPlaylistBuilder {
     fn default() -> Self {
         Self::new()
@@ -233,6 +244,7 @@ pub struct MasterPlaylist {
     session_data_tags: Vec<ExtXSessionData>,
     session_key_tags: Vec<ExtXSessionKey>,
 }
+
 impl MasterPlaylist {
     /// Returns the `EXT-X-VERSION` tag contained in the playlist.
     pub fn version_tag(&self) -> ExtXVersion {
@@ -274,6 +286,7 @@ impl MasterPlaylist {
         &self.session_key_tags
     }
 }
+
 impl fmt::Display for MasterPlaylist {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         writeln!(f, "{}", ExtM3u)?;
@@ -295,15 +308,16 @@ impl fmt::Display for MasterPlaylist {
         for t in &self.session_key_tags {
             writeln!(f, "{}", t)?;
         }
-        if let Some(ref t) = self.independent_segments_tag {
-            writeln!(f, "{}", t)?;
+        if let Some(value) = &self.independent_segments_tag {
+            writeln!(f, "{}", value)?;
         }
-        if let Some(ref t) = self.start_tag {
-            writeln!(f, "{}", t)?;
+        if let Some(value) = &self.start_tag {
+            writeln!(f, "{}", value)?;
         }
         Ok(())
     }
 }
+
 impl FromStr for MasterPlaylist {
     type Err = Error;
     fn from_str(s: &str) -> Result<Self> {

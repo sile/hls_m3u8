@@ -38,6 +38,7 @@ mod line;
 mod master_playlist;
 mod media_playlist;
 mod media_segment;
+mod utils;
 
 /// This crate specific `Result` type.
 pub type Result<T> = std::result::Result<T, Error>;
