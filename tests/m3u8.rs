@@ -1,5 +1,5 @@
 use hls_m3u8::MediaPlaylist;
-
+// https://developer.apple.com/documentation/http_live_streaming/example_playlists_for_http_live_streaming
 #[test]
 fn playlist_1() {
     let playlist_1 = r#"
