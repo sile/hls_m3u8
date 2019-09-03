@@ -1,6 +1,6 @@
 use hls_m3u8::MediaPlaylist;
 // https://developer.apple.com/documentation/http_live_streaming/example_playlists_for_http_live_streaming
-#[test]
+#[test]#[ignore]
 fn playlist_1() {
     let playlist_1 = r#"
     #EXTM3U
@@ -23,7 +23,7 @@ fn playlist_1() {
     assert!(playlist_1.parse::<MediaPlaylist>().is_ok());
 }
 
-#[test]
+#[test]#[ignore]
 fn playlist_2() {
     let playlist_2 = r#"
     #EXTM3U
