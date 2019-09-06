@@ -4,7 +4,6 @@ use crate::{Error, ErrorKind, Result};
 use std::fmt;
 use std::str::FromStr;
 
-
 /// [4.3.4.4. EXT-X-SESSION-DATA]
 ///
 /// [4.3.4.4. EXT-X-SESSION-DATA]: https://tools.ietf.org/html/rfc8216#section-4.3.4.4

@@ -1,10 +1,9 @@
-use crate::utils::parse_u64;
 use crate::attribute::AttributePairs;
 use crate::types::{DecimalResolution, HdcpLevel, ProtocolVersion, QuotedString};
+use crate::utils::parse_u64;
 use crate::{Error, ErrorKind, Result};
 use std::fmt;
 use std::str::FromStr;
-
 
 /// [4.3.4.3. EXT-X-I-FRAME-STREAM-INF]
 ///
@@ -157,7 +156,6 @@ mod test {
         assert_eq!(tag.to_string(), text);
         assert_eq!(tag.requires_version(), ProtocolVersion::V1);
     }
-
 
     fn quoted_string(s: &str) -> QuotedString {
         QuotedString::new(s).unwrap()

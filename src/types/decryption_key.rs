@@ -1,6 +1,6 @@
 use crate::attribute::AttributePairs;
+use crate::types::{EncryptionMethod, InitializationVector, ProtocolVersion, QuotedString};
 use crate::{Error, ErrorKind, Result};
-use crate::types::{QuotedString, InitializationVector, ProtocolVersion, EncryptionMethod};
 use std::fmt;
 use std::str::{self, FromStr};
 

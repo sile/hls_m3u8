@@ -1,7 +1,7 @@
+use crate::types::QuotedString;
 use crate::{Error, Result};
 use std::fmt;
 use std::str::{self, FromStr};
-use crate::types::QuotedString;
 
 /// The identifier of a closed captions group or its absence.
 ///

@@ -152,7 +152,5 @@ mod test {
     use super::*;
 
     #[test] // TODO; write some tests
-    fn it_works() {
-
-    }
+    fn it_works() {}
 }

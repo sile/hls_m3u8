@@ -1,6 +1,6 @@
-use crate::utils::parse_yes_or_no;
 use crate::attribute::AttributePairs;
-use crate::types::{ InStreamId, MediaType, ProtocolVersion, QuotedString};
+use crate::types::{InStreamId, MediaType, ProtocolVersion, QuotedString};
+use crate::utils::parse_yes_or_no;
 use crate::{Error, ErrorKind, Result};
 use std::fmt;
 use std::str::FromStr;

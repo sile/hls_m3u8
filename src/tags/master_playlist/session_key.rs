@@ -3,7 +3,6 @@ use crate::{Error, ErrorKind, Result};
 use std::fmt;
 use std::str::FromStr;
 
-
 /// [4.3.4.5. EXT-X-SESSION-KEY]
 ///
 /// [4.3.4.5. EXT-X-SESSION-KEY]: https://tools.ietf.org/html/rfc8216#section-4.3.4.5

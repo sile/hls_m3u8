@@ -46,7 +46,6 @@ impl FromStr for ExtXVersion {
     }
 }
 
-
 #[cfg(test)]
 mod test {
     use super::*;

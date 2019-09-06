@@ -1,13 +1,12 @@
-use crate::utils::parse_u64;
 use crate::attribute::AttributePairs;
 use crate::types::{
-    ClosedCaptions, DecimalFloatingPoint, DecimalResolution, HdcpLevel,
-    ProtocolVersion, QuotedString, SingleLineString,
+    ClosedCaptions, DecimalFloatingPoint, DecimalResolution, HdcpLevel, ProtocolVersion,
+    QuotedString, SingleLineString,
 };
+use crate::utils::parse_u64;
 use crate::{Error, ErrorKind, Result};
 use std::fmt;
 use std::str::FromStr;
-
 
 /// [4.3.4.2. EXT-X-STREAM-INF]
 ///
