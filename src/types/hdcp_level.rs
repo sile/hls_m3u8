@@ -33,3 +33,26 @@ impl FromStr for HdcpLevel {
         }
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_display() {
+        let level = HdcpLevel::Type0;
+        assert_eq!(level.to_string(), "TYPE-0".to_string());
+
+        let level = HdcpLevel::None;
+        assert_eq!(level.to_string(), "NONE".to_string());
+    }
+
+    #[test]
+    fn test_parse() {
+        let level = HdcpLevel::Type0;
+        assert_eq!(level, "TYPE-0".parse::<HdcpLevel>().unwrap());
+
+        let level = HdcpLevel::None;
+        assert_eq!(level, "NONE".parse::<HdcpLevel>().unwrap());
+    }
+}

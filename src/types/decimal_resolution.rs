@@ -35,3 +35,44 @@ impl FromStr for DecimalResolution {
         })
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_display() {
+        let decimal_resolution = DecimalResolution {
+            width: 1920,
+            height: 1080,
+        };
+        assert_eq!(decimal_resolution.to_string(), "1920x1080".to_string());
+
+        let decimal_resolution = DecimalResolution {
+            width: 1280,
+            height: 720,
+        };
+        assert_eq!(decimal_resolution.to_string(), "1280x720".to_string());
+    }
+
+    #[test]
+    fn test_parse() {
+        let decimal_resolution = DecimalResolution {
+            width: 1920,
+            height: 1080,
+        };
+        assert_eq!(
+            decimal_resolution,
+            "1920x1080".parse::<DecimalResolution>().unwrap()
+        );
+
+        let decimal_resolution = DecimalResolution {
+            width: 1280,
+            height: 720,
+        };
+        assert_eq!(
+            decimal_resolution,
+            "1280x720".parse::<DecimalResolution>().unwrap()
+        );
+    }
+}

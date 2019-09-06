@@ -37,3 +37,32 @@ impl FromStr for EncryptionMethod {
         }
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_display() {
+        let encryption_method = EncryptionMethod::Aes128;
+        assert_eq!(encryption_method.to_string(), "AES-128".to_string());
+
+        let encryption_method = EncryptionMethod::SampleAes;
+        assert_eq!(encryption_method.to_string(), "SAMPLE-AES".to_string());
+    }
+
+    #[test]
+    fn test_parse() {
+        let encryption_method = EncryptionMethod::Aes128;
+        assert_eq!(
+            encryption_method,
+            "AES-128".parse::<EncryptionMethod>().unwrap()
+        );
+
+        let encryption_method = EncryptionMethod::SampleAes;
+        assert_eq!(
+            encryption_method,
+            "SAMPLE-AES".parse::<EncryptionMethod>().unwrap()
+        );
+    }
+}

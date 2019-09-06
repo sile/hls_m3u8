@@ -68,3 +68,32 @@ impl FromStr for DecimalFloatingPoint {
         Ok(DecimalFloatingPoint(n))
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    pub fn test_display() {
+        let decimal_floating_point = DecimalFloatingPoint::new(22.0).unwrap();
+        assert_eq!(decimal_floating_point.to_string(), "22".to_string());
+
+        let decimal_floating_point = DecimalFloatingPoint::new(4.1).unwrap();
+        assert_eq!(decimal_floating_point.to_string(), "4.1".to_string());
+    }
+
+    #[test]
+    pub fn test_parse() {
+        let decimal_floating_point = DecimalFloatingPoint::new(22.0).unwrap();
+        assert_eq!(
+            decimal_floating_point,
+            "22".parse::<DecimalFloatingPoint>().unwrap()
+        );
+
+        let decimal_floating_point = DecimalFloatingPoint::new(4.1).unwrap();
+        assert_eq!(
+            decimal_floating_point,
+            "4.1".parse::<DecimalFloatingPoint>().unwrap()
+        );
+    }
+}

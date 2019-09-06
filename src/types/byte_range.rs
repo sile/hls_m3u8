@@ -43,3 +43,50 @@ impl FromStr for ByteRange {
         })
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_display() {
+        let byte_range = ByteRange {
+            length: 0,
+            start: Some(5),
+        };
+        assert_eq!(byte_range.to_string(), "0@5".to_string());
+
+        let byte_range = ByteRange {
+            length: 99999,
+            start: Some(2),
+        };
+        assert_eq!(byte_range.to_string(), "99999@2".to_string());
+
+        let byte_range = ByteRange {
+            length: 99999,
+            start: None,
+        };
+        assert_eq!(byte_range.to_string(), "99999".to_string());
+    }
+
+    #[test]
+    fn test_parse() {
+        let byte_range = ByteRange {
+            length: 99999,
+            start: Some(2),
+        };
+        assert_eq!(byte_range, "99999@2".parse::<ByteRange>().unwrap());
+
+        let byte_range = ByteRange {
+            length: 99999,
+            start: Some(2),
+        };
+        assert_eq!(byte_range, "99999@2".parse::<ByteRange>().unwrap());
+
+        let byte_range = ByteRange {
+            length: 99999,
+            start: None,
+        };
+        assert_eq!(byte_range, "99999".parse::<ByteRange>().unwrap());
+    }
+}

@@ -34,3 +34,29 @@ impl FromStr for ClosedCaptions {
         }
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_display() {
+        let closed_captions = ClosedCaptions::None;
+        assert_eq!(closed_captions.to_string(), "NONE".to_string());
+
+        let closed_captions = ClosedCaptions::GroupId(QuotedString::new("value").unwrap());
+        assert_eq!(closed_captions.to_string(), "\"value\"".to_string());
+    }
+
+    #[test]
+    fn test_parse() {
+        let closed_captions = ClosedCaptions::None;
+        assert_eq!(closed_captions, "NONE".parse::<ClosedCaptions>().unwrap());
+
+        let closed_captions = ClosedCaptions::GroupId(QuotedString::new("value").unwrap());
+        assert_eq!(
+            closed_captions,
+            "\"value\"".parse::<ClosedCaptions>().unwrap()
+        );
+    }
+}
