@@ -24,7 +24,7 @@ impl SignedDecimalFloatingPoint {
     }
 
     /// Converts `DecimalFloatingPoint` to `f64`.
-    pub fn as_f64(self) -> f64 {
+    pub const fn as_f64(self) -> f64 {
         self.0
     }
 }

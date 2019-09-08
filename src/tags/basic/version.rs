@@ -15,17 +15,17 @@ impl ExtXVersion {
     pub(crate) const PREFIX: &'static str = "#EXT-X-VERSION:";
 
     /// Makes a new `ExtXVersion` tag.
-    pub fn new(version: ProtocolVersion) -> Self {
+    pub const fn new(version: ProtocolVersion) -> Self {
         ExtXVersion { version }
     }
 
     /// Returns the protocol compatibility version of the playlist containing this tag.
-    pub fn version(self) -> ProtocolVersion {
+    pub const fn version(&self) -> ProtocolVersion {
         self.version
     }
 
     /// Returns the protocol compatibility version that this tag requires.
-    pub fn requires_version(self) -> ProtocolVersion {
+    pub const fn requires_version(&self) -> ProtocolVersion {
         ProtocolVersion::V1
     }
 }

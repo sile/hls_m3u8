@@ -27,6 +27,7 @@ pub struct MediaPlaylistBuilder {
     segments: Vec<MediaSegment>,
     options: MediaPlaylistOptions,
 }
+
 impl MediaPlaylistBuilder {
     /// Makes a new `MediaPlaylistBuilder` instance.
     pub fn new() -> Self {
@@ -180,6 +181,7 @@ impl MediaPlaylistBuilder {
             .unwrap_or(ProtocolVersion::V1)
     }
 }
+
 impl Default for MediaPlaylistBuilder {
     fn default() -> Self {
         Self::new()
@@ -200,49 +202,50 @@ pub struct MediaPlaylist {
     end_list_tag: Option<ExtXEndList>,
     segments: Vec<MediaSegment>,
 }
+
 impl MediaPlaylist {
     /// Returns the `EXT-X-VERSION` tag contained in the playlist.
-    pub fn version_tag(&self) -> ExtXVersion {
+    pub const fn version_tag(&self) -> ExtXVersion {
         self.version_tag
     }
 
     /// Returns the `EXT-X-TARGETDURATION` tag contained in the playlist.
-    pub fn target_duration_tag(&self) -> ExtXTargetDuration {
+    pub const fn target_duration_tag(&self) -> ExtXTargetDuration {
         self.target_duration_tag
     }
 
     /// Returns the `EXT-X-MEDIA-SEQUENCE` tag contained in the playlist.
-    pub fn media_sequence_tag(&self) -> Option<ExtXMediaSequence> {
+    pub const fn media_sequence_tag(&self) -> Option<ExtXMediaSequence> {
         self.media_sequence_tag
     }
 
     /// Returns the `EXT-X-DISCONTINUITY-SEQUENCE` tag contained in the playlist.
-    pub fn discontinuity_sequence_tag(&self) -> Option<ExtXDiscontinuitySequence> {
+    pub const fn discontinuity_sequence_tag(&self) -> Option<ExtXDiscontinuitySequence> {
         self.discontinuity_sequence_tag
     }
 
     /// Returns the `EXT-X-PLAYLIST-TYPE` tag contained in the playlist.
-    pub fn playlist_type_tag(&self) -> Option<ExtXPlaylistType> {
+    pub const fn playlist_type_tag(&self) -> Option<ExtXPlaylistType> {
         self.playlist_type_tag
     }
 
     /// Returns the `EXT-X-I-FRAMES-ONLY` tag contained in the playlist.
-    pub fn i_frames_only_tag(&self) -> Option<ExtXIFramesOnly> {
+    pub const fn i_frames_only_tag(&self) -> Option<ExtXIFramesOnly> {
         self.i_frames_only_tag
     }
 
     /// Returns the `EXT-X-INDEPENDENT-SEGMENTS` tag contained in the playlist.
-    pub fn independent_segments_tag(&self) -> Option<ExtXIndependentSegments> {
+    pub const fn independent_segments_tag(&self) -> Option<ExtXIndependentSegments> {
         self.independent_segments_tag
     }
 
     /// Returns the `EXT-X-START` tag contained in the playlist.
-    pub fn start_tag(&self) -> Option<ExtXStart> {
+    pub const fn start_tag(&self) -> Option<ExtXStart> {
         self.start_tag
     }
 
     /// Returns the `EXT-X-ENDLIST` tag contained in the playlist.
-    pub fn end_list_tag(&self) -> Option<ExtXEndList> {
+    pub const fn end_list_tag(&self) -> Option<ExtXEndList> {
         self.end_list_tag
     }
 
@@ -251,6 +254,7 @@ impl MediaPlaylist {
         &self.segments
     }
 }
+
 impl fmt::Display for MediaPlaylist {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         writeln!(f, "{}", ExtM3u)?;
@@ -285,6 +289,7 @@ impl fmt::Display for MediaPlaylist {
         Ok(())
     }
 }
+
 impl FromStr for MediaPlaylist {
     type Err = Error;
     fn from_str(s: &str) -> Result<Self> {
@@ -297,6 +302,7 @@ impl FromStr for MediaPlaylist {
 pub struct MediaPlaylistOptions {
     allowable_excess_duration: Duration,
 }
+
 impl MediaPlaylistOptions {
     /// Makes a new `MediaPlaylistOptions` with the default settings.
     pub fn new() -> Self {
@@ -450,6 +456,7 @@ impl MediaPlaylistOptions {
         track!(builder.finish())
     }
 }
+
 impl Default for MediaPlaylistOptions {
     fn default() -> Self {
         Self::new()

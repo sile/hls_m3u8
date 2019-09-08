@@ -24,7 +24,7 @@ pub struct ExtXMediaBuilder {
 
 impl ExtXMediaBuilder {
     /// Makes a `ExtXMediaBuilder` instance.
-    pub fn new() -> Self {
+    pub const fn new() -> Self {
         ExtXMediaBuilder {
             media_type: None,
             uri: None,
@@ -194,17 +194,17 @@ impl ExtXMedia {
     }
 
     /// Returns the type of the media associated with this tag.
-    pub fn media_type(&self) -> MediaType {
+    pub const fn media_type(&self) -> MediaType {
         self.media_type
     }
 
     /// Returns the identifier that specifies the group to which the rendition belongs.
-    pub fn group_id(&self) -> &String {
+    pub const fn group_id(&self) -> &String {
         &self.group_id
     }
 
     /// Returns a human-readable description of the rendition.
-    pub fn name(&self) -> &String {
+    pub const fn name(&self) -> &String {
         &self.name
     }
 
@@ -224,23 +224,23 @@ impl ExtXMedia {
     }
 
     /// Returns whether this is the default rendition.
-    pub fn default(&self) -> bool {
+    pub const fn default(&self) -> bool {
         self.default
     }
 
     /// Returns whether the client may choose to
     /// play this rendition in the absence of explicit user preference.
-    pub fn autoselect(&self) -> bool {
+    pub const fn autoselect(&self) -> bool {
         self.autoselect
     }
 
     /// Returns whether the rendition contains content that is considered essential to play.
-    pub fn forced(&self) -> bool {
+    pub const fn forced(&self) -> bool {
         self.forced
     }
 
     /// Returns the identifier that specifies a rendition within the segments in the media playlist.
-    pub fn instream_id(&self) -> Option<InStreamId> {
+    pub const fn instream_id(&self) -> Option<InStreamId> {
         self.instream_id
     }
 
@@ -308,6 +308,7 @@ impl fmt::Display for ExtXMedia {
 
 impl FromStr for ExtXMedia {
     type Err = Error;
+
     fn from_str(s: &str) -> Result<Self> {
         track_assert!(s.starts_with(Self::PREFIX), ErrorKind::InvalidInput);
 

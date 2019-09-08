@@ -37,17 +37,17 @@ impl ExtXIFrameStreamInf {
     }
 
     /// Returns the URI that identifies the associated media playlist.
-    pub fn uri(&self) -> &String {
+    pub const fn uri(&self) -> &String {
         &self.uri
     }
 
     /// Returns the peak segment bit rate of the variant stream.
-    pub fn bandwidth(&self) -> u64 {
+    pub const fn bandwidth(&self) -> u64 {
         self.bandwidth
     }
 
     /// Returns the average segment bit rate of the variant stream.
-    pub fn average_bandwidth(&self) -> Option<u64> {
+    pub const fn average_bandwidth(&self) -> Option<u64> {
         self.average_bandwidth
     }
 
@@ -57,12 +57,12 @@ impl ExtXIFrameStreamInf {
     }
 
     /// Returns the optimal pixel resolution at which to display all the video in the variant stream.
-    pub fn resolution(&self) -> Option<DecimalResolution> {
+    pub const fn resolution(&self) -> Option<DecimalResolution> {
         self.resolution
     }
 
     /// Returns the HDCP level of the variant stream.
-    pub fn hdcp_level(&self) -> Option<HdcpLevel> {
+    pub const fn hdcp_level(&self) -> Option<HdcpLevel> {
         self.hdcp_level
     }
 
@@ -72,7 +72,7 @@ impl ExtXIFrameStreamInf {
     }
 
     /// Returns the protocol compatibility version that this tag requires.
-    pub fn requires_version(&self) -> ProtocolVersion {
+    pub const fn requires_version(&self) -> ProtocolVersion {
         ProtocolVersion::V1
     }
 }
@@ -104,6 +104,7 @@ impl fmt::Display for ExtXIFrameStreamInf {
 
 impl FromStr for ExtXIFrameStreamInf {
     type Err = Error;
+
     fn from_str(s: &str) -> Result<Self> {
         track_assert!(s.starts_with(Self::PREFIX), ErrorKind::InvalidInput);
 

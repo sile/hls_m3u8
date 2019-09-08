@@ -18,7 +18,7 @@ impl ExtInf {
     pub(crate) const PREFIX: &'static str = "#EXTINF:";
 
     /// Makes a new `ExtInf` tag.
-    pub fn new(duration: Duration) -> Self {
+    pub const fn new(duration: Duration) -> Self {
         ExtInf {
             duration,
             title: None,
@@ -26,7 +26,7 @@ impl ExtInf {
     }
 
     /// Makes a new `ExtInf` tag with the given title.
-    pub fn with_title(duration: Duration, title: SingleLineString) -> Self {
+    pub const fn with_title(duration: Duration, title: SingleLineString) -> Self {
         ExtInf {
             duration,
             title: Some(title),
@@ -34,7 +34,7 @@ impl ExtInf {
     }
 
     /// Returns the duration of the associated media segment.
-    pub fn duration(&self) -> Duration {
+    pub const fn duration(&self) -> Duration {
         self.duration
     }
 

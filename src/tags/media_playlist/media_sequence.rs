@@ -16,17 +16,17 @@ impl ExtXMediaSequence {
     pub(crate) const PREFIX: &'static str = "#EXT-X-MEDIA-SEQUENCE:";
 
     /// Makes a new `ExtXMediaSequence` tag.
-    pub fn new(seq_num: u64) -> Self {
+    pub const fn new(seq_num: u64) -> Self {
         ExtXMediaSequence { seq_num }
     }
 
     /// Returns the sequence number of the first media segment that appears in the associated playlist.
-    pub fn seq_num(self) -> u64 {
+    pub const fn seq_num(self) -> u64 {
         self.seq_num
     }
 
     /// Returns the protocol compatibility version that this tag requires.
-    pub fn requires_version(self) -> ProtocolVersion {
+    pub const fn requires_version(self) -> ProtocolVersion {
         ProtocolVersion::V1
     }
 }
@@ -39,6 +39,7 @@ impl fmt::Display for ExtXMediaSequence {
 
 impl FromStr for ExtXMediaSequence {
     type Err = Error;
+
     fn from_str(s: &str) -> Result<Self> {
         track_assert!(s.starts_with(Self::PREFIX), ErrorKind::InvalidInput);
         let seq_num = may_invalid!(s.split_at(Self::PREFIX.len()).1.parse())?;

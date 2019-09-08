@@ -15,12 +15,12 @@ impl ExtXSessionKey {
     pub(crate) const PREFIX: &'static str = "#EXT-X-SESSION-KEY:";
 
     /// Makes a new `ExtXSessionKey` tag.
-    pub fn new(key: DecryptionKey) -> Self {
+    pub const fn new(key: DecryptionKey) -> Self {
         ExtXSessionKey { key }
     }
 
     /// Returns a decryption key for the playlist.
-    pub fn key(&self) -> &DecryptionKey {
+    pub const fn key(&self) -> &DecryptionKey {
         &self.key
     }
 

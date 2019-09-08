@@ -30,7 +30,7 @@ impl ExtXStreamInf {
     pub(crate) const PREFIX: &'static str = "#EXT-X-STREAM-INF:";
 
     /// Makes a new `ExtXStreamInf` tag.
-    pub fn new(uri: SingleLineString, bandwidth: u64) -> Self {
+    pub const fn new(uri: SingleLineString, bandwidth: u64) -> Self {
         ExtXStreamInf {
             uri,
             bandwidth,
@@ -47,17 +47,17 @@ impl ExtXStreamInf {
     }
 
     /// Returns the URI that identifies the associated media playlist.
-    pub fn uri(&self) -> &SingleLineString {
+    pub const fn uri(&self) -> &SingleLineString {
         &self.uri
     }
 
     /// Returns the peak segment bit rate of the variant stream.
-    pub fn bandwidth(&self) -> u64 {
+    pub const fn bandwidth(&self) -> u64 {
         self.bandwidth
     }
 
     /// Returns the average segment bit rate of the variant stream.
-    pub fn average_bandwidth(&self) -> Option<u64> {
+    pub const fn average_bandwidth(&self) -> Option<u64> {
         self.average_bandwidth
     }
 
@@ -67,17 +67,17 @@ impl ExtXStreamInf {
     }
 
     /// Returns the optimal pixel resolution at which to display all the video in the variant stream.
-    pub fn resolution(&self) -> Option<DecimalResolution> {
+    pub const fn resolution(&self) -> Option<DecimalResolution> {
         self.resolution
     }
 
     /// Returns the maximum frame rate for all the video in the variant stream.
-    pub fn frame_rate(&self) -> Option<DecimalFloatingPoint> {
+    pub const fn frame_rate(&self) -> Option<DecimalFloatingPoint> {
         self.frame_rate
     }
 
     /// Returns the HDCP level of the variant stream.
-    pub fn hdcp_level(&self) -> Option<HdcpLevel> {
+    pub const fn hdcp_level(&self) -> Option<HdcpLevel> {
         self.hdcp_level
     }
 
@@ -102,7 +102,7 @@ impl ExtXStreamInf {
     }
 
     /// Returns the protocol compatibility version that this tag requires.
-    pub fn requires_version(&self) -> ProtocolVersion {
+    pub const fn requires_version(&self) -> ProtocolVersion {
         ProtocolVersion::V1
     }
 }
@@ -145,6 +145,7 @@ impl fmt::Display for ExtXStreamInf {
 
 impl FromStr for ExtXStreamInf {
     type Err = Error;
+
     fn from_str(s: &str) -> Result<Self> {
         let mut lines = s.splitn(2, '\n');
         let first_line = lines.next().expect("Never fails").trim_end_matches('\r');

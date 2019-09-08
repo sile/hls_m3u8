@@ -19,6 +19,7 @@ pub struct MediaSegmentBuilder {
     inf_tag: Option<ExtInf>,
     uri: Option<SingleLineString>,
 }
+
 impl MediaSegmentBuilder {
     /// Makes a new `MediaSegmentBuilder` instance.
     pub fn new() -> Self {
@@ -70,6 +71,7 @@ impl MediaSegmentBuilder {
         })
     }
 }
+
 impl Default for MediaSegmentBuilder {
     fn default() -> Self {
         Self::new()
@@ -88,6 +90,7 @@ pub struct MediaSegment {
     inf_tag: ExtInf,
     uri: SingleLineString,
 }
+
 impl fmt::Display for MediaSegment {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         for t in &self.key_tags {
@@ -113,19 +116,20 @@ impl fmt::Display for MediaSegment {
         Ok(())
     }
 }
+
 impl MediaSegment {
     /// Returns the URI of the media segment.
-    pub fn uri(&self) -> &SingleLineString {
+    pub const fn uri(&self) -> &SingleLineString {
         &self.uri
     }
 
     /// Returns the `EXT-X-INF` tag associated with the media segment.
-    pub fn inf_tag(&self) -> &ExtInf {
+    pub const fn inf_tag(&self) -> &ExtInf {
         &self.inf_tag
     }
 
     /// Returns the `EXT-X-BYTERANGE` tag associated with the media segment.
-    pub fn byte_range_tag(&self) -> Option<ExtXByteRange> {
+    pub const fn byte_range_tag(&self) -> Option<ExtXByteRange> {
         self.byte_range_tag
     }
 
@@ -135,7 +139,7 @@ impl MediaSegment {
     }
 
     /// Returns the `EXT-X-DISCONTINUITY` tag associated with the media segment.
-    pub fn discontinuity_tag(&self) -> Option<ExtXDiscontinuity> {
+    pub const fn discontinuity_tag(&self) -> Option<ExtXDiscontinuity> {
         self.discontinuity_tag
     }
 

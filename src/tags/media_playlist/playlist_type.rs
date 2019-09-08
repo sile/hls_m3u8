@@ -16,17 +16,17 @@ impl ExtXPlaylistType {
     pub(crate) const PREFIX: &'static str = "#EXT-X-PLAYLIST-TYPE:";
 
     /// Makes a new `ExtXPlaylistType` tag.
-    pub fn new(playlist_type: PlaylistType) -> Self {
+    pub const fn new(playlist_type: PlaylistType) -> Self {
         ExtXPlaylistType { playlist_type }
     }
 
     /// Returns the type of the associated media playlist.
-    pub fn playlist_type(self) -> PlaylistType {
+    pub const fn playlist_type(self) -> PlaylistType {
         self.playlist_type
     }
 
     /// Returns the protocol compatibility version that this tag requires.
-    pub fn requires_version(self) -> ProtocolVersion {
+    pub const fn requires_version(self) -> ProtocolVersion {
         ProtocolVersion::V1
     }
 }
@@ -39,6 +39,7 @@ impl fmt::Display for ExtXPlaylistType {
 
 impl FromStr for ExtXPlaylistType {
     type Err = Error;
+
     fn from_str(s: &str) -> Result<Self> {
         track_assert!(s.starts_with(Self::PREFIX), ErrorKind::InvalidInput);
         let playlist_type = may_invalid!(s.split_at(Self::PREFIX.len()).1.parse())?;

@@ -37,12 +37,12 @@ impl ExtXSessionData {
     }
 
     /// Returns the identifier of the data.
-    pub fn data_id(&self) -> &String {
+    pub const fn data_id(&self) -> &String {
         &self.data_id
     }
 
     /// Returns the session data.
-    pub fn data(&self) -> &SessionData {
+    pub const fn data(&self) -> &SessionData {
         &self.data
     }
 
@@ -52,7 +52,7 @@ impl ExtXSessionData {
     }
 
     /// Returns the protocol compatibility version that this tag requires.
-    pub fn requires_version(&self) -> ProtocolVersion {
+    pub const fn requires_version(&self) -> ProtocolVersion {
         ProtocolVersion::V1
     }
 }
@@ -74,6 +74,7 @@ impl fmt::Display for ExtXSessionData {
 
 impl FromStr for ExtXSessionData {
     type Err = Error;
+
     fn from_str(s: &str) -> Result<Self> {
         track_assert!(s.starts_with(Self::PREFIX), ErrorKind::InvalidInput);
 

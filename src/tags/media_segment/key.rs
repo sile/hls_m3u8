@@ -16,14 +16,14 @@ impl ExtXKey {
     pub(crate) const PREFIX: &'static str = "#EXT-X-KEY:";
 
     /// Makes a new `ExtXKey` tag.
-    pub fn new(key: DecryptionKey) -> Self {
+    pub const fn new(key: DecryptionKey) -> Self {
         ExtXKey { key: Some(key) }
     }
 
     /// Makes a new `ExtXKey` tag without a decryption key.
     ///
     /// This tag has the `METHDO=NONE` attribute.
-    pub fn new_without_key() -> Self {
+    pub const fn new_without_key() -> Self {
         ExtXKey { key: None }
     }
 
@@ -54,6 +54,7 @@ impl fmt::Display for ExtXKey {
 
 impl FromStr for ExtXKey {
     type Err = Error;
+
     fn from_str(s: &str) -> Result<Self> {
         track_assert!(s.starts_with(Self::PREFIX), ErrorKind::InvalidInput);
         let suffix = s.split_at(Self::PREFIX.len()).1;

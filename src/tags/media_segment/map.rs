@@ -34,17 +34,17 @@ impl ExtXMap {
     }
 
     /// Returns the URI that identifies a resource that contains the media initialization section.
-    pub fn uri(&self) -> &String {
+    pub const fn uri(&self) -> &String {
         &self.uri
     }
 
     /// Returns the range of the media initialization section.
-    pub fn range(&self) -> Option<ByteRange> {
+    pub const fn range(&self) -> Option<ByteRange> {
         self.range
     }
 
     /// Returns the protocol compatibility version that this tag requires.
-    pub fn requires_version(&self) -> ProtocolVersion {
+    pub const fn requires_version(&self) -> ProtocolVersion {
         ProtocolVersion::V6
     }
 }
@@ -62,6 +62,7 @@ impl fmt::Display for ExtXMap {
 
 impl FromStr for ExtXMap {
     type Err = Error;
+
     fn from_str(s: &str) -> Result<Self> {
         track_assert!(s.starts_with(Self::PREFIX), ErrorKind::InvalidInput);
 

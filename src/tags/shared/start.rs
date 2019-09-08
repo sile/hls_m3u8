@@ -18,7 +18,7 @@ impl ExtXStart {
     pub(crate) const PREFIX: &'static str = "#EXT-X-START:";
 
     /// Makes a new `ExtXStart` tag.
-    pub fn new(time_offset: SignedDecimalFloatingPoint) -> Self {
+    pub const fn new(time_offset: SignedDecimalFloatingPoint) -> Self {
         ExtXStart {
             time_offset,
             precise: false,
@@ -26,7 +26,7 @@ impl ExtXStart {
     }
 
     /// Makes a new `ExtXStart` tag with the given `precise` flag.
-    pub fn with_precise(time_offset: SignedDecimalFloatingPoint, precise: bool) -> Self {
+    pub const fn with_precise(time_offset: SignedDecimalFloatingPoint, precise: bool) -> Self {
         ExtXStart {
             time_offset,
             precise,
@@ -34,18 +34,18 @@ impl ExtXStart {
     }
 
     /// Returns the time offset of the media segments in the playlist.
-    pub fn time_offset(&self) -> SignedDecimalFloatingPoint {
+    pub const fn time_offset(&self) -> SignedDecimalFloatingPoint {
         self.time_offset
     }
 
     /// Returns whether clients should not render media stream whose presentation times are
     /// prior to the specified time offset.
-    pub fn precise(&self) -> bool {
+    pub const fn precise(&self) -> bool {
         self.precise
     }
 
     /// Returns the protocol compatibility version that this tag requires.
-    pub fn requires_version(&self) -> ProtocolVersion {
+    pub const fn requires_version(&self) -> ProtocolVersion {
         ProtocolVersion::V1
     }
 }
@@ -63,6 +63,7 @@ impl fmt::Display for ExtXStart {
 
 impl FromStr for ExtXStart {
     type Err = Error;
+
     fn from_str(s: &str) -> Result<Self> {
         track_assert!(s.starts_with(Self::PREFIX), ErrorKind::InvalidInput);
 

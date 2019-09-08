@@ -1,3 +1,8 @@
+#![warn(
+    //clippy::pedantic,
+    clippy::nursery,
+    clippy::cargo
+)]
 //! [HLS] m3u8 parser/generator.
 //!
 //! [HLS]: https://tools.ietf.org/html/rfc8216

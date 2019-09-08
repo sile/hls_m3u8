@@ -9,6 +9,7 @@ readme = "README.md"
 license = "MIT"
 keywords = ["hls", "m3u8"]
 edition = "2018"
+categories = ["parser"]
 
 [badges]
 travis-ci = {repository = "sile/hls_m3u8"}

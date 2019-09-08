@@ -16,17 +16,17 @@ impl ExtXByteRange {
     pub(crate) const PREFIX: &'static str = "#EXT-X-BYTERANGE:";
 
     /// Makes a new `ExtXByteRange` tag.
-    pub fn new(range: ByteRange) -> Self {
+    pub const fn new(range: ByteRange) -> Self {
         ExtXByteRange { range }
     }
 
     /// Returns the range of the associated media segment.
-    pub fn range(&self) -> ByteRange {
+    pub const fn range(&self) -> ByteRange {
         self.range
     }
 
     /// Returns the protocol compatibility version that this tag requires.
-    pub fn requires_version(&self) -> ProtocolVersion {
+    pub const fn requires_version(&self) -> ProtocolVersion {
         ProtocolVersion::V4
     }
 }
@@ -39,6 +39,7 @@ impl fmt::Display for ExtXByteRange {
 
 impl FromStr for ExtXByteRange {
     type Err = Error;
+
     fn from_str(s: &str) -> Result<Self> {
         track_assert!(s.starts_with(Self::PREFIX), ErrorKind::InvalidInput);
         let range = may_invalid!(s.split_at(Self::PREFIX.len()).1.parse())?;

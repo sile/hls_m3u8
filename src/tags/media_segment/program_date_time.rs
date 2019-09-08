@@ -15,17 +15,17 @@ impl ExtXProgramDateTime {
     pub(crate) const PREFIX: &'static str = "#EXT-X-PROGRAM-DATE-TIME:";
 
     /// Makes a new `ExtXProgramDateTime` tag.
-    pub fn new(date_time: SingleLineString) -> Self {
+    pub const fn new(date_time: SingleLineString) -> Self {
         ExtXProgramDateTime { date_time }
     }
 
     /// Returns the date-time of the first sample of the associated media segment.
-    pub fn date_time(&self) -> &SingleLineString {
+    pub const fn date_time(&self) -> &SingleLineString {
         &self.date_time
     }
 
     /// Returns the protocol compatibility version that this tag requires.
-    pub fn requires_version(&self) -> ProtocolVersion {
+    pub const fn requires_version(&self) -> ProtocolVersion {
         ProtocolVersion::V1
     }
 }
@@ -38,6 +38,7 @@ impl fmt::Display for ExtXProgramDateTime {
 
 impl FromStr for ExtXProgramDateTime {
     type Err = Error;
+
     fn from_str(s: &str) -> Result<Self> {
         track_assert!(s.starts_with(Self::PREFIX), ErrorKind::InvalidInput);
         let suffix = s.split_at(Self::PREFIX.len()).1;

@@ -12,17 +12,20 @@ impl ExtXEndList {
     pub(crate) const PREFIX: &'static str = "#EXT-X-ENDLIST";
 
     /// Returns the protocol compatibility version that this tag requires.
-    pub fn requires_version(self) -> ProtocolVersion {
+    pub const fn requires_version(self) -> ProtocolVersion {
         ProtocolVersion::V1
     }
 }
+
 impl fmt::Display for ExtXEndList {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         Self::PREFIX.fmt(f)
     }
 }
+
 impl FromStr for ExtXEndList {
     type Err = Error;
+
     fn from_str(s: &str) -> Result<Self> {
         track_assert_eq!(s, Self::PREFIX, ErrorKind::InvalidInput);
         Ok(ExtXEndList)

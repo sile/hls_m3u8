@@ -238,17 +238,17 @@ pub struct MasterPlaylist {
 
 impl MasterPlaylist {
     /// Returns the `EXT-X-VERSION` tag contained in the playlist.
-    pub fn version_tag(&self) -> ExtXVersion {
+    pub const fn version_tag(&self) -> ExtXVersion {
         self.version_tag
     }
 
     /// Returns the `EXT-X-INDEPENDENT-SEGMENTS` tag contained in the playlist.
-    pub fn independent_segments_tag(&self) -> Option<ExtXIndependentSegments> {
+    pub const fn independent_segments_tag(&self) -> Option<ExtXIndependentSegments> {
         self.independent_segments_tag
     }
 
     /// Returns the `EXT-X-START` tag contained in the playlist.
-    pub fn start_tag(&self) -> Option<ExtXStart> {
+    pub const fn start_tag(&self) -> Option<ExtXStart> {
         self.start_tag
     }
 

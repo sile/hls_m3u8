@@ -19,18 +19,18 @@ impl ExtXTargetDuration {
     /// Makes a new `ExtXTargetduration` tag.
     ///
     /// Note that the nanoseconds part of the `duration` will be discarded.
-    pub fn new(duration: Duration) -> Self {
+    pub const fn new(duration: Duration) -> Self {
         let duration = Duration::from_secs(duration.as_secs());
         ExtXTargetDuration { duration }
     }
 
     /// Returns the maximum media segment duration in the associated playlist.
-    pub fn duration(&self) -> Duration {
+    pub const fn duration(&self) -> Duration {
         self.duration
     }
 
     /// Returns the protocol compatibility version that this tag requires.
-    pub fn requires_version(&self) -> ProtocolVersion {
+    pub const fn requires_version(&self) -> ProtocolVersion {
         ProtocolVersion::V1
     }
 }

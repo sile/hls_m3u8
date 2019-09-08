@@ -9,7 +9,7 @@ pub struct Lines<'a> {
     input: &'a str,
 }
 impl<'a> Lines<'a> {
-    pub fn new(input: &'a str) -> Self {
+    pub const fn new(input: &'a str) -> Self {
         Lines { input }
     }
 
