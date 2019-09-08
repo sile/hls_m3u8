@@ -38,9 +38,17 @@ mod test {
     use super::*;
 
     #[test]
-    fn extm3u() {
+    fn test_display() {
+        assert_eq!(ExtM3u.to_string(), "#EXTM3U".to_string());
+    }
+
+    #[test]
+    fn test_parser() {
         assert_eq!("#EXTM3U".parse::<ExtM3u>().ok(), Some(ExtM3u));
-        assert_eq!(ExtM3u.to_string(), "#EXTM3U");
+    }
+
+    #[test]
+    fn test_requires_version() {
         assert_eq!(ExtM3u.requires_version(), ProtocolVersion::V1);
     }
 }

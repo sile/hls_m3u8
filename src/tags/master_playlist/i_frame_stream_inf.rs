@@ -152,11 +152,30 @@ mod test {
     use super::*;
 
     #[test]
-    fn ext_x_i_frame_stream_inf() {
-        let tag = ExtXIFrameStreamInf::new("foo", 1000);
+    fn test_display() {
         let text = r#"#EXT-X-I-FRAME-STREAM-INF:URI="foo",BANDWIDTH=1000"#;
-        assert_eq!(text.parse().ok(), Some(tag.clone()));
-        assert_eq!(tag.to_string(), text);
-        assert_eq!(tag.requires_version(), ProtocolVersion::V1);
+        assert_eq!(ExtXIFrameStreamInf::new("foo", 1000).to_string(), text);
+    }
+
+    #[test]
+    fn test_parser() {
+        let text = r#"#EXT-X-I-FRAME-STREAM-INF:URI="foo",BANDWIDTH=1000"#;
+        let i_frame_stream_inf = ExtXIFrameStreamInf::new("foo", 1000);
+        assert_eq!(
+            text.parse::<ExtXIFrameStreamInf>().unwrap(),
+            i_frame_stream_inf.clone()
+        );
+
+        assert_eq!(i_frame_stream_inf.uri(), "foo");
+        assert_eq!(i_frame_stream_inf.bandwidth(), 1000);
+        // TODO: test all the optional fields
+    }
+
+    #[test]
+    fn test_requires_version() {
+        assert_eq!(
+            ExtXIFrameStreamInf::new("foo", 1000).requires_version(),
+            ProtocolVersion::V1
+        );
     }
 }
