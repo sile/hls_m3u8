@@ -38,6 +38,7 @@ impl fmt::Display for ExtXSessionKey {
 
 impl FromStr for ExtXSessionKey {
     type Err = Error;
+
     fn from_str(s: &str) -> Result<Self> {
         track_assert!(s.starts_with(Self::PREFIX), ErrorKind::InvalidInput);
         let suffix = s.split_at(Self::PREFIX.len()).1;
@@ -49,13 +50,13 @@ impl FromStr for ExtXSessionKey {
 #[cfg(test)]
 mod test {
     use super::*;
-    use crate::types::{EncryptionMethod, InitializationVector, QuotedString};
+    use crate::types::{EncryptionMethod, InitializationVector};
 
     #[test]
     fn ext_x_session_key() {
         let tag = ExtXSessionKey::new(DecryptionKey {
             method: EncryptionMethod::Aes128,
-            uri: quoted_string("foo"),
+            uri: "foo".to_string(),
             iv: Some(InitializationVector([
                 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15,
             ])),
@@ -67,9 +68,5 @@ mod test {
         assert_eq!(text.parse().ok(), Some(tag.clone()));
         assert_eq!(tag.to_string(), text);
         assert_eq!(tag.requires_version(), ProtocolVersion::V2);
-    }
-
-    fn quoted_string(s: &str) -> QuotedString {
-        QuotedString::new(s).unwrap()
     }
 }

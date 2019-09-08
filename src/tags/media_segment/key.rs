@@ -77,7 +77,7 @@ impl FromStr for ExtXKey {
 #[cfg(test)]
 mod test {
     use super::*;
-    use crate::types::{EncryptionMethod, InitializationVector, QuotedString};
+    use crate::types::{EncryptionMethod, InitializationVector};
 
     #[test]
     fn ext_x_key() {
@@ -89,7 +89,7 @@ mod test {
 
         let tag = ExtXKey::new(DecryptionKey {
             method: EncryptionMethod::Aes128,
-            uri: QuotedString::new("foo").unwrap(),
+            uri: "foo".to_string(),
             iv: None,
             key_format: None,
             key_format_versions: None,
@@ -101,7 +101,7 @@ mod test {
 
         let tag = ExtXKey::new(DecryptionKey {
             method: EncryptionMethod::Aes128,
-            uri: QuotedString::new("foo").unwrap(),
+            uri: "foo".to_string(),
             iv: Some(InitializationVector([
                 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15,
             ])),
@@ -115,11 +115,11 @@ mod test {
 
         let tag = ExtXKey::new(DecryptionKey {
             method: EncryptionMethod::Aes128,
-            uri: QuotedString::new("foo").unwrap(),
+            uri: "foo".to_string(),
             iv: Some(InitializationVector([
                 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15,
             ])),
-            key_format: Some(QuotedString::new("baz").unwrap()),
+            key_format: Some("baz".to_string()),
             key_format_versions: None,
         });
         let text = r#"#EXT-X-KEY:METHOD=AES-128,URI="foo",IV=0x000102030405060708090a0b0c0d0e0f,KEYFORMAT="baz""#;

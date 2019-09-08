@@ -1,4 +1,4 @@
-use crate::types::QuotedString;
+use crate::utils::{quote, unquote};
 use crate::{Error, Result};
 use std::fmt;
 use std::str::{self, FromStr};
@@ -11,14 +11,14 @@ use std::str::{self, FromStr};
 #[allow(missing_docs)]
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub enum ClosedCaptions {
-    GroupId(QuotedString),
+    GroupId(String),
     None,
 }
 
 impl fmt::Display for ClosedCaptions {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         match *self {
-            ClosedCaptions::GroupId(ref x) => x.fmt(f),
+            ClosedCaptions::GroupId(ref x) => write!(f, "{}", quote(x)),
             ClosedCaptions::None => "NONE".fmt(f),
         }
     }
@@ -30,7 +30,7 @@ impl FromStr for ClosedCaptions {
         if s == "NONE" {
             Ok(ClosedCaptions::None)
         } else {
-            Ok(ClosedCaptions::GroupId(track!(s.parse())?))
+            Ok(ClosedCaptions::GroupId(unquote(s)))
         }
     }
 }
@@ -44,7 +44,7 @@ mod tests {
         let closed_captions = ClosedCaptions::None;
         assert_eq!(closed_captions.to_string(), "NONE".to_string());
 
-        let closed_captions = ClosedCaptions::GroupId(QuotedString::new("value").unwrap());
+        let closed_captions = ClosedCaptions::GroupId("value".into());
         assert_eq!(closed_captions.to_string(), "\"value\"".to_string());
     }
 
@@ -53,7 +53,7 @@ mod tests {
         let closed_captions = ClosedCaptions::None;
         assert_eq!(closed_captions, "NONE".parse::<ClosedCaptions>().unwrap());
 
-        let closed_captions = ClosedCaptions::GroupId(QuotedString::new("value").unwrap());
+        let closed_captions = ClosedCaptions::GroupId("value".into());
         assert_eq!(
             closed_captions,
             "\"value\"".parse::<ClosedCaptions>().unwrap()

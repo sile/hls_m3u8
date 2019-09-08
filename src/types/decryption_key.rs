@@ -1,5 +1,6 @@
 use crate::attribute::AttributePairs;
-use crate::types::{EncryptionMethod, InitializationVector, ProtocolVersion, QuotedString};
+use crate::types::{EncryptionMethod, InitializationVector, ProtocolVersion};
+use crate::utils::{quote, unquote};
 use crate::{Error, ErrorKind, Result};
 use std::fmt;
 use std::str::{self, FromStr};
@@ -13,10 +14,10 @@ use std::str::{self, FromStr};
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub struct DecryptionKey {
     pub method: EncryptionMethod,
-    pub uri: QuotedString,
+    pub uri: String,
     pub iv: Option<InitializationVector>,
-    pub key_format: Option<QuotedString>,
-    pub key_format_versions: Option<QuotedString>,
+    pub key_format: Option<String>,
+    pub key_format_versions: Option<String>,
 }
 
 impl DecryptionKey {
@@ -34,15 +35,15 @@ impl DecryptionKey {
 impl fmt::Display for DecryptionKey {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         write!(f, "METHOD={}", self.method)?;
-        write!(f, ",URI={}", self.uri)?;
+        write!(f, ",URI={}", quote(&self.uri))?;
         if let Some(ref x) = self.iv {
             write!(f, ",IV={}", x)?;
         }
         if let Some(ref x) = self.key_format {
-            write!(f, ",KEYFORMAT={}", x)?;
+            write!(f, ",KEYFORMAT={}", quote(x))?;
         }
         if let Some(ref x) = self.key_format_versions {
-            write!(f, ",KEYFORMATVERSIONS={}", x)?;
+            write!(f, ",KEYFORMATVERSIONS={}", quote(x))?;
         }
         Ok(())
     }
@@ -61,10 +62,10 @@ impl FromStr for DecryptionKey {
             let (key, value) = track!(attr)?;
             match key {
                 "METHOD" => method = Some(track!(value.parse())?),
-                "URI" => uri = Some(track!(value.parse())?),
+                "URI" => uri = Some(unquote(value)),
                 "IV" => iv = Some(track!(value.parse())?),
-                "KEYFORMAT" => key_format = Some(track!(value.parse())?),
-                "KEYFORMATVERSIONS" => key_format_versions = Some(track!(value.parse())?),
+                "KEYFORMAT" => key_format = Some(unquote(value)),
+                "KEYFORMATVERSIONS" => key_format_versions = Some(unquote(value)),
                 _ => {
                     // [6.3.1. General Client Responsibilities]
                     // > ignore any attribute/value pair with an unrecognized AttributeName.

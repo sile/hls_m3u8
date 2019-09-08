@@ -3,7 +3,7 @@ use crate::tags::{
     ExtM3u, ExtXIFrameStreamInf, ExtXIndependentSegments, ExtXMedia, ExtXSessionData,
     ExtXSessionKey, ExtXStart, ExtXStreamInf, ExtXVersion, MasterPlaylistTag,
 };
-use crate::types::{ClosedCaptions, MediaType, ProtocolVersion, QuotedString};
+use crate::types::{ClosedCaptions, MediaType, ProtocolVersion};
 use crate::{Error, ErrorKind, Result};
 use std::collections::HashSet;
 use std::fmt;
@@ -22,6 +22,7 @@ pub struct MasterPlaylistBuilder {
     session_data_tags: Vec<ExtXSessionData>,
     session_key_tags: Vec<ExtXSessionKey>,
 }
+
 impl MasterPlaylistBuilder {
     /// Makes a new `MasterPlaylistBuilder` instance.
     pub fn new() -> Self {
@@ -209,12 +210,13 @@ impl MasterPlaylistBuilder {
         Ok(())
     }
 
-    fn check_media_group(&self, media_type: MediaType, group_id: &QuotedString) -> bool {
+    fn check_media_group<T: ToString>(&self, media_type: MediaType, group_id: T) -> bool {
         self.media_tags
             .iter()
-            .any(|t| t.media_type() == media_type && t.group_id() == group_id)
+            .any(|t| t.media_type() == media_type && t.group_id() == &group_id.to_string())
     }
 }
+
 impl Default for MasterPlaylistBuilder {
     fn default() -> Self {
         Self::new()
@@ -233,6 +235,7 @@ pub struct MasterPlaylist {
     session_data_tags: Vec<ExtXSessionData>,
     session_key_tags: Vec<ExtXSessionKey>,
 }
+
 impl MasterPlaylist {
     /// Returns the `EXT-X-VERSION` tag contained in the playlist.
     pub fn version_tag(&self) -> ExtXVersion {
@@ -274,6 +277,7 @@ impl MasterPlaylist {
         &self.session_key_tags
     }
 }
+
 impl fmt::Display for MasterPlaylist {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         writeln!(f, "{}", ExtM3u)?;

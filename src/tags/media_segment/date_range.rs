@@ -1,5 +1,6 @@
 use crate::attribute::AttributePairs;
-use crate::types::{DecimalFloatingPoint, ProtocolVersion, QuotedString};
+use crate::types::{DecimalFloatingPoint, ProtocolVersion};
+use crate::utils::{quote, unquote};
 use crate::{Error, ErrorKind, Result};
 use std::collections::BTreeMap;
 use std::fmt;
@@ -14,15 +15,15 @@ use std::time::Duration;
 #[allow(missing_docs)]
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub struct ExtXDateRange {
-    pub id: QuotedString,
-    pub class: Option<QuotedString>,
-    pub start_date: QuotedString,
-    pub end_date: Option<QuotedString>,
+    pub id: String,
+    pub class: Option<String>,
+    pub start_date: String,
+    pub end_date: Option<String>,
     pub duration: Option<Duration>,
     pub planned_duration: Option<Duration>,
-    pub scte35_cmd: Option<QuotedString>,
-    pub scte35_out: Option<QuotedString>,
-    pub scte35_in: Option<QuotedString>,
+    pub scte35_cmd: Option<String>,
+    pub scte35_out: Option<String>,
+    pub scte35_in: Option<String>,
     pub end_on_next: bool,
     pub client_attributes: BTreeMap<String, String>,
 }
@@ -39,13 +40,13 @@ impl ExtXDateRange {
 impl fmt::Display for ExtXDateRange {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         write!(f, "{}", Self::PREFIX)?;
-        write!(f, "ID={}", self.id)?;
+        write!(f, "ID={}", quote(&self.id))?;
         if let Some(ref x) = self.class {
-            write!(f, ",CLASS={}", x)?;
+            write!(f, ",CLASS={}", quote(x))?;
         }
-        write!(f, ",START-DATE={}", self.start_date)?;
+        write!(f, ",START-DATE={}", quote(&self.start_date))?;
         if let Some(ref x) = self.end_date {
-            write!(f, ",END-DATE={}", x)?;
+            write!(f, ",END-DATE={}", quote(x))?;
         }
         if let Some(x) = self.duration {
             write!(f, ",DURATION={}", DecimalFloatingPoint::from_duration(x))?;
@@ -58,13 +59,13 @@ impl fmt::Display for ExtXDateRange {
             )?;
         }
         if let Some(ref x) = self.scte35_cmd {
-            write!(f, ",SCTE35-CMD={}", x)?;
+            write!(f, ",SCTE35-CMD={}", quote(x))?;
         }
         if let Some(ref x) = self.scte35_out {
-            write!(f, ",SCTE35-OUT={}", x)?;
+            write!(f, ",SCTE35-OUT={}", quote(x))?;
         }
         if let Some(ref x) = self.scte35_in {
-            write!(f, ",SCTE35-IN={}", x)?;
+            write!(f, ",SCTE35-IN={}", quote(x))?;
         }
         if self.end_on_next {
             write!(f, ",END-ON-NEXT=YES",)?;
@@ -96,10 +97,10 @@ impl FromStr for ExtXDateRange {
         for attr in attrs {
             let (key, value) = track!(attr)?;
             match key {
-                "ID" => id = Some(track!(value.parse())?),
-                "CLASS" => class = Some(track!(value.parse())?),
-                "START-DATE" => start_date = Some(track!(value.parse())?),
-                "END-DATE" => end_date = Some(track!(value.parse())?),
+                "ID" => id = Some(unquote(value)),
+                "CLASS" => class = Some(unquote(value)),
+                "START-DATE" => start_date = Some(unquote(value)),
+                "END-DATE" => end_date = Some(unquote(value)),
                 "DURATION" => {
                     let seconds: DecimalFloatingPoint = track!(value.parse())?;
                     duration = Some(seconds.to_duration());
@@ -108,9 +109,9 @@ impl FromStr for ExtXDateRange {
                     let seconds: DecimalFloatingPoint = track!(value.parse())?;
                     planned_duration = Some(seconds.to_duration());
                 }
-                "SCTE35-CMD" => scte35_cmd = Some(track!(value.parse())?),
-                "SCTE35-OUT" => scte35_out = Some(track!(value.parse())?),
-                "SCTE35-IN" => scte35_in = Some(track!(value.parse())?),
+                "SCTE35-CMD" => scte35_cmd = Some(unquote(value)),
+                "SCTE35-OUT" => scte35_out = Some(unquote(value)),
+                "SCTE35-IN" => scte35_in = Some(unquote(value)),
                 "END-ON-NEXT" => {
                     track_assert_eq!(value, "YES", ErrorKind::InvalidInput);
                     end_on_next = true;

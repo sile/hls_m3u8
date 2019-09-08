@@ -1,5 +1,3 @@
-use crate::types::QuotedString;
-
 /// Session data.
 ///
 /// See: [4.3.4.4. EXT-X-SESSION-DATA]
@@ -8,6 +6,6 @@ use crate::types::QuotedString;
 #[allow(missing_docs)]
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub enum SessionData {
-    Value(QuotedString),
-    Uri(QuotedString),
+    Value(String),
+    Uri(String),
 }

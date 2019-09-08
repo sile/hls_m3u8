@@ -1,5 +1,6 @@
 use crate::attribute::AttributePairs;
-use crate::types::{ProtocolVersion, QuotedString, SessionData};
+use crate::types::{ProtocolVersion, SessionData};
+use crate::utils::{quote, unquote};
 use crate::{Error, ErrorKind, Result};
 use std::fmt;
 use std::str::FromStr;
@@ -9,34 +10,34 @@ use std::str::FromStr;
 /// [4.3.4.4. EXT-X-SESSION-DATA]: https://tools.ietf.org/html/rfc8216#section-4.3.4.4
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub struct ExtXSessionData {
-    data_id: QuotedString,
+    data_id: String,
     data: SessionData,
-    language: Option<QuotedString>,
+    language: Option<String>,
 }
 
 impl ExtXSessionData {
     pub(crate) const PREFIX: &'static str = "#EXT-X-SESSION-DATA:";
 
     /// Makes a new `ExtXSessionData` tag.
-    pub fn new(data_id: QuotedString, data: SessionData) -> Self {
+    pub fn new<T: ToString>(data_id: T, data: SessionData) -> Self {
         ExtXSessionData {
-            data_id,
+            data_id: data_id.to_string(),
             data,
             language: None,
         }
     }
 
     /// Makes a new `ExtXSessionData` with the given language.
-    pub fn with_language(data_id: QuotedString, data: SessionData, language: QuotedString) -> Self {
+    pub fn with_language<T: ToString>(data_id: T, data: SessionData, language: T) -> Self {
         ExtXSessionData {
-            data_id,
+            data_id: data_id.to_string(),
             data,
-            language: Some(language),
+            language: Some(language.to_string()),
         }
     }
 
     /// Returns the identifier of the data.
-    pub fn data_id(&self) -> &QuotedString {
+    pub fn data_id(&self) -> &String {
         &self.data_id
     }
 
@@ -46,7 +47,7 @@ impl ExtXSessionData {
     }
 
     /// Returns the language of the data.
-    pub fn language(&self) -> Option<&QuotedString> {
+    pub fn language(&self) -> Option<&String> {
         self.language.as_ref()
     }
 
@@ -59,13 +60,13 @@ impl ExtXSessionData {
 impl fmt::Display for ExtXSessionData {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         write!(f, "{}", Self::PREFIX)?;
-        write!(f, "DATA-ID={}", self.data_id)?;
+        write!(f, "DATA-ID={}", quote(&self.data_id))?;
         match self.data {
-            SessionData::Value(ref x) => write!(f, ",VALUE={}", x)?,
-            SessionData::Uri(ref x) => write!(f, ",URI={}", x)?,
+            SessionData::Value(ref x) => write!(f, ",VALUE={}", quote(x))?,
+            SessionData::Uri(ref x) => write!(f, ",URI={}", quote(x))?,
         }
         if let Some(ref x) = self.language {
-            write!(f, ",LANGUAGE={}", x)?;
+            write!(f, ",LANGUAGE={}", quote(x))?;
         }
         Ok(())
     }
@@ -84,10 +85,10 @@ impl FromStr for ExtXSessionData {
         for attr in attrs {
             let (key, value) = track!(attr)?;
             match key {
-                "DATA-ID" => data_id = Some(track!(value.parse())?),
-                "VALUE" => session_value = Some(track!(value.parse())?),
-                "URI" => uri = Some(track!(value.parse())?),
-                "LANGUAGE" => language = Some(track!(value.parse())?),
+                "DATA-ID" => data_id = Some(unquote(value)),
+                "VALUE" => session_value = Some(unquote(value)),
+                "URI" => uri = Some(unquote(value)),
+                "LANGUAGE" => language = Some(unquote(value)),
                 _ => {
                     // [6.3.1. General Client Responsibilities]
                     // > ignore any attribute/value pair with an unrecognized AttributeName.
@@ -118,34 +119,22 @@ mod test {
 
     #[test]
     fn ext_x_session_data() {
-        let tag = ExtXSessionData::new(
-            quoted_string("foo"),
-            SessionData::Value(quoted_string("bar")),
-        );
+        let tag = ExtXSessionData::new("foo", SessionData::Value("bar".into()));
         let text = r#"#EXT-X-SESSION-DATA:DATA-ID="foo",VALUE="bar""#;
         assert_eq!(text.parse().ok(), Some(tag.clone()));
         assert_eq!(tag.to_string(), text);
         assert_eq!(tag.requires_version(), ProtocolVersion::V1);
 
-        let tag =
-            ExtXSessionData::new(quoted_string("foo"), SessionData::Uri(quoted_string("bar")));
+        let tag = ExtXSessionData::new("foo", SessionData::Uri("bar".into()));
         let text = r#"#EXT-X-SESSION-DATA:DATA-ID="foo",URI="bar""#;
         assert_eq!(text.parse().ok(), Some(tag.clone()));
         assert_eq!(tag.to_string(), text);
         assert_eq!(tag.requires_version(), ProtocolVersion::V1);
 
-        let tag = ExtXSessionData::with_language(
-            quoted_string("foo"),
-            SessionData::Value(quoted_string("bar")),
-            quoted_string("baz"),
-        );
+        let tag = ExtXSessionData::with_language("foo", SessionData::Value("bar".into()), "baz");
         let text = r#"#EXT-X-SESSION-DATA:DATA-ID="foo",VALUE="bar",LANGUAGE="baz""#;
         assert_eq!(text.parse().ok(), Some(tag.clone()));
         assert_eq!(tag.to_string(), text);
         assert_eq!(tag.requires_version(), ProtocolVersion::V1);
-    }
-
-    fn quoted_string(s: &str) -> QuotedString {
-        QuotedString::new(s).unwrap()
     }
 }

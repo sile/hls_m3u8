@@ -1,5 +1,6 @@
 use crate::attribute::AttributePairs;
-use crate::types::{ByteRange, ProtocolVersion, QuotedString};
+use crate::types::{ByteRange, ProtocolVersion};
+use crate::utils::{quote, unquote};
 use crate::{Error, ErrorKind, Result};
 use std::fmt;
 use std::str::FromStr;
@@ -9,7 +10,7 @@ use std::str::FromStr;
 /// [4.3.2.5. EXT-X-MAP]: https://tools.ietf.org/html/rfc8216#section-4.3.2.5
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub struct ExtXMap {
-    uri: QuotedString,
+    uri: String,
     range: Option<ByteRange>,
 }
 
@@ -17,20 +18,23 @@ impl ExtXMap {
     pub(crate) const PREFIX: &'static str = "#EXT-X-MAP:";
 
     /// Makes a new `ExtXMap` tag.
-    pub fn new(uri: QuotedString) -> Self {
-        ExtXMap { uri, range: None }
+    pub fn new<T: ToString>(uri: T) -> Self {
+        ExtXMap {
+            uri: uri.to_string(),
+            range: None,
+        }
     }
 
     /// Makes a new `ExtXMap` tag with the given range.
-    pub fn with_range(uri: QuotedString, range: ByteRange) -> Self {
+    pub fn with_range<T: ToString>(uri: T, range: ByteRange) -> Self {
         ExtXMap {
-            uri,
+            uri: uri.to_string(),
             range: Some(range),
         }
     }
 
     /// Returns the URI that identifies a resource that contains the media initialization section.
-    pub fn uri(&self) -> &QuotedString {
+    pub fn uri(&self) -> &String {
         &self.uri
     }
 
@@ -48,9 +52,9 @@ impl ExtXMap {
 impl fmt::Display for ExtXMap {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         write!(f, "{}", Self::PREFIX)?;
-        write!(f, "URI={}", self.uri)?;
+        write!(f, "URI={}", quote(&self.uri))?;
         if let Some(ref x) = self.range {
-            write!(f, ",BYTERANGE=\"{}\"", x)?;
+            write!(f, ",BYTERANGE={}", quote(x))?;
         }
         Ok(())
     }
@@ -67,10 +71,9 @@ impl FromStr for ExtXMap {
         for attr in attrs {
             let (key, value) = track!(attr)?;
             match key {
-                "URI" => uri = Some(track!(value.parse())?),
+                "URI" => uri = Some(unquote(value)),
                 "BYTERANGE" => {
-                    let s: QuotedString = track!(value.parse())?;
-                    range = Some(track!(s.parse())?);
+                    range = Some(track!(unquote(value).parse())?);
                 }
                 _ => {
                     // [6.3.1. General Client Responsibilities]
@@ -90,14 +93,14 @@ mod test {
 
     #[test]
     fn ext_x_map() {
-        let tag = ExtXMap::new(QuotedString::new("foo").unwrap());
+        let tag = ExtXMap::new("foo");
         let text = r#"#EXT-X-MAP:URI="foo""#;
         assert_eq!(text.parse().ok(), Some(tag.clone()));
         assert_eq!(tag.to_string(), text);
         assert_eq!(tag.requires_version(), ProtocolVersion::V6);
 
         let tag = ExtXMap::with_range(
-            QuotedString::new("foo").unwrap(),
+            "foo",
             ByteRange {
                 length: 9,
                 start: Some(2),

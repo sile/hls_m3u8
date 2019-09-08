@@ -1,9 +1,9 @@
 use crate::attribute::AttributePairs;
 use crate::types::{
     ClosedCaptions, DecimalFloatingPoint, DecimalResolution, HdcpLevel, ProtocolVersion,
-    QuotedString, SingleLineString,
+    SingleLineString,
 };
-use crate::utils::parse_u64;
+use crate::utils::{parse_u64, quote, unquote};
 use crate::{Error, ErrorKind, Result};
 use std::fmt;
 use std::str::FromStr;
@@ -16,13 +16,13 @@ pub struct ExtXStreamInf {
     uri: SingleLineString,
     bandwidth: u64,
     average_bandwidth: Option<u64>,
-    codecs: Option<QuotedString>,
+    codecs: Option<String>,
     resolution: Option<DecimalResolution>,
     frame_rate: Option<DecimalFloatingPoint>,
     hdcp_level: Option<HdcpLevel>,
-    audio: Option<QuotedString>,
-    video: Option<QuotedString>,
-    subtitles: Option<QuotedString>,
+    audio: Option<String>,
+    video: Option<String>,
+    subtitles: Option<String>,
     closed_captions: Option<ClosedCaptions>,
 }
 
@@ -62,7 +62,7 @@ impl ExtXStreamInf {
     }
 
     /// Returns a string that represents the list of codec types contained the variant stream.
-    pub fn codecs(&self) -> Option<&QuotedString> {
+    pub fn codecs(&self) -> Option<&String> {
         self.codecs.as_ref()
     }
 
@@ -82,17 +82,17 @@ impl ExtXStreamInf {
     }
 
     /// Returns the group identifier for the audio in the variant stream.
-    pub fn audio(&self) -> Option<&QuotedString> {
+    pub fn audio(&self) -> Option<&String> {
         self.audio.as_ref()
     }
 
     /// Returns the group identifier for the video in the variant stream.
-    pub fn video(&self) -> Option<&QuotedString> {
+    pub fn video(&self) -> Option<&String> {
         self.video.as_ref()
     }
 
     /// Returns the group identifier for the subtitles in the variant stream.
-    pub fn subtitles(&self) -> Option<&QuotedString> {
+    pub fn subtitles(&self) -> Option<&String> {
         self.subtitles.as_ref()
     }
 
@@ -115,7 +115,7 @@ impl fmt::Display for ExtXStreamInf {
             write!(f, ",AVERAGE-BANDWIDTH={}", x)?;
         }
         if let Some(ref x) = self.codecs {
-            write!(f, ",CODECS={}", x)?;
+            write!(f, ",CODECS={}", quote(x))?;
         }
         if let Some(ref x) = self.resolution {
             write!(f, ",RESOLUTION={}", x)?;
@@ -127,13 +127,13 @@ impl fmt::Display for ExtXStreamInf {
             write!(f, ",HDCP-LEVEL={}", x)?;
         }
         if let Some(ref x) = self.audio {
-            write!(f, ",AUDIO={}", x)?;
+            write!(f, ",AUDIO={}", quote(x))?;
         }
         if let Some(ref x) = self.video {
-            write!(f, ",VIDEO={}", x)?;
+            write!(f, ",VIDEO={}", quote(x))?;
         }
         if let Some(ref x) = self.subtitles {
-            write!(f, ",SUBTITLES={}", x)?;
+            write!(f, ",SUBTITLES={}", quote(x))?;
         }
         if let Some(ref x) = self.closed_captions {
             write!(f, ",CLOSED-CAPTIONS={}", x)?;
@@ -171,13 +171,13 @@ impl FromStr for ExtXStreamInf {
             match key {
                 "BANDWIDTH" => bandwidth = Some(track!(parse_u64(value))?),
                 "AVERAGE-BANDWIDTH" => average_bandwidth = Some(track!(parse_u64(value))?),
-                "CODECS" => codecs = Some(track!(value.parse())?),
+                "CODECS" => codecs = Some(unquote(value)),
                 "RESOLUTION" => resolution = Some(track!(value.parse())?),
                 "FRAME-RATE" => frame_rate = Some(track!(value.parse())?),
                 "HDCP-LEVEL" => hdcp_level = Some(track!(value.parse())?),
-                "AUDIO" => audio = Some(track!(value.parse())?),
-                "VIDEO" => video = Some(track!(value.parse())?),
-                "SUBTITLES" => subtitles = Some(track!(value.parse())?),
+                "AUDIO" => audio = Some(unquote(value)),
+                "VIDEO" => video = Some(unquote(value)),
+                "SUBTITLES" => subtitles = Some(unquote(value)),
                 "CLOSED-CAPTIONS" => closed_captions = Some(track!(value.parse())?),
                 _ => {
                     // [6.3.1. General Client Responsibilities]
