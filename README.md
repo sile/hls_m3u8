@@ -5,6 +5,8 @@ hls_m3u8
 [![Documentation](https://docs.rs/hls_m3u8/badge.svg)](https://docs.rs/hls_m3u8)
 [![Build Status](https://travis-ci.org/sile/hls_m3u8.svg?branch=master)](https://travis-ci.org/sile/hls_m3u8)
 [![Code Coverage](https://codecov.io/gh/sile/hls_m3u8/branch/master/graph/badge.svg)](https://codecov.io/gh/sile/hls_m3u8/branch/master)
+[![License: Apache](https://img.shields.io/badge/License-Apache%202.0-red.svg)](LICENSE-APACHE)
+OR
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 
 [HLS] m3u8 parser/generator.
