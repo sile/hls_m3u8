@@ -6,7 +6,7 @@ description = "HLS m3u8 parser/generator"
 homepage = "https://github.com/sile/hls_m3u8"
 repository = "https://github.com/sile/hls_m3u8"
 readme = "README.md"
-license = "MIT"
+license = "MIT OR Apache-2.0"
 keywords = ["hls", "m3u8"]
 edition = "2018"
 
