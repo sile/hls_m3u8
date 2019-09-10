@@ -1,17 +1,26 @@
-use crate::attribute::AttributePairs;
-use crate::types::{ProtocolVersion, SessionData};
-use crate::utils::{quote, unquote};
-use crate::{Error, ErrorKind, Result};
 use std::fmt;
 use std::str::FromStr;
+
+use getset::{Getters, MutGetters, Setters};
+
+use crate::attribute::AttributePairs;
+use crate::types::{ProtocolVersion, SessionData};
+use crate::utils::{quote, tag, unquote};
+use crate::{Error, ErrorKind};
 
 /// [4.3.4.4. EXT-X-SESSION-DATA]
 ///
 /// [4.3.4.4. EXT-X-SESSION-DATA]: https://tools.ietf.org/html/rfc8216#section-4.3.4.4
-#[derive(Debug, Clone, PartialEq, Eq, Hash)]
+#[derive(Getters, MutGetters, Setters, Debug, Clone, PartialEq, Eq, Hash)]
+#[get = "pub"]
+#[set = "pub"]
+#[get_mut = "pub"]
 pub struct ExtXSessionData {
+    /// The identifier of the data.
     data_id: String,
+    /// The session data.
     data: SessionData,
+    /// The language of the data.
     language: Option<String>,
 }
 
@@ -34,21 +43,6 @@ impl ExtXSessionData {
             data,
             language: Some(language.to_string()),
         }
-    }
-
-    /// Returns the identifier of the data.
-    pub const fn data_id(&self) -> &String {
-        &self.data_id
-    }
-
-    /// Returns the session data.
-    pub const fn data(&self) -> &SessionData {
-        &self.data
-    }
-
-    /// Returns the language of the data.
-    pub fn language(&self) -> Option<&String> {
-        self.language.as_ref()
     }
 
     /// Returns the protocol compatibility version that this tag requires.
@@ -75,14 +69,15 @@ impl fmt::Display for ExtXSessionData {
 impl FromStr for ExtXSessionData {
     type Err = Error;
 
-    fn from_str(s: &str) -> Result<Self> {
-        track_assert!(s.starts_with(Self::PREFIX), ErrorKind::InvalidInput);
+    fn from_str(input: &str) -> Result<Self, Self::Err> {
+        let input = tag(input, Self::PREFIX)?;
 
         let mut data_id = None;
         let mut session_value = None;
         let mut uri = None;
         let mut language = None;
-        let attrs = AttributePairs::parse(s.split_at(Self::PREFIX.len()).1);
+
+        let attrs = AttributePairs::parse(input);
         for attr in attrs {
             let (key, value) = track!(attr)?;
             match key {
@@ -119,23 +114,38 @@ mod test {
     use super::*;
 
     #[test]
-    fn ext_x_session_data() {
+    fn test_display() {
         let tag = ExtXSessionData::new("foo", SessionData::Value("bar".into()));
         let text = r#"#EXT-X-SESSION-DATA:DATA-ID="foo",VALUE="bar""#;
-        assert_eq!(text.parse().ok(), Some(tag.clone()));
         assert_eq!(tag.to_string(), text);
-        assert_eq!(tag.requires_version(), ProtocolVersion::V1);
 
         let tag = ExtXSessionData::new("foo", SessionData::Uri("bar".into()));
         let text = r#"#EXT-X-SESSION-DATA:DATA-ID="foo",URI="bar""#;
-        assert_eq!(text.parse().ok(), Some(tag.clone()));
         assert_eq!(tag.to_string(), text);
-        assert_eq!(tag.requires_version(), ProtocolVersion::V1);
 
         let tag = ExtXSessionData::with_language("foo", SessionData::Value("bar".into()), "baz");
         let text = r#"#EXT-X-SESSION-DATA:DATA-ID="foo",VALUE="bar",LANGUAGE="baz""#;
-        assert_eq!(text.parse().ok(), Some(tag.clone()));
         assert_eq!(tag.to_string(), text);
+    }
+
+    #[test]
+    fn test_parser() {
+        let tag = ExtXSessionData::new("foo", SessionData::Value("bar".into()));
+        let text = r#"#EXT-X-SESSION-DATA:DATA-ID="foo",VALUE="bar""#;
+        assert_eq!(text.parse::<ExtXSessionData>().unwrap(), tag);
+
+        let tag = ExtXSessionData::new("foo", SessionData::Uri("bar".into()));
+        let text = r#"#EXT-X-SESSION-DATA:DATA-ID="foo",URI="bar""#;
+        assert_eq!(text.parse::<ExtXSessionData>().unwrap(), tag);
+
+        let tag = ExtXSessionData::with_language("foo", SessionData::Value("bar".into()), "baz");
+        let text = r#"#EXT-X-SESSION-DATA:DATA-ID="foo",VALUE="bar",LANGUAGE="baz""#;
+        assert_eq!(text.parse::<ExtXSessionData>().unwrap(), tag);
+    }
+
+    #[test]
+    fn test_requires_version() {
+        let tag = ExtXSessionData::new("foo", SessionData::Value("bar".into()));
         assert_eq!(tag.requires_version(), ProtocolVersion::V1);
     }
 }

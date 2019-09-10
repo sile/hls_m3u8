@@ -1,12 +1,13 @@
+use std::fmt;
+use std::str::FromStr;
+
 use crate::attribute::AttributePairs;
 use crate::types::{
     ClosedCaptions, DecimalFloatingPoint, DecimalResolution, HdcpLevel, ProtocolVersion,
     SingleLineString,
 };
-use crate::utils::{parse_u64, quote, unquote};
-use crate::{Error, ErrorKind, Result};
-use std::fmt;
-use std::str::FromStr;
+use crate::utils::{parse_u64, quote, tag, unquote};
+use crate::{Error, ErrorKind};
 
 /// [4.3.4.2. EXT-X-STREAM-INF]
 ///
@@ -146,16 +147,15 @@ impl fmt::Display for ExtXStreamInf {
 impl FromStr for ExtXStreamInf {
     type Err = Error;
 
-    fn from_str(s: &str) -> Result<Self> {
-        let mut lines = s.splitn(2, '\n');
-        let first_line = lines.next().expect("Never fails").trim_end_matches('\r');
-        let second_line = track_assert_some!(lines.next(), ErrorKind::InvalidInput);
+    fn from_str(input: &str) -> Result<Self, Self::Err> {
+        let mut lines = input.lines();
+        let first_line = lines.next().ok_or(ErrorKind::InvalidInput)?; // TODO!
+        let second_line = lines.next().ok_or(ErrorKind::InvalidInput)?; // TODO!
 
-        track_assert!(
-            first_line.starts_with(Self::PREFIX),
-            ErrorKind::InvalidInput
-        );
+        tag(first_line, Self::PREFIX)?;
+
         let uri = track!(SingleLineString::new(second_line))?;
+
         let mut bandwidth = None;
         let mut average_bandwidth = None;
         let mut codecs = None;
@@ -186,6 +186,7 @@ impl FromStr for ExtXStreamInf {
                 }
             }
         }
+
         let bandwidth = track_assert_some!(bandwidth, ErrorKind::InvalidInput);
         Ok(ExtXStreamInf {
             uri,

@@ -1,18 +1,32 @@
-use crate::{Error, ErrorKind, Result};
 use std::fmt;
 use std::str::{self, FromStr};
+
+use getset::{Getters, MutGetters, Setters};
 use trackable::error::ErrorKindExt;
+
+use crate::{Error, ErrorKind, Result};
 
 /// Byte range.
 ///
 /// See: [4.3.2.2. EXT-X-BYTERANGE]
 ///
 /// [4.3.2.2. EXT-X-BYTERANGE]: https://tools.ietf.org/html/rfc8216#section-4.3.2.2
-#[allow(missing_docs)]
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+#[derive(Getters, Setters, MutGetters, Debug, Clone, Copy, PartialEq, Eq, Hash)]
+#[get = "pub"]
+#[set = "pub"]
+#[get_mut = "pub"]
 pub struct ByteRange {
-    pub length: usize,
-    pub start: Option<usize>,
+    /// The length of the range.
+    length: usize,
+    /// The start of the range.
+    start: Option<usize>,
+}
+
+impl ByteRange {
+    /// Creates a new [ByteRange].
+    pub const fn new(length: usize, start: Option<usize>) -> Self {
+        Self { length, start }
+    }
 }
 
 impl fmt::Display for ByteRange {
@@ -27,20 +41,28 @@ impl fmt::Display for ByteRange {
 
 impl FromStr for ByteRange {
     type Err = Error;
+
     fn from_str(s: &str) -> Result<Self> {
-        let mut tokens = s.splitn(2, '@');
-        let length = tokens.next().expect("Never fails");
-        let start = if let Some(start) = tokens.next() {
-            Some(track!(start
-                .parse()
-                .map_err(|e| ErrorKind::InvalidInput.cause(e)))?)
-        } else {
-            None
+        let tokens = s.splitn(2, '@').collect::<Vec<_>>();
+        if tokens.is_empty() {
+            Err(ErrorKind::InvalidInput)?;
+        }
+
+        let length = tokens[0]
+            .parse()
+            .map_err(|e| ErrorKind::InvalidInput.cause(e))?;
+        let start = {
+            let mut result = None;
+            if tokens.len() == 2 {
+                result = Some(
+                    tokens[1]
+                        .parse()
+                        .map_err(|e| ErrorKind::InvalidInput.cause(e))?,
+                );
+            }
+            result
         };
-        Ok(ByteRange {
-            length: track!(length.parse().map_err(|e| ErrorKind::InvalidInput.cause(e)))?,
-            start,
-        })
+        Ok(ByteRange::new(length, start))
     }
 }
 

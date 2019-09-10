@@ -1,22 +1,35 @@
+use std::fmt;
+use std::str::FromStr;
+
+use getset::{Getters, MutGetters, Setters};
+
 use crate::attribute::AttributePairs;
 use crate::types::{DecimalResolution, HdcpLevel, ProtocolVersion};
 use crate::utils::parse_u64;
-use crate::utils::{quote, unquote};
-use crate::{Error, ErrorKind, Result};
-use std::fmt;
-use std::str::FromStr;
+use crate::utils::{quote, tag, unquote};
+use crate::{Error, ErrorKind};
 
 /// [4.3.4.3. EXT-X-I-FRAME-STREAM-INF]
 ///
 /// [4.3.4.3. EXT-X-I-FRAME-STREAM-INF]: https://tools.ietf.org/html/rfc8216#section-4.3.4.3
-#[derive(Debug, Clone, PartialEq, Eq, Hash)]
+#[derive(Getters, Setters, MutGetters, Debug, Clone, PartialEq, Eq, Hash)]
+#[get = "pub"]
+#[set = "pub"]
+#[get_mut = "pub"]
 pub struct ExtXIFrameStreamInf {
+    /// The URI, that identifies the associated media playlist.
     uri: String,
+    /// The peak segment bit rate of the variant stream.
     bandwidth: u64,
+    /// The average segment bit rate of the variant stream.
     average_bandwidth: Option<u64>,
+    /// A string that represents the list of codec types contained the variant stream.
     codecs: Option<String>,
+    /// The optimal pixel resolution at which to display all the video in the variant stream.
     resolution: Option<DecimalResolution>,
+    /// The HDCP level of the variant stream.
     hdcp_level: Option<HdcpLevel>,
+    /// The group identifier for the video in the variant stream.
     video: Option<String>,
 }
 
@@ -34,41 +47,6 @@ impl ExtXIFrameStreamInf {
             hdcp_level: None,
             video: None,
         }
-    }
-
-    /// Returns the URI that identifies the associated media playlist.
-    pub const fn uri(&self) -> &String {
-        &self.uri
-    }
-
-    /// Returns the peak segment bit rate of the variant stream.
-    pub const fn bandwidth(&self) -> u64 {
-        self.bandwidth
-    }
-
-    /// Returns the average segment bit rate of the variant stream.
-    pub const fn average_bandwidth(&self) -> Option<u64> {
-        self.average_bandwidth
-    }
-
-    /// Returns a string that represents the list of codec types contained the variant stream.
-    pub fn codecs(&self) -> Option<&String> {
-        self.codecs.as_ref()
-    }
-
-    /// Returns the optimal pixel resolution at which to display all the video in the variant stream.
-    pub const fn resolution(&self) -> Option<DecimalResolution> {
-        self.resolution
-    }
-
-    /// Returns the HDCP level of the variant stream.
-    pub const fn hdcp_level(&self) -> Option<HdcpLevel> {
-        self.hdcp_level
-    }
-
-    /// Returns the group identifier for the video in the variant stream.
-    pub fn video(&self) -> Option<&String> {
-        self.video.as_ref()
     }
 
     /// Returns the protocol compatibility version that this tag requires.
@@ -105,8 +83,8 @@ impl fmt::Display for ExtXIFrameStreamInf {
 impl FromStr for ExtXIFrameStreamInf {
     type Err = Error;
 
-    fn from_str(s: &str) -> Result<Self> {
-        track_assert!(s.starts_with(Self::PREFIX), ErrorKind::InvalidInput);
+    fn from_str(input: &str) -> Result<Self, Self::Err> {
+        let input = tag(input, Self::PREFIX)?;
 
         let mut uri = None;
         let mut bandwidth = None;
@@ -115,7 +93,8 @@ impl FromStr for ExtXIFrameStreamInf {
         let mut resolution = None;
         let mut hdcp_level = None;
         let mut video = None;
-        let attrs = AttributePairs::parse(s.split_at(Self::PREFIX.len()).1);
+
+        let attrs = AttributePairs::parse(input);
         for attr in attrs {
             let (key, value) = track!(attr)?;
             match key {
@@ -167,7 +146,7 @@ mod test {
         );
 
         assert_eq!(i_frame_stream_inf.uri(), "foo");
-        assert_eq!(i_frame_stream_inf.bandwidth(), 1000);
+        assert_eq!(*i_frame_stream_inf.bandwidth(), 1000);
         // TODO: test all the optional fields
     }
 

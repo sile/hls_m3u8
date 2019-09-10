@@ -1,7 +1,8 @@
-use crate::types::{DecryptionKey, ProtocolVersion};
-use crate::{Error, ErrorKind, Result};
 use std::fmt;
 use std::str::FromStr;
+
+use crate::types::{DecryptionKey, ProtocolVersion};
+use crate::utils::tag;
 
 /// [4.3.4.5. EXT-X-SESSION-KEY]
 ///
@@ -37,13 +38,11 @@ impl fmt::Display for ExtXSessionKey {
 }
 
 impl FromStr for ExtXSessionKey {
-    type Err = Error;
+    type Err = crate::Error;
 
-    fn from_str(s: &str) -> Result<Self> {
-        track_assert!(s.starts_with(Self::PREFIX), ErrorKind::InvalidInput);
-        let suffix = s.split_at(Self::PREFIX.len()).1;
-        let key = track!(suffix.parse())?;
-        Ok(ExtXSessionKey { key })
+    fn from_str(input: &str) -> Result<Self, Self::Err> {
+        let key = tag(input, Self::PREFIX)?.parse()?;
+        Ok(Self::new(key))
     }
 }
 

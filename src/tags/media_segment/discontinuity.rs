@@ -1,13 +1,16 @@
-use crate::types::ProtocolVersion;
-use crate::{Error, ErrorKind, Result};
 use std::fmt;
 use std::str::FromStr;
+
+use crate::types::ProtocolVersion;
+use crate::utils::tag;
+use crate::{Error, Result};
 
 /// [4.3.2.3. EXT-X-DISCONTINUITY]
 ///
 /// [4.3.2.3. EXT-X-DISCONTINUITY]: https://tools.ietf.org/html/rfc8216#section-4.3.2.3
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct ExtXDiscontinuity;
+
 impl ExtXDiscontinuity {
     pub(crate) const PREFIX: &'static str = "#EXT-X-DISCONTINUITY";
 
@@ -25,8 +28,9 @@ impl fmt::Display for ExtXDiscontinuity {
 
 impl FromStr for ExtXDiscontinuity {
     type Err = Error;
-    fn from_str(s: &str) -> Result<Self> {
-        track_assert_eq!(s, Self::PREFIX, ErrorKind::InvalidInput);
+
+    fn from_str(input: &str) -> Result<Self> {
+        tag(input, Self::PREFIX)?;
         Ok(ExtXDiscontinuity)
     }
 }

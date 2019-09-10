@@ -44,6 +44,19 @@ pub(crate) fn quote<T: ToString>(value: T) -> String {
     format!("\"{}\"", value.to_string().replace("\"", ""))
 }
 
+/// Checks, if the given tag is at the start of the input. If this is the case, it will remove it
+/// return the rest of the input, otherwise it will return an error.
+pub(crate) fn tag<T>(input: &str, tag: T) -> crate::Result<&str>
+where
+    T: AsRef<str>,
+{
+    if !input.starts_with(tag.as_ref()) {
+        Err(ErrorKind::InvalidInput)?; // TODO!
+    }
+    let result = input.split_at(tag.as_ref().len()).1;
+    Ok(result)
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -73,5 +86,22 @@ mod tests {
     fn test_quote() {
         assert_eq!(quote("value"), "\"value\"".to_string());
         assert_eq!(quote("\"value\""), "\"value\"".to_string());
+    }
+
+    #[test]
+    fn test_tag() {
+        let input = "HelloMyFriendThisIsASampleString";
+
+        let input = tag(input, "Hello").unwrap();
+        assert_eq!(input, "MyFriendThisIsASampleString");
+
+        let input = tag(input, "My").unwrap();
+        assert_eq!(input, "FriendThisIsASampleString");
+
+        let input = tag(input, "FriendThisIs").unwrap();
+        assert_eq!(input, "ASampleString");
+
+        let input = tag(input, "A").unwrap();
+        assert_eq!(input, "SampleString");
     }
 }

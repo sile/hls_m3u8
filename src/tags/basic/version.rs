@@ -1,7 +1,9 @@
-use crate::types::ProtocolVersion;
-use crate::{Error, ErrorKind, Result};
 use std::fmt;
 use std::str::FromStr;
+
+use crate::types::ProtocolVersion;
+use crate::utils::tag;
+use crate::Error;
 
 /// [4.3.1.2. EXT-X-VERSION]
 ///
@@ -37,10 +39,8 @@ impl fmt::Display for ExtXVersion {
 impl FromStr for ExtXVersion {
     type Err = Error;
 
-    fn from_str(s: &str) -> Result<Self> {
-        track_assert!(s.starts_with(Self::PREFIX), ErrorKind::InvalidInput);
-        let suffix = s.split_at(Self::PREFIX.len()).1;
-        let version = track!(suffix.parse())?;
+    fn from_str(input: &str) -> Result<Self, Self::Err> {
+        let version = tag(input, Self::PREFIX)?.parse()?;
         Ok(ExtXVersion::new(version))
     }
 }

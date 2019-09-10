@@ -17,6 +17,7 @@ codecov = {repository = "sile/hls_m3u8"}
 
 [dependencies]
 trackable = "0.2"
+getset = "0.0.8"
 
 [dev-dependencies]
 clap = "2"

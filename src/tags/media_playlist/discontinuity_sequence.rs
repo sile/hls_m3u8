@@ -1,8 +1,8 @@
-use crate::types::ProtocolVersion;
-use crate::{Error, ErrorKind, Result};
 use std::fmt;
 use std::str::FromStr;
-use trackable::error::ErrorKindExt;
+
+use crate::types::ProtocolVersion;
+use crate::utils::tag;
 
 /// [4.3.3.3. EXT-X-DISCONTINUITY-SEQUENCE]
 ///
@@ -39,12 +39,11 @@ impl fmt::Display for ExtXDiscontinuitySequence {
 }
 
 impl FromStr for ExtXDiscontinuitySequence {
-    type Err = Error;
+    type Err = crate::Error;
 
-    fn from_str(s: &str) -> Result<Self> {
-        track_assert!(s.starts_with(Self::PREFIX), ErrorKind::InvalidInput);
-        let seq_num = may_invalid!(s.split_at(Self::PREFIX.len()).1.parse())?;
-        Ok(ExtXDiscontinuitySequence { seq_num })
+    fn from_str(input: &str) -> Result<Self, Self::Err> {
+        let seq_num = tag(input, Self::PREFIX)?.parse().unwrap(); // TODO!
+        Ok(Self::new(seq_num))
     }
 }
 

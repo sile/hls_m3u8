@@ -100,13 +100,7 @@ mod test {
         assert_eq!(tag.to_string(), text);
         assert_eq!(tag.requires_version(), ProtocolVersion::V6);
 
-        let tag = ExtXMap::with_range(
-            "foo",
-            ByteRange {
-                length: 9,
-                start: Some(2),
-            },
-        );
+        let tag = ExtXMap::with_range("foo", ByteRange::new(9, Some(2)));
         let text = r#"#EXT-X-MAP:URI="foo",BYTERANGE="9@2""#;
         track_try_unwrap!(ExtXMap::from_str(text));
         assert_eq!(text.parse().ok(), Some(tag.clone()));

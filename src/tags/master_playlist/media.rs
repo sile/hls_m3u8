@@ -1,7 +1,7 @@
 use crate::attribute::AttributePairs;
 use crate::types::{InStreamId, MediaType, ProtocolVersion};
-use crate::utils::{parse_yes_or_no, quote, unquote};
-use crate::{Error, ErrorKind, Result};
+use crate::utils::{parse_yes_or_no, quote, tag, unquote};
+use crate::{Error, ErrorKind};
 use std::fmt;
 use std::str::FromStr;
 
@@ -114,7 +114,7 @@ impl ExtXMediaBuilder {
     }
 
     /// Builds a `ExtXMedia` instance.
-    pub fn finish(self) -> Result<ExtXMedia> {
+    pub fn finish(self) -> crate::Result<ExtXMedia> {
         let media_type = track_assert_some!(self.media_type, ErrorKind::InvalidInput);
         let group_id = track_assert_some!(self.group_id, ErrorKind::InvalidInput);
         let name = track_assert_some!(self.name, ErrorKind::InvalidInput);
@@ -309,11 +309,11 @@ impl fmt::Display for ExtXMedia {
 impl FromStr for ExtXMedia {
     type Err = Error;
 
-    fn from_str(s: &str) -> Result<Self> {
-        track_assert!(s.starts_with(Self::PREFIX), ErrorKind::InvalidInput);
+    fn from_str(input: &str) -> Result<Self, Self::Err> {
+        let input = tag(input, Self::PREFIX)?;
 
         let mut builder = ExtXMediaBuilder::new();
-        let attrs = AttributePairs::parse(s.split_at(Self::PREFIX.len()).1);
+        let attrs = AttributePairs::parse(input);
         for attr in attrs {
             let (key, value) = track!(attr)?;
             match key {
