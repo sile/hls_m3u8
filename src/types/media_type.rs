@@ -1,6 +1,7 @@
-use crate::{Error, ErrorKind, Result};
 use std::fmt;
 use std::str::{self, FromStr};
+
+use crate::Error;
 
 /// Media type.
 ///
@@ -29,13 +30,16 @@ impl fmt::Display for MediaType {
 
 impl FromStr for MediaType {
     type Err = Error;
-    fn from_str(s: &str) -> Result<Self> {
-        Ok(match s {
+
+    fn from_str(input: &str) -> Result<Self, Self::Err> {
+        Ok(match input {
             "AUDIO" => MediaType::Audio,
             "VIDEO" => MediaType::Video,
             "SUBTITLES" => MediaType::Subtitles,
             "CLOSED-CAPTIONS" => MediaType::ClosedCaptions,
-            _ => track_panic!(ErrorKind::InvalidInput, "Unknown media type: {:?}", s),
+            _ => {
+                return Err(Error::invalid_input());
+            }
         })
     }
 }

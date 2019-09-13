@@ -1,9 +1,10 @@
-use crate::types::{DecimalFloatingPoint, ProtocolVersion, SingleLineString};
-use crate::{Error, ErrorKind, Result};
 use std::fmt;
 use std::str::FromStr;
 use std::time::Duration;
-use trackable::error::ErrorKindExt;
+
+use crate::types::{DecimalFloatingPoint, ProtocolVersion, SingleLineString};
+use crate::utils::tag;
+use crate::Error;
 
 /// [4.3.2.1. EXTINF]
 ///
@@ -70,18 +71,20 @@ impl fmt::Display for ExtInf {
 
 impl FromStr for ExtInf {
     type Err = Error;
-    fn from_str(s: &str) -> Result<Self> {
-        track_assert!(s.starts_with(Self::PREFIX), ErrorKind::InvalidInput);
-        let mut tokens = s.split_at(Self::PREFIX.len()).1.splitn(2, ',');
 
-        let seconds: DecimalFloatingPoint =
-            may_invalid!(tokens.next().expect("Never fails").parse())?;
+    fn from_str(input: &str) -> Result<Self, Self::Err> {
+        let input = tag(input, Self::PREFIX)?;
+        let mut tokens = input.splitn(2, ',');
+
+        let seconds: DecimalFloatingPoint = tokens.next().expect("Never fails").parse()?;
         let duration = seconds.to_duration();
 
-        let title = if let Some(title) = tokens.next() {
-            Some(track!(SingleLineString::new(title))?)
-        } else {
-            None
+        let title = {
+            if let Some(title) = tokens.next() {
+                Some((SingleLineString::new(title))?)
+            } else {
+                None
+            }
         };
         Ok(ExtInf { duration, title })
     }

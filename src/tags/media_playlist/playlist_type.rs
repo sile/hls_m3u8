@@ -1,8 +1,9 @@
-use crate::types::{PlaylistType, ProtocolVersion};
-use crate::{Error, ErrorKind, Result};
 use std::fmt;
 use std::str::FromStr;
-use trackable::error::ErrorKindExt;
+
+use crate::types::{PlaylistType, ProtocolVersion};
+use crate::utils::tag;
+use crate::Error;
 
 /// [4.3.3.5. EXT-X-PLAYLIST-TYPE]
 ///
@@ -40,10 +41,10 @@ impl fmt::Display for ExtXPlaylistType {
 impl FromStr for ExtXPlaylistType {
     type Err = Error;
 
-    fn from_str(s: &str) -> Result<Self> {
-        track_assert!(s.starts_with(Self::PREFIX), ErrorKind::InvalidInput);
-        let playlist_type = may_invalid!(s.split_at(Self::PREFIX.len()).1.parse())?;
-        Ok(ExtXPlaylistType { playlist_type })
+    fn from_str(input: &str) -> Result<Self, Self::Err> {
+        let input = tag(input, Self::PREFIX)?.parse()?;
+
+        Ok(ExtXPlaylistType::new(input))
     }
 }
 

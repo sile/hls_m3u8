@@ -1,3 +1,8 @@
+use std::fmt;
+use std::iter;
+use std::str::FromStr;
+use std::time::Duration;
+
 use crate::line::{Line, Lines, Tag};
 use crate::media_segment::{MediaSegment, MediaSegmentBuilder};
 use crate::tags::{
@@ -6,11 +11,7 @@ use crate::tags::{
     MediaPlaylistTag,
 };
 use crate::types::ProtocolVersion;
-use crate::{Error, ErrorKind, Result};
-use std::fmt;
-use std::iter;
-use std::str::FromStr;
-use std::time::Duration;
+use crate::Error;
 
 /// Media playlist builder.
 #[derive(Debug, Clone)]
@@ -89,20 +90,18 @@ impl MediaPlaylistBuilder {
     }
 
     /// Builds a `MediaPlaylist` instance.
-    pub fn finish(self) -> Result<MediaPlaylist> {
+    pub fn finish(self) -> crate::Result<MediaPlaylist> {
         let required_version = self.required_version();
         let specified_version = self.version.unwrap_or(required_version);
-        track_assert!(
-            required_version <= specified_version,
-            ErrorKind::InvalidInput,
-            "required_version:{}, specified_version:{}",
-            required_version,
-            specified_version,
-        );
+        if !(required_version <= specified_version) {
+            return Err(Error::custom(format!(
+                "required_version:{}, specified_version:{}",
+                required_version, specified_version
+            )));
+        }
 
-        let target_duration_tag =
-            track_assert_some!(self.target_duration_tag, ErrorKind::InvalidInput);
-        track!(self.validate_media_segments(target_duration_tag.duration()))?;
+        let target_duration_tag = self.target_duration_tag.ok_or(Error::invalid_input())?;
+        self.validate_media_segments(target_duration_tag.duration())?;
 
         Ok(MediaPlaylist {
             version_tag: ExtXVersion::new(specified_version),
@@ -118,7 +117,7 @@ impl MediaPlaylistBuilder {
         })
     }
 
-    fn validate_media_segments(&self, target_duration: Duration) -> Result<()> {
+    fn validate_media_segments(&self, target_duration: Duration) -> crate::Result<()> {
         let mut last_range_uri = None;
         for s in &self.segments {
             // CHECK: `#EXT-X-TARGETDURATION`
@@ -129,21 +128,24 @@ impl MediaPlaylistBuilder {
                 Duration::from_secs(segment_duration.as_secs() + 1)
             };
             let max_segment_duration = target_duration + self.options.allowable_excess_duration;
-            track_assert!(
-                rounded_segment_duration <= max_segment_duration,
-                ErrorKind::InvalidInput,
-                "Too large segment duration: actual={:?}, max={:?}, target_duration={:?}, uri={:?}",
-                segment_duration,
-                max_segment_duration,
-                target_duration,
-                s.uri()
-            );
+
+            if !(rounded_segment_duration <= max_segment_duration) {
+                return Err(Error::custom(format!(
+                    "Too large segment duration: actual={:?}, max={:?}, target_duration={:?}, uri={:?}",
+                    segment_duration,
+                    max_segment_duration,
+                    target_duration,
+                    s.uri()
+                )));
+            }
 
             // CHECK: `#EXT-X-BYTE-RANGE`
             if let Some(tag) = s.byte_range_tag() {
                 if tag.to_range().start().is_none() {
-                    let last_uri = track_assert_some!(last_range_uri, ErrorKind::InvalidInput);
-                    track_assert_eq!(last_uri, s.uri(), ErrorKind::InvalidInput);
+                    let last_uri = last_range_uri.ok_or(Error::invalid_input())?;
+                    if last_uri != s.uri() {
+                        return Err(Error::invalid_input());
+                    }
                 } else {
                     last_range_uri = Some(s.uri());
                 }
@@ -292,8 +294,9 @@ impl fmt::Display for MediaPlaylist {
 
 impl FromStr for MediaPlaylist {
     type Err = Error;
-    fn from_str(s: &str) -> Result<Self> {
-        track!(MediaPlaylistOptions::new().parse(s))
+
+    fn from_str(input: &str) -> Result<Self, Self::Err> {
+        MediaPlaylistOptions::new().parse(input)
     }
 }
 
@@ -305,7 +308,7 @@ pub struct MediaPlaylistOptions {
 
 impl MediaPlaylistOptions {
     /// Makes a new `MediaPlaylistOptions` with the default settings.
-    pub fn new() -> Self {
+    pub const fn new() -> Self {
         MediaPlaylistOptions {
             allowable_excess_duration: Duration::from_secs(0),
         }
@@ -327,7 +330,7 @@ impl MediaPlaylistOptions {
     }
 
     /// Parses the given M3U8 text with the specified settings.
-    pub fn parse(&self, m3u8: &str) -> Result<MediaPlaylist> {
+    pub fn parse(&self, m3u8: &str) -> crate::Result<MediaPlaylist> {
         let mut builder = MediaPlaylistBuilder::new();
         builder.options(self.clone());
 
@@ -335,17 +338,21 @@ impl MediaPlaylistOptions {
         let mut has_partial_segment = false;
         let mut has_discontinuity_tag = false;
         for (i, line) in Lines::new(m3u8).enumerate() {
-            match track!(line)? {
+            match (line)? {
                 Line::Blank | Line::Comment(_) => {}
                 Line::Tag(tag) => {
                     if i == 0 {
-                        track_assert_eq!(tag, Tag::ExtM3u(ExtM3u), ErrorKind::InvalidInput);
+                        if tag != Tag::ExtM3u(ExtM3u) {
+                            return Err(Error::invalid_input());
+                        }
                         continue;
                     }
                     match tag {
-                        Tag::ExtM3u(_) => track_panic!(ErrorKind::InvalidInput),
+                        Tag::ExtM3u(_) => return Err(Error::invalid_input()),
                         Tag::ExtXVersion(t) => {
-                            track_assert_eq!(builder.version, None, ErrorKind::InvalidInput);
+                            if builder.version.is_some() {
+                                return Err(Error::invalid_input());
+                            }
                             builder.version(t.version());
                         }
                         Tag::ExtInf(t) => {
@@ -378,45 +385,30 @@ impl MediaPlaylistOptions {
                             segment.tag(t);
                         }
                         Tag::ExtXTargetDuration(t) => {
-                            track_assert_eq!(
-                                builder.target_duration_tag,
-                                None,
-                                ErrorKind::InvalidInput
-                            );
                             builder.tag(t);
                         }
                         Tag::ExtXMediaSequence(t) => {
-                            track_assert_eq!(
-                                builder.media_sequence_tag,
-                                None,
-                                ErrorKind::InvalidInput
-                            );
-                            track_assert!(builder.segments.is_empty(), ErrorKind::InvalidInput);
+                            if builder.segments.is_empty() {
+                                return Err(Error::invalid_input());
+                            }
                             builder.tag(t);
                         }
                         Tag::ExtXDiscontinuitySequence(t) => {
-                            track_assert!(builder.segments.is_empty(), ErrorKind::InvalidInput);
-                            track_assert!(!has_discontinuity_tag, ErrorKind::InvalidInput);
+                            if builder.segments.is_empty() {
+                                return Err(Error::invalid_input());
+                            }
+                            if has_discontinuity_tag {
+                                return Err(Error::invalid_input());
+                            }
                             builder.tag(t);
                         }
                         Tag::ExtXEndList(t) => {
-                            track_assert_eq!(builder.end_list_tag, None, ErrorKind::InvalidInput);
                             builder.tag(t);
                         }
                         Tag::ExtXPlaylistType(t) => {
-                            track_assert_eq!(
-                                builder.playlist_type_tag,
-                                None,
-                                ErrorKind::InvalidInput
-                            );
                             builder.tag(t);
                         }
                         Tag::ExtXIFramesOnly(t) => {
-                            track_assert_eq!(
-                                builder.i_frames_only_tag,
-                                None,
-                                ErrorKind::InvalidInput
-                            );
                             builder.tag(t);
                         }
                         Tag::ExtXMedia(_)
@@ -424,18 +416,12 @@ impl MediaPlaylistOptions {
                         | Tag::ExtXIFrameStreamInf(_)
                         | Tag::ExtXSessionData(_)
                         | Tag::ExtXSessionKey(_) => {
-                            track_panic!(ErrorKind::InvalidInput, "{}", tag)
+                            return Err(Error::custom(tag));
                         }
                         Tag::ExtXIndependentSegments(t) => {
-                            track_assert_eq!(
-                                builder.independent_segments_tag,
-                                None,
-                                ErrorKind::InvalidInput
-                            );
                             builder.tag(t);
                         }
                         Tag::ExtXStart(t) => {
-                            track_assert_eq!(builder.start_tag, None, ErrorKind::InvalidInput);
                             builder.tag(t);
                         }
                         Tag::Unknown(_) => {
@@ -446,14 +432,16 @@ impl MediaPlaylistOptions {
                 }
                 Line::Uri(uri) => {
                     segment.uri(uri);
-                    builder.segment(track!(segment.finish())?);
+                    builder.segment((segment.finish())?);
                     segment = MediaSegmentBuilder::new();
                     has_partial_segment = false;
                 }
             }
         }
-        track_assert!(!has_partial_segment, ErrorKind::InvalidInput);
-        track!(builder.finish())
+        if has_partial_segment {
+            return Err(Error::invalid_input());
+        }
+        builder.finish()
     }
 }
 

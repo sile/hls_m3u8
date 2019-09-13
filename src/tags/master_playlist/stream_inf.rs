@@ -7,7 +7,7 @@ use crate::types::{
     SingleLineString,
 };
 use crate::utils::{parse_u64, quote, tag, unquote};
-use crate::{Error, ErrorKind};
+use crate::Error;
 
 /// [4.3.4.2. EXT-X-STREAM-INF]
 ///
@@ -149,12 +149,12 @@ impl FromStr for ExtXStreamInf {
 
     fn from_str(input: &str) -> Result<Self, Self::Err> {
         let mut lines = input.lines();
-        let first_line = lines.next().ok_or(ErrorKind::InvalidInput)?; // TODO!
-        let second_line = lines.next().ok_or(ErrorKind::InvalidInput)?; // TODO!
+        let first_line = lines.next().ok_or(Error::invalid_input())?; // TODO!
+        let second_line = lines.next().ok_or(Error::invalid_input())?; // TODO!
 
         tag(first_line, Self::PREFIX)?;
 
-        let uri = track!(SingleLineString::new(second_line))?;
+        let uri = SingleLineString::new(second_line)?;
 
         let mut bandwidth = None;
         let mut average_bandwidth = None;
@@ -166,20 +166,21 @@ impl FromStr for ExtXStreamInf {
         let mut video = None;
         let mut subtitles = None;
         let mut closed_captions = None;
+
         let attrs = AttributePairs::parse(first_line.split_at(Self::PREFIX.len()).1);
         for attr in attrs {
-            let (key, value) = track!(attr)?;
+            let (key, value) = (attr)?;
             match key {
-                "BANDWIDTH" => bandwidth = Some(track!(parse_u64(value))?),
-                "AVERAGE-BANDWIDTH" => average_bandwidth = Some(track!(parse_u64(value))?),
+                "BANDWIDTH" => bandwidth = Some((parse_u64(value))?),
+                "AVERAGE-BANDWIDTH" => average_bandwidth = Some((parse_u64(value))?),
                 "CODECS" => codecs = Some(unquote(value)),
-                "RESOLUTION" => resolution = Some(track!(value.parse())?),
-                "FRAME-RATE" => frame_rate = Some(track!(value.parse())?),
-                "HDCP-LEVEL" => hdcp_level = Some(track!(value.parse())?),
+                "RESOLUTION" => resolution = Some((value.parse())?),
+                "FRAME-RATE" => frame_rate = Some((value.parse())?),
+                "HDCP-LEVEL" => hdcp_level = Some((value.parse())?),
                 "AUDIO" => audio = Some(unquote(value)),
                 "VIDEO" => video = Some(unquote(value)),
                 "SUBTITLES" => subtitles = Some(unquote(value)),
-                "CLOSED-CAPTIONS" => closed_captions = Some(track!(value.parse())?),
+                "CLOSED-CAPTIONS" => closed_captions = Some((value.parse())?),
                 _ => {
                     // [6.3.1. General Client Responsibilities]
                     // > ignore any attribute/value pair with an unrecognized AttributeName.
@@ -187,7 +188,8 @@ impl FromStr for ExtXStreamInf {
             }
         }
 
-        let bandwidth = track_assert_some!(bandwidth, ErrorKind::InvalidInput);
+        let bandwidth = bandwidth.ok_or(Error::missing_value("BANDWIDTH"))?;
+
         Ok(ExtXStreamInf {
             uri,
             bandwidth,

@@ -2,10 +2,9 @@ use std::fmt;
 use std::ops::Deref;
 use std::str::FromStr;
 
-use trackable::error::ErrorKindExt;
-
 use crate::types::{ByteRange, ProtocolVersion};
-use crate::{Error, ErrorKind, Result};
+use crate::utils::tag;
+use crate::Error;
 
 /// [4.3.2.2. EXT-X-BYTERANGE]
 ///
@@ -73,26 +72,20 @@ impl fmt::Display for ExtXByteRange {
 impl FromStr for ExtXByteRange {
     type Err = Error;
 
-    fn from_str(s: &str) -> Result<Self> {
-        // check if the string starts with the PREFIX
-        track_assert!(s.starts_with(Self::PREFIX), ErrorKind::InvalidInput);
-        let byte_range = s.split_at(Self::PREFIX.len()).1;
-        let tokens = byte_range.splitn(2, '@').collect::<Vec<_>>();
+    fn from_str(input: &str) -> Result<Self, Self::Err> {
+        let input = tag(input, Self::PREFIX)?;
+
+        let tokens = input.splitn(2, '@').collect::<Vec<_>>();
         if tokens.is_empty() {
-            Err(ErrorKind::InvalidInput)?;
+            return Err(Error::invalid_input());
         }
 
-        let length = tokens[0]
-            .parse()
-            .map_err(|e| ErrorKind::InvalidInput.cause(e))?;
+        let length = tokens[0].parse()?;
+
         let start = {
             let mut result = None;
             if tokens.len() == 2 {
-                result = Some(
-                    tokens[1]
-                        .parse()
-                        .map_err(|e| ErrorKind::InvalidInput.cause(e))?,
-                );
+                result = Some(tokens[1].parse()?);
             }
             result
         };

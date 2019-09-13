@@ -1,6 +1,7 @@
-use crate::{Error, ErrorKind, Result};
 use std::fmt;
-use std::str::{self, FromStr};
+use std::str::FromStr;
+
+use crate::Error;
 
 /// Playlist type.
 ///
@@ -25,11 +26,12 @@ impl fmt::Display for PlaylistType {
 
 impl FromStr for PlaylistType {
     type Err = Error;
-    fn from_str(s: &str) -> Result<Self> {
-        match s {
+
+    fn from_str(input: &str) -> Result<Self, Self::Err> {
+        match input {
             "EVENT" => Ok(PlaylistType::Event),
             "VOD" => Ok(PlaylistType::Vod),
-            _ => track_panic!(ErrorKind::InvalidInput, "Unknown playlist type: {:?}", s),
+            _ => Err(Error::custom(format!("Unknown playlist type: {:?}", input))),
         }
     }
 }

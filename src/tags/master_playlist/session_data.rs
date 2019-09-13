@@ -6,7 +6,7 @@ use getset::{Getters, MutGetters, Setters};
 use crate::attribute::AttributePairs;
 use crate::types::{ProtocolVersion, SessionData};
 use crate::utils::{quote, tag, unquote};
-use crate::{Error, ErrorKind};
+use crate::Error;
 
 /// [4.3.4.4. EXT-X-SESSION-DATA]
 ///
@@ -79,7 +79,7 @@ impl FromStr for ExtXSessionData {
 
         let attrs = AttributePairs::parse(input);
         for attr in attrs {
-            let (key, value) = track!(attr)?;
+            let (key, value) = attr?;
             match key {
                 "DATA-ID" => data_id = Some(unquote(value)),
                 "VALUE" => session_value = Some(unquote(value)),
@@ -92,15 +92,21 @@ impl FromStr for ExtXSessionData {
             }
         }
 
-        let data_id = track_assert_some!(data_id, ErrorKind::InvalidInput);
-        let data = if let Some(value) = session_value {
-            track_assert_eq!(uri, None, ErrorKind::InvalidInput);
-            SessionData::Value(value)
-        } else if let Some(uri) = uri {
-            SessionData::Uri(uri)
-        } else {
-            track_panic!(ErrorKind::InvalidInput);
+        let data_id = data_id.ok_or(Error::missing_value("DATA-ID"))?;
+        let data = {
+            if let Some(value) = session_value {
+                if uri.is_some() {
+                    return Err(Error::invalid_input());
+                } else {
+                    SessionData::Value(value)
+                }
+            } else if let Some(uri) = uri {
+                SessionData::Uri(uri)
+            } else {
+                return Err(Error::invalid_input());
+            }
         };
+
         Ok(ExtXSessionData {
             data_id,
             data,

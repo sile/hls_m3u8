@@ -1,8 +1,8 @@
-use crate::{Error, ErrorKind, Result};
 use std::fmt;
-use std::str::{self, FromStr};
+use std::str::FromStr;
 use std::time::Duration;
-use trackable::error::ErrorKindExt;
+
+use crate::Error;
 
 /// Non-negative decimal floating-point number.
 ///
@@ -19,9 +19,10 @@ impl DecimalFloatingPoint {
     ///
     /// The given value must have a positive sign and be finite,
     /// otherwise this function will return an error that has the kind `ErrorKind::InvalidInput`.
-    pub fn new(n: f64) -> Result<Self> {
-        track_assert!(n.is_sign_positive(), ErrorKind::InvalidInput);
-        track_assert!(n.is_finite(), ErrorKind::InvalidInput);
+    pub fn new(n: f64) -> crate::Result<Self> {
+        if !n.is_sign_positive() || !n.is_finite() {
+            return Err(Error::invalid_input());
+        }
         Ok(DecimalFloatingPoint(n))
     }
 
@@ -59,12 +60,12 @@ impl fmt::Display for DecimalFloatingPoint {
 
 impl FromStr for DecimalFloatingPoint {
     type Err = Error;
-    fn from_str(s: &str) -> Result<Self> {
-        track_assert!(
-            s.chars().all(|c| c.is_digit(10) || c == '.'),
-            ErrorKind::InvalidInput
-        );
-        let n = track!(s.parse().map_err(|e| ErrorKind::InvalidInput.cause(e)))?;
+
+    fn from_str(input: &str) -> Result<Self, Self::Err> {
+        if !input.chars().all(|c| c.is_digit(10) || c == '.') {
+            return Err(Error::invalid_input());
+        }
+        let n = input.parse()?;
         Ok(DecimalFloatingPoint(n))
     }
 }

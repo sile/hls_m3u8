@@ -1,9 +1,10 @@
+use std::fmt;
+use std::str::{self, FromStr};
+
 use crate::attribute::AttributePairs;
 use crate::types::{EncryptionMethod, InitializationVector, ProtocolVersion};
 use crate::utils::{quote, unquote};
-use crate::{Error, ErrorKind, Result};
-use std::fmt;
-use std::str::{self, FromStr};
+use crate::Error;
 
 /// Decryption key.
 ///
@@ -51,19 +52,21 @@ impl fmt::Display for DecryptionKey {
 
 impl FromStr for DecryptionKey {
     type Err = Error;
-    fn from_str(s: &str) -> Result<Self> {
+
+    fn from_str(input: &str) -> Result<Self, Self::Err> {
         let mut method = None;
         let mut uri = None;
         let mut iv = None;
         let mut key_format = None;
         let mut key_format_versions = None;
-        let attrs = AttributePairs::parse(s);
+
+        let attrs = AttributePairs::parse(input);
         for attr in attrs {
-            let (key, value) = track!(attr)?;
+            let (key, value) = (attr)?;
             match key {
-                "METHOD" => method = Some(track!(value.parse())?),
+                "METHOD" => method = Some((value.parse())?),
                 "URI" => uri = Some(unquote(value)),
-                "IV" => iv = Some(track!(value.parse())?),
+                "IV" => iv = Some((value.parse())?),
                 "KEYFORMAT" => key_format = Some(unquote(value)),
                 "KEYFORMATVERSIONS" => key_format_versions = Some(unquote(value)),
                 _ => {
@@ -72,8 +75,10 @@ impl FromStr for DecryptionKey {
                 }
             }
         }
-        let method = track_assert_some!(method, ErrorKind::InvalidInput);
-        let uri = track_assert_some!(uri, ErrorKind::InvalidInput);
+
+        let method = method.ok_or(Error::missing_value("EXT-X-METHOD"))?;
+        let uri = uri.ok_or(Error::missing_value("EXT-X-URI"))?;
+
         Ok(DecryptionKey {
             method,
             uri,

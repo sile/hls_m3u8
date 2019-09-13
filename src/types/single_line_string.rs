@@ -1,4 +1,4 @@
-use crate::{ErrorKind, Result};
+use crate::Error;
 use std::fmt;
 use std::ops::Deref;
 
@@ -17,10 +17,13 @@ impl SingleLineString {
     ///
     /// If the given string contains any control characters,
     /// this function will return an error which has the kind `ErrorKind::InvalidInput`.
-    pub fn new<T: Into<String>>(s: T) -> Result<Self> {
+    pub fn new<T: Into<String>>(s: T) -> crate::Result<Self> {
         let s = s.into();
-        track_assert!(!s.chars().any(|c| c.is_control()), ErrorKind::InvalidInput);
-        Ok(SingleLineString(s))
+        if s.chars().any(|c| c.is_control()) {
+            Err(Error::invalid_input())
+        } else {
+            Ok(SingleLineString(s))
+        }
     }
 }
 

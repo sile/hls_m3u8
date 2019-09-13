@@ -1,7 +1,9 @@
-use crate::types::{ProtocolVersion, SingleLineString};
-use crate::{Error, ErrorKind, Result};
 use std::fmt;
 use std::str::FromStr;
+
+use crate::types::{ProtocolVersion, SingleLineString};
+use crate::utils::tag;
+use crate::Error;
 
 /// [4.3.2.6. EXT-X-PROGRAM-DATE-TIME]
 ///
@@ -39,11 +41,13 @@ impl fmt::Display for ExtXProgramDateTime {
 impl FromStr for ExtXProgramDateTime {
     type Err = Error;
 
-    fn from_str(s: &str) -> Result<Self> {
-        track_assert!(s.starts_with(Self::PREFIX), ErrorKind::InvalidInput);
-        let suffix = s.split_at(Self::PREFIX.len()).1;
+    fn from_str(input: &str) -> Result<Self, Self::Err> {
+        let input = tag(input, Self::PREFIX)?;
+
+        // TODO: parse with chrono
+
         Ok(ExtXProgramDateTime {
-            date_time: track!(SingleLineString::new(suffix))?,
+            date_time: (SingleLineString::new(input))?,
         })
     }
 }

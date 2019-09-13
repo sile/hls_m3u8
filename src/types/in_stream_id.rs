@@ -1,6 +1,7 @@
-use crate::{Error, ErrorKind, Result};
 use std::fmt;
-use std::str::{self, FromStr};
+use std::str::FromStr;
+
+use crate::Error;
 
 /// Identifier of a rendition within the segments in a media playlist.
 ///
@@ -87,8 +88,9 @@ impl fmt::Display for InStreamId {
 
 impl FromStr for InStreamId {
     type Err = Error;
-    fn from_str(s: &str) -> Result<Self> {
-        Ok(match s {
+
+    fn from_str(input: &str) -> Result<Self, Self::Err> {
+        Ok(match input {
             "CC1" => InStreamId::Cc1,
             "CC2" => InStreamId::Cc2,
             "CC3" => InStreamId::Cc3,
@@ -156,7 +158,7 @@ impl FromStr for InStreamId {
             "SERVICE61" => InStreamId::Service61,
             "SERVICE62" => InStreamId::Service62,
             "SERVICE63" => InStreamId::Service63,
-            _ => track_panic!(ErrorKind::InvalidInput, "Unknown instream id: {:?}", s),
+            _ => return Err(Error::custom(format!("Unknown instream id: {:?}", input))),
         })
     }
 }

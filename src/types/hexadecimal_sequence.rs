@@ -1,8 +1,8 @@
-use crate::{Error, ErrorKind, Result};
 use std::fmt;
 use std::ops::Deref;
-use std::str::{self, FromStr};
-use trackable::error::ErrorKindExt;
+use std::str::FromStr;
+
+use crate::Error;
 
 /// Hexadecimal sequence.
 ///
@@ -49,20 +49,24 @@ impl fmt::Display for HexadecimalSequence {
 
 impl FromStr for HexadecimalSequence {
     type Err = Error;
-    fn from_str(s: &str) -> Result<Self> {
-        track_assert!(
-            s.starts_with("0x") || s.starts_with("0X"),
-            ErrorKind::InvalidInput
-        );
-        track_assert!(s.len() % 2 == 0, ErrorKind::InvalidInput);
 
-        let mut v = Vec::with_capacity(s.len() / 2 - 1);
-        for c in s.as_bytes().chunks(2).skip(1) {
-            let d = track!(str::from_utf8(c).map_err(|e| ErrorKind::InvalidInput.cause(e)))?;
-            let b =
-                track!(u8::from_str_radix(d, 16).map_err(|e| ErrorKind::InvalidInput.cause(e)))?;
-            v.push(b);
+    fn from_str(input: &str) -> Result<Self, Self::Err> {
+        if !(input.starts_with("0x") || input.starts_with("0X")) {
+            return Err(Error::invalid_input());
         }
-        Ok(HexadecimalSequence(v))
+
+        if input.len() % 2 != 0 {
+            return Err(Error::invalid_input());
+        }
+
+        let mut result = Vec::with_capacity(input.len() / 2 - 1);
+
+        for c in input.as_bytes().chunks(2).skip(1) {
+            let d = String::from_utf8(c.to_vec()).map_err(|e| Error::custom(e))?;
+            let b = u8::from_str_radix(d.as_str(), 16)?;
+            result.push(b);
+        }
+
+        Ok(HexadecimalSequence(result))
     }
 }

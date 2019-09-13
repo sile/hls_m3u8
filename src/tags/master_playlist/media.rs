@@ -1,9 +1,10 @@
+use std::fmt;
+use std::str::FromStr;
+
 use crate::attribute::AttributePairs;
 use crate::types::{InStreamId, MediaType, ProtocolVersion};
 use crate::utils::{parse_yes_or_no, quote, tag, unquote};
-use crate::{Error, ErrorKind};
-use std::fmt;
-use std::str::FromStr;
+use crate::Error;
 
 /// `ExtXMedia` builder.
 #[derive(Debug, Clone)]
@@ -115,21 +116,38 @@ impl ExtXMediaBuilder {
 
     /// Builds a `ExtXMedia` instance.
     pub fn finish(self) -> crate::Result<ExtXMedia> {
-        let media_type = track_assert_some!(self.media_type, ErrorKind::InvalidInput);
-        let group_id = track_assert_some!(self.group_id, ErrorKind::InvalidInput);
-        let name = track_assert_some!(self.name, ErrorKind::InvalidInput);
+        let media_type = self
+            .media_type
+            .ok_or(Error::missing_value("self.media_type"))?;
+        let group_id = self.group_id.ok_or(Error::missing_value("self.group_id"))?;
+        let name = self.name.ok_or(Error::missing_value("self.name"))?;
+
         if MediaType::ClosedCaptions == media_type {
-            track_assert_ne!(self.uri, None, ErrorKind::InvalidInput);
-            track_assert!(self.instream_id.is_some(), ErrorKind::InvalidInput);
+            if let None = self.uri {
+                return Err(Error::missing_value("self.uri"));
+            }
+            self.instream_id
+                .ok_or(Error::missing_value("self.instream_id"))?;
         } else {
-            track_assert!(self.instream_id.is_none(), ErrorKind::InvalidInput);
+            if let Some(_) = &self.instream_id {
+                Err(Error::invalid_input())?;
+            }
         }
+
         if self.default && self.autoselect.is_some() {
-            track_assert_eq!(self.autoselect, Some(true), ErrorKind::InvalidInput);
+            if let Some(value) = &self.autoselect {
+                if *value {
+                    Err(Error::invalid_input())?;
+                }
+            }
         }
+
         if MediaType::Subtitles != media_type {
-            track_assert_eq!(self.forced, None, ErrorKind::InvalidInput);
+            if self.forced.is_some() {
+                Err(Error::invalid_input())?;
+            }
         }
+
         Ok(ExtXMedia {
             media_type,
             uri: self.uri,
@@ -315,10 +333,10 @@ impl FromStr for ExtXMedia {
         let mut builder = ExtXMediaBuilder::new();
         let attrs = AttributePairs::parse(input);
         for attr in attrs {
-            let (key, value) = track!(attr)?;
+            let (key, value) = attr?;
             match key {
                 "TYPE" => {
-                    builder.media_type(track!(value.parse())?);
+                    builder.media_type(value.parse()?);
                 }
                 "URI" => {
                     builder.uri(unquote(value));
@@ -336,13 +354,13 @@ impl FromStr for ExtXMedia {
                     builder.name(unquote(value));
                 }
                 "DEFAULT" => {
-                    builder.default(track!(parse_yes_or_no(value))?);
+                    builder.default((parse_yes_or_no(value))?);
                 }
                 "AUTOSELECT" => {
-                    builder.autoselect(track!(parse_yes_or_no(value))?);
+                    builder.autoselect((parse_yes_or_no(value))?);
                 }
                 "FORCED" => {
-                    builder.forced(track!(parse_yes_or_no(value))?);
+                    builder.forced((parse_yes_or_no(value))?);
                 }
                 "INSTREAM-ID" => {
                     builder.instream_id(unquote(value).parse()?);
@@ -359,7 +377,7 @@ impl FromStr for ExtXMedia {
                 }
             }
         }
-        track!(builder.finish())
+        (builder.finish())
     }
 }
 

@@ -1,14 +1,15 @@
+use std::collections::HashSet;
+use std::fmt;
+use std::iter;
+use std::str::FromStr;
+
 use crate::line::{Line, Lines, Tag};
 use crate::tags::{
     ExtM3u, ExtXIFrameStreamInf, ExtXIndependentSegments, ExtXMedia, ExtXSessionData,
     ExtXSessionKey, ExtXStart, ExtXStreamInf, ExtXVersion, MasterPlaylistTag,
 };
 use crate::types::{ClosedCaptions, MediaType, ProtocolVersion};
-use crate::{Error, ErrorKind, Result};
-use std::collections::HashSet;
-use std::fmt;
-use std::iter;
-use std::str::FromStr;
+use crate::{Error, Result};
 
 /// Master playlist builder.
 #[derive(Debug, Clone)]
@@ -71,18 +72,16 @@ impl MasterPlaylistBuilder {
     pub fn finish(self) -> Result<MasterPlaylist> {
         let required_version = self.required_version();
         let specified_version = self.version.unwrap_or(required_version);
-        track_assert!(
-            required_version <= specified_version,
-            ErrorKind::InvalidInput,
-            "required_version:{}, specified_version:{}",
-            required_version,
-            specified_version,
-        );
 
-        track!(self.validate_stream_inf_tags())?;
-        track!(self.validate_i_frame_stream_inf_tags())?;
-        track!(self.validate_session_data_tags())?;
-        track!(self.validate_session_key_tags())?;
+        if required_version <= specified_version {
+            // "required_version:{}, specified_version:{}"
+            return Err(Error::invalid_input());
+        }
+
+        (self.validate_stream_inf_tags())?;
+        (self.validate_i_frame_stream_inf_tags())?;
+        (self.validate_session_data_tags())?;
+        (self.validate_session_key_tags())?;
 
         Ok(MasterPlaylist {
             version_tag: ExtXVersion::new(specified_version),
@@ -121,37 +120,25 @@ impl MasterPlaylistBuilder {
         let mut has_none_closed_captions = false;
         for t in &self.stream_inf_tags {
             if let Some(group_id) = t.audio() {
-                track_assert!(
-                    self.check_media_group(MediaType::Audio, group_id),
-                    ErrorKind::InvalidInput,
-                    "Unmatched audio group: {:?}",
-                    group_id
-                );
+                if !self.check_media_group(MediaType::Audio, group_id) {
+                    return Err(Error::unmatched_group(group_id));
+                }
             }
             if let Some(group_id) = t.video() {
-                track_assert!(
-                    self.check_media_group(MediaType::Video, group_id),
-                    ErrorKind::InvalidInput,
-                    "Unmatched video group: {:?}",
-                    group_id
-                );
+                if !self.check_media_group(MediaType::Video, group_id) {
+                    return Err(Error::unmatched_group(group_id));
+                }
             }
             if let Some(group_id) = t.subtitles() {
-                track_assert!(
-                    self.check_media_group(MediaType::Subtitles, group_id),
-                    ErrorKind::InvalidInput,
-                    "Unmatched subtitles group: {:?}",
-                    group_id
-                );
+                if !self.check_media_group(MediaType::Subtitles, group_id) {
+                    return Err(Error::unmatched_group(group_id));
+                }
             }
             match t.closed_captions() {
                 Some(&ClosedCaptions::GroupId(ref group_id)) => {
-                    track_assert!(
-                        self.check_media_group(MediaType::ClosedCaptions, group_id),
-                        ErrorKind::InvalidInput,
-                        "Unmatched closed-captions group: {:?}",
-                        group_id
-                    );
+                    if !self.check_media_group(MediaType::ClosedCaptions, group_id) {
+                        return Err(Error::unmatched_group(group_id));
+                    }
                 }
                 Some(&ClosedCaptions::None) => {
                     has_none_closed_captions = true;
@@ -160,53 +147,49 @@ impl MasterPlaylistBuilder {
             }
         }
         if has_none_closed_captions {
-            track_assert!(
-                self.stream_inf_tags
-                    .iter()
-                    .all(|t| t.closed_captions() == Some(&ClosedCaptions::None)),
-                ErrorKind::InvalidInput
-            );
+            if !self
+                .stream_inf_tags
+                .iter()
+                .all(|t| t.closed_captions() == Some(&ClosedCaptions::None))
+            {
+                return Err(Error::invalid_input());
+            }
         }
+
         Ok(())
     }
 
     fn validate_i_frame_stream_inf_tags(&self) -> Result<()> {
         for t in &self.i_frame_stream_inf_tags {
             if let Some(group_id) = t.video() {
-                track_assert!(
-                    self.check_media_group(MediaType::Video, group_id),
-                    ErrorKind::InvalidInput,
-                    "Unmatched video group: {:?}",
-                    group_id
-                );
+                if !self.check_media_group(MediaType::Video, group_id) {
+                    return Err(Error::unmatched_group(group_id));
+                }
             }
         }
+
         Ok(())
     }
 
     fn validate_session_data_tags(&self) -> Result<()> {
         let mut set = HashSet::new();
         for t in &self.session_data_tags {
-            track_assert!(
-                set.insert((t.data_id(), t.language())),
-                ErrorKind::InvalidInput,
-                "Conflict: {}",
-                t
-            );
+            if !set.insert((t.data_id(), t.language())) {
+                return Err(Error::custom(format!("Conflict: {}", t)));
+            }
         }
+
         Ok(())
     }
 
     fn validate_session_key_tags(&self) -> Result<()> {
         let mut set = HashSet::new();
         for t in &self.session_key_tags {
-            track_assert!(
-                set.insert(t.key()),
-                ErrorKind::InvalidInput,
-                "Conflict: {}",
-                t
-            );
+            if !set.insert(t.key()) {
+                return Err(Error::custom(format!("Conflict: {}", t)));
+            }
         }
+
         Ok(())
     }
 
@@ -308,24 +291,29 @@ impl fmt::Display for MasterPlaylist {
         Ok(())
     }
 }
+
 impl FromStr for MasterPlaylist {
     type Err = Error;
     fn from_str(s: &str) -> Result<Self> {
         let mut builder = MasterPlaylistBuilder::new();
         for (i, line) in Lines::new(s).enumerate() {
-            match track!(line)? {
+            match (line)? {
                 Line::Blank | Line::Comment(_) => {}
                 Line::Tag(tag) => {
                     if i == 0 {
-                        track_assert_eq!(tag, Tag::ExtM3u(ExtM3u), ErrorKind::InvalidInput);
+                        if tag != Tag::ExtM3u(ExtM3u) {
+                            return Err(Error::invalid_input());
+                        }
                         continue;
                     }
                     match tag {
                         Tag::ExtM3u(_) => {
-                            track_panic!(ErrorKind::InvalidInput);
+                            return Err(Error::invalid_input());
                         }
                         Tag::ExtXVersion(t) => {
-                            track_assert_eq!(builder.version, None, ErrorKind::InvalidInput);
+                            if builder.version.is_some() {
+                                return Err(Error::invalid_input());
+                            }
                             builder.version(t.version());
                         }
                         Tag::ExtInf(_)
@@ -341,7 +329,7 @@ impl FromStr for MasterPlaylist {
                         | Tag::ExtXEndList(_)
                         | Tag::ExtXPlaylistType(_)
                         | Tag::ExtXIFramesOnly(_) => {
-                            track_panic!(ErrorKind::InvalidInput, "{}", tag)
+                            return Err(Error::invalid_input()); // TODO: why?
                         }
                         Tag::ExtXMedia(t) => {
                             builder.tag(t);
@@ -359,28 +347,29 @@ impl FromStr for MasterPlaylist {
                             builder.tag(t);
                         }
                         Tag::ExtXIndependentSegments(t) => {
-                            track_assert_eq!(
-                                builder.independent_segments_tag,
-                                None,
-                                ErrorKind::InvalidInput
-                            );
+                            if builder.independent_segments_tag.is_some() {
+                                return Err(Error::invalid_input());
+                            }
                             builder.tag(t);
                         }
                         Tag::ExtXStart(t) => {
-                            track_assert_eq!(builder.start_tag, None, ErrorKind::InvalidInput);
+                            if builder.start_tag.is_some() {
+                                return Err(Error::invalid_input());
+                            }
                             builder.tag(t);
                         }
                         Tag::Unknown(_) => {
                             // [6.3.1. General Client Responsibilities]
                             // > ignore any unrecognized tags.
+                            // TODO: collect custom tags
                         }
                     }
                 }
                 Line::Uri(uri) => {
-                    track_panic!(ErrorKind::InvalidInput, "Unexpected URI: {:?}", uri);
+                    return Err(Error::custom(format!("Unexpected URI: {:?}", uri)));
                 }
             }
         }
-        track!(builder.finish())
+        builder.finish()
     }
 }

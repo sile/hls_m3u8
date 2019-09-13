@@ -1,11 +1,12 @@
+use std::fmt;
+use std::iter;
+
 use crate::tags::{
     ExtInf, ExtXByteRange, ExtXDateRange, ExtXDiscontinuity, ExtXKey, ExtXMap, ExtXProgramDateTime,
     MediaSegmentTag,
 };
 use crate::types::{ProtocolVersion, SingleLineString};
-use crate::{ErrorKind, Result};
-use std::fmt;
-use std::iter;
+use crate::Error;
 
 /// Media segment builder.
 #[derive(Debug, Clone)]
@@ -56,9 +57,10 @@ impl MediaSegmentBuilder {
     }
 
     /// Builds a `MediaSegment` instance.
-    pub fn finish(self) -> Result<MediaSegment> {
-        let uri = track_assert_some!(self.uri, ErrorKind::InvalidInput);
-        let inf_tag = track_assert_some!(self.inf_tag, ErrorKind::InvalidInput);
+    pub fn finish(self) -> crate::Result<MediaSegment> {
+        let uri = self.uri.ok_or(Error::missing_value("self.uri"))?;
+        let inf_tag = self.inf_tag.ok_or(Error::missing_value("self.inf_tag"))?;
+
         Ok(MediaSegment {
             key_tags: self.key_tags,
             map_tag: self.map_tag,

@@ -1,10 +1,9 @@
 use std::fmt;
-use std::str::{self, FromStr};
+use std::str::FromStr;
 
 use getset::{Getters, MutGetters, Setters};
-use trackable::error::ErrorKindExt;
 
-use crate::{Error, ErrorKind, Result};
+use crate::Error;
 
 /// Byte range.
 ///
@@ -42,23 +41,18 @@ impl fmt::Display for ByteRange {
 impl FromStr for ByteRange {
     type Err = Error;
 
-    fn from_str(s: &str) -> Result<Self> {
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
         let tokens = s.splitn(2, '@').collect::<Vec<_>>();
         if tokens.is_empty() {
-            Err(ErrorKind::InvalidInput)?;
+            return Err(Error::invalid_input());
         }
 
-        let length = tokens[0]
-            .parse()
-            .map_err(|e| ErrorKind::InvalidInput.cause(e))?;
+        let length = tokens[0].parse()?;
+
         let start = {
             let mut result = None;
             if tokens.len() == 2 {
-                result = Some(
-                    tokens[1]
-                        .parse()
-                        .map_err(|e| ErrorKind::InvalidInput.cause(e))?,
-                );
+                result = Some(tokens[1].parse()?);
             }
             result
         };

@@ -1,6 +1,7 @@
-use crate::{Error, ErrorKind, Result};
 use std::fmt;
 use std::str::{self, FromStr};
+
+use crate::Error;
 
 /// [7. Protocol Version Compatibility]
 ///
@@ -32,8 +33,9 @@ impl fmt::Display for ProtocolVersion {
 }
 impl FromStr for ProtocolVersion {
     type Err = Error;
-    fn from_str(s: &str) -> Result<Self> {
-        Ok(match s {
+
+    fn from_str(input: &str) -> Result<Self, Self::Err> {
+        Ok(match input {
             "1" => ProtocolVersion::V1,
             "2" => ProtocolVersion::V2,
             "3" => ProtocolVersion::V3,
@@ -41,7 +43,7 @@ impl FromStr for ProtocolVersion {
             "5" => ProtocolVersion::V5,
             "6" => ProtocolVersion::V6,
             "7" => ProtocolVersion::V7,
-            _ => track_panic!(ErrorKind::InvalidInput, "Unknown protocol version: {:?}", s),
+            _ => return Err(Error::unknown_protocol_version(input)),
         })
     }
 }

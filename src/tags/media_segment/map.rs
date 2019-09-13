@@ -1,9 +1,10 @@
-use crate::attribute::AttributePairs;
-use crate::types::{ByteRange, ProtocolVersion};
-use crate::utils::{quote, unquote};
-use crate::{Error, ErrorKind, Result};
 use std::fmt;
 use std::str::FromStr;
+
+use crate::attribute::AttributePairs;
+use crate::types::{ByteRange, ProtocolVersion};
+use crate::utils::{quote, tag, unquote};
+use crate::Error;
 
 /// [4.3.2.5. EXT-X-MAP]
 ///
@@ -63,18 +64,18 @@ impl fmt::Display for ExtXMap {
 impl FromStr for ExtXMap {
     type Err = Error;
 
-    fn from_str(s: &str) -> Result<Self> {
-        track_assert!(s.starts_with(Self::PREFIX), ErrorKind::InvalidInput);
+    fn from_str(input: &str) -> Result<Self, Self::Err> {
+        let input = tag(input, Self::PREFIX)?;
 
         let mut uri = None;
         let mut range = None;
-        let attrs = AttributePairs::parse(s.split_at(Self::PREFIX.len()).1);
+        let attrs = AttributePairs::parse(input);
         for attr in attrs {
-            let (key, value) = track!(attr)?;
+            let (key, value) = (attr)?;
             match key {
                 "URI" => uri = Some(unquote(value)),
                 "BYTERANGE" => {
-                    range = Some(track!(unquote(value).parse())?);
+                    range = Some((unquote(value).parse())?);
                 }
                 _ => {
                     // [6.3.1. General Client Responsibilities]
@@ -83,7 +84,7 @@ impl FromStr for ExtXMap {
             }
         }
 
-        let uri = track_assert_some!(uri, ErrorKind::InvalidInput);
+        let uri = uri.ok_or(Error::missing_value("EXT-X-URI"))?;
         Ok(ExtXMap { uri, range })
     }
 }
@@ -102,7 +103,8 @@ mod test {
 
         let tag = ExtXMap::with_range("foo", ByteRange::new(9, Some(2)));
         let text = r#"#EXT-X-MAP:URI="foo",BYTERANGE="9@2""#;
-        track_try_unwrap!(ExtXMap::from_str(text));
+        ExtXMap::from_str(text).unwrap();
+
         assert_eq!(text.parse().ok(), Some(tag.clone()));
         assert_eq!(tag.to_string(), text);
         assert_eq!(tag.requires_version(), ProtocolVersion::V6);

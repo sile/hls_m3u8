@@ -1,9 +1,10 @@
-use crate::types::ProtocolVersion;
-use crate::{Error, ErrorKind, Result};
 use std::fmt;
 use std::str::FromStr;
 use std::time::Duration;
-use trackable::error::ErrorKindExt;
+
+use crate::types::ProtocolVersion;
+use crate::utils::tag;
+use crate::Error;
 
 /// [4.3.3.1. EXT-X-TARGETDURATION]
 ///
@@ -43,11 +44,11 @@ impl fmt::Display for ExtXTargetDuration {
 
 impl FromStr for ExtXTargetDuration {
     type Err = Error;
-    fn from_str(s: &str) -> Result<Self> {
-        track_assert!(s.starts_with(Self::PREFIX), ErrorKind::InvalidInput);
-        let duration = may_invalid!(s.split_at(Self::PREFIX.len()).1.parse())?;
+
+    fn from_str(input: &str) -> Result<Self, Self::Err> {
+        let input = tag(input, Self::PREFIX)?.parse()?;
         Ok(ExtXTargetDuration {
-            duration: Duration::from_secs(duration),
+            duration: Duration::from_secs(input),
         })
     }
 }

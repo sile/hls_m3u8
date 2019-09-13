@@ -1,11 +1,12 @@
-use crate::attribute::AttributePairs;
-use crate::types::{DecimalFloatingPoint, ProtocolVersion};
-use crate::utils::{quote, unquote};
-use crate::{Error, ErrorKind, Result};
 use std::collections::BTreeMap;
 use std::fmt;
 use std::str::FromStr;
 use std::time::Duration;
+
+use crate::attribute::AttributePairs;
+use crate::types::{DecimalFloatingPoint, ProtocolVersion};
+use crate::utils::{quote, tag, unquote};
+use crate::Error;
 
 /// [4.3.2.7.  EXT-X-DATERANGE]
 ///
@@ -79,8 +80,9 @@ impl fmt::Display for ExtXDateRange {
 
 impl FromStr for ExtXDateRange {
     type Err = Error;
-    fn from_str(s: &str) -> Result<Self> {
-        track_assert!(s.starts_with(Self::PREFIX), ErrorKind::InvalidInput);
+
+    fn from_str(input: &str) -> Result<Self, Self::Err> {
+        let input = tag(input, Self::PREFIX)?;
 
         let mut id = None;
         let mut class = None;
@@ -92,28 +94,32 @@ impl FromStr for ExtXDateRange {
         let mut scte35_out = None;
         let mut scte35_in = None;
         let mut end_on_next = false;
+
         let mut client_attributes = BTreeMap::new();
-        let attrs = AttributePairs::parse(s.split_at(Self::PREFIX.len()).1);
+        let attrs = AttributePairs::parse(input);
+
         for attr in attrs {
-            let (key, value) = track!(attr)?;
+            let (key, value) = attr?;
             match key {
                 "ID" => id = Some(unquote(value)),
                 "CLASS" => class = Some(unquote(value)),
                 "START-DATE" => start_date = Some(unquote(value)),
                 "END-DATE" => end_date = Some(unquote(value)),
                 "DURATION" => {
-                    let seconds: DecimalFloatingPoint = track!(value.parse())?;
+                    let seconds: DecimalFloatingPoint = (value.parse())?;
                     duration = Some(seconds.to_duration());
                 }
                 "PLANNED-DURATION" => {
-                    let seconds: DecimalFloatingPoint = track!(value.parse())?;
+                    let seconds: DecimalFloatingPoint = (value.parse())?;
                     planned_duration = Some(seconds.to_duration());
                 }
                 "SCTE35-CMD" => scte35_cmd = Some(unquote(value)),
                 "SCTE35-OUT" => scte35_out = Some(unquote(value)),
                 "SCTE35-IN" => scte35_in = Some(unquote(value)),
                 "END-ON-NEXT" => {
-                    track_assert_eq!(value, "YES", ErrorKind::InvalidInput);
+                    if value != "YES" {
+                        return Err(Error::invalid_input());
+                    }
                     end_on_next = true;
                 }
                 _ => {
@@ -127,10 +133,12 @@ impl FromStr for ExtXDateRange {
             }
         }
 
-        let id = track_assert_some!(id, ErrorKind::InvalidInput);
-        let start_date = track_assert_some!(start_date, ErrorKind::InvalidInput);
+        let id = id.ok_or(Error::missing_value("EXT-X-ID"))?;
+        let start_date = start_date.ok_or(Error::missing_value("EXT-X-START-DATE"))?;
         if end_on_next {
-            track_assert!(class.is_some(), ErrorKind::InvalidInput);
+            if class.is_none() {
+                return Err(Error::invalid_input());
+            }
         }
         Ok(ExtXDateRange {
             id,

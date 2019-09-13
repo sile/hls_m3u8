@@ -7,7 +7,7 @@ use crate::attribute::AttributePairs;
 use crate::types::{DecimalResolution, HdcpLevel, ProtocolVersion};
 use crate::utils::parse_u64;
 use crate::utils::{quote, tag, unquote};
-use crate::{Error, ErrorKind};
+use crate::Error;
 
 /// [4.3.4.3. EXT-X-I-FRAME-STREAM-INF]
 ///
@@ -96,14 +96,14 @@ impl FromStr for ExtXIFrameStreamInf {
 
         let attrs = AttributePairs::parse(input);
         for attr in attrs {
-            let (key, value) = track!(attr)?;
+            let (key, value) = attr?;
             match key {
                 "URI" => uri = Some(unquote(value)),
-                "BANDWIDTH" => bandwidth = Some(track!(parse_u64(value))?),
-                "AVERAGE-BANDWIDTH" => average_bandwidth = Some(track!(parse_u64(value))?),
+                "BANDWIDTH" => bandwidth = Some(parse_u64(value)?),
+                "AVERAGE-BANDWIDTH" => average_bandwidth = Some(parse_u64(value)?),
                 "CODECS" => codecs = Some(unquote(value)),
-                "RESOLUTION" => resolution = Some(track!(value.parse())?),
-                "HDCP-LEVEL" => hdcp_level = Some(track!(value.parse())?),
+                "RESOLUTION" => resolution = Some(value.parse()?),
+                "HDCP-LEVEL" => hdcp_level = Some(value.parse()?),
                 "VIDEO" => video = Some(unquote(value)),
                 _ => {
                     // [6.3.1. General Client Responsibilities]
@@ -112,8 +112,9 @@ impl FromStr for ExtXIFrameStreamInf {
             }
         }
 
-        let uri = track_assert_some!(uri, ErrorKind::InvalidInput);
-        let bandwidth = track_assert_some!(bandwidth, ErrorKind::InvalidInput);
+        let uri = uri.ok_or(Error::missing_value("URI"))?;
+        let bandwidth = bandwidth.ok_or(Error::missing_value("BANDWIDTH"))?;
+
         Ok(ExtXIFrameStreamInf {
             uri,
             bandwidth,

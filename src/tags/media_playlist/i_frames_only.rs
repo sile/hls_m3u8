@@ -1,7 +1,9 @@
-use crate::types::ProtocolVersion;
-use crate::{Error, ErrorKind, Result};
 use std::fmt;
 use std::str::FromStr;
+
+use crate::types::ProtocolVersion;
+use crate::utils::tag;
+use crate::Error;
 
 /// [4.3.3.6. EXT-X-I-FRAMES-ONLY]
 ///
@@ -27,8 +29,8 @@ impl fmt::Display for ExtXIFramesOnly {
 impl FromStr for ExtXIFramesOnly {
     type Err = Error;
 
-    fn from_str(s: &str) -> Result<Self> {
-        track_assert_eq!(s, Self::PREFIX, ErrorKind::InvalidInput);
+    fn from_str(input: &str) -> Result<Self, Self::Err> {
+        tag(input, Self::PREFIX)?;
         Ok(ExtXIFramesOnly)
     }
 }

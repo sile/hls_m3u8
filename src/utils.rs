@@ -1,23 +1,15 @@
-use crate::{ErrorKind, Result};
-use trackable::error::ErrorKindExt;
+use crate::{Error, Result};
 
 pub(crate) fn parse_yes_or_no<T: AsRef<str>>(s: T) -> Result<bool> {
     match s.as_ref() {
         "YES" => Ok(true),
         "NO" => Ok(false),
-        _ => track_panic!(
-            ErrorKind::InvalidInput,
-            "Unexpected value: {:?}",
-            s.as_ref()
-        ),
+        _ => Err(Error::invalid_input()),
     }
 }
 
 pub(crate) fn parse_u64<T: AsRef<str>>(s: T) -> Result<u64> {
-    let n = track!(s
-        .as_ref()
-        .parse()
-        .map_err(|e| ErrorKind::InvalidInput.cause(e)))?;
+    let n = s.as_ref().parse().map_err(Error::unknown)?; // TODO: Error::number
     Ok(n)
 }
 
@@ -45,13 +37,17 @@ pub(crate) fn quote<T: ToString>(value: T) -> String {
 }
 
 /// Checks, if the given tag is at the start of the input. If this is the case, it will remove it
-/// return the rest of the input, otherwise it will return an error.
+/// and return the rest of the input.
+///
+/// # Error
+/// This function will return `Error::MissingTag`, if the input doesn't start with the tag, that
+/// has been passed to this function.
 pub(crate) fn tag<T>(input: &str, tag: T) -> crate::Result<&str>
 where
     T: AsRef<str>,
 {
     if !input.starts_with(tag.as_ref()) {
-        Err(ErrorKind::InvalidInput)?; // TODO!
+        return Err(Error::missing_tag(tag.as_ref(), input));
     }
     let result = input.split_at(tag.as_ref().len()).1;
     Ok(result)

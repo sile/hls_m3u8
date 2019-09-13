@@ -1,6 +1,7 @@
-use crate::{Error, ErrorKind, Result};
 use std::fmt;
-use std::str::{self, FromStr};
+use std::str::FromStr;
+
+use crate::Error;
 
 /// Encryption method.
 ///
@@ -25,15 +26,15 @@ impl fmt::Display for EncryptionMethod {
 
 impl FromStr for EncryptionMethod {
     type Err = Error;
-    fn from_str(s: &str) -> Result<Self> {
-        match s {
+
+    fn from_str(input: &str) -> Result<Self, Self::Err> {
+        match input {
             "AES-128" => Ok(EncryptionMethod::Aes128),
             "SAMPLE-AES" => Ok(EncryptionMethod::SampleAes),
-            _ => track_panic!(
-                ErrorKind::InvalidInput,
+            _ => Err(Error::custom(format!(
                 "Unknown encryption method: {:?}",
-                s
-            ),
+                input
+            ))),
         }
     }
 }

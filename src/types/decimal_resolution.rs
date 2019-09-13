@@ -1,7 +1,7 @@
-use crate::{Error, ErrorKind, Result};
 use std::fmt;
 use std::str::{self, FromStr};
-use trackable::error::ErrorKindExt;
+
+use crate::Error;
 
 /// Decimal resolution.
 ///
@@ -25,13 +25,15 @@ impl fmt::Display for DecimalResolution {
 
 impl FromStr for DecimalResolution {
     type Err = Error;
-    fn from_str(s: &str) -> Result<Self> {
-        let mut tokens = s.splitn(2, 'x');
-        let width = tokens.next().expect("Never fails");
-        let height = track_assert_some!(tokens.next(), ErrorKind::InvalidInput);
+
+    fn from_str(input: &str) -> Result<Self, Self::Err> {
+        let mut tokens = input.splitn(2, 'x');
+        let width = tokens.next().ok_or(Error::missing_value("width"))?;
+        let height = tokens.next().ok_or(Error::missing_value("height"))?;
+
         Ok(DecimalResolution {
-            width: track!(width.parse().map_err(|e| ErrorKind::InvalidInput.cause(e)))?,
-            height: track!(height.parse().map_err(|e| ErrorKind::InvalidInput.cause(e)))?,
+            width: width.parse().map_err(|e| Error::custom(e))?,
+            height: height.parse().map_err(|e| Error::custom(e))?,
         })
     }
 }

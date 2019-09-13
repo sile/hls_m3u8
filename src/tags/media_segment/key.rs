@@ -1,8 +1,10 @@
-use crate::attribute::AttributePairs;
-use crate::types::{DecryptionKey, ProtocolVersion};
-use crate::{Error, ErrorKind, Result};
 use std::fmt;
 use std::str::FromStr;
+
+use crate::attribute::AttributePairs;
+use crate::types::{DecryptionKey, ProtocolVersion};
+use crate::utils::tag;
+use crate::Error;
 
 /// [4.3.2.4. EXT-X-KEY]
 ///
@@ -55,21 +57,19 @@ impl fmt::Display for ExtXKey {
 impl FromStr for ExtXKey {
     type Err = Error;
 
-    fn from_str(s: &str) -> Result<Self> {
-        track_assert!(s.starts_with(Self::PREFIX), ErrorKind::InvalidInput);
-        let suffix = s.split_at(Self::PREFIX.len()).1;
+    fn from_str(input: &str) -> Result<Self, Self::Err> {
+        let input = tag(input, Self::PREFIX)?;
 
-        if AttributePairs::parse(suffix).any(|a| a.as_ref().ok() == Some(&("METHOD", "NONE"))) {
-            for attr in AttributePairs::parse(suffix) {
-                let (key, _) = track!(attr)?;
-                track_assert_ne!(key, "URI", ErrorKind::InvalidInput);
-                track_assert_ne!(key, "IV", ErrorKind::InvalidInput);
-                track_assert_ne!(key, "KEYFORMAT", ErrorKind::InvalidInput);
-                track_assert_ne!(key, "KEYFORMATVERSIONS", ErrorKind::InvalidInput);
+        if AttributePairs::parse(input).any(|a| a.as_ref().ok() == Some(&("METHOD", "NONE"))) {
+            for attr in AttributePairs::parse(input) {
+                let (key, _) = attr?;
+                if key == "URI" || key == "IV" || key == "KEYFORMAT" || key == "KEYFORMATVERSIONS" {
+                    return Err(Error::invalid_input());
+                }
             }
             Ok(ExtXKey { key: None })
         } else {
-            let key = track!(suffix.parse())?;
+            let key = input.parse()?;
             Ok(ExtXKey { key: Some(key) })
         }
     }

@@ -1,8 +1,9 @@
-use crate::types::ProtocolVersion;
-use crate::{Error, ErrorKind, Result};
 use std::fmt;
 use std::str::FromStr;
-use trackable::error::ErrorKindExt;
+
+use crate::types::ProtocolVersion;
+use crate::utils::tag;
+use crate::Error;
 
 /// [4.3.3.2. EXT-X-MEDIA-SEQUENCE]
 ///
@@ -40,10 +41,10 @@ impl fmt::Display for ExtXMediaSequence {
 impl FromStr for ExtXMediaSequence {
     type Err = Error;
 
-    fn from_str(s: &str) -> Result<Self> {
-        track_assert!(s.starts_with(Self::PREFIX), ErrorKind::InvalidInput);
-        let seq_num = may_invalid!(s.split_at(Self::PREFIX.len()).1.parse())?;
-        Ok(ExtXMediaSequence { seq_num })
+    fn from_str(input: &str) -> Result<Self, Self::Err> {
+        let seq_num = tag(input, Self::PREFIX)?.parse()?;
+
+        Ok(ExtXMediaSequence::new(seq_num))
     }
 }
 
