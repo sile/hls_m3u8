@@ -6,56 +6,63 @@ use failure::{Backtrace, Context, Fail};
 /// This crate specific `Result` type.
 pub type Result<T> = std::result::Result<T, Error>;
 
-#[derive(Debug, Fail, Clone)]
-pub enum AttributeError {
-    #[fail(display = "The attribute has an invalid name; {:?}", _0)]
-    InvalidAttribute(String),
-    #[fail(display = "A value is missing for the attribute: {}", _0)]
-    MissingValue(String),
-}
-
+/// The ErrorKind.
 #[derive(Debug, Fail, Clone)]
 pub enum ErrorKind {
-    #[fail(display = "AttributeError: {}", _0)]
-    AttributeError(AttributeError),
-
     #[fail(display = "UnknownError: {}", _0)]
+    /// An unknown error occured.
     UnknownError(String),
 
     #[fail(display = "A value is missing for the attribute {}", _0)]
+    /// A required value is missing.
     MissingValue(String),
 
     #[fail(display = "Invalid Input")]
+    /// Error for anything.
     InvalidInput,
 
     #[fail(display = "ParseIntError: {}", _0)]
+    /// Failed to parse a String to int.
     ParseIntError(String),
 
     #[fail(display = "ParseFloatError: {}", _0)]
+    /// Failed to parse a String to float.
     ParseFloatError(String),
 
     #[fail(display = "MissingTag: Expected {} at the start of {:?}", tag, input)]
-    MissingTag { tag: String, input: String },
+    /// A tag is missing, that is required at the start of the input.
+    MissingTag {
+        /// The required tag.
+        tag: String,
+        /// The unparsed input data.
+        input: String,
+    },
 
     #[fail(display = "CustomError: {}", _0)]
+    /// A custom error.
     Custom(String),
 
     #[fail(display = "Unmatched Group: {:?}", _0)]
+    /// Unmatched Group
     UnmatchedGroup(String),
 
     #[fail(display = "Unknown Protocol version: {:?}", _0)]
+    /// Unknown m3u8 version. This library supports up to ProtocolVersion 7.
     UnknownProtocolVersion(String),
 
     #[fail(display = "IoError: {}", _0)]
+    /// Some io error
     Io(String),
 
     #[fail(
         display = "VersionError: required_version: {:?}, specified_version: {:?}",
         _0, _1
     )]
+    /// This error occurs, if there is a ProtocolVersion mismatch.
     VersionError(String, String),
 
     #[fail(display = "BuilderError: {}", _0)]
+    /// An Error from a Builder.
     BuilderError(String),
 
     /// Hints that destructuring should not be exhaustive.
@@ -69,6 +76,7 @@ pub enum ErrorKind {
 }
 
 #[derive(Debug)]
+/// The Error type of this library.
 pub struct Error {
     inner: Context<ErrorKind>,
 }
@@ -101,33 +109,7 @@ impl From<Context<ErrorKind>> for Error {
     }
 }
 
-macro_rules! from_error {
-    ( $( $f:tt ),* ) => {
-        $(
-            impl From<$f> for ErrorKind {
-                fn from(value: $f) -> Self {
-                    Self::$f(value)
-                }
-            }
-        )*
-    }
-}
-
-from_error!(AttributeError);
-
 impl Error {
-    pub(crate) fn invalid_attribute<T: ToString>(value: T) -> Self {
-        Self::from(ErrorKind::from(AttributeError::InvalidAttribute(
-            value.to_string(),
-        )))
-    }
-
-    pub(crate) fn missing_attribute_value<T: ToString>(value: T) -> Self {
-        Self::from(ErrorKind::from(AttributeError::MissingValue(
-            value.to_string(),
-        )))
-    }
-
     pub(crate) fn unknown<T>(value: T) -> Self
     where
         T: error::Error,
@@ -197,19 +179,19 @@ impl Error {
     }
 }
 
-impl From<std::num::ParseIntError> for Error {
+impl From<::std::num::ParseIntError> for Error {
     fn from(value: ::std::num::ParseIntError) -> Self {
         Error::parse_int_error(value)
     }
 }
 
-impl From<std::num::ParseFloatError> for Error {
+impl From<::std::num::ParseFloatError> for Error {
     fn from(value: ::std::num::ParseFloatError) -> Self {
         Error::parse_float_error(value)
     }
 }
 
-impl From<std::io::Error> for Error {
+impl From<::std::io::Error> for Error {
     fn from(value: ::std::io::Error) -> Self {
         Error::io(value)
     }

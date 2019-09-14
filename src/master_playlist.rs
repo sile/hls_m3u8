@@ -1,5 +1,6 @@
 use std::collections::HashSet;
 use std::fmt;
+use std::iter;
 use std::str::FromStr;
 
 use derive_builder::Builder;
@@ -13,17 +14,34 @@ use crate::types::{ClosedCaptions, MediaType, ProtocolVersion};
 use crate::Error;
 
 /// Master playlist.
-#[derive(Debug, Clone, Builder, Default)]
+#[derive(Debug, Clone, Builder)]
 #[builder(build_fn(validate = "Self::validate"))]
-#[builder(setter(into, strip_option), default)]
+#[builder(setter(into, strip_option))]
 pub struct MasterPlaylist {
+    #[builder(default, setter(name = "version"))]
+    /// Sets the protocol compatibility version of the resulting playlist.
+    ///
+    /// If the resulting playlist has tags which requires a compatibility version greater than
+    /// `version`,
+    /// `build()` method will fail with an `ErrorKind::InvalidInput` error.
+    ///
+    /// The default is the maximum version among the tags in the playlist.
     version_tag: ExtXVersion,
+    #[builder(default)]
+    /// Sets the [ExtXIndependentSegments] tag.
     independent_segments_tag: Option<ExtXIndependentSegments>,
+    #[builder(default)]
+    /// Sets the [ExtXStart] tag.
     start_tag: Option<ExtXStart>,
+    /// Sets the [ExtXMedia] tag.
     media_tags: Vec<ExtXMedia>,
+    /// Sets all [ExtXStreamInf]s.
     stream_inf_tags: Vec<ExtXStreamInf>,
+    /// Sets all [ExtXIFrameStreamInf]s.
     i_frame_stream_inf_tags: Vec<ExtXIFrameStreamInf>,
+    /// Sets all [ExtXSessionData]s.
     session_data_tags: Vec<ExtXSessionData>,
+    /// Sets all [ExtXSessionKey]s.
     session_key_tags: Vec<ExtXSessionKey>,
 }
 
@@ -75,30 +93,100 @@ impl MasterPlaylist {
 }
 
 impl MasterPlaylistBuilder {
-    pub(crate) fn validate(&self) -> Result<(), String> {
-        // validate stream inf tags
-        if let Some(stream_inf_tags) = &self.stream_inf_tags {
+    fn validate(&self) -> Result<(), String> {
+        let required_version = self.required_version();
+        let specified_version = self
+            .version_tag
+            .unwrap_or(required_version.into())
+            .version();
+
+        if required_version > specified_version {
+            return Err(Error::required_version(required_version, specified_version).to_string());
+        }
+
+        self.validate_stream_inf_tags().map_err(|e| e.to_string())?;
+        self.validate_i_frame_stream_inf_tags()
+            .map_err(|e| e.to_string())?;
+        self.validate_session_data_tags()
+            .map_err(|e| e.to_string())?;
+        self.validate_session_key_tags()
+            .map_err(|e| e.to_string())?;
+
+        Ok(())
+    }
+
+    fn required_version(&self) -> ProtocolVersion {
+        iter::empty()
+            .chain(
+                self.independent_segments_tag
+                    .iter()
+                    .map(|t| t.iter().map(|t| t.requires_version()))
+                    .flatten(),
+            )
+            .chain(
+                self.start_tag
+                    .iter()
+                    .map(|t| t.iter().map(|t| t.requires_version()))
+                    .flatten(),
+            )
+            .chain(
+                self.media_tags
+                    .iter()
+                    .map(|t| t.iter().map(|t| t.requires_version()))
+                    .flatten(),
+            )
+            .chain(
+                self.stream_inf_tags
+                    .iter()
+                    .map(|t| t.iter().map(|t| t.requires_version()))
+                    .flatten(),
+            )
+            .chain(
+                self.i_frame_stream_inf_tags
+                    .iter()
+                    .map(|t| t.iter().map(|t| t.requires_version()))
+                    .flatten(),
+            )
+            .chain(
+                self.session_data_tags
+                    .iter()
+                    .map(|t| t.iter().map(|t| t.requires_version()))
+                    .flatten(),
+            )
+            .chain(
+                self.session_key_tags
+                    .iter()
+                    .map(|t| t.iter().map(|t| t.requires_version()))
+                    .flatten(),
+            )
+            .max()
+            .unwrap_or(ProtocolVersion::V7)
+    }
+
+    fn validate_stream_inf_tags(&self) -> crate::Result<()> {
+        if let Some(value) = &self.stream_inf_tags {
             let mut has_none_closed_captions = false;
-            for t in stream_inf_tags {
+
+            for t in value {
                 if let Some(group_id) = t.audio() {
                     if !self.check_media_group(MediaType::Audio, group_id) {
-                        return Err(Error::unmatched_group(group_id).to_string());
+                        return Err(Error::unmatched_group(group_id));
                     }
                 }
                 if let Some(group_id) = t.video() {
                     if !self.check_media_group(MediaType::Video, group_id) {
-                        return Err(Error::unmatched_group(group_id).to_string());
+                        return Err(Error::unmatched_group(group_id));
                     }
                 }
                 if let Some(group_id) = t.subtitles() {
                     if !self.check_media_group(MediaType::Subtitles, group_id) {
-                        return Err(Error::unmatched_group(group_id).to_string());
+                        return Err(Error::unmatched_group(group_id));
                     }
                 }
                 match t.closed_captions() {
                     Some(&ClosedCaptions::GroupId(ref group_id)) => {
                         if !self.check_media_group(MediaType::ClosedCaptions, group_id) {
-                            return Err(Error::unmatched_group(group_id).to_string());
+                            return Err(Error::unmatched_group(group_id));
                         }
                     }
                     Some(&ClosedCaptions::None) => {
@@ -108,53 +196,57 @@ impl MasterPlaylistBuilder {
                 }
             }
             if has_none_closed_captions {
-                if !stream_inf_tags
+                if !value
                     .iter()
                     .all(|t| t.closed_captions() == Some(&ClosedCaptions::None))
                 {
-                    return Err(Error::invalid_input().to_string());
+                    return Err(Error::invalid_input());
                 }
             }
         }
+        Ok(())
+    }
 
-        // validate i_frame_stream_inf_tags
-        if let Some(i_frame_stream_inf_tags) = &self.i_frame_stream_inf_tags {
-            for t in i_frame_stream_inf_tags {
+    fn validate_i_frame_stream_inf_tags(&self) -> crate::Result<()> {
+        if let Some(value) = &self.i_frame_stream_inf_tags {
+            for t in value {
                 if let Some(group_id) = t.video() {
                     if !self.check_media_group(MediaType::Video, group_id) {
-                        return Err(Error::unmatched_group(group_id).to_string());
+                        return Err(Error::unmatched_group(group_id));
                     }
                 }
             }
         }
+        Ok(())
+    }
 
-        // validate session_data_tags
-        if let Some(session_data_tags) = &self.session_data_tags {
-            let mut set = HashSet::new();
-
-            for t in session_data_tags {
+    fn validate_session_data_tags(&self) -> crate::Result<()> {
+        let mut set = HashSet::new();
+        if let Some(value) = &self.session_data_tags {
+            for t in value {
                 if !set.insert((t.data_id(), t.language())) {
-                    return Err(Error::custom(format!("Conflict: {}", t)).to_string());
+                    return Err(Error::custom(format!("Conflict: {}", t)));
                 }
             }
         }
+        Ok(())
+    }
 
-        // validate session_key_tags
-        if let Some(session_key_tags) = &self.session_key_tags {
-            let mut set = HashSet::new();
-            for t in session_key_tags {
+    fn validate_session_key_tags(&self) -> crate::Result<()> {
+        let mut set = HashSet::new();
+        if let Some(value) = &self.session_key_tags {
+            for t in value {
                 if !set.insert(t.key()) {
-                    return Err(Error::custom(format!("Conflict: {}", t)).to_string());
+                    return Err(Error::custom(format!("Conflict: {}", t)));
                 }
             }
         }
-
         Ok(())
     }
 
     fn check_media_group<T: ToString>(&self, media_type: MediaType, group_id: T) -> bool {
-        if let Some(media_tags) = &self.media_tags {
-            media_tags
+        if let Some(value) = &self.media_tags {
+            value
                 .iter()
                 .any(|t| t.media_type() == media_type && t.group_id() == &group_id.to_string())
         } else {
@@ -220,7 +312,7 @@ impl FromStr for MasterPlaylist {
                             return Err(Error::invalid_input());
                         }
                         Tag::ExtXVersion(t) => {
-                            builder.version_tag(t.version());
+                            builder.version(t.version());
                         }
                         Tag::ExtInf(_)
                         | Tag::ExtXByteRange(_)
@@ -235,7 +327,10 @@ impl FromStr for MasterPlaylist {
                         | Tag::ExtXEndList(_)
                         | Tag::ExtXPlaylistType(_)
                         | Tag::ExtXIFramesOnly(_) => {
-                            return Err(Error::invalid_input()); // TODO: why?
+                            return Err(Error::custom(format!(
+                                "This tag isn't allowed in a master playlist: {}",
+                                tag
+                            )));
                         }
                         Tag::ExtXMedia(t) => {
                             media_tags.push(t);
@@ -258,7 +353,7 @@ impl FromStr for MasterPlaylist {
                         Tag::ExtXStart(t) => {
                             builder.start_tag(t);
                         }
-                        Tag::Unknown(_) => {
+                        _ => {
                             // [6.3.1. General Client Responsibilities]
                             // > ignore any unrecognized tags.
                             // TODO: collect custom tags

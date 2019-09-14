@@ -9,7 +9,7 @@ use crate::Error;
 /// [4.3.3.1. EXT-X-TARGETDURATION]
 ///
 /// [4.3.3.1. EXT-X-TARGETDURATION]: https://tools.ietf.org/html/rfc8216#section-4.3.3.1
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Default)]
 pub struct ExtXTargetDuration {
     duration: Duration,
 }

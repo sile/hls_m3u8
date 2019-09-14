@@ -31,9 +31,9 @@ impl ExtXStreamInf {
     pub(crate) const PREFIX: &'static str = "#EXT-X-STREAM-INF:";
 
     /// Makes a new `ExtXStreamInf` tag.
-    pub const fn new(uri: SingleLineString, bandwidth: u64) -> Self {
+    pub fn new<T: ToString>(uri: T, bandwidth: u64) -> Self {
         ExtXStreamInf {
-            uri,
+            uri: SingleLineString::new(uri.to_string()).unwrap(),
             bandwidth,
             average_bandwidth: None,
             codecs: None,
@@ -209,11 +209,27 @@ mod test {
     use super::*;
 
     #[test]
-    fn ext_x_stream_inf() {
-        let tag = ExtXStreamInf::new(SingleLineString::new("foo").unwrap(), 1000);
-        let text = "#EXT-X-STREAM-INF:BANDWIDTH=1000\nfoo";
-        assert_eq!(text.parse().ok(), Some(tag.clone()));
-        assert_eq!(tag.to_string(), text);
-        assert_eq!(tag.requires_version(), ProtocolVersion::V1);
+    fn test_parser() {
+        let stream_inf = "#EXT-X-STREAM-INF:BANDWIDTH=1000\nfoo"
+            .parse::<ExtXStreamInf>()
+            .unwrap();
+
+        assert_eq!(stream_inf, ExtXStreamInf::new("foo", 1000));
+    }
+
+    #[test]
+    fn test_requires_version() {
+        assert_eq!(
+            ProtocolVersion::V1,
+            ExtXStreamInf::new("foo", 1000).requires_version()
+        );
+    }
+
+    #[test]
+    fn test_display() {
+        assert_eq!(
+            ExtXStreamInf::new("foo", 1000).to_string(),
+            "#EXT-X-STREAM-INF:BANDWIDTH=1000\nfoo".to_string()
+        );
     }
 }
