@@ -21,19 +21,40 @@ impl FromStr for Lines {
     fn from_str(input: &str) -> Result<Self, Self::Err> {
         let mut result = Lines::new();
 
-        for line in input.lines() {
+        let mut stream_inf = false;
+        let mut stream_inf_line = None;
+
+        for l in input.lines() {
+            let line = l.trim();
+
             // ignore empty lines
-            if line.trim().len() == 0 {
+            if line.len() == 0 {
                 continue;
             }
 
             let pline = {
-                if line.starts_with("#EXT") {
+                if line.starts_with(tags::ExtXStreamInf::PREFIX) {
+                    stream_inf = true;
+                    stream_inf_line = Some(line);
+
+                    continue;
+                } else if line.starts_with("#EXT") {
                     Line::Tag(line.parse()?)
                 } else if line.starts_with("#") {
                     continue; // ignore comments
                 } else {
-                    Line::Uri(SingleLineString::new(line)?)
+                    if stream_inf {
+                        stream_inf = false;
+                        if let Some(first_line) = stream_inf_line {
+                            let res = Line::Tag(format!("{}\n{}", first_line, line).parse()?);
+                            stream_inf_line = None;
+                            res
+                        } else {
+                            continue;
+                        }
+                    } else {
+                        Line::Uri(SingleLineString::new(line)?)
+                    }
                 }
             };
 
@@ -136,49 +157,49 @@ impl FromStr for Tag {
 
     fn from_str(s: &str) -> Result<Self, Self::Err> {
         if s.starts_with(tags::ExtM3u::PREFIX) {
-            (s.parse().map(Tag::ExtM3u))
+            s.parse().map(Tag::ExtM3u)
         } else if s.starts_with(tags::ExtXVersion::PREFIX) {
-            (s.parse().map(Tag::ExtXVersion))
+            s.parse().map(Tag::ExtXVersion)
         } else if s.starts_with(tags::ExtInf::PREFIX) {
-            (s.parse().map(Tag::ExtInf))
+            s.parse().map(Tag::ExtInf)
         } else if s.starts_with(tags::ExtXByteRange::PREFIX) {
-            (s.parse().map(Tag::ExtXByteRange))
+            s.parse().map(Tag::ExtXByteRange)
         } else if s.starts_with(tags::ExtXDiscontinuity::PREFIX) {
-            (s.parse().map(Tag::ExtXDiscontinuity))
+            s.parse().map(Tag::ExtXDiscontinuity)
         } else if s.starts_with(tags::ExtXKey::PREFIX) {
-            (s.parse().map(Tag::ExtXKey))
+            s.parse().map(Tag::ExtXKey)
         } else if s.starts_with(tags::ExtXMap::PREFIX) {
-            (s.parse().map(Tag::ExtXMap))
+            s.parse().map(Tag::ExtXMap)
         } else if s.starts_with(tags::ExtXProgramDateTime::PREFIX) {
-            (s.parse().map(Tag::ExtXProgramDateTime))
+            s.parse().map(Tag::ExtXProgramDateTime)
         } else if s.starts_with(tags::ExtXTargetDuration::PREFIX) {
-            (s.parse().map(Tag::ExtXTargetDuration))
+            s.parse().map(Tag::ExtXTargetDuration)
         } else if s.starts_with(tags::ExtXDateRange::PREFIX) {
-            (s.parse().map(Tag::ExtXDateRange))
+            s.parse().map(Tag::ExtXDateRange)
         } else if s.starts_with(tags::ExtXMediaSequence::PREFIX) {
-            (s.parse().map(Tag::ExtXMediaSequence))
+            s.parse().map(Tag::ExtXMediaSequence)
         } else if s.starts_with(tags::ExtXDiscontinuitySequence::PREFIX) {
-            (s.parse().map(Tag::ExtXDiscontinuitySequence))
+            s.parse().map(Tag::ExtXDiscontinuitySequence)
         } else if s.starts_with(tags::ExtXEndList::PREFIX) {
-            (s.parse().map(Tag::ExtXEndList))
+            s.parse().map(Tag::ExtXEndList)
         } else if s.starts_with(tags::ExtXPlaylistType::PREFIX) {
-            (s.parse().map(Tag::ExtXPlaylistType))
+            s.parse().map(Tag::ExtXPlaylistType)
         } else if s.starts_with(tags::ExtXIFramesOnly::PREFIX) {
-            (s.parse().map(Tag::ExtXIFramesOnly))
+            s.parse().map(Tag::ExtXIFramesOnly)
         } else if s.starts_with(tags::ExtXMedia::PREFIX) {
-            (s.parse().map(Tag::ExtXMedia))
+            s.parse().map(Tag::ExtXMedia)
         } else if s.starts_with(tags::ExtXStreamInf::PREFIX) {
-            (s.parse().map(Tag::ExtXStreamInf))
+            s.parse().map(Tag::ExtXStreamInf)
         } else if s.starts_with(tags::ExtXIFrameStreamInf::PREFIX) {
-            (s.parse().map(Tag::ExtXIFrameStreamInf))
+            s.parse().map(Tag::ExtXIFrameStreamInf)
         } else if s.starts_with(tags::ExtXSessionData::PREFIX) {
-            (s.parse().map(Tag::ExtXSessionData))
+            s.parse().map(Tag::ExtXSessionData)
         } else if s.starts_with(tags::ExtXSessionKey::PREFIX) {
-            (s.parse().map(Tag::ExtXSessionKey))
+            s.parse().map(Tag::ExtXSessionKey)
         } else if s.starts_with(tags::ExtXIndependentSegments::PREFIX) {
-            (s.parse().map(Tag::ExtXIndependentSegments))
+            s.parse().map(Tag::ExtXIndependentSegments)
         } else if s.starts_with(tags::ExtXStart::PREFIX) {
-            (s.parse().map(Tag::ExtXStart))
+            s.parse().map(Tag::ExtXStart)
         } else {
             SingleLineString::new(s).map(Tag::Unknown)
         }
