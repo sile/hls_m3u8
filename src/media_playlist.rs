@@ -6,7 +6,7 @@ use std::time::Duration;
 use derive_builder::Builder;
 
 use crate::line::{Line, Lines, Tag};
-use crate::media_segment::{MediaSegment, MediaSegmentBuilder};
+use crate::media_segment::MediaSegment;
 use crate::tags::{
     ExtM3u, ExtXDiscontinuitySequence, ExtXEndList, ExtXIFramesOnly, ExtXIndependentSegments,
     ExtXMediaSequence, ExtXPlaylistType, ExtXStart, ExtXTargetDuration, ExtXVersion,
@@ -314,7 +314,7 @@ fn parse_media_playlist(
     input: &str,
     builder: &mut MediaPlaylistBuilder,
 ) -> crate::Result<MediaPlaylist> {
-    let mut segment = MediaSegmentBuilder::new();
+    let mut segment = MediaSegment::builder();
     let mut segments = vec![];
 
     let mut has_partial_segment = false;
@@ -336,32 +336,32 @@ fn parse_media_playlist(
                     }
                     Tag::ExtInf(t) => {
                         has_partial_segment = true;
-                        segment.tag(t);
+                        segment.inf_tag(t);
                     }
                     Tag::ExtXByteRange(t) => {
                         has_partial_segment = true;
-                        segment.tag(t);
+                        segment.byte_range_tag(t);
                     }
                     Tag::ExtXDiscontinuity(t) => {
                         has_discontinuity_tag = true;
                         has_partial_segment = true;
-                        segment.tag(t);
+                        segment.discontinuity_tag(t);
                     }
                     Tag::ExtXKey(t) => {
                         has_partial_segment = true;
-                        segment.tag(t);
+                        segment.push_key_tag(t);
                     }
                     Tag::ExtXMap(t) => {
                         has_partial_segment = true;
-                        segment.tag(t);
+                        segment.map_tag(t);
                     }
                     Tag::ExtXProgramDateTime(t) => {
                         has_partial_segment = true;
-                        segment.tag(t);
+                        segment.program_date_time_tag(t);
                     }
                     Tag::ExtXDateRange(t) => {
                         has_partial_segment = true;
-                        segment.tag(t);
+                        segment.date_range_tag(t);
                     }
                     Tag::ExtXTargetDuration(t) => {
                         builder.target_duration_tag(t);
@@ -408,8 +408,8 @@ fn parse_media_playlist(
             }
             Line::Uri(uri) => {
                 segment.uri(uri);
-                segments.push(segment.finish()?);
-                segment = MediaSegmentBuilder::new();
+                segments.push(segment.build().map_err(Error::builder_error)?);
+                segment = MediaSegment::builder();
                 has_partial_segment = false;
             }
         }

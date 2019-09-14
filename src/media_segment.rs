@@ -1,96 +1,51 @@
 use std::fmt;
 use std::iter;
 
+use derive_builder::Builder;
+
 use crate::tags::{
     ExtInf, ExtXByteRange, ExtXDateRange, ExtXDiscontinuity, ExtXKey, ExtXMap, ExtXProgramDateTime,
-    MediaSegmentTag,
 };
 use crate::types::{ProtocolVersion, SingleLineString};
-use crate::Error;
 
-/// Media segment builder.
-#[derive(Debug, Clone)]
-pub struct MediaSegmentBuilder {
+/// Media segment.
+#[derive(Debug, Clone, Builder)]
+#[builder(setter(into, strip_option))]
+pub struct MediaSegment {
+    #[builder(default)]
+    /// Sets all [ExtXKey] tags.
     key_tags: Vec<ExtXKey>,
+    #[builder(default)]
+    /// Sets an [ExtXMap] tag.
     map_tag: Option<ExtXMap>,
+    #[builder(default)]
+    /// Sets an [ExtXByteRange] tag.
     byte_range_tag: Option<ExtXByteRange>,
+    #[builder(default)]
+    /// Sets an [ExtXDateRange] tag.
     date_range_tag: Option<ExtXDateRange>,
+    #[builder(default)]
+    /// Sets an [ExtXDiscontinuity] tag.
     discontinuity_tag: Option<ExtXDiscontinuity>,
+    #[builder(default)]
+    /// Sets an [ExtXProgramDateTime] tag.
     program_date_time_tag: Option<ExtXProgramDateTime>,
-    inf_tag: Option<ExtInf>,
-    uri: Option<SingleLineString>,
+    /// Sets an [ExtInf] tag.
+    inf_tag: ExtInf,
+    /// Sets an Uri.
+    uri: SingleLineString,
 }
 
 impl MediaSegmentBuilder {
-    /// Makes a new `MediaSegmentBuilder` instance.
-    pub fn new() -> Self {
-        MediaSegmentBuilder {
-            key_tags: Vec::new(),
-            map_tag: None,
-            byte_range_tag: None,
-            date_range_tag: None,
-            discontinuity_tag: None,
-            program_date_time_tag: None,
-            inf_tag: None,
-            uri: None,
-        }
-    }
-
-    /// Sets the URI of the resulting media segment.
-    pub fn uri(&mut self, uri: SingleLineString) -> &mut Self {
-        self.uri = Some(uri);
-        self
-    }
-
-    /// Sets the given tag to the resulting media segment.
-    pub fn tag<T: Into<MediaSegmentTag>>(&mut self, tag: T) -> &mut Self {
-        match tag.into() {
-            MediaSegmentTag::ExtInf(t) => self.inf_tag = Some(t),
-            MediaSegmentTag::ExtXByteRange(t) => self.byte_range_tag = Some(t),
-            MediaSegmentTag::ExtXDateRange(t) => self.date_range_tag = Some(t),
-            MediaSegmentTag::ExtXDiscontinuity(t) => self.discontinuity_tag = Some(t),
-            MediaSegmentTag::ExtXKey(t) => self.key_tags.push(t),
-            MediaSegmentTag::ExtXMap(t) => self.map_tag = Some(t),
-            MediaSegmentTag::ExtXProgramDateTime(t) => self.program_date_time_tag = Some(t),
+    /// Pushes an [ExtXKey] tag.
+    pub fn push_key_tag<VALUE: Into<ExtXKey>>(&mut self, value: VALUE) -> &mut Self {
+        if let Some(key_tags) = &mut self.key_tags {
+            key_tags.push(value.into());
+        } else {
+            self.key_tags = Some(vec![value.into()]);
         }
         self
     }
-
-    /// Builds a `MediaSegment` instance.
-    pub fn finish(self) -> crate::Result<MediaSegment> {
-        let uri = self.uri.ok_or(Error::missing_value("self.uri"))?;
-        let inf_tag = self.inf_tag.ok_or(Error::missing_value("self.inf_tag"))?;
-
-        Ok(MediaSegment {
-            key_tags: self.key_tags,
-            map_tag: self.map_tag,
-            byte_range_tag: self.byte_range_tag,
-            date_range_tag: self.date_range_tag,
-            discontinuity_tag: self.discontinuity_tag,
-            program_date_time_tag: self.program_date_time_tag,
-            inf_tag,
-            uri,
-        })
-    }
-}
-
-impl Default for MediaSegmentBuilder {
-    fn default() -> Self {
-        Self::new()
-    }
-}
-
-/// Media segment.
-#[derive(Debug, Clone)]
-pub struct MediaSegment {
-    key_tags: Vec<ExtXKey>,
-    map_tag: Option<ExtXMap>,
-    byte_range_tag: Option<ExtXByteRange>,
-    date_range_tag: Option<ExtXDateRange>,
-    discontinuity_tag: Option<ExtXDiscontinuity>,
-    program_date_time_tag: Option<ExtXProgramDateTime>,
-    inf_tag: ExtInf,
-    uri: SingleLineString,
 }
 
 impl fmt::Display for MediaSegment {
@@ -120,6 +75,10 @@ impl fmt::Display for MediaSegment {
 }
 
 impl MediaSegment {
+    /// Creates a [MediaSegmentBuilder].
+    pub fn builder() -> MediaSegmentBuilder {
+        MediaSegmentBuilder::default()
+    }
     /// Returns the URI of the media segment.
     pub const fn uri(&self) -> &SingleLineString {
         &self.uri
@@ -175,6 +134,6 @@ impl MediaSegment {
             )
             .chain(iter::once(self.inf_tag.requires_version()))
             .max()
-            .expect("Never fails")
+            .unwrap_or(ProtocolVersion::V7)
     }
 }
