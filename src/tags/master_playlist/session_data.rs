@@ -77,10 +77,8 @@ impl FromStr for ExtXSessionData {
         let mut uri = None;
         let mut language = None;
 
-        let attrs = AttributePairs::parse(input);
-        for attr in attrs {
-            let (key, value) = attr?;
-            match key {
+        for (key, value) in input.parse::<AttributePairs>()? {
+            match key.as_str() {
                 "DATA-ID" => data_id = Some(unquote(value)),
                 "VALUE" => session_value = Some(unquote(value)),
                 "URI" => uri = Some(unquote(value)),
@@ -92,7 +90,7 @@ impl FromStr for ExtXSessionData {
             }
         }
 
-        let data_id = data_id.ok_or(Error::missing_value("DATA-ID"))?;
+        let data_id = data_id.ok_or(Error::missing_value("EXT-X-DATA-ID"))?;
         let data = {
             if let Some(value) = session_value {
                 if uri.is_some() {

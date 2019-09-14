@@ -46,6 +46,9 @@ pub enum ErrorKind {
     #[fail(display = "Unknown Protocol version: {:?}", _0)]
     UnknownProtocolVersion(String),
 
+    #[fail(display = "IoError: {}", _0)]
+    Io(String),
+
     /// Hints that destructuring should not be exhaustive.
     ///
     /// This enum may grow additional variants, so this makes sure clients
@@ -164,6 +167,10 @@ impl Error {
     pub(crate) fn unknown_protocol_version<T: ToString>(value: T) -> Self {
         Self::from(ErrorKind::UnknownProtocolVersion(value.to_string()))
     }
+
+    pub(crate) fn io<T: ToString>(value: T) -> Self {
+        Self::from(ErrorKind::Io(value.to_string()))
+    }
 }
 
 impl From<std::num::ParseIntError> for Error {
@@ -175,5 +182,11 @@ impl From<std::num::ParseIntError> for Error {
 impl From<std::num::ParseFloatError> for Error {
     fn from(value: ::std::num::ParseFloatError) -> Self {
         Error::parse_float_error(value)
+    }
+}
+
+impl From<std::io::Error> for Error {
+    fn from(value: ::std::io::Error) -> Self {
+        Error::io(value)
     }
 }

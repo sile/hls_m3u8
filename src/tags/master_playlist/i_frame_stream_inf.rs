@@ -94,10 +94,8 @@ impl FromStr for ExtXIFrameStreamInf {
         let mut hdcp_level = None;
         let mut video = None;
 
-        let attrs = AttributePairs::parse(input);
-        for attr in attrs {
-            let (key, value) = attr?;
-            match key {
+        for (key, value) in input.parse::<AttributePairs>()? {
+            match key.as_str() {
                 "URI" => uri = Some(unquote(value)),
                 "BANDWIDTH" => bandwidth = Some(parse_u64(value)?),
                 "AVERAGE-BANDWIDTH" => average_bandwidth = Some(parse_u64(value)?),

@@ -10,33 +10,31 @@ use crate::Error;
 ///
 /// [4.3.2.4. EXT-X-KEY]: https://tools.ietf.org/html/rfc8216#section-4.3.2.4
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
-pub struct ExtXKey {
-    key: Option<DecryptionKey>,
-}
+pub struct ExtXKey(Option<DecryptionKey>);
 
 impl ExtXKey {
     pub(crate) const PREFIX: &'static str = "#EXT-X-KEY:";
 
     /// Makes a new `ExtXKey` tag.
     pub const fn new(key: DecryptionKey) -> Self {
-        ExtXKey { key: Some(key) }
+        Self(Some(key))
     }
 
     /// Makes a new `ExtXKey` tag without a decryption key.
     ///
     /// This tag has the `METHDO=NONE` attribute.
     pub const fn new_without_key() -> Self {
-        ExtXKey { key: None }
+        Self(None)
     }
 
     /// Returns the decryption key for the following media segments and media initialization sections.
     pub fn key(&self) -> Option<&DecryptionKey> {
-        self.key.as_ref()
+        self.0.as_ref()
     }
 
     /// Returns the protocol compatibility version that this tag requires.
     pub fn requires_version(&self) -> ProtocolVersion {
-        self.key
+        self.0
             .as_ref()
             .map_or(ProtocolVersion::V1, |k| k.requires_version())
     }
@@ -45,7 +43,7 @@ impl ExtXKey {
 impl fmt::Display for ExtXKey {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         write!(f, "{}", Self::PREFIX)?;
-        if let Some(ref key) = self.key {
+        if let Some(ref key) = self.0 {
             write!(f, "{}", key)?;
         } else {
             write!(f, "METHOD=NONE")?;
@@ -60,17 +58,18 @@ impl FromStr for ExtXKey {
     fn from_str(input: &str) -> Result<Self, Self::Err> {
         let input = tag(input, Self::PREFIX)?;
 
-        if AttributePairs::parse(input).any(|a| a.as_ref().ok() == Some(&("METHOD", "NONE"))) {
-            for attr in AttributePairs::parse(input) {
-                let (key, _) = attr?;
+        let pairs = input.parse::<AttributePairs>()?;
+
+        if pairs.iter().any(|(k, v)| k == "METHOD" && v == "NONE") {
+            for (key, _) in pairs {
                 if key == "URI" || key == "IV" || key == "KEYFORMAT" || key == "KEYFORMATVERSIONS" {
                     return Err(Error::invalid_input());
                 }
             }
-            Ok(ExtXKey { key: None })
+
+            Ok(Self(None))
         } else {
-            let key = input.parse()?;
-            Ok(ExtXKey { key: Some(key) })
+            Ok(Self(Some(input.parse()?)))
         }
     }
 }

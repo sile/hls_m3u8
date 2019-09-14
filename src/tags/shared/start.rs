@@ -71,11 +71,8 @@ impl FromStr for ExtXStart {
         let mut time_offset = None;
         let mut precise = false;
 
-        let attrs = AttributePairs::parse(input);
-
-        for attr in attrs {
-            let (key, value) = (attr)?;
-            match key {
+        for (key, value) in input.parse::<AttributePairs>()? {
+            match key.as_str() {
                 "TIME-OFFSET" => time_offset = Some((value.parse())?),
                 "PRECISE" => precise = (parse_yes_or_no(value))?,
                 _ => {

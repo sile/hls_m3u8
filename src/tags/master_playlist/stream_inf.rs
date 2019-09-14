@@ -149,10 +149,10 @@ impl FromStr for ExtXStreamInf {
 
     fn from_str(input: &str) -> Result<Self, Self::Err> {
         let mut lines = input.lines();
-        let first_line = lines.next().ok_or(Error::invalid_input())?; // TODO!
-        let second_line = lines.next().ok_or(Error::invalid_input())?; // TODO!
+        let first_line = lines.next().ok_or(Error::missing_value("first_line"))?;
+        let second_line = lines.next().ok_or(Error::missing_value("second_line"))?;
 
-        tag(first_line, Self::PREFIX)?;
+        let first_line = tag(first_line, Self::PREFIX)?;
 
         let uri = SingleLineString::new(second_line)?;
 
@@ -167,10 +167,8 @@ impl FromStr for ExtXStreamInf {
         let mut subtitles = None;
         let mut closed_captions = None;
 
-        let attrs = AttributePairs::parse(first_line.split_at(Self::PREFIX.len()).1);
-        for attr in attrs {
-            let (key, value) = (attr)?;
-            match key {
+        for (key, value) in first_line.parse::<AttributePairs>()? {
+            match key.as_str() {
                 "BANDWIDTH" => bandwidth = Some((parse_u64(value))?),
                 "AVERAGE-BANDWIDTH" => average_bandwidth = Some((parse_u64(value))?),
                 "CODECS" => codecs = Some(unquote(value)),
@@ -188,7 +186,7 @@ impl FromStr for ExtXStreamInf {
             }
         }
 
-        let bandwidth = bandwidth.ok_or(Error::missing_value("BANDWIDTH"))?;
+        let bandwidth = bandwidth.ok_or(Error::missing_value("EXT-X-BANDWIDTH"))?;
 
         Ok(ExtXStreamInf {
             uri,

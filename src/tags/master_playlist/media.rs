@@ -331,10 +331,9 @@ impl FromStr for ExtXMedia {
         let input = tag(input, Self::PREFIX)?;
 
         let mut builder = ExtXMediaBuilder::new();
-        let attrs = AttributePairs::parse(input);
-        for attr in attrs {
-            let (key, value) = attr?;
-            match key {
+
+        for (key, value) in input.parse::<AttributePairs>()? {
+            match key.as_str() {
                 "TYPE" => {
                     builder.media_type(value.parse()?);
                 }

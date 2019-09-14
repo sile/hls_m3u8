@@ -60,10 +60,8 @@ impl FromStr for DecryptionKey {
         let mut key_format = None;
         let mut key_format_versions = None;
 
-        let attrs = AttributePairs::parse(input);
-        for attr in attrs {
-            let (key, value) = (attr)?;
-            match key {
+        for (key, value) in input.parse::<AttributePairs>()? {
+            match key.as_str() {
                 "METHOD" => method = Some((value.parse())?),
                 "URI" => uri = Some(unquote(value)),
                 "IV" => iv = Some((value.parse())?),
