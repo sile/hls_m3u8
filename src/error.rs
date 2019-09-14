@@ -49,6 +49,12 @@ pub enum ErrorKind {
     #[fail(display = "IoError: {}", _0)]
     Io(String),
 
+    #[fail(
+        display = "VersionError: required_version: {:?}, specified_version: {:?}",
+        _0, _1
+    )]
+    VersionError(String, String),
+
     /// Hints that destructuring should not be exhaustive.
     ///
     /// This enum may grow additional variants, so this makes sure clients
@@ -170,6 +176,17 @@ impl Error {
 
     pub(crate) fn io<T: ToString>(value: T) -> Self {
         Self::from(ErrorKind::Io(value.to_string()))
+    }
+
+    pub(crate) fn required_version<T, U>(required_version: T, specified_version: U) -> Self
+    where
+        T: ToString,
+        U: ToString,
+    {
+        Self::from(ErrorKind::VersionError(
+            required_version.to_string(),
+            specified_version.to_string(),
+        ))
     }
 }
 

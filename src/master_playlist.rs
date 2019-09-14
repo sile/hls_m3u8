@@ -73,9 +73,8 @@ impl MasterPlaylistBuilder {
         let required_version = self.required_version();
         let specified_version = self.version.unwrap_or(required_version);
 
-        if required_version <= specified_version {
-            // "required_version:{}, specified_version:{}"
-            return Err(Error::invalid_input());
+        if required_version < specified_version {
+            return Err(Error::required_version(required_version, specified_version));
         }
 
         (self.validate_stream_inf_tags())?;
@@ -379,5 +378,21 @@ mod tests {
     use super::*;
 
     #[test]
-    fn test_parser() {}
+    fn test_parser() {
+        let playlist = r#"
+        #EXTM3U
+        #EXT-X-STREAM-INF:BANDWIDTH=150000,RESOLUTION=416x234,CODECS="avc1.42e00a,mp4a.40.2"
+        http://example.com/low/index.m3u8
+        #EXT-X-STREAM-INF:BANDWIDTH=240000,RESOLUTION=416x234,CODECS="avc1.42e00a,mp4a.40.2"
+        http://example.com/lo_mid/index.m3u8
+        #EXT-X-STREAM-INF:BANDWIDTH=440000,RESOLUTION=416x234,CODECS="avc1.42e00a,mp4a.40.2"
+        http://example.com/hi_mid/index.m3u8
+        #EXT-X-STREAM-INF:BANDWIDTH=640000,RESOLUTION=640x360,CODECS="avc1.42e00a,mp4a.40.2"
+        http://example.com/high/index.m3u8
+        #EXT-X-STREAM-INF:BANDWIDTH=64000,CODECS="mp4a.40.5"
+        http://example.com/audio/index.m3u8
+        "#
+        .parse::<MasterPlaylist>()
+        .unwrap();
+    }
 }
