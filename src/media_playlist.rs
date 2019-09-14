@@ -282,29 +282,29 @@ impl fmt::Display for MediaPlaylist {
             writeln!(f, "{}", self.version_tag)?;
         }
         writeln!(f, "{}", self.target_duration_tag)?;
-        if let Some(ref t) = self.media_sequence_tag {
-            writeln!(f, "{}", t)?;
+        if let Some(value) = &self.media_sequence_tag {
+            writeln!(f, "{}", value)?;
         }
-        if let Some(ref t) = self.discontinuity_sequence_tag {
-            writeln!(f, "{}", t)?;
+        if let Some(value) = &self.discontinuity_sequence_tag {
+            writeln!(f, "{}", value)?;
         }
-        if let Some(ref t) = self.playlist_type_tag {
-            writeln!(f, "{}", t)?;
+        if let Some(value) = &self.playlist_type_tag {
+            writeln!(f, "{}", value)?;
         }
-        if let Some(ref t) = self.i_frames_only_tag {
-            writeln!(f, "{}", t)?;
+        if let Some(value) = &self.i_frames_only_tag {
+            writeln!(f, "{}", value)?;
         }
-        if let Some(ref t) = self.independent_segments_tag {
-            writeln!(f, "{}", t)?;
+        if let Some(value) = &self.independent_segments_tag {
+            writeln!(f, "{}", value)?;
         }
-        if let Some(ref t) = self.start_tag {
-            writeln!(f, "{}", t)?;
+        if let Some(value) = &self.start_tag {
+            writeln!(f, "{}", value)?;
         }
         for segment in &self.segments {
             write!(f, "{}", segment)?;
         }
-        if let Some(ref t) = self.end_list_tag {
-            writeln!(f, "{}", t)?;
+        if let Some(value) = &self.end_list_tag {
+            writeln!(f, "{}", value)?;
         }
         Ok(())
     }

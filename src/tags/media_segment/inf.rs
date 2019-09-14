@@ -62,8 +62,8 @@ impl fmt::Display for ExtInf {
             + (f64::from(self.duration.subsec_nanos()) / 1_000_000_000.0);
         write!(f, "{}", duration)?;
 
-        if let Some(ref title) = self.title {
-            write!(f, ",{}", title)?;
+        if let Some(value) = &self.title {
+            write!(f, ",{}", value)?;
         }
         Ok(())
     }

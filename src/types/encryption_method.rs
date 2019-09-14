@@ -17,7 +17,7 @@ pub enum EncryptionMethod {
 
 impl fmt::Display for EncryptionMethod {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        match *self {
+        match &self {
             EncryptionMethod::Aes128 => "AES-128".fmt(f),
             EncryptionMethod::SampleAes => "SAMPLE-AES".fmt(f),
         }

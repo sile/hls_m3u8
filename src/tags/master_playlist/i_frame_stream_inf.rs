@@ -61,20 +61,20 @@ impl fmt::Display for ExtXIFrameStreamInf {
         write!(f, "URI={}", quote(&self.uri))?;
         write!(f, ",BANDWIDTH={}", self.bandwidth)?;
 
-        if let Some(ref x) = self.average_bandwidth {
-            write!(f, ",AVERAGE-BANDWIDTH={}", x)?;
+        if let Some(value) = &self.average_bandwidth {
+            write!(f, ",AVERAGE-BANDWIDTH={}", value)?;
         }
-        if let Some(ref x) = self.codecs {
-            write!(f, ",CODECS={}", quote(x))?;
+        if let Some(value) = &self.codecs {
+            write!(f, ",CODECS={}", quote(value))?;
         }
-        if let Some(ref x) = self.resolution {
-            write!(f, ",RESOLUTION={}", x)?;
+        if let Some(value) = &self.resolution {
+            write!(f, ",RESOLUTION={}", value)?;
         }
-        if let Some(ref x) = self.hdcp_level {
-            write!(f, ",HDCP-LEVEL={}", x)?;
+        if let Some(value) = &self.hdcp_level {
+            write!(f, ",HDCP-LEVEL={}", value)?;
         }
-        if let Some(ref x) = self.video {
-            write!(f, ",VIDEO={}", quote(x))?;
+        if let Some(value) = &self.video {
+            write!(f, ",VIDEO={}", quote(value))?;
         }
         Ok(())
     }

@@ -42,12 +42,12 @@ impl fmt::Display for ExtXDateRange {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         write!(f, "{}", Self::PREFIX)?;
         write!(f, "ID={}", quote(&self.id))?;
-        if let Some(ref x) = self.class {
-            write!(f, ",CLASS={}", quote(x))?;
+        if let Some(value) = &self.class {
+            write!(f, ",CLASS={}", quote(value))?;
         }
         write!(f, ",START-DATE={}", quote(&self.start_date))?;
-        if let Some(ref x) = self.end_date {
-            write!(f, ",END-DATE={}", quote(x))?;
+        if let Some(value) = &self.end_date {
+            write!(f, ",END-DATE={}", quote(value))?;
         }
         if let Some(x) = self.duration {
             write!(f, ",DURATION={}", DecimalFloatingPoint::from_duration(x))?;
@@ -59,14 +59,14 @@ impl fmt::Display for ExtXDateRange {
                 DecimalFloatingPoint::from_duration(x)
             )?;
         }
-        if let Some(ref x) = self.scte35_cmd {
-            write!(f, ",SCTE35-CMD={}", quote(x))?;
+        if let Some(value) = &self.scte35_cmd {
+            write!(f, ",SCTE35-CMD={}", quote(value))?;
         }
-        if let Some(ref x) = self.scte35_out {
-            write!(f, ",SCTE35-OUT={}", quote(x))?;
+        if let Some(value) = &self.scte35_out {
+            write!(f, ",SCTE35-OUT={}", quote(value))?;
         }
-        if let Some(ref x) = self.scte35_in {
-            write!(f, ",SCTE35-IN={}", quote(x))?;
+        if let Some(value) = &self.scte35_in {
+            write!(f, ",SCTE35-IN={}", quote(value))?;
         }
         if self.end_on_next {
             write!(f, ",END-ON-NEXT=YES",)?;

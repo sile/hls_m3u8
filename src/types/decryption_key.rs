@@ -37,14 +37,14 @@ impl fmt::Display for DecryptionKey {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         write!(f, "METHOD={}", self.method)?;
         write!(f, ",URI={}", quote(&self.uri))?;
-        if let Some(ref x) = self.iv {
-            write!(f, ",IV={}", x)?;
+        if let Some(value) = &self.iv {
+            write!(f, ",IV={}", value)?;
         }
-        if let Some(ref x) = self.key_format {
-            write!(f, ",KEYFORMAT={}", quote(x))?;
+        if let Some(value) = &self.key_format {
+            write!(f, ",KEYFORMAT={}", quote(value))?;
         }
-        if let Some(ref x) = self.key_format_versions {
-            write!(f, ",KEYFORMATVERSIONS={}", quote(x))?;
+        if let Some(value) = &self.key_format_versions {
+            write!(f, ",KEYFORMATVERSIONS={}", quote(value))?;
         }
         Ok(())
     }

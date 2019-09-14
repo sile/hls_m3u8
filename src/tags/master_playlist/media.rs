@@ -291,15 +291,15 @@ impl fmt::Display for ExtXMedia {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         write!(f, "{}", Self::PREFIX)?;
         write!(f, "TYPE={}", self.media_type)?;
-        if let Some(ref x) = self.uri {
-            write!(f, ",URI={}", quote(x))?;
+        if let Some(value) = &self.uri {
+            write!(f, ",URI={}", quote(value))?;
         }
         write!(f, ",GROUP-ID={}", quote(&self.group_id))?;
-        if let Some(ref x) = self.language {
-            write!(f, ",LANGUAGE={}", quote(x))?;
+        if let Some(value) = &self.language {
+            write!(f, ",LANGUAGE={}", quote(value))?;
         }
-        if let Some(ref x) = self.assoc_language {
-            write!(f, ",ASSOC-LANGUAGE={}", quote(x))?;
+        if let Some(value) = &self.assoc_language {
+            write!(f, ",ASSOC-LANGUAGE={}", quote(value))?;
         }
         write!(f, ",NAME={}", quote(&self.name))?;
         if self.default {
@@ -311,14 +311,14 @@ impl fmt::Display for ExtXMedia {
         if self.forced {
             write!(f, ",FORCED=YES")?;
         }
-        if let Some(ref x) = self.instream_id {
-            write!(f, ",INSTREAM-ID={}", quote(x))?;
+        if let Some(value) = &self.instream_id {
+            write!(f, ",INSTREAM-ID={}", quote(value))?;
         }
-        if let Some(ref x) = self.characteristics {
-            write!(f, ",CHARACTERISTICS={}", quote(x))?;
+        if let Some(value) = &self.characteristics {
+            write!(f, ",CHARACTERISTICS={}", quote(value))?;
         }
-        if let Some(ref x) = self.channels {
-            write!(f, ",CHANNELS={}", quote(x))?;
+        if let Some(value) = &self.channels {
+            write!(f, ",CHANNELS={}", quote(value))?;
         }
         Ok(())
     }

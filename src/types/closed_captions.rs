@@ -17,8 +17,8 @@ pub enum ClosedCaptions {
 
 impl fmt::Display for ClosedCaptions {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        match *self {
-            ClosedCaptions::GroupId(ref x) => write!(f, "{}", quote(x)),
+        match &self {
+            ClosedCaptions::GroupId(value) => write!(f, "{}", quote(value)),
             ClosedCaptions::None => "NONE".fmt(f),
         }
     }

@@ -43,8 +43,8 @@ impl ExtXKey {
 impl fmt::Display for ExtXKey {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         write!(f, "{}", Self::PREFIX)?;
-        if let Some(ref key) = self.0 {
-            write!(f, "{}", key)?;
+        if let Some(value) = &self.0 {
+            write!(f, "{}", value)?;
         } else {
             write!(f, "METHOD=NONE")?;
         }

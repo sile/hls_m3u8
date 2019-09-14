@@ -54,8 +54,8 @@ impl fmt::Display for ExtXMap {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         write!(f, "{}", Self::PREFIX)?;
         write!(f, "URI={}", quote(&self.uri))?;
-        if let Some(ref x) = self.range {
-            write!(f, ",BYTERANGE={}", quote(x))?;
+        if let Some(value) = &self.range {
+            write!(f, ",BYTERANGE={}", quote(value))?;
         }
         Ok(())
     }

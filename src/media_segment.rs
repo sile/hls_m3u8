@@ -50,23 +50,23 @@ impl MediaSegmentBuilder {
 
 impl fmt::Display for MediaSegment {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        for t in &self.key_tags {
-            writeln!(f, "{}", t)?;
+        for value in &self.key_tags {
+            writeln!(f, "{}", value)?;
         }
-        if let Some(ref t) = self.map_tag {
-            writeln!(f, "{}", t)?;
+        if let Some(value) = &self.map_tag {
+            writeln!(f, "{}", value)?;
         }
-        if let Some(ref t) = self.byte_range_tag {
-            writeln!(f, "{}", t)?;
+        if let Some(value) = &self.byte_range_tag {
+            writeln!(f, "{}", value)?;
         }
-        if let Some(ref t) = self.date_range_tag {
-            writeln!(f, "{}", t)?;
+        if let Some(value) = &self.date_range_tag {
+            writeln!(f, "{}", value)?;
         }
-        if let Some(ref t) = self.discontinuity_tag {
-            writeln!(f, "{}", t)?;
+        if let Some(value) = &self.discontinuity_tag {
+            writeln!(f, "{}", value)?;
         }
-        if let Some(ref t) = self.program_date_time_tag {
-            writeln!(f, "{}", t)?;
+        if let Some(value) = &self.program_date_time_tag {
+            writeln!(f, "{}", value)?;
         }
         writeln!(f, "{},", self.inf_tag)?;
         writeln!(f, "{}", self.uri)?;

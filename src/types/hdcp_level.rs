@@ -17,7 +17,7 @@ pub enum HdcpLevel {
 
 impl fmt::Display for HdcpLevel {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        match *self {
+        match &self {
             HdcpLevel::Type0 => "TYPE-0".fmt(f),
             HdcpLevel::None => "NONE".fmt(f),
         }

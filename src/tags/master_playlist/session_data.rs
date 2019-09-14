@@ -55,12 +55,12 @@ impl fmt::Display for ExtXSessionData {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         write!(f, "{}", Self::PREFIX)?;
         write!(f, "DATA-ID={}", quote(&self.data_id))?;
-        match self.data {
-            SessionData::Value(ref x) => write!(f, ",VALUE={}", quote(x))?,
-            SessionData::Uri(ref x) => write!(f, ",URI={}", quote(x))?,
+        match &self.data {
+            SessionData::Value(value) => write!(f, ",VALUE={}", quote(value))?,
+            SessionData::Uri(value) => write!(f, ",URI={}", quote(value))?,
         }
-        if let Some(ref x) = self.language {
-            write!(f, ",LANGUAGE={}", quote(x))?;
+        if let Some(value) = &self.language {
+            write!(f, ",LANGUAGE={}", quote(value))?;
         }
         Ok(())
     }

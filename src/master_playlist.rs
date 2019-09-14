@@ -276,11 +276,11 @@ impl fmt::Display for MasterPlaylist {
         for t in &self.session_key_tags {
             writeln!(f, "{}", t)?;
         }
-        if let Some(ref t) = self.independent_segments_tag {
-            writeln!(f, "{}", t)?;
+        if let Some(value) = &self.independent_segments_tag {
+            writeln!(f, "{}", value)?;
         }
-        if let Some(ref t) = self.start_tag {
-            writeln!(f, "{}", t)?;
+        if let Some(value) = &self.start_tag {
+            writeln!(f, "{}", value)?;
         }
         Ok(())
     }

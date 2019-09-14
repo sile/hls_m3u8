@@ -112,32 +112,32 @@ impl fmt::Display for ExtXStreamInf {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         write!(f, "{}", Self::PREFIX)?;
         write!(f, "BANDWIDTH={}", self.bandwidth)?;
-        if let Some(ref x) = self.average_bandwidth {
-            write!(f, ",AVERAGE-BANDWIDTH={}", x)?;
+        if let Some(value) = &self.average_bandwidth {
+            write!(f, ",AVERAGE-BANDWIDTH={}", value)?;
         }
-        if let Some(ref x) = self.resolution {
-            write!(f, ",RESOLUTION={}", x)?;
+        if let Some(value) = &self.resolution {
+            write!(f, ",RESOLUTION={}", value)?;
         }
-        if let Some(ref x) = self.codecs {
-            write!(f, ",CODECS={}", quote(x))?;
+        if let Some(value) = &self.codecs {
+            write!(f, ",CODECS={}", quote(value))?;
         }
-        if let Some(ref x) = self.frame_rate {
-            write!(f, ",FRAME-RATE={:.3}", x.as_f64())?;
+        if let Some(value) = &self.frame_rate {
+            write!(f, ",FRAME-RATE={:.3}", value.as_f64())?;
         }
-        if let Some(ref x) = self.hdcp_level {
-            write!(f, ",HDCP-LEVEL={}", x)?;
+        if let Some(value) = &self.hdcp_level {
+            write!(f, ",HDCP-LEVEL={}", value)?;
         }
-        if let Some(ref x) = self.audio {
-            write!(f, ",AUDIO={}", quote(x))?;
+        if let Some(value) = &self.audio {
+            write!(f, ",AUDIO={}", quote(value))?;
         }
-        if let Some(ref x) = self.video {
-            write!(f, ",VIDEO={}", quote(x))?;
+        if let Some(value) = &self.video {
+            write!(f, ",VIDEO={}", quote(value))?;
         }
-        if let Some(ref x) = self.subtitles {
-            write!(f, ",SUBTITLES={}", quote(x))?;
+        if let Some(value) = &self.subtitles {
+            write!(f, ",SUBTITLES={}", quote(value))?;
         }
-        if let Some(ref x) = self.closed_captions {
-            write!(f, ",CLOSED-CAPTIONS={}", x)?;
+        if let Some(value) = &self.closed_captions {
+            write!(f, ",CLOSED-CAPTIONS={}", value)?;
         }
         write!(f, "\n{}", self.uri)?;
         Ok(())

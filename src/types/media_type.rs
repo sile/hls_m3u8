@@ -19,7 +19,7 @@ pub enum MediaType {
 
 impl fmt::Display for MediaType {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        match *self {
+        match &self {
             MediaType::Audio => "AUDIO".fmt(f),
             MediaType::Video => "VIDEO".fmt(f),
             MediaType::Subtitles => "SUBTITLES".fmt(f),
