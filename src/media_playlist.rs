@@ -337,9 +337,8 @@ impl MediaPlaylistOptions {
         let mut segment = MediaSegmentBuilder::new();
         let mut has_partial_segment = false;
         let mut has_discontinuity_tag = false;
-        for (i, line) in Lines::new(m3u8).enumerate() {
-            match (line)? {
-                Line::Blank | Line::Comment(_) => {}
+        for (i, line) in m3u8.parse::<Lines>()?.into_iter().enumerate() {
+            match line {
                 Line::Tag(tag) => {
                     if i == 0 {
                         if tag != Tag::ExtM3u(ExtM3u) {

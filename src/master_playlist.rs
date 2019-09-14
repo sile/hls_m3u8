@@ -9,7 +9,7 @@ use crate::tags::{
     ExtXSessionKey, ExtXStart, ExtXStreamInf, ExtXVersion, MasterPlaylistTag,
 };
 use crate::types::{ClosedCaptions, MediaType, ProtocolVersion};
-use crate::{Error, Result};
+use crate::Error;
 
 /// Master playlist builder.
 #[derive(Debug, Clone)]
@@ -69,7 +69,7 @@ impl MasterPlaylistBuilder {
     }
 
     /// Builds a `MasterPlaylist` instance.
-    pub fn finish(self) -> Result<MasterPlaylist> {
+    pub fn finish(self) -> crate::Result<MasterPlaylist> {
         let required_version = self.required_version();
         let specified_version = self.version.unwrap_or(required_version);
 
@@ -116,7 +116,7 @@ impl MasterPlaylistBuilder {
             .expect("Never fails")
     }
 
-    fn validate_stream_inf_tags(&self) -> Result<()> {
+    fn validate_stream_inf_tags(&self) -> crate::Result<()> {
         let mut has_none_closed_captions = false;
         for t in &self.stream_inf_tags {
             if let Some(group_id) = t.audio() {
@@ -159,7 +159,7 @@ impl MasterPlaylistBuilder {
         Ok(())
     }
 
-    fn validate_i_frame_stream_inf_tags(&self) -> Result<()> {
+    fn validate_i_frame_stream_inf_tags(&self) -> crate::Result<()> {
         for t in &self.i_frame_stream_inf_tags {
             if let Some(group_id) = t.video() {
                 if !self.check_media_group(MediaType::Video, group_id) {
@@ -171,7 +171,7 @@ impl MasterPlaylistBuilder {
         Ok(())
     }
 
-    fn validate_session_data_tags(&self) -> Result<()> {
+    fn validate_session_data_tags(&self) -> crate::Result<()> {
         let mut set = HashSet::new();
         for t in &self.session_data_tags {
             if !set.insert((t.data_id(), t.language())) {
@@ -182,7 +182,7 @@ impl MasterPlaylistBuilder {
         Ok(())
     }
 
-    fn validate_session_key_tags(&self) -> Result<()> {
+    fn validate_session_key_tags(&self) -> crate::Result<()> {
         let mut set = HashSet::new();
         for t in &self.session_key_tags {
             if !set.insert(t.key()) {
@@ -294,11 +294,11 @@ impl fmt::Display for MasterPlaylist {
 
 impl FromStr for MasterPlaylist {
     type Err = Error;
-    fn from_str(s: &str) -> Result<Self> {
+
+    fn from_str(input: &str) -> Result<Self, Self::Err> {
         let mut builder = MasterPlaylistBuilder::new();
-        for (i, line) in Lines::new(s).enumerate() {
-            match (line)? {
-                Line::Blank | Line::Comment(_) => {}
+        for (i, line) in input.parse::<Lines>()?.into_iter().enumerate() {
+            match line {
                 Line::Tag(tag) => {
                     if i == 0 {
                         if tag != Tag::ExtM3u(ExtM3u) {
@@ -372,4 +372,12 @@ impl FromStr for MasterPlaylist {
         }
         builder.finish()
     }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_parser() {}
 }

@@ -1,87 +1,74 @@
 use std::fmt;
+use std::ops::{Deref, DerefMut};
 use std::str::FromStr;
 
 use crate::tags;
 use crate::types::SingleLineString;
 use crate::Error;
 
-#[derive(Debug)]
-pub struct Lines<'a> {
-    input: &'a str,
-}
-impl<'a> Lines<'a> {
-    pub const fn new(input: &'a str) -> Self {
-        Lines { input }
+#[derive(Debug, Default)]
+pub struct Lines(Vec<Line>);
+
+impl Lines {
+    pub fn new() -> Self {
+        Self::default()
     }
+}
 
-    fn read_line(&mut self) -> crate::Result<Line<'a>> {
-        let mut end = self.input.len();
-        let mut next_start = self.input.len();
-        let mut adjust = 0;
-        let mut next_line_of_ext_x_stream_inf = false;
+impl FromStr for Lines {
+    type Err = Error;
 
-        for (i, c) in self.input.char_indices() {
-            match c {
-                '\n' => {
-                    if !next_line_of_ext_x_stream_inf
-                        && self.input.starts_with(tags::ExtXStreamInf::PREFIX)
-                    {
-                        next_line_of_ext_x_stream_inf = true;
-                        adjust = 0;
-                        continue;
-                    }
-                    next_start = i + 1;
-                    end = i - adjust;
-                    break;
-                }
-                '\r' => {
-                    adjust = 1;
-                }
-                _ => {
-                    if c.is_control() {
-                        return Err(Error::invalid_input());
-                    }
-                    adjust = 0;
-                }
+    fn from_str(input: &str) -> Result<Self, Self::Err> {
+        let mut result = Lines::new();
+
+        for line in input.lines() {
+            // ignore empty lines
+            if line.trim().len() == 0 {
+                continue;
             }
-        }
-        let raw_line = &self.input[..end];
 
-        let line = if raw_line.is_empty() {
-            Line::Blank
-        } else if raw_line.starts_with("#EXT") {
-            Line::Tag((raw_line.parse())?)
-        } else if raw_line.starts_with('#') {
-            Line::Comment(raw_line)
-        } else {
-            let uri = SingleLineString::new(raw_line)?;
-            Line::Uri(uri)
-        };
+            let pline = {
+                if line.starts_with("#EXT") {
+                    Line::Tag(line.parse()?)
+                } else if line.starts_with("#") {
+                    continue; // ignore comments
+                } else {
+                    Line::Uri(SingleLineString::new(line)?)
+                }
+            };
 
-        self.input = &self.input[next_start..];
-        Ok(line)
-    }
-}
-impl<'a> Iterator for Lines<'a> {
-    type Item = crate::Result<Line<'a>>;
-
-    fn next(&mut self) -> Option<Self::Item> {
-        if self.input.is_empty() {
-            return None;
+            result.push(pline);
         }
 
-        match self.read_line() {
-            Err(e) => Some(Err(e)),
-            Ok(line) => Some(Ok(line)),
-        }
+        Ok(result)
     }
 }
 
-#[allow(clippy::large_enum_variant)]
+impl IntoIterator for Lines {
+    type Item = Line;
+    type IntoIter = ::std::vec::IntoIter<Line>;
+
+    fn into_iter(self) -> Self::IntoIter {
+        self.0.into_iter()
+    }
+}
+
+impl Deref for Lines {
+    type Target = Vec<Line>;
+
+    fn deref(&self) -> &Self::Target {
+        &self.0
+    }
+}
+
+impl DerefMut for Lines {
+    fn deref_mut(&mut self) -> &mut Self::Target {
+        &mut self.0
+    }
+}
+
 #[derive(Debug, PartialEq, Eq)]
-pub enum Line<'a> {
-    Blank,
-    Comment(&'a str),
+pub enum Line {
     Tag(Tag),
     Uri(SingleLineString),
 }
