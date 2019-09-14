@@ -55,6 +55,9 @@ pub enum ErrorKind {
     )]
     VersionError(String, String),
 
+    #[fail(display = "BuilderError: {}", _0)]
+    BuilderError(String),
+
     /// Hints that destructuring should not be exhaustive.
     ///
     /// This enum may grow additional variants, so this makes sure clients
@@ -187,6 +190,10 @@ impl Error {
             required_version.to_string(),
             specified_version.to_string(),
         ))
+    }
+
+    pub(crate) fn builder_error<T: ToString>(value: T) -> Self {
+        Self::from(ErrorKind::BuilderError(value.to_string()))
     }
 }
 

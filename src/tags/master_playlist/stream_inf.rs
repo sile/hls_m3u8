@@ -115,11 +115,11 @@ impl fmt::Display for ExtXStreamInf {
         if let Some(ref x) = self.average_bandwidth {
             write!(f, ",AVERAGE-BANDWIDTH={}", x)?;
         }
-        if let Some(ref x) = self.codecs {
-            write!(f, ",CODECS={}", quote(x))?;
-        }
         if let Some(ref x) = self.resolution {
             write!(f, ",RESOLUTION={}", x)?;
+        }
+        if let Some(ref x) = self.codecs {
+            write!(f, ",CODECS={}", quote(x))?;
         }
         if let Some(ref x) = self.frame_rate {
             write!(f, ",FRAME-RATE={:.3}", x.as_f64())?;

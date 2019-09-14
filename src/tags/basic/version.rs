@@ -36,6 +36,18 @@ impl fmt::Display for ExtXVersion {
     }
 }
 
+impl Default for ExtXVersion {
+    fn default() -> Self {
+        Self(ProtocolVersion::V1)
+    }
+}
+
+impl From<ProtocolVersion> for ExtXVersion {
+    fn from(value: ProtocolVersion) -> Self {
+        Self(value)
+    }
+}
+
 impl FromStr for ExtXVersion {
     type Err = Error;
 
