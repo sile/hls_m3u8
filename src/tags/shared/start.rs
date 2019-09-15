@@ -19,24 +19,36 @@ impl ExtXStart {
     pub(crate) const PREFIX: &'static str = "#EXT-X-START:";
 
     /// Makes a new `ExtXStart` tag.
-    pub const fn new(time_offset: SignedDecimalFloatingPoint) -> Self {
+    /// # Panic
+    /// Panics if the time_offset value is infinite.
+    pub fn new(time_offset: f64) -> Self {
+        if time_offset.is_infinite() {
+            panic!("EXT-X-START: Floating point value must be finite!");
+        }
+
         ExtXStart {
-            time_offset,
+            time_offset: SignedDecimalFloatingPoint::new(time_offset).unwrap(),
             precise: false,
         }
     }
 
     /// Makes a new `ExtXStart` tag with the given `precise` flag.
-    pub const fn with_precise(time_offset: SignedDecimalFloatingPoint, precise: bool) -> Self {
+    /// # Panic
+    /// Panics if the time_offset value is infinite.
+    pub fn with_precise(time_offset: f64, precise: bool) -> Self {
+        if time_offset.is_infinite() {
+            panic!("EXT-X-START: Floating point value must be finite!");
+        }
+
         ExtXStart {
-            time_offset,
+            time_offset: SignedDecimalFloatingPoint::new(time_offset).unwrap(),
             precise,
         }
     }
 
     /// Returns the time offset of the media segments in the playlist.
-    pub const fn time_offset(&self) -> SignedDecimalFloatingPoint {
-        self.time_offset
+    pub const fn time_offset(&self) -> f64 {
+        self.time_offset.as_f64()
     }
 
     /// Returns whether clients should not render media stream whose presentation times are
@@ -97,13 +109,13 @@ mod test {
 
     #[test]
     fn ext_x_start() {
-        let tag = ExtXStart::new(SignedDecimalFloatingPoint::new(-1.23).unwrap());
+        let tag = ExtXStart::new(-1.23);
         let text = "#EXT-X-START:TIME-OFFSET=-1.23";
         assert_eq!(text.parse().ok(), Some(tag));
         assert_eq!(tag.to_string(), text);
         assert_eq!(tag.requires_version(), ProtocolVersion::V1);
 
-        let tag = ExtXStart::with_precise(SignedDecimalFloatingPoint::new(1.23).unwrap(), true);
+        let tag = ExtXStart::with_precise(1.23, true);
         let text = "#EXT-X-START:TIME-OFFSET=1.23,PRECISE=YES";
         assert_eq!(text.parse().ok(), Some(tag));
         assert_eq!(tag.to_string(), text);

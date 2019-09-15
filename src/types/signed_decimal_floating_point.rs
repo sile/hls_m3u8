@@ -9,7 +9,7 @@ use crate::Error;
 ///
 /// [4.2. Attribute Lists]: https://tools.ietf.org/html/rfc8216#section-4.2
 #[derive(Debug, Clone, Copy, PartialEq, PartialOrd)]
-pub struct SignedDecimalFloatingPoint(f64);
+pub(crate) struct SignedDecimalFloatingPoint(f64);
 
 impl SignedDecimalFloatingPoint {
     /// Makes a new `SignedDecimalFloatingPoint` instance.
