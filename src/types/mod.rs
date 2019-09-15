@@ -14,7 +14,7 @@ mod signed_decimal_floating_point;
 
 pub use byte_range::*;
 pub use closed_captions::*;
-pub use decimal_floating_point::*;
+pub(crate) use decimal_floating_point::*;
 pub(crate) use decimal_resolution::*;
 pub use encryption_method::*;
 pub use hdcp_level::*;

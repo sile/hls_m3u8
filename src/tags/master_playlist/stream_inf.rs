@@ -79,8 +79,8 @@ impl ExtXStreamInf {
     }
 
     /// Returns the maximum frame rate for all the video in the variant stream.
-    pub const fn frame_rate(&self) -> Option<DecimalFloatingPoint> {
-        self.frame_rate
+    pub fn frame_rate(&self) -> Option<f64> {
+        self.frame_rate.map_or(None, |v| Some(v.as_f64()))
     }
 
     /// Returns the HDCP level of the variant stream.

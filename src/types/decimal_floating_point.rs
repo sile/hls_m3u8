@@ -10,7 +10,7 @@ use crate::Error;
 ///
 /// [4.2. Attribute Lists]: https://tools.ietf.org/html/rfc8216#section-4.2
 #[derive(Debug, Clone, Copy, PartialEq, PartialOrd)]
-pub struct DecimalFloatingPoint(f64);
+pub(crate) struct DecimalFloatingPoint(f64);
 
 impl DecimalFloatingPoint {
     /// Makes a new `DecimalFloatingPoint` instance.
@@ -66,7 +66,7 @@ impl FromStr for DecimalFloatingPoint {
             return Err(Error::invalid_input());
         }
         let n = input.parse()?;
-        Ok(DecimalFloatingPoint(n))
+        DecimalFloatingPoint::new(n)
     }
 }
 
