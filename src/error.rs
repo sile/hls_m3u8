@@ -7,7 +7,7 @@ use failure::{Backtrace, Context, Fail};
 pub type Result<T> = std::result::Result<T, Error>;
 
 /// The ErrorKind.
-#[derive(Debug, Fail, Clone)]
+#[derive(Debug, Fail, Clone, PartialEq, Eq)]
 pub enum ErrorKind {
     #[fail(display = "UnknownError: {}", _0)]
     /// An unknown error occured.

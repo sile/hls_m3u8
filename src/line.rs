@@ -43,6 +43,7 @@ impl FromStr for Lines {
                 } else if line.starts_with("#") {
                     continue; // ignore comments
                 } else {
+                    // stream inf line needs special treatment
                     if stream_inf {
                         stream_inf = false;
                         if let Some(first_line) = stream_inf_line {

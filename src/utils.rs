@@ -1,6 +1,6 @@
-use crate::{Error, Result};
+use crate::Error;
 
-pub(crate) fn parse_yes_or_no<T: AsRef<str>>(s: T) -> Result<bool> {
+pub(crate) fn parse_yes_or_no<T: AsRef<str>>(s: T) -> crate::Result<bool> {
     match s.as_ref() {
         "YES" => Ok(true),
         "NO" => Ok(false),
@@ -8,7 +8,7 @@ pub(crate) fn parse_yes_or_no<T: AsRef<str>>(s: T) -> Result<bool> {
     }
 }
 
-pub(crate) fn parse_u64<T: AsRef<str>>(s: T) -> Result<u64> {
+pub(crate) fn parse_u64<T: AsRef<str>>(s: T) -> crate::Result<u64> {
     let n = s.as_ref().parse().map_err(Error::unknown)?; // TODO: Error::number
     Ok(n)
 }

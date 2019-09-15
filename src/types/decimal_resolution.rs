@@ -1,5 +1,5 @@
 use std::fmt;
-use std::str::{self, FromStr};
+use std::str::FromStr;
 
 use crate::Error;
 
@@ -10,11 +10,37 @@ use crate::Error;
 /// [4.2. Attribute Lists]: https://tools.ietf.org/html/rfc8216#section-4.2
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct DecimalResolution {
+    width: usize,
+    height: usize,
+}
+
+impl DecimalResolution {
+    /// Creates a new DecimalResolution.
+    pub const fn new(width: usize, height: usize) -> Self {
+        Self { width, height }
+    }
+
     /// Horizontal pixel dimension.
-    pub width: usize,
+    pub const fn width(&self) -> usize {
+        self.width
+    }
+
+    /// Sets Horizontal pixel dimension.
+    pub fn set_width(&mut self, value: usize) -> &mut Self {
+        self.width = value;
+        self
+    }
 
     /// Vertical pixel dimension.
-    pub height: usize,
+    pub const fn height(&self) -> usize {
+        self.height
+    }
+
+    /// Sets Vertical pixel dimension.
+    pub fn set_height(&mut self, value: usize) -> &mut Self {
+        self.height = value;
+        self
+    }
 }
 
 impl fmt::Display for DecimalResolution {
@@ -27,13 +53,21 @@ impl FromStr for DecimalResolution {
     type Err = Error;
 
     fn from_str(input: &str) -> Result<Self, Self::Err> {
-        let mut tokens = input.splitn(2, 'x');
-        let width = tokens.next().ok_or(Error::missing_value("width"))?;
-        let height = tokens.next().ok_or(Error::missing_value("height"))?;
+        let tokens = input.splitn(2, 'x').collect::<Vec<_>>();
+
+        if tokens.len() != 2 {
+            return Err(Error::custom(format!(
+                "InvalidInput: Expected input format: [width]x[height] (ex. 1920x1080), got {:?}",
+                input,
+            )));
+        }
+
+        let width = tokens[0];
+        let height = tokens[1];
 
         Ok(DecimalResolution {
-            width: width.parse().map_err(|e| Error::custom(e))?,
-            height: height.parse().map_err(|e| Error::custom(e))?,
+            width: width.parse()?,
+            height: height.parse()?,
         })
     }
 }
@@ -44,37 +78,44 @@ mod tests {
 
     #[test]
     fn test_display() {
-        let decimal_resolution = DecimalResolution {
-            width: 1920,
-            height: 1080,
-        };
-        assert_eq!(decimal_resolution.to_string(), "1920x1080".to_string());
+        assert_eq!(
+            DecimalResolution::new(1920, 1080).to_string(),
+            "1920x1080".to_string()
+        );
 
-        let decimal_resolution = DecimalResolution {
-            width: 1280,
-            height: 720,
-        };
-        assert_eq!(decimal_resolution.to_string(), "1280x720".to_string());
+        assert_eq!(
+            DecimalResolution::new(1280, 720).to_string(),
+            "1280x720".to_string()
+        );
     }
 
     #[test]
     fn test_parse() {
-        let decimal_resolution = DecimalResolution {
-            width: 1920,
-            height: 1080,
-        };
         assert_eq!(
-            decimal_resolution,
+            DecimalResolution::new(1920, 1080),
             "1920x1080".parse::<DecimalResolution>().unwrap()
         );
 
-        let decimal_resolution = DecimalResolution {
-            width: 1280,
-            height: 720,
-        };
         assert_eq!(
-            decimal_resolution,
+            DecimalResolution::new(1280, 720),
             "1280x720".parse::<DecimalResolution>().unwrap()
+        );
+
+        assert!("1280".parse::<DecimalResolution>().is_err());
+    }
+
+    #[test]
+    fn test_width() {
+        assert_eq!(DecimalResolution::new(1920, 1080).width(), 1920);
+        assert_eq!(DecimalResolution::new(1920, 1080).set_width(12).width(), 12);
+    }
+
+    #[test]
+    fn test_height() {
+        assert_eq!(DecimalResolution::new(1920, 1080).height(), 1080);
+        assert_eq!(
+            DecimalResolution::new(1920, 1080).set_height(12).height(),
+            12
         );
     }
 }

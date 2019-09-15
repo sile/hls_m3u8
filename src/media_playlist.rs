@@ -319,6 +319,7 @@ fn parse_media_playlist(
 
     let mut has_partial_segment = false;
     let mut has_discontinuity_tag = false;
+    let mut has_version = false; // m3u8 files without ExtXVersion tags are ProtocolVersion::V1
 
     for (i, line) in input.parse::<Lines>()?.into_iter().enumerate() {
         match line {
@@ -333,6 +334,7 @@ fn parse_media_playlist(
                     Tag::ExtM3u(_) => return Err(Error::invalid_input()),
                     Tag::ExtXVersion(t) => {
                         builder.version(t.version());
+                        has_version = true;
                     }
                     Tag::ExtInf(t) => {
                         has_partial_segment = true;
@@ -417,6 +419,9 @@ fn parse_media_playlist(
     if has_partial_segment {
         return Err(Error::invalid_input());
     }
+    if !has_version {
+        builder.version(ProtocolVersion::V1);
+    }
 
     builder.segments(segments);
     builder.build().map_err(Error::builder_error)
@@ -436,36 +441,37 @@ mod tests {
 
     #[test]
     fn too_large_segment_duration_test() {
-        let m3u8 = "#EXTM3U\n\
-                    #EXT-X-TARGETDURATION:8\n\
-                    #EXT-X-VERSION:3\n\
-                    #EXTINF:9.009,\n\
-                    http://media.example.com/first.ts\n\
-                    #EXTINF:9.509,\n\
-                    http://media.example.com/second.ts\n\
-                    #EXTINF:3.003,\n\
-                    http://media.example.com/third.ts\n\
-                    #EXT-X-ENDLIST";
+        let playlist = r#"
+        #EXTM3U
+        #EXT-X-TARGETDURATION:8
+        #EXT-X-VERSION:3
+        #EXTINF:9.009,
+        http://media.example.com/first.ts
+        #EXTINF:9.509,
+        http://media.example.com/second.ts
+        #EXTINF:3.003,
+        http://media.example.com/third.ts
+        #EXT-X-ENDLIST"#;
 
         // Error (allowable segment duration = target duration = 8)
-        assert!(m3u8.parse::<MediaPlaylist>().is_err());
+        assert!(playlist.parse::<MediaPlaylist>().is_err());
 
         // Error (allowable segment duration = 9)
         assert!(MediaPlaylist::builder()
             .allowable_excess_duration(Duration::from_secs(1))
-            .parse(m3u8)
+            .parse(playlist)
             .is_err());
 
         // Ok (allowable segment duration = 10)
         MediaPlaylist::builder()
             .allowable_excess_duration(Duration::from_secs(2))
-            .parse(m3u8)
+            .parse(playlist)
             .unwrap();
     }
 
     #[test]
-    fn test_parser() {
-        let m3u8 = "";
-        assert!(m3u8.parse::<MediaPlaylist>().is_err());
+    fn test_empty_playlist() {
+        let playlist = "";
+        assert!(playlist.parse::<MediaPlaylist>().is_err());
     }
 }
