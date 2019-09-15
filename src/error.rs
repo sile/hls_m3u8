@@ -9,6 +9,9 @@ pub type Result<T> = std::result::Result<T, Error>;
 /// The ErrorKind.
 #[derive(Debug, Fail, Clone, PartialEq, Eq)]
 pub enum ErrorKind {
+    #[fail(display = "ChronoParseError: {}", _0)]
+    /// An error from the [Chrono](chrono) crate.
+    ChronoParseError(String),
     #[fail(display = "UrlParseError: {}", _0)]
     /// An error from the [Url](url) crate.
     UrlParseError(String),
@@ -184,6 +187,10 @@ impl Error {
     pub(crate) fn url<T: ToString>(value: T) -> Self {
         Self::from(ErrorKind::UrlParseError(value.to_string()))
     }
+
+    pub(crate) fn chrono<T: ToString>(value: T) -> Self {
+        Self::from(ErrorKind::ChronoParseError(value.to_string()))
+    }
 }
 
 impl From<::std::num::ParseIntError> for Error {
@@ -207,5 +214,11 @@ impl From<::std::io::Error> for Error {
 impl From<::url::ParseError> for Error {
     fn from(value: ::url::ParseError) -> Self {
         Error::url(value)
+    }
+}
+
+impl From<::chrono::ParseError> for Error {
+    fn from(value: ::chrono::ParseError) -> Self {
+        Error::chrono(value)
     }
 }
