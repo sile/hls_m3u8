@@ -4,9 +4,21 @@ use std::str::FromStr;
 use getset::{Getters, MutGetters, Setters};
 
 use crate::attribute::AttributePairs;
-use crate::types::{ProtocolVersion, SessionData};
+use crate::types::ProtocolVersion;
 use crate::utils::{quote, tag, unquote};
 use crate::Error;
+
+/// Session data.
+///
+/// See: [4.3.4.4. EXT-X-SESSION-DATA]
+///
+/// [4.3.4.4. EXT-X-SESSION-DATA]: https://tools.ietf.org/html/rfc8216#section-4.3.4.4
+#[allow(missing_docs)]
+#[derive(Debug, Clone, PartialEq, Eq, Hash)]
+pub enum SessionData {
+    Value(String),
+    Uri(String),
+}
 
 /// [4.3.4.4. EXT-X-SESSION-DATA]
 ///

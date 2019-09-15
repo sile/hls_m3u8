@@ -51,8 +51,8 @@ impl FromStr for AttributePairs {
     fn from_str(input: &str) -> Result<Self, Self::Err> {
         let mut result = AttributePairs::new();
 
-        for line in split(input) {
-            let pair = line.trim().split("=").collect::<Vec<_>>();
+        for line in split(input, ',') {
+            let pair = split(line.trim(), '=');
 
             if pair.len() < 2 {
                 return Err(Error::invalid_input());
@@ -63,11 +63,13 @@ impl FromStr for AttributePairs {
 
             result.insert(key.to_string(), value.to_string());
         }
+
+        dbg!(&result);
         Ok(result)
     }
 }
 
-fn split(value: &str) -> Vec<String> {
+fn split(value: &str, terminator: char) -> Vec<String> {
     let mut result = vec![];
 
     let mut inside_quotes = false;
@@ -83,7 +85,7 @@ fn split(value: &str) -> Vec<String> {
                 }
                 temp_string.push(c);
             }
-            ',' => {
+            k if (k == terminator) => {
                 if !inside_quotes {
                     result.push(temp_string);
                     temp_string = String::new();

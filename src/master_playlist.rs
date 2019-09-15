@@ -109,8 +109,6 @@ impl MasterPlaylistBuilder {
             .map_err(|e| e.to_string())?;
         self.validate_session_data_tags()
             .map_err(|e| e.to_string())?;
-        self.validate_session_key_tags()
-            .map_err(|e| e.to_string())?;
 
         Ok(())
     }
@@ -225,18 +223,6 @@ impl MasterPlaylistBuilder {
         if let Some(value) = &self.session_data_tags {
             for t in value {
                 if !set.insert((t.data_id(), t.language())) {
-                    return Err(Error::custom(format!("Conflict: {}", t)));
-                }
-            }
-        }
-        Ok(())
-    }
-
-    fn validate_session_key_tags(&self) -> crate::Result<()> {
-        let mut set = HashSet::new();
-        if let Some(value) = &self.session_key_tags {
-            for t in value {
-                if !set.insert(t.key()) {
                     return Err(Error::custom(format!("Conflict: {}", t)));
                 }
             }
