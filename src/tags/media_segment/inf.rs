@@ -2,7 +2,7 @@ use std::fmt;
 use std::str::FromStr;
 use std::time::Duration;
 
-use crate::types::{DecimalFloatingPoint, ProtocolVersion, SingleLineString};
+use crate::types::{DecimalFloatingPoint, ProtocolVersion};
 use crate::utils::tag;
 use crate::Error;
 
@@ -35,11 +35,10 @@ use crate::Error;
 /// ```
 /// use std::time::Duration;
 /// use hls_m3u8::tags::ExtInf;
-/// use hls_m3u8::types::SingleLineString;
 ///
 /// let ext_inf = ExtInf::with_title(
 ///     Duration::from_millis(88),
-///     SingleLineString::new("title").unwrap()
+///     "title"
 /// );
 ///
 /// assert_eq!(ext_inf.duration(), Duration::from_millis(88));
@@ -48,7 +47,7 @@ use crate::Error;
 #[derive(Default, Debug, Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]
 pub struct ExtInf {
     duration: Duration,
-    title: Option<SingleLineString>,
+    title: Option<String>,
 }
 
 impl ExtInf {
@@ -63,10 +62,10 @@ impl ExtInf {
     }
 
     /// Makes a new `ExtInf` tag with the given title.
-    pub const fn with_title(duration: Duration, title: SingleLineString) -> Self {
+    pub fn with_title<T: ToString>(duration: Duration, title: T) -> Self {
         ExtInf {
             duration,
-            title: Some(title),
+            title: Some(title.to_string()),
         }
     }
 
@@ -76,7 +75,7 @@ impl ExtInf {
     }
 
     /// Returns the title of the associated media segment.
-    pub fn title(&self) -> Option<&SingleLineString> {
+    pub fn title(&self) -> Option<&String> {
         self.title.as_ref()
     }
 
@@ -127,7 +126,7 @@ impl FromStr for ExtInf {
                 if tokens[1].trim().is_empty() {
                     None
                 } else {
-                    Some(SingleLineString::new(tokens[1])?)
+                    Some(tokens[1].to_string())
                 }
             } else {
                 None
@@ -160,19 +159,11 @@ mod test {
         );
         assert_eq!(
             "#EXTINF:5.5,title".to_string(),
-            ExtInf::with_title(
-                Duration::from_millis(5500),
-                SingleLineString::new("title").unwrap()
-            )
-            .to_string()
+            ExtInf::with_title(Duration::from_millis(5500), "title").to_string()
         );
         assert_eq!(
             "#EXTINF:5,title".to_string(),
-            ExtInf::with_title(
-                Duration::from_secs(5),
-                SingleLineString::new("title").unwrap()
-            )
-            .to_string()
+            ExtInf::with_title(Duration::from_secs(5), "title").to_string()
         );
     }
 
@@ -197,17 +188,11 @@ mod test {
         );
         assert_eq!(
             "#EXTINF:5.5,title".parse::<ExtInf>().unwrap(),
-            ExtInf::with_title(
-                Duration::from_millis(5500),
-                SingleLineString::new("title").unwrap()
-            )
+            ExtInf::with_title(Duration::from_millis(5500), "title")
         );
         assert_eq!(
             "#EXTINF:5,title".parse::<ExtInf>().unwrap(),
-            ExtInf::with_title(
-                Duration::from_secs(5),
-                SingleLineString::new("title").unwrap()
-            )
+            ExtInf::with_title(Duration::from_secs(5), "title")
         );
     }
 
@@ -215,12 +200,8 @@ mod test {
     fn test_title() {
         assert_eq!(ExtInf::new(Duration::from_secs(5)).title(), None);
         assert_eq!(
-            ExtInf::with_title(
-                Duration::from_secs(5),
-                SingleLineString::new("title").unwrap()
-            )
-            .title(),
-            Some(&SingleLineString::new("title").unwrap())
+            ExtInf::with_title(Duration::from_secs(5), "title").title(),
+            Some(&"title".to_string())
         );
     }
 

@@ -1,7 +1,7 @@
 use std::fmt;
 use std::str::FromStr;
 
-use crate::types::{ProtocolVersion, SingleLineString};
+use crate::types::ProtocolVersion;
 use crate::utils::tag;
 use crate::Error;
 
@@ -9,21 +9,19 @@ use crate::Error;
 ///
 /// [4.3.2.6. EXT-X-PROGRAM-DATE-TIME]: https://tools.ietf.org/html/rfc8216#section-4.3.2.6
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
-pub struct ExtXProgramDateTime {
-    date_time: SingleLineString,
-}
+pub struct ExtXProgramDateTime(String);
 
 impl ExtXProgramDateTime {
     pub(crate) const PREFIX: &'static str = "#EXT-X-PROGRAM-DATE-TIME:";
 
     /// Makes a new `ExtXProgramDateTime` tag.
-    pub const fn new(date_time: SingleLineString) -> Self {
-        ExtXProgramDateTime { date_time }
+    pub fn new<T: ToString>(date_time: T) -> Self {
+        Self(date_time.to_string())
     }
 
     /// Returns the date-time of the first sample of the associated media segment.
-    pub const fn date_time(&self) -> &SingleLineString {
-        &self.date_time
+    pub const fn date_time(&self) -> &String {
+        &self.0
     }
 
     /// Returns the protocol compatibility version that this tag requires.
@@ -34,7 +32,7 @@ impl ExtXProgramDateTime {
 
 impl fmt::Display for ExtXProgramDateTime {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(f, "{}{}", Self::PREFIX, self.date_time)
+        write!(f, "{}{}", Self::PREFIX, self.0)
     }
 }
 
@@ -46,9 +44,7 @@ impl FromStr for ExtXProgramDateTime {
 
         // TODO: parse with chrono
 
-        Ok(ExtXProgramDateTime {
-            date_time: (SingleLineString::new(input))?,
-        })
+        Ok(Self::new(input))
     }
 }
 

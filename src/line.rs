@@ -3,7 +3,6 @@ use std::ops::{Deref, DerefMut};
 use std::str::FromStr;
 
 use crate::tags;
-use crate::types::SingleLineString;
 use crate::Error;
 
 #[derive(Debug, Default)]
@@ -54,7 +53,7 @@ impl FromStr for Lines {
                             continue;
                         }
                     } else {
-                        Line::Uri(SingleLineString::new(line)?)
+                        Line::Uri(line.trim().to_string())
                     }
                 }
             };
@@ -92,7 +91,7 @@ impl DerefMut for Lines {
 #[derive(Debug, PartialEq, Eq)]
 pub enum Line {
     Tag(Tag),
-    Uri(SingleLineString),
+    Uri(String),
 }
 
 #[allow(clippy::large_enum_variant)]
@@ -120,7 +119,7 @@ pub enum Tag {
     ExtXSessionKey(tags::ExtXSessionKey),
     ExtXIndependentSegments(tags::ExtXIndependentSegments),
     ExtXStart(tags::ExtXStart),
-    Unknown(SingleLineString),
+    Unknown(String),
 }
 
 impl fmt::Display for Tag {
@@ -202,7 +201,7 @@ impl FromStr for Tag {
         } else if s.starts_with(tags::ExtXStart::PREFIX) {
             s.parse().map(Tag::ExtXStart)
         } else {
-            SingleLineString::new(s).map(Tag::Unknown)
+            Ok(Tag::Unknown(s.to_string()))
         }
     }
 }

@@ -6,7 +6,7 @@ use derive_builder::Builder;
 use crate::tags::{
     ExtInf, ExtXByteRange, ExtXDateRange, ExtXDiscontinuity, ExtXKey, ExtXMap, ExtXProgramDateTime,
 };
-use crate::types::{ProtocolVersion, SingleLineString};
+use crate::types::ProtocolVersion;
 
 /// Media segment.
 #[derive(Debug, Clone, Builder)]
@@ -33,7 +33,7 @@ pub struct MediaSegment {
     /// Sets an [ExtInf] tag.
     inf_tag: ExtInf,
     /// Sets an Uri.
-    uri: SingleLineString,
+    uri: String,
 }
 
 impl MediaSegmentBuilder {
@@ -80,7 +80,7 @@ impl MediaSegment {
         MediaSegmentBuilder::default()
     }
     /// Returns the URI of the media segment.
-    pub const fn uri(&self) -> &SingleLineString {
+    pub const fn uri(&self) -> &String {
         &self.uri
     }
 

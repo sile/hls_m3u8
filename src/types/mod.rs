@@ -13,7 +13,6 @@ mod media_type;
 mod protocol_version;
 mod session_data;
 mod signed_decimal_floating_point;
-mod single_line_string;
 
 pub use byte_range::*;
 pub use closed_captions::*;
@@ -29,4 +28,3 @@ pub use media_type::*;
 pub use protocol_version::*;
 pub use session_data::*;
 pub use signed_decimal_floating_point::*;
-pub use single_line_string::*;

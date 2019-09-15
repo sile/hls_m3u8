@@ -37,11 +37,11 @@ fn test_simple_playlist() {
 
     assert_eq!(
         media_playlist.segments()[0].uri(),
-        &SingleLineString::new("http://media.example.com/entire1.ts").unwrap()
+        &"http://media.example.com/entire1.ts".to_string()
     );
 
     assert_eq!(
         media_playlist.segments()[1].uri(),
-        &SingleLineString::new("http://media.example.com/entire2.ts").unwrap()
+        &"http://media.example.com/entire2.ts".to_string()
     );
 }

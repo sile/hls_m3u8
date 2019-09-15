@@ -4,7 +4,6 @@ use std::str::FromStr;
 use crate::attribute::AttributePairs;
 use crate::types::{
     ClosedCaptions, DecimalFloatingPoint, DecimalResolution, HdcpLevel, ProtocolVersion,
-    SingleLineString,
 };
 use crate::utils::{parse_u64, quote, tag, unquote};
 use crate::Error;
@@ -14,7 +13,7 @@ use crate::Error;
 /// [4.3.4.2. EXT-X-STREAM-INF]: https://tools.ietf.org/html/rfc8216#section-4.3.4.2
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct ExtXStreamInf {
-    uri: SingleLineString,
+    uri: String,
     bandwidth: u64,
     average_bandwidth: Option<u64>,
     codecs: Option<String>,
@@ -33,7 +32,7 @@ impl ExtXStreamInf {
     /// Makes a new `ExtXStreamInf` tag.
     pub fn new<T: ToString>(uri: T, bandwidth: u64) -> Self {
         ExtXStreamInf {
-            uri: SingleLineString::new(uri.to_string()).unwrap(),
+            uri: uri.to_string(),
             bandwidth,
             average_bandwidth: None,
             codecs: None,
@@ -48,7 +47,7 @@ impl ExtXStreamInf {
     }
 
     /// Returns the URI that identifies the associated media playlist.
-    pub const fn uri(&self) -> &SingleLineString {
+    pub const fn uri(&self) -> &String {
         &self.uri
     }
 
@@ -155,11 +154,9 @@ impl FromStr for ExtXStreamInf {
     fn from_str(input: &str) -> Result<Self, Self::Err> {
         let mut lines = input.lines();
         let first_line = lines.next().ok_or(Error::missing_value("first_line"))?;
-        let second_line = lines.next().ok_or(Error::missing_value("second_line"))?;
+        let uri = lines.next().ok_or(Error::missing_value("second_line"))?;
 
         let first_line = tag(first_line, Self::PREFIX)?;
-
-        let uri = SingleLineString::new(second_line)?;
 
         let mut bandwidth = None;
         let mut average_bandwidth = None;
@@ -194,7 +191,7 @@ impl FromStr for ExtXStreamInf {
         let bandwidth = bandwidth.ok_or(Error::missing_value("EXT-X-BANDWIDTH"))?;
 
         Ok(ExtXStreamInf {
-            uri,
+            uri: uri.to_string(),
             bandwidth,
             average_bandwidth,
             codecs,
