@@ -18,7 +18,7 @@ mod single_line_string;
 pub use byte_range::*;
 pub use closed_captions::*;
 pub use decimal_floating_point::*;
-pub use decimal_resolution::*;
+pub(crate) use decimal_resolution::*;
 pub use decryption_key::*;
 pub use encryption_method::*;
 pub use hdcp_level::*;

@@ -13,22 +13,37 @@ use crate::Error;
 ///
 /// [4.3.4.3. EXT-X-I-FRAME-STREAM-INF]: https://tools.ietf.org/html/rfc8216#section-4.3.4.3
 #[derive(Getters, Setters, MutGetters, Debug, Clone, PartialEq, Eq, Hash)]
-#[get = "pub"]
-#[set = "pub"]
-#[get_mut = "pub"]
 pub struct ExtXIFrameStreamInf {
+    #[get = "pub"]
+    #[set = "pub"]
+    #[get_mut = "pub"]
     /// The URI, that identifies the associated media playlist.
     uri: String,
+    #[get = "pub"]
+    #[set = "pub"]
+    #[get_mut = "pub"]
     /// The peak segment bit rate of the variant stream.
     bandwidth: u64,
+    #[get = "pub"]
+    #[set = "pub"]
+    #[get_mut = "pub"]
     /// The average segment bit rate of the variant stream.
     average_bandwidth: Option<u64>,
+    #[get = "pub"]
+    #[set = "pub"]
+    #[get_mut = "pub"]
     /// A string that represents the list of codec types contained the variant stream.
     codecs: Option<String>,
     /// The optimal pixel resolution at which to display all the video in the variant stream.
     resolution: Option<DecimalResolution>,
+    #[get = "pub"]
+    #[set = "pub"]
+    #[get_mut = "pub"]
     /// The HDCP level of the variant stream.
     hdcp_level: Option<HdcpLevel>,
+    #[get = "pub"]
+    #[set = "pub"]
+    #[get_mut = "pub"]
     /// The group identifier for the video in the variant stream.
     video: Option<String>,
 }
@@ -49,6 +64,25 @@ impl ExtXIFrameStreamInf {
         }
     }
 
+    /// The optimal pixel resolution at which to display all the video in the variant stream.
+    pub fn resolution(&self) -> Option<(usize, usize)> {
+        if let Some(res) = &self.resolution {
+            Some((res.width(), res.height()))
+        } else {
+            None
+        }
+    }
+
+    /// Sets the optimal pixel resolution at which to display all the video in the variant stream.
+    pub fn set_resolution(&mut self, width: usize, height: usize) -> &mut Self {
+        if let Some(res) = &mut self.resolution {
+            res.set_width(width);
+            res.set_height(height);
+        } else {
+            self.resolution = Some(DecimalResolution::new(width, height));
+        }
+        self
+    }
     /// Returns the protocol compatibility version that this tag requires.
     pub const fn requires_version(&self) -> ProtocolVersion {
         ProtocolVersion::V1

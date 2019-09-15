@@ -67,9 +67,14 @@ impl ExtXStreamInf {
         self.codecs.as_ref()
     }
 
-    /// Returns the optimal pixel resolution at which to display all the video in the variant stream.
-    pub const fn resolution(&self) -> Option<DecimalResolution> {
-        self.resolution
+    /// Returns the optimal pixel resolution at which to display all the video in the variant
+    /// stream.
+    pub fn resolution(&self) -> Option<(usize, usize)> {
+        if let Some(res) = &self.resolution {
+            Some((res.width(), res.height()))
+        } else {
+            None
+        }
     }
 
     /// Returns the maximum frame rate for all the video in the variant stream.

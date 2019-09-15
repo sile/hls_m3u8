@@ -9,7 +9,7 @@ use crate::Error;
 ///
 /// [4.2. Attribute Lists]: https://tools.ietf.org/html/rfc8216#section-4.2
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct DecimalResolution {
+pub(crate) struct DecimalResolution {
     width: usize,
     height: usize,
 }
