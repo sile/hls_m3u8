@@ -1,7 +1,8 @@
+use std::fmt;
+use std::str::FromStr;
+
 use crate::utils::{quote, unquote};
 use crate::{Error, Result};
-use std::fmt;
-use std::str::{self, FromStr};
 
 /// The identifier of a closed captions group or its absence.
 ///

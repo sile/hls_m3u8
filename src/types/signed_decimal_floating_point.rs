@@ -1,5 +1,5 @@
 use std::fmt;
-use std::str::{self, FromStr};
+use std::str::FromStr;
 
 use crate::Error;
 
