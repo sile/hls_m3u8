@@ -2,6 +2,8 @@ use std::fmt;
 use std::ops::{Deref, DerefMut};
 use std::str::FromStr;
 
+use url::Url;
+
 use crate::tags;
 use crate::Error;
 
@@ -53,7 +55,7 @@ impl FromStr for Lines {
                             continue;
                         }
                     } else {
-                        Line::Uri(line.trim().to_string())
+                        Line::Uri(line.trim().parse()?)
                     }
                 }
             };
@@ -91,7 +93,7 @@ impl DerefMut for Lines {
 #[derive(Debug, PartialEq, Eq)]
 pub enum Line {
     Tag(Tag),
-    Uri(String),
+    Uri(Url),
 }
 
 #[allow(clippy::large_enum_variant)]

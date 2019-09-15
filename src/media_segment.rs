@@ -2,6 +2,7 @@ use std::fmt;
 use std::iter;
 
 use derive_builder::Builder;
+use url::Url;
 
 use crate::tags::{
     ExtInf, ExtXByteRange, ExtXDateRange, ExtXDiscontinuity, ExtXKey, ExtXMap, ExtXProgramDateTime,
@@ -33,7 +34,7 @@ pub struct MediaSegment {
     /// Sets an [ExtInf] tag.
     inf_tag: ExtInf,
     /// Sets an Uri.
-    uri: String,
+    uri: Url,
 }
 
 impl MediaSegmentBuilder {
@@ -80,7 +81,7 @@ impl MediaSegment {
         MediaSegmentBuilder::default()
     }
     /// Returns the URI of the media segment.
-    pub const fn uri(&self) -> &String {
+    pub const fn uri(&self) -> &Url {
         &self.uri
     }
 

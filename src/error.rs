@@ -9,6 +9,9 @@ pub type Result<T> = std::result::Result<T, Error>;
 /// The ErrorKind.
 #[derive(Debug, Fail, Clone, PartialEq, Eq)]
 pub enum ErrorKind {
+    #[fail(display = "UrlParseError: {}", _0)]
+    /// An error from the [Url](url) crate.
+    UrlParseError(String),
     #[fail(display = "UnknownError: {}", _0)]
     /// An unknown error occured.
     UnknownError(String),
@@ -177,6 +180,10 @@ impl Error {
     pub(crate) fn builder_error<T: ToString>(value: T) -> Self {
         Self::from(ErrorKind::BuilderError(value.to_string()))
     }
+
+    pub(crate) fn url<T: ToString>(value: T) -> Self {
+        Self::from(ErrorKind::UrlParseError(value.to_string()))
+    }
 }
 
 impl From<::std::num::ParseIntError> for Error {
@@ -194,5 +201,11 @@ impl From<::std::num::ParseFloatError> for Error {
 impl From<::std::io::Error> for Error {
     fn from(value: ::std::io::Error) -> Self {
         Error::io(value)
+    }
+}
+
+impl From<::url::ParseError> for Error {
+    fn from(value: ::url::ParseError) -> Self {
+        Error::url(value)
     }
 }

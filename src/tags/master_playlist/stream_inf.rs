@@ -1,6 +1,8 @@
 use std::fmt;
 use std::str::FromStr;
 
+use url::Url;
+
 use crate::attribute::AttributePairs;
 use crate::types::{
     ClosedCaptions, DecimalFloatingPoint, DecimalResolution, HdcpLevel, ProtocolVersion,
@@ -13,7 +15,7 @@ use crate::Error;
 /// [4.3.4.2. EXT-X-STREAM-INF]: https://tools.ietf.org/html/rfc8216#section-4.3.4.2
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct ExtXStreamInf {
-    uri: String,
+    uri: Url,
     bandwidth: u64,
     average_bandwidth: Option<u64>,
     codecs: Option<String>,
@@ -30,9 +32,9 @@ impl ExtXStreamInf {
     pub(crate) const PREFIX: &'static str = "#EXT-X-STREAM-INF:";
 
     /// Makes a new `ExtXStreamInf` tag.
-    pub fn new<T: ToString>(uri: T, bandwidth: u64) -> Self {
+    pub const fn new(uri: Url, bandwidth: u64) -> Self {
         ExtXStreamInf {
-            uri: uri.to_string(),
+            uri,
             bandwidth,
             average_bandwidth: None,
             codecs: None,
@@ -47,7 +49,7 @@ impl ExtXStreamInf {
     }
 
     /// Returns the URI that identifies the associated media playlist.
-    pub const fn uri(&self) -> &String {
+    pub const fn uri(&self) -> &Url {
         &self.uri
     }
 
@@ -191,7 +193,7 @@ impl FromStr for ExtXStreamInf {
         let bandwidth = bandwidth.ok_or(Error::missing_value("EXT-X-BANDWIDTH"))?;
 
         Ok(ExtXStreamInf {
-            uri: uri.to_string(),
+            uri: uri.parse()?,
             bandwidth,
             average_bandwidth,
             codecs,
@@ -212,26 +214,29 @@ mod test {
 
     #[test]
     fn test_parser() {
-        let stream_inf = "#EXT-X-STREAM-INF:BANDWIDTH=1000\nfoo"
+        let stream_inf = "#EXT-X-STREAM-INF:BANDWIDTH=1000\nhttp://www.example.com"
             .parse::<ExtXStreamInf>()
             .unwrap();
 
-        assert_eq!(stream_inf, ExtXStreamInf::new("foo", 1000));
+        assert_eq!(
+            stream_inf,
+            ExtXStreamInf::new("http://www.example.com".parse().unwrap(), 1000)
+        );
     }
 
     #[test]
     fn test_requires_version() {
         assert_eq!(
             ProtocolVersion::V1,
-            ExtXStreamInf::new("foo", 1000).requires_version()
+            ExtXStreamInf::new("http://www.example.com".parse().unwrap(), 1000).requires_version()
         );
     }
 
     #[test]
     fn test_display() {
         assert_eq!(
-            ExtXStreamInf::new("foo", 1000).to_string(),
-            "#EXT-X-STREAM-INF:BANDWIDTH=1000\nfoo".to_string()
+            ExtXStreamInf::new("http://www.example.com".parse().unwrap(), 1000).to_string(),
+            "#EXT-X-STREAM-INF:BANDWIDTH=1000\nhttp://www.example.com/".to_string()
         );
     }
 }

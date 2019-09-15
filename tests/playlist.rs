@@ -1,7 +1,6 @@
 //! Credits go to
 //! - https://github.com/globocom/m3u8/blob/master/tests/playlists.py
 use hls_m3u8::tags::*;
-use hls_m3u8::types::*;
 use hls_m3u8::MediaPlaylist;
 
 use std::time::Duration;
@@ -37,11 +36,11 @@ fn test_simple_playlist() {
 
     assert_eq!(
         media_playlist.segments()[0].uri(),
-        &"http://media.example.com/entire1.ts".to_string()
+        &"http://media.example.com/entire1.ts".parse().unwrap()
     );
 
     assert_eq!(
         media_playlist.segments()[1].uri(),
-        &"http://media.example.com/entire2.ts".to_string()
+        &"http://media.example.com/entire2.ts".parse().unwrap()
     );
 }
