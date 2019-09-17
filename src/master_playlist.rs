@@ -158,7 +158,7 @@ impl MasterPlaylistBuilder {
                     .flatten(),
             )
             .max()
-            .unwrap_or(ProtocolVersion::V7)
+            .unwrap_or(ProtocolVersion::latest())
     }
 
     fn validate_stream_inf_tags(&self) -> crate::Result<()> {

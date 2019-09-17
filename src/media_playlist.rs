@@ -200,7 +200,7 @@ impl MediaPlaylistBuilder {
                     .unwrap_or(ProtocolVersion::V1)
             }))
             .max()
-            .unwrap_or(ProtocolVersion::V1)
+            .unwrap_or(ProtocolVersion::latest())
     }
 
     /// Adds a media segment to the resulting playlist.

@@ -17,6 +17,14 @@ pub enum ProtocolVersion {
     V6,
     V7,
 }
+
+impl ProtocolVersion {
+    /// Returns the newest ProtocolVersion, that is supported by this library.
+    pub const fn latest() -> Self {
+        Self::V7
+    }
+}
+
 impl fmt::Display for ProtocolVersion {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         let n = {
@@ -33,6 +41,7 @@ impl fmt::Display for ProtocolVersion {
         write!(f, "{}", n)
     }
 }
+
 impl FromStr for ProtocolVersion {
     type Err = Error;
 

@@ -13,6 +13,7 @@ use crate::Error;
 pub struct InitializationVector(pub [u8; 16]);
 
 impl InitializationVector {
+    /// Converts the initialization vector to a slice.
     pub const fn to_slice(&self) -> [u8; 16] {
         self.0
     }
