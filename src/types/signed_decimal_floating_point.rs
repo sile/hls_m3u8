@@ -1,7 +1,7 @@
-use crate::{Error, ErrorKind, Result};
 use std::fmt;
-use std::str::{self, FromStr};
-use trackable::error::ErrorKindExt;
+use std::str::FromStr;
+
+use crate::Error;
 
 /// Signed decimal floating-point number.
 ///
@@ -9,7 +9,7 @@ use trackable::error::ErrorKindExt;
 ///
 /// [4.2. Attribute Lists]: https://tools.ietf.org/html/rfc8216#section-4.2
 #[derive(Debug, Clone, Copy, PartialEq, PartialOrd)]
-pub struct SignedDecimalFloatingPoint(f64);
+pub(crate) struct SignedDecimalFloatingPoint(f64);
 
 impl SignedDecimalFloatingPoint {
     /// Makes a new `SignedDecimalFloatingPoint` instance.
@@ -18,13 +18,16 @@ impl SignedDecimalFloatingPoint {
     ///
     /// The given value must be finite,
     /// otherwise this function will return an error that has the kind `ErrorKind::InvalidInput`.
-    pub fn new(n: f64) -> Result<Self> {
-        track_assert!(n.is_finite(), ErrorKind::InvalidInput);
-        Ok(SignedDecimalFloatingPoint(n))
+    pub fn new(n: f64) -> crate::Result<Self> {
+        if !n.is_finite() {
+            Err(Error::invalid_input())
+        } else {
+            Ok(SignedDecimalFloatingPoint(n))
+        }
     }
 
     /// Converts `DecimalFloatingPoint` to `f64`.
-    pub fn as_f64(self) -> f64 {
+    pub const fn as_f64(self) -> f64 {
         self.0
     }
 }
@@ -45,12 +48,8 @@ impl fmt::Display for SignedDecimalFloatingPoint {
 
 impl FromStr for SignedDecimalFloatingPoint {
     type Err = Error;
-    fn from_str(s: &str) -> Result<Self> {
-        track_assert!(
-            s.chars().all(|c| c.is_digit(10) || c == '.' || c == '-'),
-            ErrorKind::InvalidInput
-        );
-        let n = track!(s.parse().map_err(|e| ErrorKind::InvalidInput.cause(e)))?;
-        Ok(SignedDecimalFloatingPoint(n))
+
+    fn from_str(input: &str) -> Result<Self, Self::Err> {
+        SignedDecimalFloatingPoint::new(input.parse().map_err(Error::parse_float_error)?)
     }
 }

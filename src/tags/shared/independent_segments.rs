@@ -1,7 +1,9 @@
-use crate::types::ProtocolVersion;
-use crate::{Error, ErrorKind, Result};
 use std::fmt;
 use std::str::FromStr;
+
+use crate::types::ProtocolVersion;
+use crate::utils::tag;
+use crate::Error;
 
 /// [4.3.5.1. EXT-X-INDEPENDENT-SEGMENTS]
 ///
@@ -12,7 +14,7 @@ impl ExtXIndependentSegments {
     pub(crate) const PREFIX: &'static str = "#EXT-X-INDEPENDENT-SEGMENTS";
 
     /// Returns the protocol compatibility version that this tag requires.
-    pub fn requires_version(self) -> ProtocolVersion {
+    pub const fn requires_version(&self) -> ProtocolVersion {
         ProtocolVersion::V1
     }
 }
@@ -25,8 +27,9 @@ impl fmt::Display for ExtXIndependentSegments {
 
 impl FromStr for ExtXIndependentSegments {
     type Err = Error;
-    fn from_str(s: &str) -> Result<Self> {
-        track_assert_eq!(s, Self::PREFIX, ErrorKind::InvalidInput);
+
+    fn from_str(input: &str) -> Result<Self, Self::Err> {
+        tag(input, Self::PREFIX)?;
         Ok(ExtXIndependentSegments)
     }
 }

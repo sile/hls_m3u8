@@ -2,12 +2,6 @@
 //!
 //! [4.3. Playlist Tags]: https://tools.ietf.org/html/rfc8216#section-4.3
 
-macro_rules! may_invalid {
-    ($expr:expr) => {
-        $expr.map_err(|e| track!(Error::from(ErrorKind::InvalidInput.cause(e))))
-    };
-}
-
 macro_rules! impl_from {
     ($to:ident, $from:ident) => {
         impl From<$from> for $to {

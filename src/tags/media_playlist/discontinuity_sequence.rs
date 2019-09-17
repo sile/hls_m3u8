@@ -1,8 +1,8 @@
-use crate::types::ProtocolVersion;
-use crate::{Error, ErrorKind, Result};
 use std::fmt;
 use std::str::FromStr;
-use trackable::error::ErrorKindExt;
+
+use crate::types::ProtocolVersion;
+use crate::utils::tag;
 
 /// [4.3.3.3. EXT-X-DISCONTINUITY-SEQUENCE]
 ///
@@ -16,18 +16,18 @@ impl ExtXDiscontinuitySequence {
     pub(crate) const PREFIX: &'static str = "#EXT-X-DISCONTINUITY-SEQUENCE:";
 
     /// Makes a new `ExtXDiscontinuitySequence` tag.
-    pub fn new(seq_num: u64) -> Self {
+    pub const fn new(seq_num: u64) -> Self {
         ExtXDiscontinuitySequence { seq_num }
     }
 
     /// Returns the discontinuity sequence number of
     /// the first media segment that appears in the associated playlist.
-    pub fn seq_num(self) -> u64 {
+    pub const fn seq_num(self) -> u64 {
         self.seq_num
     }
 
     /// Returns the protocol compatibility version that this tag requires.
-    pub fn requires_version(self) -> ProtocolVersion {
+    pub const fn requires_version(self) -> ProtocolVersion {
         ProtocolVersion::V1
     }
 }
@@ -39,11 +39,11 @@ impl fmt::Display for ExtXDiscontinuitySequence {
 }
 
 impl FromStr for ExtXDiscontinuitySequence {
-    type Err = Error;
-    fn from_str(s: &str) -> Result<Self> {
-        track_assert!(s.starts_with(Self::PREFIX), ErrorKind::InvalidInput);
-        let seq_num = may_invalid!(s.split_at(Self::PREFIX.len()).1.parse())?;
-        Ok(ExtXDiscontinuitySequence { seq_num })
+    type Err = crate::Error;
+
+    fn from_str(input: &str) -> Result<Self, Self::Err> {
+        let seq_num = tag(input, Self::PREFIX)?.parse().unwrap(); // TODO!
+        Ok(Self::new(seq_num))
     }
 }
 

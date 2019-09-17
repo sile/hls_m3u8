@@ -9,13 +9,18 @@ readme = "README.md"
 license = "MIT OR Apache-2.0"
 keywords = ["hls", "m3u8"]
 edition = "2018"
+categories = ["parser"]
 
 [badges]
 travis-ci = {repository = "sile/hls_m3u8"}
 codecov = {repository = "sile/hls_m3u8"}
 
 [dependencies]
-trackable = "0.2"
+getset = "0.0.8"
+failure = "0.1.5"
+derive_builder = "0.7.2"
+url = "2.1.0"
+chrono = "0.4.9"
 
 [dev-dependencies]
 clap = "2"

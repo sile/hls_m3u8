@@ -1,15 +1,17 @@
-use crate::attribute::AttributePairs;
-use crate::types::{ByteRange, ProtocolVersion, QuotedString};
-use crate::{Error, ErrorKind, Result};
 use std::fmt;
 use std::str::FromStr;
+
+use crate::attribute::AttributePairs;
+use crate::types::{ByteRange, ProtocolVersion};
+use crate::utils::{quote, tag, unquote};
+use crate::Error;
 
 /// [4.3.2.5. EXT-X-MAP]
 ///
 /// [4.3.2.5. EXT-X-MAP]: https://tools.ietf.org/html/rfc8216#section-4.3.2.5
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub struct ExtXMap {
-    uri: QuotedString,
+    uri: String,
     range: Option<ByteRange>,
 }
 
@@ -17,30 +19,33 @@ impl ExtXMap {
     pub(crate) const PREFIX: &'static str = "#EXT-X-MAP:";
 
     /// Makes a new `ExtXMap` tag.
-    pub fn new(uri: QuotedString) -> Self {
-        ExtXMap { uri, range: None }
+    pub fn new<T: ToString>(uri: T) -> Self {
+        ExtXMap {
+            uri: uri.to_string(),
+            range: None,
+        }
     }
 
     /// Makes a new `ExtXMap` tag with the given range.
-    pub fn with_range(uri: QuotedString, range: ByteRange) -> Self {
+    pub fn with_range<T: ToString>(uri: T, range: ByteRange) -> Self {
         ExtXMap {
-            uri,
+            uri: uri.to_string(),
             range: Some(range),
         }
     }
 
     /// Returns the URI that identifies a resource that contains the media initialization section.
-    pub fn uri(&self) -> &QuotedString {
+    pub const fn uri(&self) -> &String {
         &self.uri
     }
 
     /// Returns the range of the media initialization section.
-    pub fn range(&self) -> Option<ByteRange> {
+    pub const fn range(&self) -> Option<ByteRange> {
         self.range
     }
 
     /// Returns the protocol compatibility version that this tag requires.
-    pub fn requires_version(&self) -> ProtocolVersion {
+    pub const fn requires_version(&self) -> ProtocolVersion {
         ProtocolVersion::V6
     }
 }
@@ -48,9 +53,9 @@ impl ExtXMap {
 impl fmt::Display for ExtXMap {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         write!(f, "{}", Self::PREFIX)?;
-        write!(f, "URI={}", self.uri)?;
-        if let Some(ref x) = self.range {
-            write!(f, ",BYTERANGE=\"{}\"", x)?;
+        write!(f, "URI={}", quote(&self.uri))?;
+        if let Some(value) = &self.range {
+            write!(f, ",BYTERANGE={}", quote(value))?;
         }
         Ok(())
     }
@@ -58,19 +63,18 @@ impl fmt::Display for ExtXMap {
 
 impl FromStr for ExtXMap {
     type Err = Error;
-    fn from_str(s: &str) -> Result<Self> {
-        track_assert!(s.starts_with(Self::PREFIX), ErrorKind::InvalidInput);
+
+    fn from_str(input: &str) -> Result<Self, Self::Err> {
+        let input = tag(input, Self::PREFIX)?;
 
         let mut uri = None;
         let mut range = None;
-        let attrs = AttributePairs::parse(s.split_at(Self::PREFIX.len()).1);
-        for attr in attrs {
-            let (key, value) = track!(attr)?;
-            match key {
-                "URI" => uri = Some(track!(value.parse())?),
+
+        for (key, value) in input.parse::<AttributePairs>()? {
+            match key.as_str() {
+                "URI" => uri = Some(unquote(value)),
                 "BYTERANGE" => {
-                    let s: QuotedString = track!(value.parse())?;
-                    range = Some(track!(s.parse())?);
+                    range = Some((unquote(value).parse())?);
                 }
                 _ => {
                     // [6.3.1. General Client Responsibilities]
@@ -79,7 +83,7 @@ impl FromStr for ExtXMap {
             }
         }
 
-        let uri = track_assert_some!(uri, ErrorKind::InvalidInput);
+        let uri = uri.ok_or(Error::missing_value("EXT-X-URI"))?;
         Ok(ExtXMap { uri, range })
     }
 }
@@ -90,21 +94,16 @@ mod test {
 
     #[test]
     fn ext_x_map() {
-        let tag = ExtXMap::new(QuotedString::new("foo").unwrap());
+        let tag = ExtXMap::new("foo");
         let text = r#"#EXT-X-MAP:URI="foo""#;
         assert_eq!(text.parse().ok(), Some(tag.clone()));
         assert_eq!(tag.to_string(), text);
         assert_eq!(tag.requires_version(), ProtocolVersion::V6);
 
-        let tag = ExtXMap::with_range(
-            QuotedString::new("foo").unwrap(),
-            ByteRange {
-                length: 9,
-                start: Some(2),
-            },
-        );
+        let tag = ExtXMap::with_range("foo", ByteRange::new(9, Some(2)));
         let text = r#"#EXT-X-MAP:URI="foo",BYTERANGE="9@2""#;
-        track_try_unwrap!(ExtXMap::from_str(text));
+        ExtXMap::from_str(text).unwrap();
+
         assert_eq!(text.parse().ok(), Some(tag.clone()));
         assert_eq!(tag.to_string(), text);
         assert_eq!(tag.requires_version(), ProtocolVersion::V6);

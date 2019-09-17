@@ -1,6 +1,7 @@
-use crate::{Error, ErrorKind, Result};
 use std::fmt;
-use std::str::{self, FromStr};
+use std::str::FromStr;
+
+use crate::Error;
 
 /// HDCP level.
 ///
@@ -16,7 +17,7 @@ pub enum HdcpLevel {
 
 impl fmt::Display for HdcpLevel {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        match *self {
+        match &self {
             HdcpLevel::Type0 => "TYPE-0".fmt(f),
             HdcpLevel::None => "NONE".fmt(f),
         }
@@ -25,11 +26,12 @@ impl fmt::Display for HdcpLevel {
 
 impl FromStr for HdcpLevel {
     type Err = Error;
-    fn from_str(s: &str) -> Result<Self> {
-        match s {
+
+    fn from_str(input: &str) -> Result<Self, Self::Err> {
+        match input {
             "TYPE-0" => Ok(HdcpLevel::Type0),
             "NONE" => Ok(HdcpLevel::None),
-            _ => track_panic!(ErrorKind::InvalidInput, "Unknown HDCP level: {:?}", s),
+            _ => Err(Error::custom(format!("Unknown HDCP level: {:?}", input))),
         }
     }
 }

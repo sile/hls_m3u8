@@ -1,24 +1,60 @@
-use crate::types::{DecimalFloatingPoint, ProtocolVersion, SingleLineString};
-use crate::{Error, ErrorKind, Result};
 use std::fmt;
 use std::str::FromStr;
 use std::time::Duration;
-use trackable::error::ErrorKindExt;
 
-/// [4.3.2.1. EXTINF]
+use crate::types::{DecimalFloatingPoint, ProtocolVersion};
+use crate::utils::tag;
+use crate::Error;
+
+/// [4.3.2.1. EXTINF](https://tools.ietf.org/html/rfc8216#section-4.3.2.1)
 ///
-/// [4.3.2.1. EXTINF]: https://tools.ietf.org/html/rfc8216#section-4.3.2.1
-#[derive(Debug, Clone, PartialEq, Eq, Hash)]
+/// The [ExtInf] tag specifies the duration of a [Media Segment].  It applies
+/// only to the next [Media Segment]. This tag is REQUIRED for each [Media Segment].
+///
+/// Its format is:
+/// ```text
+/// #EXTINF:<duration>,[<title>]
+/// ```
+/// The title is an optional informative title about the [Media Segment].
+///
+/// [Media Segment]: crate::media_segment::MediaSegment
+///
+/// # Examples
+/// Parsing from a String:
+/// ```
+/// use std::time::Duration;
+/// use hls_m3u8::tags::ExtInf;
+///
+/// let ext_inf = "#EXTINF:8,".parse::<ExtInf>().expect("Failed to parse tag!");
+///
+/// assert_eq!(ext_inf.duration(), Duration::from_secs(8));
+/// assert_eq!(ext_inf.title(), None);
+/// ```
+///
+/// Converting to a String:
+/// ```
+/// use std::time::Duration;
+/// use hls_m3u8::tags::ExtInf;
+///
+/// let ext_inf = ExtInf::with_title(
+///     Duration::from_millis(88),
+///     "title"
+/// );
+///
+/// assert_eq!(ext_inf.duration(), Duration::from_millis(88));
+/// assert_eq!(ext_inf.to_string(), "#EXTINF:0.088,title".to_string());
+/// ```
+#[derive(Default, Debug, Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]
 pub struct ExtInf {
     duration: Duration,
-    title: Option<SingleLineString>,
+    title: Option<String>,
 }
 
 impl ExtInf {
     pub(crate) const PREFIX: &'static str = "#EXTINF:";
 
     /// Makes a new `ExtInf` tag.
-    pub fn new(duration: Duration) -> Self {
+    pub const fn new(duration: Duration) -> Self {
         ExtInf {
             duration,
             title: None,
@@ -26,20 +62,20 @@ impl ExtInf {
     }
 
     /// Makes a new `ExtInf` tag with the given title.
-    pub fn with_title(duration: Duration, title: SingleLineString) -> Self {
+    pub fn with_title<T: ToString>(duration: Duration, title: T) -> Self {
         ExtInf {
             duration,
-            title: Some(title),
+            title: Some(title.to_string()),
         }
     }
 
     /// Returns the duration of the associated media segment.
-    pub fn duration(&self) -> Duration {
+    pub const fn duration(&self) -> Duration {
         self.duration
     }
 
     /// Returns the title of the associated media segment.
-    pub fn title(&self) -> Option<&SingleLineString> {
+    pub fn title(&self) -> Option<&String> {
         self.title.as_ref()
     }
 
@@ -59,10 +95,10 @@ impl fmt::Display for ExtInf {
 
         let duration = (self.duration.as_secs() as f64)
             + (f64::from(self.duration.subsec_nanos()) / 1_000_000_000.0);
-        write!(f, "{}", duration)?;
+        write!(f, "{},", duration)?;
 
-        if let Some(ref title) = self.title {
-            write!(f, ",{}", title)?;
+        if let Some(value) = &self.title {
+            write!(f, "{}", value)?;
         }
         Ok(())
     }
@@ -70,20 +106,40 @@ impl fmt::Display for ExtInf {
 
 impl FromStr for ExtInf {
     type Err = Error;
-    fn from_str(s: &str) -> Result<Self> {
-        track_assert!(s.starts_with(Self::PREFIX), ErrorKind::InvalidInput);
-        let mut tokens = s.split_at(Self::PREFIX.len()).1.splitn(2, ',');
 
-        let seconds: DecimalFloatingPoint =
-            may_invalid!(tokens.next().expect("Never fails").parse())?;
-        let duration = seconds.to_duration();
+    fn from_str(input: &str) -> Result<Self, Self::Err> {
+        let input = tag(input, Self::PREFIX)?;
+        dbg!(&input);
+        let tokens = input.splitn(2, ',').collect::<Vec<_>>();
 
-        let title = if let Some(title) = tokens.next() {
-            Some(track!(SingleLineString::new(title))?)
-        } else {
-            None
+        if tokens.len() == 0 {
+            return Err(Error::custom(format!(
+                "failed to parse #EXTINF tag, couldn't split input: {:?}",
+                input
+            )));
+        }
+
+        let duration = tokens[0].parse::<DecimalFloatingPoint>()?.to_duration();
+
+        let title = {
+            if tokens.len() >= 2 {
+                if tokens[1].trim().is_empty() {
+                    None
+                } else {
+                    Some(tokens[1].to_string())
+                }
+            } else {
+                None
+            }
         };
+
         Ok(ExtInf { duration, title })
+    }
+}
+
+impl From<Duration> for ExtInf {
+    fn from(value: Duration) -> Self {
+        Self::new(value)
     }
 }
 
@@ -92,23 +148,72 @@ mod test {
     use super::*;
 
     #[test]
-    fn extinf() {
-        let tag = ExtInf::new(Duration::from_secs(5));
-        assert_eq!("#EXTINF:5".parse().ok(), Some(tag.clone()));
-        assert_eq!(tag.to_string(), "#EXTINF:5");
-        assert_eq!(tag.requires_version(), ProtocolVersion::V1);
-
-        let tag = ExtInf::with_title(
-            Duration::from_secs(5),
-            SingleLineString::new("foo").unwrap(),
+    fn test_display() {
+        assert_eq!(
+            "#EXTINF:5,".to_string(),
+            ExtInf::new(Duration::from_secs(5)).to_string()
         );
-        assert_eq!("#EXTINF:5,foo".parse().ok(), Some(tag.clone()));
-        assert_eq!(tag.to_string(), "#EXTINF:5,foo");
-        assert_eq!(tag.requires_version(), ProtocolVersion::V1);
+        assert_eq!(
+            "#EXTINF:5.5,".to_string(),
+            ExtInf::new(Duration::from_millis(5500)).to_string()
+        );
+        assert_eq!(
+            "#EXTINF:5.5,title".to_string(),
+            ExtInf::with_title(Duration::from_millis(5500), "title").to_string()
+        );
+        assert_eq!(
+            "#EXTINF:5,title".to_string(),
+            ExtInf::with_title(Duration::from_secs(5), "title").to_string()
+        );
+    }
 
-        let tag = ExtInf::new(Duration::from_millis(1234));
-        assert_eq!("#EXTINF:1.234".parse().ok(), Some(tag.clone()));
-        assert_eq!(tag.to_string(), "#EXTINF:1.234");
-        assert_eq!(tag.requires_version(), ProtocolVersion::V3);
+    #[test]
+    fn test_parser() {
+        // #EXTINF:<duration>,[<title>]
+        assert_eq!(
+            "#EXTINF:5".parse::<ExtInf>().unwrap(),
+            ExtInf::new(Duration::from_secs(5))
+        );
+        assert_eq!(
+            "#EXTINF:5,".parse::<ExtInf>().unwrap(),
+            ExtInf::new(Duration::from_secs(5))
+        );
+        assert_eq!(
+            "#EXTINF:5.5".parse::<ExtInf>().unwrap(),
+            ExtInf::new(Duration::from_millis(5500))
+        );
+        assert_eq!(
+            "#EXTINF:5.5,".parse::<ExtInf>().unwrap(),
+            ExtInf::new(Duration::from_millis(5500))
+        );
+        assert_eq!(
+            "#EXTINF:5.5,title".parse::<ExtInf>().unwrap(),
+            ExtInf::with_title(Duration::from_millis(5500), "title")
+        );
+        assert_eq!(
+            "#EXTINF:5,title".parse::<ExtInf>().unwrap(),
+            ExtInf::with_title(Duration::from_secs(5), "title")
+        );
+    }
+
+    #[test]
+    fn test_title() {
+        assert_eq!(ExtInf::new(Duration::from_secs(5)).title(), None);
+        assert_eq!(
+            ExtInf::with_title(Duration::from_secs(5), "title").title(),
+            Some(&"title".to_string())
+        );
+    }
+
+    #[test]
+    fn test_requires_version() {
+        assert_eq!(
+            ExtInf::new(Duration::from_secs(4)).requires_version(),
+            ProtocolVersion::V1
+        );
+        assert_eq!(
+            ExtInf::new(Duration::from_millis(4400)).requires_version(),
+            ProtocolVersion::V3
+        );
     }
 }

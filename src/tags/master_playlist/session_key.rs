@@ -1,75 +1,148 @@
-use crate::types::{DecryptionKey, ProtocolVersion};
-use crate::{Error, ErrorKind, Result};
 use std::fmt;
+use std::ops::{Deref, DerefMut};
 use std::str::FromStr;
+
+use url::Url;
+
+use crate::types::{DecryptionKey, EncryptionMethod, ProtocolVersion};
+use crate::utils::tag;
+use crate::Error;
 
 /// [4.3.4.5. EXT-X-SESSION-KEY]
 ///
 /// [4.3.4.5. EXT-X-SESSION-KEY]: https://tools.ietf.org/html/rfc8216#section-4.3.4.5
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
-pub struct ExtXSessionKey {
-    key: DecryptionKey,
-}
+pub struct ExtXSessionKey(DecryptionKey);
 
 impl ExtXSessionKey {
     pub(crate) const PREFIX: &'static str = "#EXT-X-SESSION-KEY:";
 
-    /// Makes a new `ExtXSessionKey` tag.
-    pub fn new(key: DecryptionKey) -> Self {
-        ExtXSessionKey { key }
-    }
+    /// Makes a new [ExtXSessionKey] tag.
+    /// # Panic
+    /// This method will panic, if the [EncryptionMethod] is None.
+    pub fn new(method: EncryptionMethod, uri: Url) -> Self {
+        if method == EncryptionMethod::None {
+            panic!("The EncryptionMethod is not allowed to be None");
+        }
 
-    /// Returns a decryption key for the playlist.
-    pub fn key(&self) -> &DecryptionKey {
-        &self.key
+        Self(DecryptionKey::new(method, uri))
     }
 
     /// Returns the protocol compatibility version that this tag requires.
+    /// # Example
+    /// ```
+    /// use hls_m3u8::tags::ExtXSessionKey;
+    /// use hls_m3u8::types::{EncryptionMethod, ProtocolVersion};
+    ///
+    /// let mut key = ExtXSessionKey::new(
+    ///     EncryptionMethod::Aes128,
+    ///     "https://www.example.com".parse().unwrap()
+    /// );
+    ///
+    /// assert_eq!(
+    ///     key.requires_version(),
+    ///     ProtocolVersion::V1
+    /// );
+    /// ```
     pub fn requires_version(&self) -> ProtocolVersion {
-        self.key.requires_version()
+        if self.0.key_format.is_some() | self.0.key_format_versions.is_some() {
+            ProtocolVersion::V5
+        } else if self.0.iv.is_some() {
+            ProtocolVersion::V2
+        } else {
+            ProtocolVersion::V1
+        }
     }
 }
 
 impl fmt::Display for ExtXSessionKey {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(f, "{}{}", Self::PREFIX, self.key)
+        write!(f, "{}{}", Self::PREFIX, self.0)
     }
 }
 
 impl FromStr for ExtXSessionKey {
     type Err = Error;
-    fn from_str(s: &str) -> Result<Self> {
-        track_assert!(s.starts_with(Self::PREFIX), ErrorKind::InvalidInput);
-        let suffix = s.split_at(Self::PREFIX.len()).1;
-        let key = track!(suffix.parse())?;
-        Ok(ExtXSessionKey { key })
+
+    fn from_str(input: &str) -> Result<Self, Self::Err> {
+        let input = tag(input, Self::PREFIX)?;
+        Ok(Self(input.parse()?))
+    }
+}
+
+impl Deref for ExtXSessionKey {
+    type Target = DecryptionKey;
+
+    fn deref(&self) -> &Self::Target {
+        &self.0
+    }
+}
+
+impl DerefMut for ExtXSessionKey {
+    fn deref_mut(&mut self) -> &mut Self::Target {
+        &mut self.0
     }
 }
 
 #[cfg(test)]
 mod test {
     use super::*;
-    use crate::types::{EncryptionMethod, InitializationVector, QuotedString};
+    use crate::types::EncryptionMethod;
 
     #[test]
-    fn ext_x_session_key() {
-        let tag = ExtXSessionKey::new(DecryptionKey {
-            method: EncryptionMethod::Aes128,
-            uri: quoted_string("foo"),
-            iv: Some(InitializationVector([
-                0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15,
-            ])),
-            key_format: None,
-            key_format_versions: None,
-        });
-        let text =
-            r#"#EXT-X-SESSION-KEY:METHOD=AES-128,URI="foo",IV=0x000102030405060708090a0b0c0d0e0f"#;
-        assert_eq!(text.parse().ok(), Some(tag.clone()));
-        assert_eq!(tag.to_string(), text);
-        assert_eq!(tag.requires_version(), ProtocolVersion::V2);
+    fn test_display() {
+        let mut key = ExtXSessionKey::new(
+            EncryptionMethod::Aes128,
+            "https://www.example.com/hls-key/key.bin".parse().unwrap(),
+        );
+        key.set_iv([
+            16, 239, 143, 117, 140, 165, 85, 17, 85, 132, 187, 91, 60, 104, 127, 82,
+        ]);
+
+        assert_eq!(
+            key.to_string(),
+            "#EXT-X-SESSION-KEY:METHOD=AES-128,\
+             URI=\"https://www.example.com/hls-key/key.bin\",\
+             IV=0x10ef8f758ca555115584bb5b3c687f52"
+                .to_string()
+        );
     }
 
-    fn quoted_string(s: &str) -> QuotedString {
-        QuotedString::new(s).unwrap()
+    #[test]
+    fn test_parser() {
+        assert_eq!(
+            r#"#EXT-X-SESSION-KEY:METHOD=AES-128,URI="https://priv.example.com/key.php?r=52""#
+                .parse::<ExtXSessionKey>()
+                .unwrap(),
+            ExtXSessionKey::new(
+                EncryptionMethod::Aes128,
+                "https://priv.example.com/key.php?r=52".parse().unwrap()
+            )
+        );
+
+        let mut key = ExtXSessionKey::new(
+            EncryptionMethod::Aes128,
+            "https://www.example.com/hls-key/key.bin".parse().unwrap(),
+        );
+        key.set_iv([
+            16, 239, 143, 117, 140, 165, 85, 17, 85, 132, 187, 91, 60, 104, 127, 82,
+        ]);
+
+        assert_eq!(
+            "#EXT-X-SESSION-KEY:METHOD=AES-128,\
+             URI=\"https://www.example.com/hls-key/key.bin\",\
+             IV=0X10ef8f758ca555115584bb5b3c687f52"
+                .parse::<ExtXSessionKey>()
+                .unwrap(),
+            key
+        );
+
+        key.set_key_format("baz");
+
+        assert_eq!(
+            r#"#EXT-X-SESSION-KEY:METHOD=AES-128,URI="https://www.example.com/hls-key/key.bin",IV=0x10ef8f758ca555115584bb5b3c687f52,KEYFORMAT="baz""#
+            .parse::<ExtXSessionKey>().unwrap(),
+            key
+        )
     }
 }

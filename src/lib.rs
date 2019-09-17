@@ -1,3 +1,9 @@
+#![warn(
+    //clippy::pedantic,
+    clippy::nursery,
+    clippy::cargo
+)]
+#![warn(missing_docs)]
 //! [HLS] m3u8 parser/generator.
 //!
 //! [HLS]: https://tools.ietf.org/html/rfc8216
@@ -20,13 +26,10 @@
 //!
 //! assert!(m3u8.parse::<MediaPlaylist>().is_ok());
 //! ```
-#![warn(missing_docs)]
-#[macro_use]
-extern crate trackable;
 
 pub use error::{Error, ErrorKind};
 pub use master_playlist::{MasterPlaylist, MasterPlaylistBuilder};
-pub use media_playlist::{MediaPlaylist, MediaPlaylistBuilder, MediaPlaylistOptions};
+pub use media_playlist::{MediaPlaylist, MediaPlaylistBuilder};
 pub use media_segment::{MediaSegment, MediaSegmentBuilder};
 
 pub mod tags;
@@ -40,5 +43,4 @@ mod media_playlist;
 mod media_segment;
 mod utils;
 
-/// This crate specific `Result` type.
-pub type Result<T> = std::result::Result<T, Error>;
+pub use error::Result;

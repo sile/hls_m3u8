@@ -1,9 +1,10 @@
-use crate::attribute::AttributePairs;
-use crate::types::{ProtocolVersion, SignedDecimalFloatingPoint};
-use crate::utils::parse_yes_or_no;
-use crate::{Error, ErrorKind, Result};
 use std::fmt;
 use std::str::FromStr;
+
+use crate::attribute::AttributePairs;
+use crate::types::{ProtocolVersion, SignedDecimalFloatingPoint};
+use crate::utils::{parse_yes_or_no, tag};
+use crate::Error;
 
 /// [4.3.5.2. EXT-X-START]
 ///
@@ -18,34 +19,46 @@ impl ExtXStart {
     pub(crate) const PREFIX: &'static str = "#EXT-X-START:";
 
     /// Makes a new `ExtXStart` tag.
-    pub fn new(time_offset: SignedDecimalFloatingPoint) -> Self {
+    /// # Panic
+    /// Panics if the time_offset value is infinite.
+    pub fn new(time_offset: f64) -> Self {
+        if time_offset.is_infinite() {
+            panic!("EXT-X-START: Floating point value must be finite!");
+        }
+
         ExtXStart {
-            time_offset,
+            time_offset: SignedDecimalFloatingPoint::new(time_offset).unwrap(),
             precise: false,
         }
     }
 
     /// Makes a new `ExtXStart` tag with the given `precise` flag.
-    pub fn with_precise(time_offset: SignedDecimalFloatingPoint, precise: bool) -> Self {
+    /// # Panic
+    /// Panics if the time_offset value is infinite.
+    pub fn with_precise(time_offset: f64, precise: bool) -> Self {
+        if time_offset.is_infinite() {
+            panic!("EXT-X-START: Floating point value must be finite!");
+        }
+
         ExtXStart {
-            time_offset,
+            time_offset: SignedDecimalFloatingPoint::new(time_offset).unwrap(),
             precise,
         }
     }
 
     /// Returns the time offset of the media segments in the playlist.
-    pub fn time_offset(&self) -> SignedDecimalFloatingPoint {
-        self.time_offset
+    pub const fn time_offset(&self) -> f64 {
+        self.time_offset.as_f64()
     }
 
     /// Returns whether clients should not render media stream whose presentation times are
     /// prior to the specified time offset.
-    pub fn precise(&self) -> bool {
+    pub const fn precise(&self) -> bool {
         self.precise
     }
 
     /// Returns the protocol compatibility version that this tag requires.
-    pub fn requires_version(&self) -> ProtocolVersion {
+    pub const fn requires_version(&self) -> ProtocolVersion {
         ProtocolVersion::V1
     }
 }
@@ -63,17 +76,17 @@ impl fmt::Display for ExtXStart {
 
 impl FromStr for ExtXStart {
     type Err = Error;
-    fn from_str(s: &str) -> Result<Self> {
-        track_assert!(s.starts_with(Self::PREFIX), ErrorKind::InvalidInput);
+
+    fn from_str(input: &str) -> Result<Self, Self::Err> {
+        let input = tag(input, Self::PREFIX)?;
 
         let mut time_offset = None;
         let mut precise = false;
-        let attrs = AttributePairs::parse(s.split_at(Self::PREFIX.len()).1);
-        for attr in attrs {
-            let (key, value) = track!(attr)?;
-            match key {
-                "TIME-OFFSET" => time_offset = Some(track!(value.parse())?),
-                "PRECISE" => precise = track!(parse_yes_or_no(value))?,
+
+        for (key, value) in input.parse::<AttributePairs>()? {
+            match key.as_str() {
+                "TIME-OFFSET" => time_offset = Some((value.parse())?),
+                "PRECISE" => precise = (parse_yes_or_no(value))?,
                 _ => {
                     // [6.3.1. General Client Responsibilities]
                     // > ignore any attribute/value pair with an unrecognized AttributeName.
@@ -81,7 +94,8 @@ impl FromStr for ExtXStart {
             }
         }
 
-        let time_offset = track_assert_some!(time_offset, ErrorKind::InvalidInput);
+        let time_offset = time_offset.ok_or(Error::missing_value("EXT-X-TIME-OFFSET"))?;
+
         Ok(ExtXStart {
             time_offset,
             precise,
@@ -95,13 +109,13 @@ mod test {
 
     #[test]
     fn ext_x_start() {
-        let tag = ExtXStart::new(SignedDecimalFloatingPoint::new(-1.23).unwrap());
+        let tag = ExtXStart::new(-1.23);
         let text = "#EXT-X-START:TIME-OFFSET=-1.23";
         assert_eq!(text.parse().ok(), Some(tag));
         assert_eq!(tag.to_string(), text);
         assert_eq!(tag.requires_version(), ProtocolVersion::V1);
 
-        let tag = ExtXStart::with_precise(SignedDecimalFloatingPoint::new(1.23).unwrap(), true);
+        let tag = ExtXStart::with_precise(1.23, true);
         let text = "#EXT-X-START:TIME-OFFSET=1.23,PRECISE=YES";
         assert_eq!(text.parse().ok(), Some(tag));
         assert_eq!(tag.to_string(), text);
