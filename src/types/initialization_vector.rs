@@ -10,7 +10,7 @@ use crate::Error;
 ///
 /// [4.3.2.4. EXT-X-KEY]: https://tools.ietf.org/html/rfc8216#section-4.3.2.4
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
-pub(crate) struct InitializationVector(pub [u8; 16]);
+pub struct InitializationVector(pub [u8; 16]);
 
 impl InitializationVector {
     pub const fn to_slice(&self) -> [u8; 16] {
