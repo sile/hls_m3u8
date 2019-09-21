@@ -50,7 +50,7 @@ mod tests {
     }
 
     #[test]
-    fn test_parse() {
+    fn test_parser() {
         let closed_captions = ClosedCaptions::None;
         assert_eq!(closed_captions, "NONE".parse::<ClosedCaptions>().unwrap());
 

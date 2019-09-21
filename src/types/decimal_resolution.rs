@@ -90,7 +90,7 @@ mod tests {
     }
 
     #[test]
-    fn test_parse() {
+    fn test_parser() {
         assert_eq!(
             DecimalResolution::new(1920, 1080),
             "1920x1080".parse::<DecimalResolution>().unwrap()
