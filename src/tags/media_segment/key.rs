@@ -2,8 +2,6 @@ use std::fmt;
 use std::ops::{Deref, DerefMut};
 use std::str::FromStr;
 
-use url::Url;
-
 use crate::types::{DecryptionKey, EncryptionMethod};
 use crate::utils::tag;
 use crate::Error;
@@ -22,14 +20,12 @@ impl ExtXKey {
     /// Makes a new `ExtXKey` tag.
     /// # Example
     /// ```
-    /// use url::Url;
-    ///
     /// use hls_m3u8::tags::ExtXKey;
     /// use hls_m3u8::types::EncryptionMethod;
     ///
     /// let key = ExtXKey::new(
     ///     EncryptionMethod::Aes128,
-    ///     "https://www.example.com".parse().unwrap()
+    ///     "https://www.example.com/"
     /// );
     ///
     /// assert_eq!(
@@ -37,7 +33,7 @@ impl ExtXKey {
     ///     "#EXT-X-KEY:METHOD=AES-128,URI=\"https://www.example.com/\""
     /// );
     /// ```
-    pub const fn new(method: EncryptionMethod, uri: Url) -> Self {
+    pub fn new<T: ToString>(method: EncryptionMethod, uri: T) -> Self {
         Self(DecryptionKey::new(method, uri))
     }
 
@@ -128,7 +124,7 @@ mod test {
         key.set_iv([
             16, 239, 143, 117, 140, 165, 85, 17, 85, 132, 187, 91, 60, 104, 127, 82,
         ]);
-        key.set_uri("https://www.example.com".parse().unwrap());
+        key.set_uri(Some("https://www.example.com"));
         key.set_key_format_versions("1/2/3");
 
         assert_eq!(key.to_string(), "#EXT-X-KEY:METHOD=NONE".to_string());
@@ -142,13 +138,13 @@ mod test {
                 .unwrap(),
             ExtXKey::new(
                 EncryptionMethod::Aes128,
-                "https://priv.example.com/key.php?r=52".parse().unwrap()
+                "https://priv.example.com/key.php?r=52"
             )
         );
 
         let mut key = ExtXKey::new(
             EncryptionMethod::Aes128,
-            "https://www.example.com/hls-key/key.bin".parse().unwrap(),
+            "https://www.example.com/hls-key/key.bin",
         );
         key.set_iv([
             16, 239, 143, 117, 140, 165, 85, 17, 85, 132, 187, 91, 60, 104, 127, 82,

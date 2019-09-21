@@ -2,8 +2,6 @@ use std::fmt;
 use std::ops::{Deref, DerefMut};
 use std::str::FromStr;
 
-use url::Url;
-
 use crate::types::{DecryptionKey, EncryptionMethod, ProtocolVersion};
 use crate::utils::tag;
 use crate::Error;
@@ -20,7 +18,7 @@ impl ExtXSessionKey {
     /// Makes a new [ExtXSessionKey] tag.
     /// # Panic
     /// This method will panic, if the [EncryptionMethod] is None.
-    pub fn new(method: EncryptionMethod, uri: Url) -> Self {
+    pub fn new<T: ToString>(method: EncryptionMethod, uri: T) -> Self {
         if method == EncryptionMethod::None {
             panic!("The EncryptionMethod is not allowed to be None");
         }
@@ -36,7 +34,7 @@ impl ExtXSessionKey {
     ///
     /// let mut key = ExtXSessionKey::new(
     ///     EncryptionMethod::Aes128,
-    ///     "https://www.example.com".parse().unwrap()
+    ///     "https://www.example.com/"
     /// );
     ///
     /// assert_eq!(
@@ -93,7 +91,7 @@ mod test {
     fn test_display() {
         let mut key = ExtXSessionKey::new(
             EncryptionMethod::Aes128,
-            "https://www.example.com/hls-key/key.bin".parse().unwrap(),
+            "https://www.example.com/hls-key/key.bin",
         );
         key.set_iv([
             16, 239, 143, 117, 140, 165, 85, 17, 85, 132, 187, 91, 60, 104, 127, 82,
@@ -116,13 +114,13 @@ mod test {
                 .unwrap(),
             ExtXSessionKey::new(
                 EncryptionMethod::Aes128,
-                "https://priv.example.com/key.php?r=52".parse().unwrap()
+                "https://priv.example.com/key.php?r=52"
             )
         );
 
         let mut key = ExtXSessionKey::new(
             EncryptionMethod::Aes128,
-            "https://www.example.com/hls-key/key.bin".parse().unwrap(),
+            "https://www.example.com/hls-key/key.bin",
         );
         key.set_iv([
             16, 239, 143, 117, 140, 165, 85, 17, 85, 132, 187, 91, 60, 104, 127, 82,
