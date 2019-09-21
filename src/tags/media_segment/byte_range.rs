@@ -114,7 +114,7 @@ mod test {
     }
 
     #[test]
-    fn test_parse() {
+    fn test_parser() {
         let byte_range = ExtXByteRange::new(99999, Some(2));
         assert_eq!(
             byte_range,
@@ -132,7 +132,7 @@ mod test {
     fn test_deref() {
         let byte_range = ExtXByteRange::new(0, Some(22));
 
-        assert_eq!(*byte_range.length(), 0);
-        assert_eq!(*byte_range.start(), Some(22));
+        assert_eq!(byte_range.length(), 0);
+        assert_eq!(byte_range.start(), Some(22));
     }
 }
