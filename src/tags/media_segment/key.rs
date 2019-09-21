@@ -18,7 +18,7 @@ impl ExtXKey {
     pub(crate) const PREFIX: &'static str = "#EXT-X-KEY:";
 
     /// Makes a new `ExtXKey` tag.
-    /// # Example
+    /// # Examples
     /// ```
     /// use hls_m3u8::tags::ExtXKey;
     /// use hls_m3u8::types::EncryptionMethod;
@@ -38,7 +38,7 @@ impl ExtXKey {
     }
 
     /// Makes a new `ExtXKey` tag without a decryption key.
-    /// # Example
+    /// # Examples
     /// ```
     /// use hls_m3u8::tags::ExtXKey;
     ///
@@ -60,7 +60,7 @@ impl ExtXKey {
     }
 
     /// Returns whether the [EncryptionMethod] is [None](EncryptionMethod::None).
-    /// # Example
+    /// # Examples
     /// ```
     /// use hls_m3u8::tags::ExtXKey;
     /// use hls_m3u8::types::EncryptionMethod;

@@ -89,7 +89,7 @@ mod tests {
     }
 
     #[test]
-    fn test_parse() {
+    fn test_parser() {
         assert_eq!(
             EncryptionMethod::Aes128,
             "AES-128".parse::<EncryptionMethod>().unwrap()

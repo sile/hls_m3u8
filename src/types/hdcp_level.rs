@@ -50,7 +50,7 @@ mod tests {
     }
 
     #[test]
-    fn test_parse() {
+    fn test_parser() {
         let level = HdcpLevel::Type0;
         assert_eq!(level, "TYPE-0".parse::<HdcpLevel>().unwrap());
 

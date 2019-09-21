@@ -11,6 +11,7 @@ mod initialization_vector;
 mod media_type;
 mod protocol_version;
 mod signed_decimal_floating_point;
+mod stream_inf;
 
 pub use byte_range::*;
 pub use closed_captions::*;
@@ -24,3 +25,4 @@ pub use initialization_vector::*;
 pub use media_type::*;
 pub use protocol_version::*;
 pub(crate) use signed_decimal_floating_point::*;
+pub use stream_inf::*;

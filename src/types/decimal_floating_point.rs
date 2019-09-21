@@ -84,7 +84,7 @@ mod tests {
     }
 
     #[test]
-    pub fn test_parse() {
+    pub fn test_parser() {
         let decimal_floating_point = DecimalFloatingPoint::new(22.0).unwrap();
         assert_eq!(
             decimal_floating_point,
