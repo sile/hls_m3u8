@@ -64,6 +64,7 @@ impl FromStr for AttributePairs {
             result.insert(key.to_string(), value.to_string());
         }
 
+        #[cfg(test)]
         dbg!(&result);
         Ok(result)
     }
