@@ -1,8 +1,6 @@
 use std::fmt;
 use std::str::FromStr;
 
-use getset::{Getters, MutGetters, Setters};
-
 use crate::Error;
 
 /// Byte range.
@@ -10,14 +8,9 @@ use crate::Error;
 /// See: [4.3.2.2. EXT-X-BYTERANGE]
 ///
 /// [4.3.2.2. EXT-X-BYTERANGE]: https://tools.ietf.org/html/rfc8216#section-4.3.2.2
-#[derive(Getters, Setters, MutGetters, Debug, Clone, Copy, PartialEq, Eq, Hash)]
-#[get = "pub"]
-#[set = "pub"]
-#[get_mut = "pub"]
+#[derive(Copy, Hash, Eq, Ord, Debug, PartialEq, Clone, PartialOrd)]
 pub struct ByteRange {
-    /// The length of the range.
     length: usize,
-    /// The start of the range.
     start: Option<usize>,
 }
 
@@ -25,6 +18,60 @@ impl ByteRange {
     /// Creates a new [ByteRange].
     pub const fn new(length: usize, start: Option<usize>) -> Self {
         Self { length, start }
+    }
+
+    /// Returns the length of the range.
+    /// # Example
+    /// ```
+    /// # use hls_m3u8::types::ByteRange;
+    /// #
+    /// assert_eq!(ByteRange::new(20, Some(3)).length(), 20);
+    /// ```
+    pub const fn length(&self) -> usize {
+        self.length
+    }
+
+    /// Sets the length of the range.
+    /// # Example
+    /// ```
+    /// # use hls_m3u8::types::ByteRange;
+    /// #
+    /// let mut range = ByteRange::new(20, Some(3));
+    ///
+    /// # assert_eq!(range.length(), 20);
+    /// range.set_length(10);
+    /// assert_eq!(range.length(), 10);
+    /// ```
+    pub fn set_length(&mut self, value: usize) -> &mut Self {
+        self.length = value;
+        self
+    }
+
+    /// Returns the start of the range.
+    /// # Example
+    /// ```
+    /// # use hls_m3u8::types::ByteRange;
+    /// #
+    /// assert_eq!(ByteRange::new(20, Some(3)).start(), Some(3));
+    /// ```
+    pub const fn start(&self) -> Option<usize> {
+        self.start
+    }
+
+    /// Sets the start of the range.
+    /// # Example
+    /// ```
+    /// # use hls_m3u8::types::ByteRange;
+    /// #
+    /// let mut range = ByteRange::new(20, None);
+    ///
+    /// # assert_eq!(range.start(), None);
+    /// range.set_start(Some(3));
+    /// assert_eq!(range.start(), Some(3));
+    /// ```
+    pub fn set_start(&mut self, value: Option<usize>) -> &mut Self {
+        self.start = value;
+        self
     }
 }
 
@@ -86,7 +133,7 @@ mod tests {
     }
 
     #[test]
-    fn test_parse() {
+    fn test_parser() {
         let byte_range = ByteRange {
             length: 99999,
             start: Some(2),

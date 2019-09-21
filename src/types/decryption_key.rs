@@ -2,7 +2,6 @@ use std::fmt;
 use std::str::FromStr;
 
 use derive_builder::Builder;
-use url::Url;
 
 use crate::attribute::AttributePairs;
 use crate::types::{EncryptionMethod, InitializationVector, ProtocolVersion};
@@ -14,7 +13,7 @@ use crate::Error;
 pub struct DecryptionKey {
     pub(crate) method: EncryptionMethod,
     #[builder(setter(into, strip_option), default)]
-    pub(crate) uri: Option<Url>,
+    pub(crate) uri: Option<String>,
     #[builder(setter(into, strip_option), default)]
     pub(crate) iv: Option<InitializationVector>,
     #[builder(setter(into, strip_option), default)]
@@ -27,13 +26,11 @@ impl DecryptionKey {
     /// Makes a new `DecryptionKey`.
     /// # Example
     /// ```
-    /// use url::Url;
-    ///
     /// use hls_m3u8::types::{EncryptionMethod, DecryptionKey};
     ///
     /// let key = DecryptionKey::new(
     ///     EncryptionMethod::Aes128,
-    ///     "https://www.example.com".parse().unwrap()
+    ///     "https://www.example.com/"
     /// );
     ///
     /// assert_eq!(
@@ -41,10 +38,10 @@ impl DecryptionKey {
     ///     "METHOD=AES-128,URI=\"https://www.example.com/\""
     /// );
     /// ```
-    pub const fn new(method: EncryptionMethod, uri: Url) -> Self {
+    pub fn new<T: ToString>(method: EncryptionMethod, uri: T) -> Self {
         Self {
             method,
-            uri: Some(uri),
+            uri: Some(uri.to_string()),
             iv: None,
             key_format: None,
             key_format_versions: None,
@@ -58,7 +55,7 @@ impl DecryptionKey {
     ///
     /// let key = DecryptionKey::new(
     ///     EncryptionMethod::Aes128,
-    ///     "https://www.example.com".parse().unwrap()
+    ///     "https://www.example.com/"
     /// );
     ///
     /// assert_eq!(
@@ -82,7 +79,7 @@ impl DecryptionKey {
     ///
     /// let mut key = DecryptionKey::new(
     ///     EncryptionMethod::Aes128,
-    ///     "https://www.example.com".parse().unwrap()
+    ///     "https://www.example.com/"
     /// );
     ///
     /// key.set_method(EncryptionMethod::SampleAes);
@@ -105,39 +102,41 @@ impl DecryptionKey {
     ///
     /// let key = DecryptionKey::new(
     ///     EncryptionMethod::Aes128,
-    ///     "https://www.example.com".parse().unwrap()
+    ///     "https://www.example.com/"
     /// );
     ///
     /// assert_eq!(
     ///     key.uri(),
-    ///     &Some("https://www.example.com".parse().unwrap())
+    ///     &Some("https://www.example.com/".to_string())
     /// );
     /// ```
-    pub const fn uri(&self) -> &Option<Url> {
+    pub const fn uri(&self) -> &Option<String> {
         &self.uri
     }
 
     /// Sets the `URI` attribute.
     ///
-    /// This attribute is required, if the [EncryptionMethod] is not None.
+    /// # Note
+    /// This attribute is required, if the [EncryptionMethod] is not `None`.
+    ///
     /// # Example
     /// ```
     /// use hls_m3u8::types::{DecryptionKey, EncryptionMethod};
     ///
     /// let mut key = DecryptionKey::new(
     ///     EncryptionMethod::Aes128,
-    ///     "https://www.example.com".parse().unwrap()
+    ///     "https://www.example.com/"
     /// );
     ///
-    /// key.set_uri("http://www.google.com".parse().unwrap());
+    /// key.set_uri(Some("http://www.google.com/"));
     ///
     /// assert_eq!(
     ///     key.to_string(),
     ///     "METHOD=AES-128,URI=\"http://www.google.com/\"".to_string()
     /// );
     /// ```
-    pub fn set_uri(&mut self, value: Url) {
-        self.uri = Some(value);
+    pub fn set_uri<T: ToString>(&mut self, value: Option<T>) {
+        self.uri = value.map(|v| v.to_string());
     }
 
     /// Returns the IV (Initialization Vector) attribute.
@@ -149,7 +148,7 @@ impl DecryptionKey {
     ///
     /// let mut key = DecryptionKey::new(
     ///     EncryptionMethod::Aes128,
-    ///     "https://www.example.com".parse().unwrap()
+    ///     "https://www.example.com/"
     /// );
     ///
     /// key.set_iv([
@@ -178,7 +177,7 @@ impl DecryptionKey {
     ///
     /// let mut key = DecryptionKey::new(
     ///     EncryptionMethod::Aes128,
-    ///     "https://www.example.com".parse().unwrap()
+    ///     "https://www.example.com/"
     /// );
     ///
     /// key.set_iv([
@@ -207,7 +206,7 @@ impl DecryptionKey {
     ///
     /// let mut key = DecryptionKey::new(
     ///     EncryptionMethod::Aes128,
-    ///     "https://www.example.com".parse().unwrap()
+    ///     "https://www.example.com/"
     /// );
     ///
     /// key.set_key_format("key_format_attribute");
@@ -230,7 +229,7 @@ impl DecryptionKey {
     ///
     /// let mut key = DecryptionKey::new(
     ///     EncryptionMethod::Aes128,
-    ///     "https://www.example.com".parse().unwrap()
+    ///     "https://www.example.com/"
     /// );
     ///
     /// key.set_key_format("key_format_attribute");
@@ -257,7 +256,7 @@ impl DecryptionKey {
     ///
     /// let mut key = DecryptionKey::new(
     ///     EncryptionMethod::Aes128,
-    ///     "https://www.example.com".parse().unwrap()
+    ///     "https://www.example.com/"
     /// );
     ///
     /// key.set_key_format_versions("1/2/3/4/5");
@@ -280,7 +279,7 @@ impl DecryptionKey {
     ///
     /// let mut key = DecryptionKey::new(
     ///     EncryptionMethod::Aes128,
-    ///     "https://www.example.com".parse().unwrap()
+    ///     "https://www.example.com/"
     /// );
     ///
     /// key.set_key_format_versions("1/2/3/4/5");
@@ -301,7 +300,7 @@ impl DecryptionKey {
     ///
     /// let mut key = DecryptionKey::new(
     ///     EncryptionMethod::Aes128,
-    ///     "https://www.example.com".parse().unwrap()
+    ///     "https://www.example.com/"
     /// );
     ///
     /// assert_eq!(
@@ -333,7 +332,7 @@ impl FromStr for DecryptionKey {
         for (key, value) in input.parse::<AttributePairs>()? {
             match key.as_str() {
                 "METHOD" => method = Some((value.parse())?),
-                "URI" => uri = Some(unquote(value).parse()?),
+                "URI" => uri = Some(unquote(value)),
                 "IV" => iv = Some((value.parse())?),
                 "KEYFORMAT" => key_format = Some(unquote(value)),
                 "KEYFORMATVERSIONS" => key_format_versions = Some(unquote(value)),
@@ -388,22 +387,28 @@ mod test {
     use crate::types::EncryptionMethod;
 
     #[test]
-    fn test_requires_version() {
+    fn test_builder() {
         let key = DecryptionKey::builder()
             .method(EncryptionMethod::Aes128)
-            .uri("https://www.example.com".parse::<Url>().unwrap())
+            .uri("https://www.example.com/")
             .iv([
                 16, 239, 143, 117, 140, 165, 85, 17, 85, 132, 187, 91, 60, 104, 127, 82,
             ])
+            .key_format("ABC123")
+            .key_format_versions("1,2,3,4,5/12345")
             .build()
             .unwrap();
+        assert_eq!(
+            key.to_string(),
+            "METHOD=AES-128,URI=\"https://www.example.com/\",IV=0x10ef8f758ca555115584bb5b3c687f52,KEYFORMAT=\"ABC123\",KEYFORMATVERSIONS=\"1,2,3,4,5/12345\"".to_string()
+        )
     }
 
     #[test]
     fn test_display() {
         let mut key = DecryptionKey::new(
             EncryptionMethod::Aes128,
-            "https://www.example.com/hls-key/key.bin".parse().unwrap(),
+            "https://www.example.com/hls-key/key.bin",
         );
         key.set_iv([
             16, 239, 143, 117, 140, 165, 85, 17, 85, 132, 187, 91, 60, 104, 127, 82,
@@ -426,13 +431,13 @@ mod test {
                 .unwrap(),
             DecryptionKey::new(
                 EncryptionMethod::Aes128,
-                "https://priv.example.com/key.php?r=52".parse().unwrap()
+                "https://priv.example.com/key.php?r=52"
             )
         );
 
         let mut key = DecryptionKey::new(
             EncryptionMethod::Aes128,
-            "https://www.example.com/hls-key/key.bin".parse().unwrap(),
+            "https://www.example.com/hls-key/key.bin",
         );
         key.set_iv([
             16, 239, 143, 117, 140, 165, 85, 17, 85, 132, 187, 91, 60, 104, 127, 82,
@@ -447,10 +452,7 @@ mod test {
             key
         );
 
-        let mut key = DecryptionKey::new(
-            EncryptionMethod::Aes128,
-            "http://www.example.com".parse().unwrap(),
-        );
+        let mut key = DecryptionKey::new(EncryptionMethod::Aes128, "http://www.example.com");
         key.set_iv([
             16, 239, 143, 117, 140, 165, 85, 17, 85, 132, 187, 91, 60, 104, 127, 82,
         ]);

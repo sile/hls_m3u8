@@ -4,7 +4,6 @@ use std::str::FromStr;
 use std::time::Duration;
 
 use chrono::{DateTime, FixedOffset};
-use getset::{Getters, MutGetters, Setters};
 
 use crate::attribute::AttributePairs;
 use crate::types::{DecimalFloatingPoint, ProtocolVersion};
@@ -17,10 +16,7 @@ use crate::Error;
 ///
 /// TODO: Implement properly
 #[allow(missing_docs)]
-#[derive(Debug, Clone, PartialEq, Eq, Hash, Getters, MutGetters, Setters)]
-#[get = "pub"]
-#[set = "pub"]
-#[get_mut = "pub"]
+#[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub struct ExtXDateRange {
     /// A string that uniquely identifies a Date Range in the Playlist.
     /// This attribute is REQUIRED.

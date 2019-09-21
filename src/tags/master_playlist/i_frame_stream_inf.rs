@@ -1,8 +1,6 @@
 use std::fmt;
 use std::str::FromStr;
 
-use getset::{Getters, MutGetters, Setters};
-
 use crate::attribute::AttributePairs;
 use crate::types::{DecimalResolution, HdcpLevel, ProtocolVersion};
 use crate::utils::parse_u64;
@@ -12,39 +10,14 @@ use crate::Error;
 /// [4.3.4.3. EXT-X-I-FRAME-STREAM-INF]
 ///
 /// [4.3.4.3. EXT-X-I-FRAME-STREAM-INF]: https://tools.ietf.org/html/rfc8216#section-4.3.4.3
-#[derive(Getters, Setters, MutGetters, Debug, Clone, PartialEq, Eq, Hash)]
+#[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub struct ExtXIFrameStreamInf {
-    #[get = "pub"]
-    #[set = "pub"]
-    #[get_mut = "pub"]
-    /// The URI, that identifies the associated media playlist.
     uri: String,
-    #[get = "pub"]
-    #[set = "pub"]
-    #[get_mut = "pub"]
-    /// The peak segment bit rate of the variant stream.
     bandwidth: u64,
-    #[get = "pub"]
-    #[set = "pub"]
-    #[get_mut = "pub"]
-    /// The average segment bit rate of the variant stream.
     average_bandwidth: Option<u64>,
-    #[get = "pub"]
-    #[set = "pub"]
-    #[get_mut = "pub"]
-    /// A string that represents the list of codec types contained the variant stream.
     codecs: Option<String>,
-    /// The optimal pixel resolution at which to display all the video in the variant stream.
     resolution: Option<DecimalResolution>,
-    #[get = "pub"]
-    #[set = "pub"]
-    #[get_mut = "pub"]
-    /// The HDCP level of the variant stream.
     hdcp_level: Option<HdcpLevel>,
-    #[get = "pub"]
-    #[set = "pub"]
-    #[get_mut = "pub"]
-    /// The group identifier for the video in the variant stream.
     video: Option<String>,
 }
 
@@ -64,7 +37,160 @@ impl ExtXIFrameStreamInf {
         }
     }
 
-    /// The optimal pixel resolution at which to display all the video in the variant stream.
+    /// Returns the URI, that identifies the associated media playlist.
+    ///
+    /// # Example
+    /// ```
+    /// # use hls_m3u8::tags::ExtXIFrameStreamInf;
+    /// #
+    /// let stream = ExtXIFrameStreamInf::new("https://www.example.com", 20);
+    /// assert_eq!(stream.uri(), &"https://www.example.com".to_string());
+    /// ```
+    pub const fn uri(&self) -> &String {
+        &self.uri
+    }
+
+    /// Sets the URI, that identifies the associated media playlist.
+    ///
+    /// # Example
+    /// ```
+    /// # use hls_m3u8::tags::ExtXIFrameStreamInf;
+    /// #
+    /// let mut stream = ExtXIFrameStreamInf::new("https://www.example.com", 20);
+    ///
+    /// stream.set_uri("../new/uri");
+    /// assert_eq!(stream.uri(), &"../new/uri".to_string());
+    /// ```
+    pub fn set_uri<T: ToString>(&mut self, value: T) -> &mut Self {
+        self.uri = value.to_string();
+        self
+    }
+
+    /// Returns the peak segment bit rate of the variant stream.
+    ///
+    /// # Example
+    /// ```
+    /// # use hls_m3u8::tags::ExtXIFrameStreamInf;
+    /// #
+    /// let stream = ExtXIFrameStreamInf::new("https://www.example.com", 20);
+    /// assert_eq!(stream.bandwidth(), 20);
+    /// ```
+    pub const fn bandwidth(&self) -> u64 {
+        self.bandwidth
+    }
+
+    /// Sets the group identifier for the video in the variant stream.
+    ///
+    /// # Example
+    /// ```
+    /// # use hls_m3u8::tags::ExtXIFrameStreamInf;
+    /// #
+    /// let mut stream = ExtXIFrameStreamInf::new("https://www.example.com", 20);
+    ///
+    /// stream.set_video(Some("video"));
+    /// assert_eq!(stream.video(), &Some("video".to_string()));
+    /// ```
+    pub fn set_video<T: ToString>(&mut self, value: Option<T>) -> &mut Self {
+        self.video = value.map(|v| v.to_string());
+        self
+    }
+
+    /// Returns the group identifier for the video in the variant stream.
+    ///
+    /// # Example
+    /// ```
+    /// # use hls_m3u8::tags::ExtXIFrameStreamInf;
+    /// #
+    /// let stream = ExtXIFrameStreamInf::new("https://www.example.com", 20);
+    /// assert_eq!(stream.video(), &None);
+    /// ```
+    pub const fn video(&self) -> &Option<String> {
+        &self.video
+    }
+
+    /// Sets the peak segment bit rate of the variant stream.
+    ///
+    /// # Example
+    /// ```
+    /// # use hls_m3u8::tags::ExtXIFrameStreamInf;
+    /// #
+    /// let mut stream = ExtXIFrameStreamInf::new("https://www.example.com", 20);
+    ///
+    /// stream.set_bandwidth(5);
+    /// assert_eq!(stream.bandwidth(), 5);
+    /// ```
+    pub fn set_bandwidth(&mut self, value: u64) -> &mut Self {
+        self.bandwidth = value;
+        self
+    }
+
+    /// Returns the average segment bit rate of the variant stream.
+    ///
+    /// # Example
+    /// ```
+    /// # use hls_m3u8::tags::ExtXIFrameStreamInf;
+    /// #
+    /// let stream = ExtXIFrameStreamInf::new("https://www.example.com", 20);
+    /// assert_eq!(stream.average_bandwidth(), None);
+    /// ```
+    pub const fn average_bandwidth(&self) -> Option<u64> {
+        self.average_bandwidth
+    }
+
+    /// Sets the average segment bit rate of the variant stream.
+    ///
+    /// # Example
+    /// ```
+    /// # use hls_m3u8::tags::ExtXIFrameStreamInf;
+    /// #
+    /// let mut stream = ExtXIFrameStreamInf::new("https://www.example.com", 20);
+    ///
+    /// stream.set_average_bandwidth(Some(300));
+    /// assert_eq!(stream.average_bandwidth(), Some(300));
+    /// ```
+    pub fn set_average_bandwidth(&mut self, value: Option<u64>) -> &mut Self {
+        self.average_bandwidth = value;
+        self
+    }
+
+    /// A string that represents the list of codec types contained the variant stream.
+    ///
+    /// # Example
+    /// ```
+    /// # use hls_m3u8::tags::ExtXIFrameStreamInf;
+    /// #
+    /// let stream = ExtXIFrameStreamInf::new("https://www.example.com", 20);
+    /// assert_eq!(stream.codecs(), &None);
+    /// ```
+    pub const fn codecs(&self) -> &Option<String> {
+        &self.codecs
+    }
+
+    /// A string that represents the list of codec types contained the variant stream.
+    ///
+    /// # Example
+    /// ```
+    /// # use hls_m3u8::tags::ExtXIFrameStreamInf;
+    /// #
+    /// let mut stream = ExtXIFrameStreamInf::new("https://www.example.com", 20);
+    ///
+    /// stream.set_uri("../new/uri");
+    /// assert_eq!(stream.uri(), &"../new/uri".to_string());
+    /// ```
+    pub fn set_codecs<T: ToString>(&mut self, value: Option<T>) -> &mut Self {
+        self.codecs = value.map(|v| v.to_string());
+        self
+    }
+
+    /// Returns the resolution of the stream.
+    ///
+    /// # Example
+    /// ```
+    /// # use hls_m3u8::tags::ExtXIFrameStreamInf;
+    /// #
+    /// let stream = ExtXIFrameStreamInf::new("https://www.example.com", 20);
+    /// assert_eq!(stream.resolution(), None);
+    /// ```
     pub fn resolution(&self) -> Option<(usize, usize)> {
         if let Some(res) = &self.resolution {
             Some((res.width(), res.height()))
@@ -73,7 +199,17 @@ impl ExtXIFrameStreamInf {
         }
     }
 
-    /// Sets the optimal pixel resolution at which to display all the video in the variant stream.
+    /// Sets the resolution of the stream.
+    ///
+    /// # Example
+    /// ```
+    /// # use hls_m3u8::tags::ExtXIFrameStreamInf;
+    /// #
+    /// let mut stream = ExtXIFrameStreamInf::new("https://www.example.com", 20);
+    ///
+    /// stream.set_resolution(1920, 1080);
+    /// assert_eq!(stream.resolution(), Some((1920, 1080)));
+    /// ```
     pub fn set_resolution(&mut self, width: usize, height: usize) -> &mut Self {
         if let Some(res) = &mut self.resolution {
             res.set_width(width);
@@ -83,6 +219,36 @@ impl ExtXIFrameStreamInf {
         }
         self
     }
+
+    /// The HDCP level of the variant stream.
+    ///
+    /// # Example
+    /// ```
+    /// # use hls_m3u8::tags::ExtXIFrameStreamInf;
+    /// #
+    /// let stream = ExtXIFrameStreamInf::new("https://www.example.com", 20);
+    /// assert_eq!(stream.uri(), &"https://www.example.com".to_string());
+    /// ```
+    pub const fn hdcp_level(&self) -> Option<HdcpLevel> {
+        self.hdcp_level
+    }
+
+    /// The HDCP level of the variant stream.
+    ///
+    /// # Example
+    /// ```
+    /// # use hls_m3u8::tags::ExtXIFrameStreamInf;
+    /// #
+    /// let mut stream = ExtXIFrameStreamInf::new("https://www.example.com", 20);
+    ///
+    /// stream.set_uri("../new/uri");
+    /// assert_eq!(stream.uri(), &"../new/uri".to_string());
+    /// ```
+    pub fn set_hdcp_level<T: Into<HdcpLevel>>(&mut self, value: Option<T>) -> &mut Self {
+        self.hdcp_level = value.map(|v| v.into());
+        self
+    }
+
     /// Returns the protocol compatibility version that this tag requires.
     pub const fn requires_version(&self) -> ProtocolVersion {
         ProtocolVersion::V1
@@ -179,7 +345,7 @@ mod test {
         );
 
         assert_eq!(i_frame_stream_inf.uri(), "foo");
-        assert_eq!(*i_frame_stream_inf.bandwidth(), 1000);
+        assert_eq!(i_frame_stream_inf.bandwidth(), 1000);
         // TODO: test all the optional fields
     }
 
