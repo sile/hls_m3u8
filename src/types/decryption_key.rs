@@ -388,15 +388,21 @@ mod test {
     use crate::types::EncryptionMethod;
 
     #[test]
-    fn test_requires_version() {
+    fn test_builder() {
         let key = DecryptionKey::builder()
             .method(EncryptionMethod::Aes128)
             .uri("https://www.example.com".parse::<Url>().unwrap())
             .iv([
                 16, 239, 143, 117, 140, 165, 85, 17, 85, 132, 187, 91, 60, 104, 127, 82,
             ])
+            .key_format("ABC123")
+            .key_format_versions("1,2,3,4,5/12345")
             .build()
             .unwrap();
+        assert_eq!(
+            key.to_string(),
+            "METHOD=AES-128,URI=\"https://www.example.com/\",IV=0x10ef8f758ca555115584bb5b3c687f52,KEYFORMAT=\"ABC123\",KEYFORMATVERSIONS=\"1,2,3,4,5/12345\"".to_string()
+        )
     }
 
     #[test]
