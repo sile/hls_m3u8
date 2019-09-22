@@ -2,7 +2,7 @@ use std::fmt;
 use std::str::FromStr;
 
 use crate::attribute::AttributePairs;
-use crate::types::{ProtocolVersion, SignedDecimalFloatingPoint};
+use crate::types::{ProtocolVersion, RequiredVersion, SignedDecimalFloatingPoint};
 use crate::utils::{parse_yes_or_no, tag};
 use crate::Error;
 
@@ -19,6 +19,7 @@ impl ExtXStart {
     pub(crate) const PREFIX: &'static str = "#EXT-X-START:";
 
     /// Makes a new `ExtXStart` tag.
+    ///
     /// # Panic
     /// Panics if the time_offset value is infinite.
     pub fn new(time_offset: f64) -> Self {
@@ -33,6 +34,7 @@ impl ExtXStart {
     }
 
     /// Makes a new `ExtXStart` tag with the given `precise` flag.
+    ///
     /// # Panic
     /// Panics if the time_offset value is infinite.
     pub fn with_precise(time_offset: f64, precise: bool) -> Self {
@@ -56,9 +58,10 @@ impl ExtXStart {
     pub const fn precise(&self) -> bool {
         self.precise
     }
+}
 
-    /// Returns the protocol compatibility version that this tag requires.
-    pub const fn requires_version(&self) -> ProtocolVersion {
+impl RequiredVersion for ExtXStart {
+    fn required_version(&self) -> ProtocolVersion {
         ProtocolVersion::V1
     }
 }
@@ -108,17 +111,41 @@ mod test {
     use super::*;
 
     #[test]
-    fn ext_x_start() {
-        let tag = ExtXStart::new(-1.23);
-        let text = "#EXT-X-START:TIME-OFFSET=-1.23";
-        assert_eq!(text.parse().ok(), Some(tag));
-        assert_eq!(tag.to_string(), text);
-        assert_eq!(tag.requires_version(), ProtocolVersion::V1);
+    fn test_display() {
+        assert_eq!(
+            ExtXStart::new(-1.23).to_string(),
+            "#EXT-X-START:TIME-OFFSET=-1.23".to_string(),
+        );
 
-        let tag = ExtXStart::with_precise(1.23, true);
-        let text = "#EXT-X-START:TIME-OFFSET=1.23,PRECISE=YES";
-        assert_eq!(text.parse().ok(), Some(tag));
-        assert_eq!(tag.to_string(), text);
-        assert_eq!(tag.requires_version(), ProtocolVersion::V1);
+        assert_eq!(
+            ExtXStart::with_precise(1.23, true).to_string(),
+            "#EXT-X-START:TIME-OFFSET=1.23,PRECISE=YES".to_string(),
+        );
+    }
+
+    #[test]
+    fn test_required_version() {
+        assert_eq!(
+            ExtXStart::new(-1.23).required_version(),
+            ProtocolVersion::V1,
+        );
+
+        assert_eq!(
+            ExtXStart::with_precise(1.23, true).required_version(),
+            ProtocolVersion::V1,
+        );
+    }
+
+    #[test]
+    fn test_parser() {
+        assert_eq!(
+            ExtXStart::new(-1.23),
+            "#EXT-X-START:TIME-OFFSET=-1.23".parse().unwrap(),
+        );
+
+        assert_eq!(
+            ExtXStart::with_precise(1.23, true),
+            "#EXT-X-START:TIME-OFFSET=1.23,PRECISE=YES".parse().unwrap(),
+        );
     }
 }

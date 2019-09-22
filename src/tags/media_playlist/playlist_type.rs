@@ -1,7 +1,7 @@
 use std::fmt;
 use std::str::FromStr;
 
-use crate::types::ProtocolVersion;
+use crate::types::{ProtocolVersion, RequiredVersion};
 use crate::utils::tag;
 use crate::Error;
 
@@ -31,9 +31,10 @@ pub enum ExtXPlaylistType {
 
 impl ExtXPlaylistType {
     pub(crate) const PREFIX: &'static str = "#EXT-X-PLAYLIST-TYPE:";
+}
 
-    /// Returns the protocol compatibility version that this tag requires.
-    pub const fn requires_version(&self) -> ProtocolVersion {
+impl RequiredVersion for ExtXPlaylistType {
+    fn required_version(&self) -> ProtocolVersion {
         ProtocolVersion::V1
     }
 }
@@ -99,13 +100,13 @@ mod test {
     }
 
     #[test]
-    fn test_requires_version() {
+    fn test_required_version() {
         assert_eq!(
-            ExtXPlaylistType::Vod.requires_version(),
+            ExtXPlaylistType::Vod.required_version(),
             ProtocolVersion::V1
         );
         assert_eq!(
-            ExtXPlaylistType::Event.requires_version(),
+            ExtXPlaylistType::Event.required_version(),
             ProtocolVersion::V1
         );
     }

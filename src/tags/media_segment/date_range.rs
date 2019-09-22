@@ -6,7 +6,7 @@ use std::time::Duration;
 use chrono::{DateTime, FixedOffset};
 
 use crate::attribute::AttributePairs;
-use crate::types::{DecimalFloatingPoint, ProtocolVersion};
+use crate::types::{DecimalFloatingPoint, ProtocolVersion, RequiredVersion};
 use crate::utils::{quote, tag, unquote};
 use crate::Error;
 
@@ -63,9 +63,10 @@ pub struct ExtXDateRange {
 
 impl ExtXDateRange {
     pub(crate) const PREFIX: &'static str = "#EXT-X-DATERANGE:";
+}
 
-    /// Returns the protocol compatibility version that this tag requires.
-    pub const fn requires_version(&self) -> ProtocolVersion {
+impl RequiredVersion for ExtXDateRange {
+    fn required_version(&self) -> ProtocolVersion {
         ProtocolVersion::V1
     }
 }

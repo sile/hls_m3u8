@@ -2,7 +2,7 @@ use std::fmt;
 use std::str::FromStr;
 use std::time::Duration;
 
-use crate::types::{DecimalFloatingPoint, ProtocolVersion};
+use crate::types::{DecimalFloatingPoint, ProtocolVersion, RequiredVersion};
 use crate::utils::tag;
 use crate::Error;
 
@@ -78,9 +78,10 @@ impl ExtInf {
     pub fn title(&self) -> Option<&String> {
         self.title.as_ref()
     }
+}
 
-    /// Returns the protocol compatibility version that this tag requires.
-    pub fn requires_version(&self) -> ProtocolVersion {
+impl RequiredVersion for ExtInf {
+    fn required_version(&self) -> ProtocolVersion {
         if self.duration.subsec_nanos() == 0 {
             ProtocolVersion::V1
         } else {
@@ -206,13 +207,13 @@ mod test {
     }
 
     #[test]
-    fn test_requires_version() {
+    fn test_required_version() {
         assert_eq!(
-            ExtInf::new(Duration::from_secs(4)).requires_version(),
+            ExtInf::new(Duration::from_secs(4)).required_version(),
             ProtocolVersion::V1
         );
         assert_eq!(
-            ExtInf::new(Duration::from_millis(4400)).requires_version(),
+            ExtInf::new(Duration::from_millis(4400)).required_version(),
             ProtocolVersion::V3
         );
     }

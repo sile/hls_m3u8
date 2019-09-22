@@ -3,7 +3,9 @@ use std::ops::{Deref, DerefMut};
 use std::str::FromStr;
 
 use crate::attribute::AttributePairs;
-use crate::types::{ClosedCaptions, DecimalFloatingPoint, ProtocolVersion, StreamInf};
+use crate::types::{
+    ClosedCaptions, DecimalFloatingPoint, ProtocolVersion, RequiredVersion, StreamInf,
+};
 use crate::utils::{quote, tag, unquote};
 use crate::Error;
 
@@ -23,7 +25,9 @@ pub struct ExtXStreamInf {
 impl ExtXStreamInf {
     pub(crate) const PREFIX: &'static str = "#EXT-X-STREAM-INF:";
 
-    /// Makes a new [ExtXStreamInf] tag.
+    /// Creates a new [ExtXStreamInf] tag.
+    ///
+    /// # Examples
     /// ```
     /// # use hls_m3u8::tags::ExtXStreamInf;
     /// #
@@ -40,9 +44,19 @@ impl ExtXStreamInf {
         }
     }
 
+    pub fn set_uri<T: ToString>(&mut self, value: T) -> &mut Self {
+        self.uri = value.to_string();
+        self
+    }
+
     /// Returns the URI that identifies the associated media playlist.
     pub const fn uri(&self) -> &String {
         &self.uri
+    }
+
+    pub fn set_frame_rate(&mut self, value: Option<f64>) -> &mut Self {
+        self.frame_rate = value.map(|v| v.into());
+        self
     }
 
     /// Returns the maximum frame rate for all the video in the variant stream.
@@ -64,9 +78,10 @@ impl ExtXStreamInf {
     pub fn closed_captions(&self) -> Option<&ClosedCaptions> {
         self.closed_captions.as_ref()
     }
+}
 
-    /// Returns the protocol compatibility version that this tag requires.
-    pub const fn requires_version(&self) -> ProtocolVersion {
+impl RequiredVersion for ExtXStreamInf {
+    fn required_version(&self) -> ProtocolVersion {
         ProtocolVersion::V1
     }
 }
@@ -158,10 +173,10 @@ mod test {
     }
 
     #[test]
-    fn test_requires_version() {
+    fn test_required_version() {
         assert_eq!(
             ProtocolVersion::V1,
-            ExtXStreamInf::new("http://www.example.com", 1000).requires_version()
+            ExtXStreamInf::new("http://www.example.com", 1000).required_version()
         );
     }
 

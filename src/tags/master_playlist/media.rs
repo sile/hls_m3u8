@@ -2,7 +2,7 @@ use std::fmt;
 use std::str::FromStr;
 
 use crate::attribute::AttributePairs;
-use crate::types::{InStreamId, MediaType, ProtocolVersion};
+use crate::types::{InStreamId, MediaType, ProtocolVersion, RequiredVersion};
 use crate::utils::{parse_yes_or_no, quote, tag, unquote};
 use crate::Error;
 
@@ -273,9 +273,10 @@ impl ExtXMedia {
     pub fn channels(&self) -> Option<&String> {
         self.channels.as_ref()
     }
+}
 
-    /// Returns the protocol compatibility version that this tag requires.
-    pub fn requires_version(&self) -> ProtocolVersion {
+impl RequiredVersion for ExtXMedia {
+    fn required_version(&self) -> ProtocolVersion {
         match self.instream_id {
             None
             | Some(InStreamId::Cc1)
@@ -385,11 +386,28 @@ mod test {
     use super::*;
 
     #[test]
-    fn ext_x_media() {
-        let tag = ExtXMedia::new(MediaType::Audio, "foo", "bar");
-        let text = r#"#EXT-X-MEDIA:TYPE=AUDIO,GROUP-ID="foo",NAME="bar""#;
-        assert_eq!(text.parse().ok(), Some(tag.clone()));
-        assert_eq!(tag.to_string(), text);
-        assert_eq!(tag.requires_version(), ProtocolVersion::V1);
+    fn test_display() {
+        assert_eq!(
+            ExtXMedia::new(MediaType::Audio, "foo", "bar").to_string(),
+            "#EXT-X-MEDIA:TYPE=AUDIO,GROUP-ID=\"foo\",NAME=\"bar\"".to_string()
+        )
+    }
+
+    #[test]
+    fn test_parser() {
+        assert_eq!(
+            ExtXMedia::new(MediaType::Audio, "foo", "bar"),
+            "#EXT-X-MEDIA:TYPE=AUDIO,GROUP-ID=\"foo\",NAME=\"bar\""
+                .parse()
+                .unwrap()
+        )
+    }
+
+    #[test]
+    fn test_required_version() {
+        assert_eq!(
+            ExtXMedia::new(MediaType::Audio, "foo", "bar").required_version(),
+            ProtocolVersion::V1
+        )
     }
 }

@@ -6,7 +6,7 @@ use derive_builder::Builder;
 use crate::tags::{
     ExtInf, ExtXByteRange, ExtXDateRange, ExtXDiscontinuity, ExtXKey, ExtXMap, ExtXProgramDateTime,
 };
-use crate::types::ProtocolVersion;
+use crate::types::{ProtocolVersion, RequiredVersion};
 
 /// Media segment.
 #[derive(Debug, Clone, Builder)]
@@ -118,21 +118,22 @@ impl MediaSegment {
     pub fn key_tags(&self) -> &[ExtXKey] {
         &self.key_tags
     }
+}
 
-    /// Returns the protocol compatibility version that this segment requires.
-    pub fn requires_version(&self) -> ProtocolVersion {
+impl RequiredVersion for MediaSegment {
+    fn required_version(&self) -> ProtocolVersion {
         iter::empty()
-            .chain(self.key_tags.iter().map(|t| t.requires_version()))
-            .chain(self.map_tag.iter().map(|t| t.requires_version()))
-            .chain(self.byte_range_tag.iter().map(|t| t.requires_version()))
-            .chain(self.date_range_tag.iter().map(|t| t.requires_version()))
-            .chain(self.discontinuity_tag.iter().map(|t| t.requires_version()))
+            .chain(self.key_tags.iter().map(|t| t.required_version()))
+            .chain(self.map_tag.iter().map(|t| t.required_version()))
+            .chain(self.byte_range_tag.iter().map(|t| t.required_version()))
+            .chain(self.date_range_tag.iter().map(|t| t.required_version()))
+            .chain(self.discontinuity_tag.iter().map(|t| t.required_version()))
             .chain(
                 self.program_date_time_tag
                     .iter()
-                    .map(|t| t.requires_version()),
+                    .map(|t| t.required_version()),
             )
-            .chain(iter::once(self.inf_tag.requires_version()))
+            .chain(iter::once(self.inf_tag.required_version()))
             .max()
             .unwrap_or(ProtocolVersion::V7)
     }

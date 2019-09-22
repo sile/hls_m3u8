@@ -1,7 +1,7 @@
 use std::fmt;
 use std::str::FromStr;
 
-use crate::types::ProtocolVersion;
+use crate::types::{ProtocolVersion, RequiredVersion};
 use crate::utils::tag;
 use crate::Error;
 
@@ -13,9 +13,10 @@ pub struct ExtXIFramesOnly;
 
 impl ExtXIFramesOnly {
     pub(crate) const PREFIX: &'static str = "#EXT-X-I-FRAMES-ONLY";
+}
 
-    /// Returns the protocol compatibility version that this tag requires.
-    pub const fn requires_version(self) -> ProtocolVersion {
+impl RequiredVersion for ExtXIFramesOnly {
+    fn required_version(&self) -> ProtocolVersion {
         ProtocolVersion::V4
     }
 }
@@ -40,11 +41,20 @@ mod test {
     use super::*;
 
     #[test]
-    fn ext_i_frames_only() {
-        let tag = ExtXIFramesOnly;
-        let text = "#EXT-X-I-FRAMES-ONLY";
-        assert_eq!(text.parse().ok(), Some(tag));
-        assert_eq!(tag.to_string(), text);
-        assert_eq!(tag.requires_version(), ProtocolVersion::V4);
+    fn test_display() {
+        assert_eq!(
+            ExtXIFramesOnly.to_string(),
+            "#EXT-X-I-FRAMES-ONLY".to_string(),
+        )
+    }
+
+    #[test]
+    fn test_parser() {
+        assert_eq!(ExtXIFramesOnly, "#EXT-X-I-FRAMES-ONLY".parse().unwrap(),)
+    }
+
+    #[test]
+    fn test_required_version() {
+        assert_eq!(ExtXIFramesOnly.required_version(), ProtocolVersion::V4)
     }
 }

@@ -1,9 +1,9 @@
 use std::fmt;
 use std::str::FromStr;
 
-use crate::types::ProtocolVersion;
+use crate::types::{ProtocolVersion, RequiredVersion};
 use crate::utils::tag;
-use crate::{Error, Result};
+use crate::Error;
 
 /// [4.3.2.3. EXT-X-DISCONTINUITY]
 ///
@@ -13,9 +13,10 @@ pub struct ExtXDiscontinuity;
 
 impl ExtXDiscontinuity {
     pub(crate) const PREFIX: &'static str = "#EXT-X-DISCONTINUITY";
+}
 
-    /// Returns the protocol compatibility version that this tag requires.
-    pub const fn requires_version(self) -> ProtocolVersion {
+impl RequiredVersion for ExtXDiscontinuity {
+    fn required_version(&self) -> ProtocolVersion {
         ProtocolVersion::V1
     }
 }
@@ -29,7 +30,7 @@ impl fmt::Display for ExtXDiscontinuity {
 impl FromStr for ExtXDiscontinuity {
     type Err = Error;
 
-    fn from_str(input: &str) -> Result<Self> {
+    fn from_str(input: &str) -> Result<Self, Self::Err> {
         tag(input, Self::PREFIX)?;
         Ok(ExtXDiscontinuity)
     }
@@ -40,10 +41,20 @@ mod test {
     use super::*;
 
     #[test]
-    fn ext_x_discontinuity() {
-        let tag = ExtXDiscontinuity;
-        assert_eq!("#EXT-X-DISCONTINUITY".parse().ok(), Some(tag));
-        assert_eq!(tag.to_string(), "#EXT-X-DISCONTINUITY");
-        assert_eq!(tag.requires_version(), ProtocolVersion::V1);
+    fn test_display() {
+        assert_eq!(
+            ExtXDiscontinuity.to_string(),
+            "#EXT-X-DISCONTINUITY".to_string(),
+        )
+    }
+
+    #[test]
+    fn test_parser() {
+        assert_eq!(ExtXDiscontinuity, "#EXT-X-DISCONTINUITY".parse().unwrap(),)
+    }
+
+    #[test]
+    fn test_required_version() {
+        assert_eq!(ExtXDiscontinuity.required_version(), ProtocolVersion::V1)
     }
 }

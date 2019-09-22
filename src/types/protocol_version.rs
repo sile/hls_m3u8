@@ -3,6 +3,30 @@ use std::str::FromStr;
 
 use crate::Error;
 
+/// # Example
+/// Implementing it:
+/// ```
+/// # use hls_m3u8::types::{ProtocolVersion, RequiredVersion};
+/// #
+/// struct NewTag(u64);
+///
+/// impl RequiredVersion for NewTag {
+///     fn required_version(&self) -> ProtocolVersion {
+///         if self.0 == 5 {
+///             ProtocolVersion::V4
+///         } else {
+///             ProtocolVersion::V1
+///         }
+///     }
+/// }
+/// assert_eq!(NewTag(5).required_version(), ProtocolVersion::V4);
+/// assert_eq!(NewTag(2).required_version(), ProtocolVersion::V1);
+/// ```
+pub trait RequiredVersion {
+    /// Returns the protocol compatibility version that this tag requires.
+    fn required_version(&self) -> ProtocolVersion;
+}
+
 /// [7. Protocol Version Compatibility]
 ///
 /// [7. Protocol Version Compatibility]: https://tools.ietf.org/html/rfc8216#section-7
@@ -29,13 +53,13 @@ impl fmt::Display for ProtocolVersion {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         let n = {
             match &self {
-                ProtocolVersion::V1 => 1,
-                ProtocolVersion::V2 => 2,
-                ProtocolVersion::V3 => 3,
-                ProtocolVersion::V4 => 4,
-                ProtocolVersion::V5 => 5,
-                ProtocolVersion::V6 => 6,
-                ProtocolVersion::V7 => 7,
+                Self::V1 => 1,
+                Self::V2 => 2,
+                Self::V3 => 3,
+                Self::V4 => 4,
+                Self::V5 => 5,
+                Self::V6 => 6,
+                Self::V7 => 7,
             }
         };
         write!(f, "{}", n)
@@ -47,16 +71,49 @@ impl FromStr for ProtocolVersion {
 
     fn from_str(input: &str) -> Result<Self, Self::Err> {
         Ok({
-            match input {
-                "1" => ProtocolVersion::V1,
-                "2" => ProtocolVersion::V2,
-                "3" => ProtocolVersion::V3,
-                "4" => ProtocolVersion::V4,
-                "5" => ProtocolVersion::V5,
-                "6" => ProtocolVersion::V6,
-                "7" => ProtocolVersion::V7,
+            match input.trim() {
+                "1" => Self::V1,
+                "2" => Self::V2,
+                "3" => Self::V3,
+                "4" => Self::V4,
+                "5" => Self::V5,
+                "6" => Self::V6,
+                "7" => Self::V7,
                 _ => return Err(Error::unknown_protocol_version(input)),
             }
         })
+    }
+}
+
+impl Default for ProtocolVersion {
+    fn default() -> Self {
+        Self::V1
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_display() {
+        assert_eq!(ProtocolVersion::V1.to_string(), "1".to_string());
+        assert_eq!(ProtocolVersion::V2.to_string(), "2".to_string());
+        assert_eq!(ProtocolVersion::V3.to_string(), "3".to_string());
+        assert_eq!(ProtocolVersion::V4.to_string(), "4".to_string());
+        assert_eq!(ProtocolVersion::V5.to_string(), "5".to_string());
+        assert_eq!(ProtocolVersion::V6.to_string(), "6".to_string());
+        assert_eq!(ProtocolVersion::V7.to_string(), "7".to_string());
+    }
+
+    #[test]
+    fn test_parser() {
+        assert_eq!(ProtocolVersion::V1, "1".parse().unwrap());
+        assert_eq!(ProtocolVersion::V2, "2".parse().unwrap());
+        assert_eq!(ProtocolVersion::V3, "3".parse().unwrap());
+        assert_eq!(ProtocolVersion::V4, "4".parse().unwrap());
+        assert_eq!(ProtocolVersion::V5, "5".parse().unwrap());
+        assert_eq!(ProtocolVersion::V6, "6".parse().unwrap());
+        assert_eq!(ProtocolVersion::V7, "7".parse().unwrap());
     }
 }

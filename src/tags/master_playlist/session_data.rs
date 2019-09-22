@@ -4,7 +4,7 @@ use std::str::FromStr;
 use derive_builder::Builder;
 
 use crate::attribute::AttributePairs;
-use crate::types::ProtocolVersion;
+use crate::types::{ProtocolVersion, RequiredVersion};
 use crate::utils::{quote, tag, unquote};
 use crate::Error;
 
@@ -243,18 +243,10 @@ impl ExtXSessionData {
         self.data = value;
         self
     }
+}
 
-    /// Returns the protocol compatibility version, that this tag requires.
-    ///
-    /// # Example
-    /// ```
-    /// # use hls_m3u8::types::ProtocolVersion;
-    /// # use hls_m3u8::tags::{ExtXSessionData, SessionData};
-    /// #
-    /// let tag = ExtXSessionData::new("foo", SessionData::Value("bar".into()));
-    /// assert_eq!(tag.requires_version(), ProtocolVersion::V1);
-    /// ```
-    pub const fn requires_version(&self) -> ProtocolVersion {
+impl RequiredVersion for ExtXSessionData {
+    fn required_version(&self) -> ProtocolVersion {
         ProtocolVersion::V1
     }
 }

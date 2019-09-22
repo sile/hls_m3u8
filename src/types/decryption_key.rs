@@ -4,7 +4,7 @@ use std::str::FromStr;
 use derive_builder::Builder;
 
 use crate::attribute::AttributePairs;
-use crate::types::{EncryptionMethod, InitializationVector, ProtocolVersion};
+use crate::types::{EncryptionMethod, InitializationVector, ProtocolVersion, RequiredVersion};
 use crate::utils::{quote, unquote};
 use crate::Error;
 
@@ -292,23 +292,10 @@ impl DecryptionKey {
     pub fn set_key_format_versions<T: ToString>(&mut self, value: T) {
         self.key_format_versions = Some(value.to_string());
     }
+}
 
-    /// Returns the protocol compatibility version that this tag requires.
-    /// # Example
-    /// ```
-    /// use hls_m3u8::types::{EncryptionMethod, ProtocolVersion, DecryptionKey};
-    ///
-    /// let mut key = DecryptionKey::new(
-    ///     EncryptionMethod::Aes128,
-    ///     "https://www.example.com/"
-    /// );
-    ///
-    /// assert_eq!(
-    ///     key.requires_version(),
-    ///     ProtocolVersion::V1
-    /// );
-    /// ```
-    pub fn requires_version(&self) -> ProtocolVersion {
+impl RequiredVersion for DecryptionKey {
+    fn required_version(&self) -> ProtocolVersion {
         if self.key_format.is_some() || self.key_format_versions.is_some() {
             ProtocolVersion::V5
         } else if self.iv.is_some() {
@@ -462,6 +449,15 @@ mod test {
             r#"METHOD=AES-128,URI="http://www.example.com",IV=0x10ef8f758ca555115584bb5b3c687f52,KEYFORMAT="baz""#
             .parse::<DecryptionKey>().unwrap(),
             key
+        )
+    }
+
+    #[test]
+    fn test_required_version() {
+        assert_eq!(
+            DecryptionKey::new(EncryptionMethod::Aes128, "https://www.example.com/")
+                .required_version(),
+            ProtocolVersion::V1
         )
     }
 }

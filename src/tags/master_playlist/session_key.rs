@@ -2,7 +2,7 @@ use std::fmt;
 use std::ops::{Deref, DerefMut};
 use std::str::FromStr;
 
-use crate::types::{DecryptionKey, EncryptionMethod, ProtocolVersion};
+use crate::types::{DecryptionKey, EncryptionMethod, ProtocolVersion, RequiredVersion};
 use crate::utils::tag;
 use crate::Error;
 
@@ -25,24 +25,10 @@ impl ExtXSessionKey {
 
         Self(DecryptionKey::new(method, uri))
     }
+}
 
-    /// Returns the protocol compatibility version that this tag requires.
-    /// # Example
-    /// ```
-    /// use hls_m3u8::tags::ExtXSessionKey;
-    /// use hls_m3u8::types::{EncryptionMethod, ProtocolVersion};
-    ///
-    /// let mut key = ExtXSessionKey::new(
-    ///     EncryptionMethod::Aes128,
-    ///     "https://www.example.com/"
-    /// );
-    ///
-    /// assert_eq!(
-    ///     key.requires_version(),
-    ///     ProtocolVersion::V1
-    /// );
-    /// ```
-    pub fn requires_version(&self) -> ProtocolVersion {
+impl RequiredVersion for ExtXSessionKey {
+    fn required_version(&self) -> ProtocolVersion {
         if self.0.key_format.is_some() | self.0.key_format_versions.is_some() {
             ProtocolVersion::V5
         } else if self.0.iv.is_some() {
@@ -142,5 +128,14 @@ mod test {
             .parse::<ExtXSessionKey>().unwrap(),
             key
         )
+    }
+
+    #[test]
+    fn test_required_version() {
+        assert_eq!(
+            ExtXSessionKey::new(EncryptionMethod::Aes128, "https://www.example.com/")
+                .required_version(),
+            ProtocolVersion::V1
+        );
     }
 }

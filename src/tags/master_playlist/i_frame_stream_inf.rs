@@ -3,12 +3,23 @@ use std::ops::{Deref, DerefMut};
 use std::str::FromStr;
 
 use crate::attribute::AttributePairs;
-use crate::types::{ProtocolVersion, StreamInf};
+use crate::types::{ProtocolVersion, RequiredVersion, StreamInf};
 use crate::utils::{quote, tag, unquote};
 use crate::Error;
 
-/// [4.3.4.3. EXT-X-I-FRAME-STREAM-INF]
+/// # [4.3.4.3. EXT-X-I-FRAME-STREAM-INF]
+/// The [ExtXIFrameStreamInf] tag identifies a [Media Playlist] file
+/// containing the I-frames of a multimedia presentation. It stands
+/// alone, in that it does not apply to a particular URI in the [Master Playlist].
 ///
+/// Its format is:
+///
+/// ```text
+/// #EXT-X-I-FRAME-STREAM-INF:<attribute-list>
+/// ```
+///
+/// [Master Playlist]: crate::MasterPlaylist
+/// [Media Playlist]: crate::MediaPlaylist
 /// [4.3.4.3. EXT-X-I-FRAME-STREAM-INF]: https://tools.ietf.org/html/rfc8216#section-4.3.4.3
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub struct ExtXIFrameStreamInf {
@@ -19,7 +30,7 @@ pub struct ExtXIFrameStreamInf {
 impl ExtXIFrameStreamInf {
     pub(crate) const PREFIX: &'static str = "#EXT-X-I-FRAME-STREAM-INF:";
 
-    /// Makes a new `ExtXIFrameStreamInf` tag.
+    /// Makes a new [ExtXIFrameStreamInf] tag.
     pub fn new<T: ToString>(uri: T, bandwidth: u64) -> Self {
         ExtXIFrameStreamInf {
             uri: uri.to_string(),
@@ -55,9 +66,10 @@ impl ExtXIFrameStreamInf {
         self.uri = value.to_string();
         self
     }
+}
 
-    /// Returns the protocol compatibility version that this tag requires.
-    pub const fn requires_version(&self) -> ProtocolVersion {
+impl RequiredVersion for ExtXIFrameStreamInf {
+    fn required_version(&self) -> ProtocolVersion {
         ProtocolVersion::V1
     }
 }
@@ -133,9 +145,9 @@ mod test {
     }
 
     #[test]
-    fn test_requires_version() {
+    fn test_required_version() {
         assert_eq!(
-            ExtXIFrameStreamInf::new("foo", 1000).requires_version(),
+            ExtXIFrameStreamInf::new("foo", 1000).required_version(),
             ProtocolVersion::V1
         );
     }

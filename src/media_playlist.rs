@@ -11,7 +11,7 @@ use crate::tags::{
     ExtM3u, ExtXDiscontinuitySequence, ExtXEndList, ExtXIFramesOnly, ExtXIndependentSegments,
     ExtXMediaSequence, ExtXPlaylistType, ExtXStart, ExtXTargetDuration, ExtXVersion,
 };
-use crate::types::ProtocolVersion;
+use crate::types::{ProtocolVersion, RequiredVersion};
 use crate::Error;
 
 /// Media playlist.
@@ -142,60 +142,60 @@ impl MediaPlaylistBuilder {
             .chain(
                 self.target_duration_tag
                     .iter()
-                    .map(|t| t.requires_version()),
+                    .map(|t| t.required_version()),
             )
             .chain(self.media_sequence_tag.iter().map(|t| {
                 if let Some(p) = t {
-                    p.requires_version()
+                    p.required_version()
                 } else {
                     ProtocolVersion::V1
                 }
             }))
             .chain(self.discontinuity_sequence_tag.iter().map(|t| {
                 if let Some(p) = t {
-                    p.requires_version()
+                    p.required_version()
                 } else {
                     ProtocolVersion::V1
                 }
             }))
             .chain(self.playlist_type_tag.iter().map(|t| {
                 if let Some(p) = t {
-                    p.requires_version()
+                    p.required_version()
                 } else {
                     ProtocolVersion::V1
                 }
             }))
             .chain(self.i_frames_only_tag.iter().map(|t| {
                 if let Some(p) = t {
-                    p.requires_version()
+                    p.required_version()
                 } else {
                     ProtocolVersion::V1
                 }
             }))
             .chain(self.independent_segments_tag.iter().map(|t| {
                 if let Some(p) = t {
-                    p.requires_version()
+                    p.required_version()
                 } else {
                     ProtocolVersion::V1
                 }
             }))
             .chain(self.start_tag.iter().map(|t| {
                 if let Some(p) = t {
-                    p.requires_version()
+                    p.required_version()
                 } else {
                     ProtocolVersion::V1
                 }
             }))
             .chain(self.end_list_tag.iter().map(|t| {
                 if let Some(p) = t {
-                    p.requires_version()
+                    p.required_version()
                 } else {
                     ProtocolVersion::V1
                 }
             }))
             .chain(self.segments.iter().map(|t| {
                 t.iter()
-                    .map(|s| s.requires_version())
+                    .map(|s| s.required_version())
                     .max()
                     .unwrap_or(ProtocolVersion::V1)
             }))
