@@ -5,21 +5,40 @@ use crate::types::{ProtocolVersion, RequiredVersion};
 use crate::utils::tag;
 use crate::Error;
 
-/// [4.3.1.2. EXT-X-VERSION]
+/// # [4.3.1.2. EXT-X-VERSION]
+/// The [ExtXVersion] tag indicates the compatibility version of the
+/// Playlist file, its associated media, and its server.
+///
+/// The [ExtXVersion] tag applies to the entire Playlist file. Its
+/// format is:
+///
+/// ```text
+/// #EXT-X-VERSION:<n>
+/// ```
+/// where `n` is an integer indicating the protocol compatibility version
+/// number.
 ///
 /// [4.3.1.2. EXT-X-VERSION]: https://tools.ietf.org/html/rfc8216#section-4.3.1.2
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+#[derive(Copy, Clone, Eq, PartialEq, Ord, PartialOrd, Hash, Debug)]
 pub struct ExtXVersion(ProtocolVersion);
 
 impl ExtXVersion {
     pub(crate) const PREFIX: &'static str = "#EXT-X-VERSION:";
 
-    /// Makes a new `ExtXVersion` tag.
+    /// Makes a new [ExtXVersion] tag.
+    ///
+    /// # Example
+    /// ```
+    /// # use hls_m3u8::tags::ExtXVersion;
+    /// use hls_m3u8::types::ProtocolVersion;
+    ///
+    /// let version_tag = ExtXVersion::new(ProtocolVersion::V2);
+    /// ```
     pub const fn new(version: ProtocolVersion) -> Self {
         Self(version)
     }
 
-    /// Returns the protocol compatibility version of the playlist containing this tag.
+    /// Returns the protocol compatibility version of the playlist, containing this tag.
     ///
     /// # Example
     /// ```
@@ -84,8 +103,8 @@ mod test {
     #[test]
     fn test_parser() {
         assert_eq!(
-            "#EXT-X-VERSION:6".parse().ok(),
-            Some(ExtXVersion::new(ProtocolVersion::V6))
+            "#EXT-X-VERSION:6".parse::<ExtXVersion>().unwrap(),
+            ExtXVersion::new(ProtocolVersion::V6)
         );
     }
 

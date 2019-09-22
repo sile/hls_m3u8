@@ -5,26 +5,25 @@ use crate::types::{ProtocolVersion, RequiredVersion};
 use crate::utils::tag;
 use crate::Error;
 
-/// [4.3.3.5. EXT-X-PLAYLIST-TYPE](https://tools.ietf.org/html/rfc8216#section-4.3.3.5)
+/// # [4.4.3.5. EXT-X-PLAYLIST-TYPE]
 ///
-/// The EXT-X-PLAYLIST-TYPE tag provides mutability information about the
-/// Media Playlist. It applies to the entire Media Playlist.
-/// It is OPTIONAL. Its format is:
+/// The [ExtXPlaylistType] tag provides mutability information about the
+/// [Media Playlist]. It applies to the entire [Media Playlist].
 ///
+/// Its format is:
 /// ```text
 /// #EXT-X-PLAYLIST-TYPE:<type-enum>
 /// ```
 ///
-/// # Note
-/// If the EXT-X-PLAYLIST-TYPE tag is omitted from a Media Playlist, the
-/// Playlist can be updated according to the rules in Section 6.2.1 with
-/// no additional restrictions.
+/// [Media Playlist]: crate::MediaPlaylist
+/// [4.4.3.5. EXT-X-PLAYLIST-TYPE]:
+/// https://tools.ietf.org/html/draft-pantos-hls-rfc8216bis-04#section-4.4.3.5
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum ExtXPlaylistType {
-    /// If the ExtXPlaylistType is Event, Media Segments can only be added to
+    /// If the [ExtXPlaylistType] is Event, Media Segments can only be added to
     /// the end of the Media Playlist.
     Event,
-    /// If the ExtXPlaylistType is Video On Demand (Vod),
+    /// If the [ExtXPlaylistType] is Video On Demand (Vod),
     /// the Media Playlist cannot change.
     Vod,
 }

@@ -22,11 +22,12 @@ pub enum SessionData {
     Uri(String),
 }
 
-/// [4.3.4.4. EXT-X-SESSION-DATA]
+/// # [4.3.4.4. EXT-X-SESSION-DATA]
 ///
 /// The [ExtXSessionData] tag allows arbitrary session data to be
-/// carried in a [Master Playlist](crate::MasterPlaylist).
+/// carried in a [Master Playlist].
 ///
+/// [Master Playlist]: crate::MasterPlaylist
 /// [4.3.4.4. EXT-X-SESSION-DATA]: https://tools.ietf.org/html/rfc8216#section-4.3.4.4
 #[derive(Builder, Hash, Eq, Ord, Debug, PartialEq, Clone, PartialOrd)]
 #[builder(setter(into))]
@@ -319,40 +320,73 @@ mod test {
 
     #[test]
     fn test_display() {
-        let tag = ExtXSessionData::new("foo", SessionData::Value("bar".into()));
-        let text = r#"#EXT-X-SESSION-DATA:DATA-ID="foo",VALUE="bar""#;
-        assert_eq!(tag.to_string(), text);
+        assert_eq!(
+            "#EXT-X-SESSION-DATA:DATA-ID=\"com.example.lyrics\",URI=\"lyrics.json\"".to_string(),
+            ExtXSessionData::new(
+                "com.example.lyrics",
+                SessionData::Uri("lyrics.json".to_string())
+            )
+            .to_string()
+        );
 
-        let tag = ExtXSessionData::new("foo", SessionData::Uri("bar".into()));
-        let text = r#"#EXT-X-SESSION-DATA:DATA-ID="foo",URI="bar""#;
-        assert_eq!(tag.to_string(), text);
+        assert_eq!(
+            "#EXT-X-SESSION-DATA:DATA-ID=\"com.example.title\",\
+             VALUE=\"This is an example\",LANGUAGE=\"en\""
+                .to_string(),
+            ExtXSessionData::with_language(
+                "com.example.title",
+                SessionData::Value("This is an example".to_string()),
+                "en"
+            )
+            .to_string()
+        );
 
-        let tag = ExtXSessionData::with_language("foo", SessionData::Value("bar".into()), "baz");
-        let text = r#"#EXT-X-SESSION-DATA:DATA-ID="foo",VALUE="bar",LANGUAGE="baz""#;
-        assert_eq!(tag.to_string(), text);
+        assert_eq!(
+            "#EXT-X-SESSION-DATA:DATA-ID=\"com.example.title\",\
+             VALUE=\"Este es un ejemplo\",LANGUAGE=\"es\""
+                .to_string(),
+            ExtXSessionData::with_language(
+                "com.example.title",
+                SessionData::Value("Este es un ejemplo".to_string()),
+                "es"
+            )
+            .to_string()
+        );
+
+        assert_eq!(
+            "#EXT-X-SESSION-DATA:DATA-ID=\"foo\",VALUE=\"bar\"".to_string(),
+            ExtXSessionData::new("foo", SessionData::Value("bar".into())).to_string()
+        );
+
+        assert_eq!(
+            "#EXT-X-SESSION-DATA:DATA-ID=\"foo\",URI=\"bar\"".to_string(),
+            ExtXSessionData::new("foo", SessionData::Uri("bar".into())).to_string()
+        );
+
+        assert_eq!(
+            "#EXT-X-SESSION-DATA:DATA-ID=\"foo\",VALUE=\"bar\",LANGUAGE=\"baz\"".to_string(),
+            ExtXSessionData::with_language("foo", SessionData::Value("bar".into()), "baz")
+                .to_string()
+        );
     }
 
     #[test]
     fn test_parser() {
-        let tag = "#EXT-X-SESSION-DATA:DATA-ID=\"com.example.lyrics\",URI=\"lyrics.json\""
-            .parse::<ExtXSessionData>()
-            .unwrap();
-
         assert_eq!(
-            tag,
+            "#EXT-X-SESSION-DATA:DATA-ID=\"com.example.lyrics\",URI=\"lyrics.json\""
+                .parse::<ExtXSessionData>()
+                .unwrap(),
             ExtXSessionData::new(
                 "com.example.lyrics",
                 SessionData::Uri("lyrics.json".to_string())
             )
         );
 
-        let tag = "#EXT-X-SESSION-DATA:DATA-ID=\"com.example.title\",\
-                   LANGUAGE=\"en\", VALUE=\"This is an example\""
-            .parse::<ExtXSessionData>()
-            .unwrap();
-
         assert_eq!(
-            tag,
+            "#EXT-X-SESSION-DATA:DATA-ID=\"com.example.title\",\
+             LANGUAGE=\"en\", VALUE=\"This is an example\""
+                .parse::<ExtXSessionData>()
+                .unwrap(),
             ExtXSessionData::with_language(
                 "com.example.title",
                 SessionData::Value("This is an example".to_string()),
@@ -360,13 +394,11 @@ mod test {
             )
         );
 
-        let tag = "#EXT-X-SESSION-DATA:DATA-ID=\"com.example.title\",\
-                   LANGUAGE=\"es\", VALUE=\"Este es un ejemplo\""
-            .parse::<ExtXSessionData>()
-            .unwrap();
-
         assert_eq!(
-            tag,
+            "#EXT-X-SESSION-DATA:DATA-ID=\"com.example.title\",\
+             LANGUAGE=\"es\", VALUE=\"Este es un ejemplo\""
+                .parse::<ExtXSessionData>()
+                .unwrap(),
             ExtXSessionData::with_language(
                 "com.example.title",
                 SessionData::Value("Este es un ejemplo".to_string()),
@@ -374,16 +406,37 @@ mod test {
             )
         );
 
-        let tag = ExtXSessionData::new("foo", SessionData::Value("bar".into()));
-        let text = r#"#EXT-X-SESSION-DATA:DATA-ID="foo",VALUE="bar""#;
-        assert_eq!(text.parse::<ExtXSessionData>().unwrap(), tag);
+        assert_eq!(
+            "#EXT-X-SESSION-DATA:DATA-ID=\"foo\",VALUE=\"bar\""
+                .parse::<ExtXSessionData>()
+                .unwrap(),
+            ExtXSessionData::new("foo", SessionData::Value("bar".into()))
+        );
 
-        let tag = ExtXSessionData::new("foo", SessionData::Uri("bar".into()));
-        let text = r#"#EXT-X-SESSION-DATA:DATA-ID="foo",URI="bar""#;
-        assert_eq!(text.parse::<ExtXSessionData>().unwrap(), tag);
+        assert_eq!(
+            "#EXT-X-SESSION-DATA:DATA-ID=\"foo\",URI=\"bar\""
+                .parse::<ExtXSessionData>()
+                .unwrap(),
+            ExtXSessionData::new("foo", SessionData::Uri("bar".into()))
+        );
 
-        let tag = ExtXSessionData::with_language("foo", SessionData::Value("bar".into()), "baz");
-        let text = r#"#EXT-X-SESSION-DATA:DATA-ID="foo",VALUE="bar",LANGUAGE="baz""#;
-        assert_eq!(text.parse::<ExtXSessionData>().unwrap(), tag);
+        assert_eq!(
+            "#EXT-X-SESSION-DATA:DATA-ID=\"foo\",VALUE=\"bar\",LANGUAGE=\"baz\""
+                .parse::<ExtXSessionData>()
+                .unwrap(),
+            ExtXSessionData::with_language("foo", SessionData::Value("bar".into()), "baz")
+        );
+    }
+
+    #[test]
+    fn test_required_version() {
+        assert_eq!(
+            ExtXSessionData::new(
+                "com.example.lyrics",
+                SessionData::Uri("lyrics.json".to_string())
+            )
+            .required_version(),
+            ProtocolVersion::V1
+        );
     }
 }

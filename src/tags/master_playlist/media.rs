@@ -8,9 +8,23 @@ use crate::types::{InStreamId, MediaType, ProtocolVersion, RequiredVersion};
 use crate::utils::{parse_yes_or_no, quote, tag, unquote};
 use crate::Error;
 
-/// [4.3.4.1. EXT-X-MEDIA]
+/// # [4.4.4.1. EXT-X-MEDIA]
+/// The [ExtXMedia] tag is used to relate [Media Playlist]s that contain
+/// alternative Renditions of the same content. For
+/// example, three [ExtXMedia] tags can be used to identify audio-only
+/// [Media Playlist]s, that contain English, French, and Spanish Renditions
+/// of the same presentation. Or, two [ExtXMedia] tags can be used to
+/// identify video-only [Media Playlist]s that show two different camera
+/// angles.
 ///
-/// [4.3.4.1. EXT-X-MEDIA]: https://tools.ietf.org/html/rfc8216#section-4.3.4.1
+/// Its format is:
+/// ```text
+/// #EXT-X-MEDIA:<attribute-list>
+/// ```
+///
+/// [Media Playlist]: crate::MediaPlaylist
+/// [4.4.4.1. EXT-X-MEDIA]:
+/// https://tools.ietf.org/html/draft-pantos-hls-rfc8216bis-04#section-4.4.4.1
 #[derive(Builder, Debug, Clone, PartialEq, Eq, Hash)]
 #[builder(setter(into))]
 #[builder(build_fn(validate = "Self::validate"))]
@@ -54,22 +68,27 @@ impl ExtXMediaBuilder {
     fn validate(&self) -> Result<(), String> {
         let media_type = self
             .media_type
-            .ok_or(Error::missing_value("self.media_type").to_string())?;
+            .ok_or(Error::missing_attribute("MEDIA-TYPE").to_string())?;
 
         if MediaType::ClosedCaptions == media_type {
-            if let None = self.uri {
-                return Err(Error::missing_value("self.uri").to_string());
+            if self.uri.is_some() {
+                return Err(Error::custom(
+                    "Unexpected attribute: \"URL\" for MediaType::ClosedCaptions!",
+                )
+                .to_string());
             }
             self.instream_id
-                .ok_or(Error::missing_value("self.instream_id").to_string())?;
+                .ok_or(Error::missing_attribute("INSTREAM-ID").to_string())?;
         } else {
-            if let Some(_) = &self.instream_id {
-                return Err(Error::invalid_input().to_string());
+            if self.instream_id.is_some() {
+                return Err(Error::custom("Unexpected attribute: \"INSTREAM-ID\"!").to_string());
             }
         }
 
-        if self.is_default.unwrap_or(false) && self.is_autoselect.unwrap_or(false) {
-            return Err(Error::invalid_input().to_string());
+        if self.is_default.unwrap_or(false) && !self.is_autoselect.unwrap_or(false) {
+            return Err(
+                Error::custom("If `DEFAULT` is true, `AUTOSELECT` has to be true too!").to_string(),
+            );
         }
 
         if MediaType::Subtitles != media_type {
@@ -85,7 +104,7 @@ impl ExtXMediaBuilder {
 impl ExtXMedia {
     pub(crate) const PREFIX: &'static str = "#EXT-X-MEDIA:";
 
-    /// Makes a new `ExtXMedia` tag.
+    /// Makes a new [ExtXMedia] tag.
     pub fn new<T: ToString>(media_type: MediaType, group_id: T, name: T) -> Self {
         ExtXMedia {
             media_type,
@@ -284,6 +303,52 @@ mod test {
 
     #[test]
     fn test_display() {
+        // TODO: https://developer.apple.com/documentation/http_live_streaming/example_playlists_for_http_live_streaming/adding_alternate_media_to_a_playlist
+        assert_eq!(
+            ExtXMedia::builder()
+                .media_type(MediaType::Audio)
+                .group_id("audio")
+                .language("eng")
+                .name("English")
+                .is_autoselect(true)
+                .is_default(true)
+                .uri("eng/prog_index.m3u8")
+                .build()
+                .unwrap()
+                .to_string(),
+            "#EXT-X-MEDIA:\
+             TYPE=AUDIO,\
+             URI=\"eng/prog_index.m3u8\",\
+             GROUP-ID=\"audio\",\
+             LANGUAGE=\"eng\",\
+             NAME=\"English\",\
+             DEFAULT=YES,\
+             AUTOSELECT=YES"
+                .to_string()
+        );
+
+        assert_eq!(
+            ExtXMedia::builder()
+                .media_type(MediaType::Audio)
+                .group_id("audio")
+                .language("fre")
+                .name("Français")
+                .is_autoselect(true)
+                .is_default(false)
+                .uri("fre/prog_index.m3u8")
+                .build()
+                .unwrap()
+                .to_string(),
+            "#EXT-X-MEDIA:\
+             TYPE=AUDIO,\
+             URI=\"fre/prog_index.m3u8\",\
+             GROUP-ID=\"audio\",\
+             LANGUAGE=\"fre\",\
+             NAME=\"Français\",\
+             AUTOSELECT=YES"
+                .to_string()
+        );
+
         assert_eq!(
             ExtXMedia::new(MediaType::Audio, "foo", "bar").to_string(),
             "#EXT-X-MEDIA:TYPE=AUDIO,GROUP-ID=\"foo\",NAME=\"bar\"".to_string()

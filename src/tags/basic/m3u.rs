@@ -5,10 +5,18 @@ use crate::types::{ProtocolVersion, RequiredVersion};
 use crate::utils::tag;
 use crate::Error;
 
-/// [4.3.1.1. EXTM3U]
+/// # [4.3.1.1. EXTM3U]
+/// The [ExtM3u] tag indicates that the file is an Extended [M3U]
+/// Playlist file.
 ///
+/// Its format is:
+/// ```text
+/// #EXTM3U
+/// ```
+///
+/// [M3U]: https://en.wikipedia.org/wiki/M3U
 /// [4.3.1.1. EXTM3U]: https://tools.ietf.org/html/rfc8216#section-4.3.1.1
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+#[derive(Copy, Clone, Eq, PartialEq, Ord, PartialOrd, Hash, Debug, Default)]
 pub struct ExtM3u;
 
 impl ExtM3u {

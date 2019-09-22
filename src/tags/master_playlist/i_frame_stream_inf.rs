@@ -10,7 +10,7 @@ use crate::Error;
 /// # [4.3.4.3. EXT-X-I-FRAME-STREAM-INF]
 /// The [ExtXIFrameStreamInf] tag identifies a [Media Playlist] file
 /// containing the I-frames of a multimedia presentation. It stands
-/// alone, in that it does not apply to a particular URI in the [Master Playlist].
+/// alone, in that it does not apply to a particular `URI` in the [Master Playlist].
 ///
 /// Its format is:
 ///
@@ -38,7 +38,7 @@ impl ExtXIFrameStreamInf {
         }
     }
 
-    /// Returns the URI, that identifies the associated media playlist.
+    /// Returns the `URI`, that identifies the associated media playlist.
     ///
     /// # Example
     /// ```
@@ -51,7 +51,7 @@ impl ExtXIFrameStreamInf {
         &self.uri
     }
 
-    /// Sets the URI, that identifies the associated media playlist.
+    /// Sets the `URI`, that identifies the associated media playlist.
     ///
     /// # Example
     /// ```
@@ -126,22 +126,20 @@ mod test {
 
     #[test]
     fn test_display() {
-        let text = r#"#EXT-X-I-FRAME-STREAM-INF:URI="foo",BANDWIDTH=1000"#;
-        assert_eq!(ExtXIFrameStreamInf::new("foo", 1000).to_string(), text);
+        assert_eq!(
+            ExtXIFrameStreamInf::new("foo", 1000).to_string(),
+            "#EXT-X-I-FRAME-STREAM-INF:URI=\"foo\",BANDWIDTH=1000".to_string()
+        );
     }
 
     #[test]
     fn test_parser() {
-        let text = r#"#EXT-X-I-FRAME-STREAM-INF:URI="foo",BANDWIDTH=1000"#;
-        let i_frame_stream_inf = ExtXIFrameStreamInf::new("foo", 1000);
         assert_eq!(
-            text.parse::<ExtXIFrameStreamInf>().unwrap(),
-            i_frame_stream_inf.clone()
+            "#EXT-X-I-FRAME-STREAM-INF:URI=\"foo\",BANDWIDTH=1000"
+                .parse::<ExtXIFrameStreamInf>()
+                .unwrap(),
+            ExtXIFrameStreamInf::new("foo", 1000)
         );
-
-        assert_eq!(i_frame_stream_inf.uri(), "foo");
-        assert_eq!(i_frame_stream_inf.bandwidth(), 1000);
-        // TODO: test all the optional fields
     }
 
     #[test]

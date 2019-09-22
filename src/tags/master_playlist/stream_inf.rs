@@ -44,16 +44,18 @@ impl ExtXStreamInf {
         }
     }
 
+    /// Sets the `URI` that identifies the associated media playlist.
     pub fn set_uri<T: ToString>(&mut self, value: T) -> &mut Self {
         self.uri = value.to_string();
         self
     }
 
-    /// Returns the URI that identifies the associated media playlist.
+    /// Returns the `URI` that identifies the associated media playlist.
     pub const fn uri(&self) -> &String {
         &self.uri
     }
 
+    /// Sets the maximum frame rate for all the video in the variant stream.
     pub fn set_frame_rate(&mut self, value: Option<f64>) -> &mut Self {
         self.frame_rate = value.map(|v| v.into());
         self

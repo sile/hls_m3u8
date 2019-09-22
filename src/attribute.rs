@@ -110,7 +110,7 @@ mod test {
 
     #[test]
     fn test_parser() {
-        let pairs = ("FOO=BAR,BAR=\"baz,qux\",ABC=12.3")
+        let pairs = "FOO=BAR,BAR=\"baz,qux\",ABC=12.3"
             .parse::<AttributePairs>()
             .unwrap();
 

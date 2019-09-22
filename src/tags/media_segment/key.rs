@@ -2,15 +2,30 @@ use std::fmt;
 use std::ops::{Deref, DerefMut};
 use std::str::FromStr;
 
-use crate::types::{DecryptionKey, EncryptionMethod};
+use crate::types::{DecryptionKey, EncryptionMethod, KeyFormatVersions};
 use crate::utils::tag;
 use crate::Error;
 
-/// [4.3.2.4. EXT-X-KEY]
+/// # [4.4.2.4. EXT-X-KEY]
+/// [Media Segment]s may be encrypted. The [ExtXKey] tag specifies how to
+/// decrypt them. It applies to every [Media Segment] and to every Media
+/// Initialization Section declared by an [ExtXMap] tag, that appears
+/// between it and the next [ExtXKey] tag in the Playlist file with the
+/// same [KeyFormat] attribute (or the end of the Playlist file).
 ///
-/// [4.3.2.4. EXT-X-KEY]: https://tools.ietf.org/html/rfc8216#section-4.3.2.4
+/// The format is:
+/// ```text
+/// #EXT-X-KEY:<attribute-list>
+/// ```
+///
 /// # Note
 /// In case of an empty key (`EncryptionMethod::None`), all attributes will be ignored.
+///
+/// [KeyFormat]: crate::types::KeyFormat
+/// [ExtXMap]: crate::tags::ExtXMap
+/// [Media Segment]: crate::MediaSegment
+/// [4.4.2.4. EXT-X-KEY]:
+/// https://tools.ietf.org/html/draft-pantos-hls-rfc8216bis-04#section-4.4.2.4
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub struct ExtXKey(DecryptionKey);
 
@@ -49,13 +64,13 @@ impl ExtXKey {
     ///     "#EXT-X-KEY:METHOD=NONE"
     /// );
     /// ```
-    pub const fn empty() -> Self {
+    pub fn empty() -> Self {
         Self(DecryptionKey {
             method: EncryptionMethod::None,
             uri: None,
             iv: None,
             key_format: None,
-            key_format_versions: None,
+            key_format_versions: KeyFormatVersions::new(),
         })
     }
 
@@ -109,7 +124,7 @@ impl DerefMut for ExtXKey {
 #[cfg(test)]
 mod test {
     use super::*;
-    use crate::types::EncryptionMethod;
+    use crate::types::{EncryptionMethod, KeyFormat};
 
     #[test]
     fn test_display() {
@@ -120,12 +135,12 @@ mod test {
 
         let mut key = ExtXKey::empty();
         // it is expected, that all attributes will be ignored in an empty key!
-        key.set_key_format("hi");
+        key.set_key_format(Some(KeyFormat::Identity));
         key.set_iv([
             16, 239, 143, 117, 140, 165, 85, 17, 85, 132, 187, 91, 60, 104, 127, 82,
         ]);
         key.set_uri(Some("https://www.example.com"));
-        key.set_key_format_versions("1/2/3");
+        key.set_key_format_versions(vec![1, 2, 3]);
 
         assert_eq!(key.to_string(), "#EXT-X-KEY:METHOD=NONE".to_string());
     }
@@ -133,7 +148,9 @@ mod test {
     #[test]
     fn test_parser() {
         assert_eq!(
-            r#"#EXT-X-KEY:METHOD=AES-128,URI="https://priv.example.com/key.php?r=52""#
+            "#EXT-X-KEY:\
+             METHOD=AES-128,\
+             URI=\"https://priv.example.com/key.php?r=52\""
                 .parse::<ExtXKey>()
                 .unwrap(),
             ExtXKey::new(

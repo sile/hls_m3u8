@@ -6,19 +6,31 @@ use crate::types::{ProtocolVersion, RequiredVersion};
 use crate::utils::tag;
 use crate::Error;
 
-/// [4.3.3.1. EXT-X-TARGETDURATION]
+/// # [4.4.3.1. EXT-X-TARGETDURATION]
+/// The [ExtXTargetDuration] tag specifies the maximum [Media Segment]
+/// duration.
 ///
-/// [4.3.3.1. EXT-X-TARGETDURATION]: https://tools.ietf.org/html/rfc8216#section-4.3.3.1
+/// Its format is:
+/// ```text
+/// #EXT-X-TARGETDURATION:<s>
+/// ```
+/// where `s` is the target [Duration] in seconds.
+///
+/// [Media Segment]: crate::MediaSegment
+/// [4.4.3.1. EXT-X-TARGETDURATION]:
+/// https://tools.ietf.org/html/draft-pantos-hls-rfc8216bis-04#section-4.4.3.1
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Default)]
 pub struct ExtXTargetDuration(Duration);
 
 impl ExtXTargetDuration {
     pub(crate) const PREFIX: &'static str = "#EXT-X-TARGETDURATION:";
 
-    /// Makes a new `ExtXTargetduration` tag.
+    /// Makes a new [ExtXTargetduration] tag.
     ///
-    /// Note that the nanoseconds part of the `duration` will be discarded.
+    /// # Note
+    /// The nanoseconds part of the [Duration] will be discarded.
     pub const fn new(duration: Duration) -> Self {
+        // TOOD: round instead of discarding?
         Self(Duration::from_secs(duration.as_secs()))
     }
 

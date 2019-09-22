@@ -5,24 +5,63 @@ use crate::types::{ProtocolVersion, RequiredVersion};
 use crate::utils::tag;
 use crate::Error;
 
-/// [4.3.3.2. EXT-X-MEDIA-SEQUENCE]
+/// # [4.4.3.2. EXT-X-MEDIA-SEQUENCE]
+/// The [ExtXMediaSequence] tag indicates the Media Sequence Number of
+/// the first [Media Segment] that appears in a Playlist file.
 ///
-/// [4.3.3.2. EXT-X-MEDIA-SEQUENCE]: https://tools.ietf.org/html/rfc8216#section-4.3.3.2
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+/// Its format is:
+/// ```text
+/// #EXT-X-MEDIA-SEQUENCE:<number>
+/// ```
+/// where `number` is a [u64].
+///
+/// [Media Segment]: crate::MediaSegment
+/// [4.4.3.2. EXT-X-MEDIA-SEQUENCE]:
+/// https://tools.ietf.org/html/draft-pantos-hls-rfc8216bis-04#section-4.4.3.2
+#[derive(Default, Debug, Clone, Copy, PartialEq, Eq, Hash, Ord, PartialOrd)]
 pub struct ExtXMediaSequence(u64);
 
 impl ExtXMediaSequence {
     pub(crate) const PREFIX: &'static str = "#EXT-X-MEDIA-SEQUENCE:";
 
-    /// Makes a new `ExtXMediaSequence` tag.
+    /// Makes a new [ExtXMediaSequence] tag.
+    ///
+    /// # Example
+    /// ```
+    /// # use hls_m3u8::tags::ExtXMediaSequence;
+    /// let media_sequence = ExtXMediaSequence::new(5);
+    /// ```
     pub const fn new(seq_num: u64) -> Self {
         Self(seq_num)
     }
 
     /// Returns the sequence number of the first media segment,
     /// that appears in the associated playlist.
+    ///
+    /// # Example
+    /// ```
+    /// # use hls_m3u8::tags::ExtXMediaSequence;
+    /// let media_sequence = ExtXMediaSequence::new(5);
+    ///
+    /// assert_eq!(media_sequence.seq_num(), 5);
+    /// ```
     pub const fn seq_num(&self) -> u64 {
         self.0
+    }
+
+    /// Sets the sequence number.
+    ///
+    /// # Example
+    /// ```
+    /// # use hls_m3u8::tags::ExtXMediaSequence;
+    /// let mut media_sequence = ExtXMediaSequence::new(5);
+    ///
+    /// media_sequence.set_seq_num(10);
+    /// assert_eq!(media_sequence.seq_num(), 10);
+    /// ```
+    pub fn set_seq_num(&mut self, value: u64) -> &mut Self {
+        self.0 = value;
+        self
     }
 }
 

@@ -5,9 +5,19 @@ use crate::types::{ProtocolVersion, RequiredVersion};
 use crate::utils::tag;
 use crate::Error;
 
-/// [4.3.3.4. EXT-X-ENDLIST]
+/// # [4.4.3.4. EXT-X-ENDLIST]
+/// The [ExtXEndList] tag indicates, that no more [Media Segment]s will be
+/// added to the [Media Playlist] file.
 ///
-/// [4.3.3.4. EXT-X-ENDLIST]: https://tools.ietf.org/html/rfc8216#section-4.3.3.4
+/// Its format is:
+/// ```text
+/// #EXT-X-ENDLIST
+/// ```
+///
+/// [Media Segment]: crate::MediaSegment
+/// [Media Playlist]: crate::MediaPlaylist
+/// [4.4.3.4. EXT-X-ENDLIST]:
+/// https://tools.ietf.org/html/draft-pantos-hls-rfc8216bis-04#section-4.4.3.4
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct ExtXEndList;
 

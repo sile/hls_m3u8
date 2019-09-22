@@ -18,8 +18,8 @@ use crate::Error;
 #[allow(missing_docs)]
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub struct ExtXDateRange {
-    /// A string that uniquely identifies a Date Range in the Playlist.
-    /// This attribute is REQUIRED.
+    /// A string that uniquely identifies a [ExtXDateRange] in the Playlist.
+    /// This attribute is required.
     id: String,
     /// A client-defined string that specifies some set of attributes and their associated value
     /// semantics. All Date Ranges with the same CLASS attribute value MUST adhere to these

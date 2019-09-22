@@ -6,9 +6,18 @@ use crate::types::{ByteRange, ProtocolVersion, RequiredVersion};
 use crate::utils::{quote, tag, unquote};
 use crate::Error;
 
-/// [4.3.2.5. EXT-X-MAP]
+/// # [4.4.2.5. EXT-X-MAP]
+/// The [ExtXMap] tag specifies how to obtain the Media Initialization
+/// Section, required to parse the applicable [Media Segment]s.
 ///
-/// [4.3.2.5. EXT-X-MAP]: https://tools.ietf.org/html/rfc8216#section-4.3.2.5
+/// Its format is:
+/// ```text
+/// #EXT-X-MAP:<attribute-list>
+/// ```
+///
+/// [Media Segment]: crate::MediaSegment
+/// [4.4.2.5. EXT-X-MAP]:
+/// https://tools.ietf.org/html/draft-pantos-hls-rfc8216bis-04#section-4.4.2.5
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub struct ExtXMap {
     uri: String,
