@@ -69,6 +69,10 @@ pub enum ErrorKind {
     /// An Error from a Builder.
     BuilderError(String),
 
+    #[fail(display = "Missing Attribute: {}", _0)]
+    /// An attribute is missing.
+    MissingAttribute(String),
+
     /// Hints that destructuring should not be exhaustive.
     ///
     /// This enum may grow additional variants, so this makes sure clients
@@ -184,6 +188,10 @@ impl Error {
 
     pub(crate) fn chrono<T: ToString>(value: T) -> Self {
         Self::from(ErrorKind::ChronoParseError(value.to_string()))
+    }
+
+    pub(crate) fn missing_attribute<T: ToString>(value: T) -> Self {
+        Self::from(ErrorKind::MissingAttribute(value.to_string()))
     }
 }
 

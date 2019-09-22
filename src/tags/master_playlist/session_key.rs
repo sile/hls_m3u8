@@ -2,12 +2,23 @@ use std::fmt;
 use std::ops::{Deref, DerefMut};
 use std::str::FromStr;
 
-use crate::types::{DecryptionKey, EncryptionMethod, ProtocolVersion};
+use crate::types::{DecryptionKey, EncryptionMethod, ProtocolVersion, RequiredVersion};
 use crate::utils::tag;
 use crate::Error;
 
-/// [4.3.4.5. EXT-X-SESSION-KEY]
+/// # [4.3.4.5. EXT-X-SESSION-KEY]
+/// The [ExtXSessionKey] tag allows encryption keys from [Media Playlist]s
+/// to be specified in a [Master Playlist]. This allows the client to
+/// preload these keys without having to read the [Media Playlist]s
+/// first.
 ///
+/// Its format is:
+/// ```text
+/// #EXT-X-SESSION-KEY:<attribute-list>
+/// ```
+///
+/// [Media Playlist]: crate::MediaPlaylist
+/// [Master Playlist]: crate::MasterPlaylist
 /// [4.3.4.5. EXT-X-SESSION-KEY]: https://tools.ietf.org/html/rfc8216#section-4.3.4.5
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub struct ExtXSessionKey(DecryptionKey);
@@ -16,8 +27,21 @@ impl ExtXSessionKey {
     pub(crate) const PREFIX: &'static str = "#EXT-X-SESSION-KEY:";
 
     /// Makes a new [ExtXSessionKey] tag.
+    ///
     /// # Panic
-    /// This method will panic, if the [EncryptionMethod] is None.
+    /// An [ExtXSessionKey] should only be used, if the segments of the stream are encrypted.
+    /// Therefore this function will panic, if the `method` is [EncryptionMethod::None].
+    ///
+    /// # Example
+    /// ```
+    /// # use hls_m3u8::tags::ExtXSessionKey;
+    /// use hls_m3u8::types::EncryptionMethod;
+    ///
+    /// let session_key = ExtXSessionKey::new(
+    ///     EncryptionMethod::Aes128,
+    ///     "https://www.example.com/"
+    /// );
+    /// ```
     pub fn new<T: ToString>(method: EncryptionMethod, uri: T) -> Self {
         if method == EncryptionMethod::None {
             panic!("The EncryptionMethod is not allowed to be None");
@@ -25,36 +49,19 @@ impl ExtXSessionKey {
 
         Self(DecryptionKey::new(method, uri))
     }
+}
 
-    /// Returns the protocol compatibility version that this tag requires.
-    /// # Example
-    /// ```
-    /// use hls_m3u8::tags::ExtXSessionKey;
-    /// use hls_m3u8::types::{EncryptionMethod, ProtocolVersion};
-    ///
-    /// let mut key = ExtXSessionKey::new(
-    ///     EncryptionMethod::Aes128,
-    ///     "https://www.example.com/"
-    /// );
-    ///
-    /// assert_eq!(
-    ///     key.requires_version(),
-    ///     ProtocolVersion::V1
-    /// );
-    /// ```
-    pub fn requires_version(&self) -> ProtocolVersion {
-        if self.0.key_format.is_some() | self.0.key_format_versions.is_some() {
-            ProtocolVersion::V5
-        } else if self.0.iv.is_some() {
-            ProtocolVersion::V2
-        } else {
-            ProtocolVersion::V1
-        }
+impl RequiredVersion for ExtXSessionKey {
+    fn required_version(&self) -> ProtocolVersion {
+        self.0.required_version()
     }
 }
 
 impl fmt::Display for ExtXSessionKey {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        if self.0.method == EncryptionMethod::None {
+            return Err(fmt::Error);
+        }
         write!(f, "{}{}", Self::PREFIX, self.0)
     }
 }
@@ -85,7 +92,7 @@ impl DerefMut for ExtXSessionKey {
 #[cfg(test)]
 mod test {
     use super::*;
-    use crate::types::EncryptionMethod;
+    use crate::types::{EncryptionMethod, KeyFormat};
 
     #[test]
     fn test_display() {
@@ -135,12 +142,26 @@ mod test {
             key
         );
 
-        key.set_key_format("baz");
+        key.set_key_format(Some(KeyFormat::Identity));
 
         assert_eq!(
-            r#"#EXT-X-SESSION-KEY:METHOD=AES-128,URI="https://www.example.com/hls-key/key.bin",IV=0x10ef8f758ca555115584bb5b3c687f52,KEYFORMAT="baz""#
-            .parse::<ExtXSessionKey>().unwrap(),
+            "#EXT-X-SESSION-KEY:\
+             METHOD=AES-128,\
+             URI=\"https://www.example.com/hls-key/key.bin\",\
+             IV=0x10ef8f758ca555115584bb5b3c687f52,\
+             KEYFORMAT=\"identity\""
+                .parse::<ExtXSessionKey>()
+                .unwrap(),
             key
         )
+    }
+
+    #[test]
+    fn test_required_version() {
+        assert_eq!(
+            ExtXSessionKey::new(EncryptionMethod::Aes128, "https://www.example.com/")
+                .required_version(),
+            ProtocolVersion::V1
+        );
     }
 }

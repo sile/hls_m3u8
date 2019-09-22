@@ -2,14 +2,14 @@ use std::fmt;
 use std::str::FromStr;
 use std::time::Duration;
 
-use crate::types::{DecimalFloatingPoint, ProtocolVersion};
+use crate::types::{DecimalFloatingPoint, ProtocolVersion, RequiredVersion};
 use crate::utils::tag;
 use crate::Error;
 
-/// [4.3.2.1. EXTINF](https://tools.ietf.org/html/rfc8216#section-4.3.2.1)
+/// # [4.4.2.1. EXTINF]
 ///
-/// The [ExtInf] tag specifies the duration of a [Media Segment].  It applies
-/// only to the next [Media Segment]. This tag is REQUIRED for each [Media Segment].
+/// The [ExtInf] tag specifies the duration of a [Media Segment]. It applies
+/// only to the next [Media Segment].
 ///
 /// Its format is:
 /// ```text
@@ -18,32 +18,8 @@ use crate::Error;
 /// The title is an optional informative title about the [Media Segment].
 ///
 /// [Media Segment]: crate::media_segment::MediaSegment
-///
-/// # Examples
-/// Parsing from a String:
-/// ```
-/// use std::time::Duration;
-/// use hls_m3u8::tags::ExtInf;
-///
-/// let ext_inf = "#EXTINF:8,".parse::<ExtInf>().expect("Failed to parse tag!");
-///
-/// assert_eq!(ext_inf.duration(), Duration::from_secs(8));
-/// assert_eq!(ext_inf.title(), None);
-/// ```
-///
-/// Converting to a String:
-/// ```
-/// use std::time::Duration;
-/// use hls_m3u8::tags::ExtInf;
-///
-/// let ext_inf = ExtInf::with_title(
-///     Duration::from_millis(88),
-///     "title"
-/// );
-///
-/// assert_eq!(ext_inf.duration(), Duration::from_millis(88));
-/// assert_eq!(ext_inf.to_string(), "#EXTINF:0.088,title".to_string());
-/// ```
+/// [4.4.2.1. EXTINF]:
+/// https://tools.ietf.org/html/draft-pantos-hls-rfc8216bis-04#section-4.4.2.1
 #[derive(Default, Debug, Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]
 pub struct ExtInf {
     duration: Duration,
@@ -53,7 +29,15 @@ pub struct ExtInf {
 impl ExtInf {
     pub(crate) const PREFIX: &'static str = "#EXTINF:";
 
-    /// Makes a new `ExtInf` tag.
+    /// Makes a new [ExtInf] tag.
+    ///
+    /// # Example
+    /// ```
+    /// # use hls_m3u8::tags::ExtInf;
+    /// use std::time::Duration;
+    ///
+    /// let ext_inf = ExtInf::new(Duration::from_secs(5));
+    /// ```
     pub const fn new(duration: Duration) -> Self {
         ExtInf {
             duration,
@@ -61,7 +45,15 @@ impl ExtInf {
         }
     }
 
-    /// Makes a new `ExtInf` tag with the given title.
+    /// Makes a new [ExtInf] tag with the given title.
+    ///
+    /// # Example
+    /// ```
+    /// # use hls_m3u8::tags::ExtInf;
+    /// use std::time::Duration;
+    ///
+    /// let ext_inf = ExtInf::with_title(Duration::from_secs(5), "title");
+    /// ```
     pub fn with_title<T: ToString>(duration: Duration, title: T) -> Self {
         ExtInf {
             duration,
@@ -70,17 +62,86 @@ impl ExtInf {
     }
 
     /// Returns the duration of the associated media segment.
+    ///
+    /// # Example
+    /// ```
+    /// # use hls_m3u8::tags::ExtInf;
+    /// use std::time::Duration;
+    ///
+    /// let ext_inf = ExtInf::new(Duration::from_secs(5));
+    ///
+    /// assert_eq!(
+    ///     ext_inf.duration(),
+    ///     Duration::from_secs(5)
+    /// );
+    /// ```
     pub const fn duration(&self) -> Duration {
         self.duration
     }
 
-    /// Returns the title of the associated media segment.
-    pub fn title(&self) -> Option<&String> {
-        self.title.as_ref()
+    /// Sets the duration of the associated media segment.
+    ///
+    /// # Example
+    /// ```
+    /// # use hls_m3u8::tags::ExtInf;
+    /// use std::time::Duration;
+    ///
+    /// let mut ext_inf = ExtInf::new(Duration::from_secs(5));
+    ///
+    /// ext_inf.set_duration(Duration::from_secs(10));
+    ///
+    /// assert_eq!(
+    ///     ext_inf.duration(),
+    ///     Duration::from_secs(10)
+    /// );
+    /// ```
+    pub fn set_duration(&mut self, value: Duration) -> &mut Self {
+        self.duration = value;
+        self
     }
 
-    /// Returns the protocol compatibility version that this tag requires.
-    pub fn requires_version(&self) -> ProtocolVersion {
+    /// Returns the title of the associated media segment.
+    ///
+    /// # Example
+    /// ```
+    /// # use hls_m3u8::tags::ExtInf;
+    /// use std::time::Duration;
+    ///
+    /// let ext_inf = ExtInf::with_title(Duration::from_secs(5), "title");
+    ///
+    /// assert_eq!(
+    ///     ext_inf.title(),
+    ///     &Some("title".to_string())
+    /// );
+    /// ```
+    pub const fn title(&self) -> &Option<String> {
+        &self.title
+    }
+
+    /// Sets the title of the associated media segment.
+    ///
+    /// # Example
+    /// ```
+    /// # use hls_m3u8::tags::ExtInf;
+    /// use std::time::Duration;
+    ///
+    /// let mut ext_inf = ExtInf::with_title(Duration::from_secs(5), "title");
+    ///
+    /// ext_inf.set_title(Some("better title"));
+    ///
+    /// assert_eq!(
+    ///     ext_inf.title(),
+    ///     &Some("better title".to_string())
+    /// );
+    /// ```
+    pub fn set_title<T: ToString>(&mut self, value: Option<T>) -> &mut Self {
+        self.title = value.map(|v| v.to_string());
+        self
+    }
+}
+
+impl RequiredVersion for ExtInf {
+    fn required_version(&self) -> ProtocolVersion {
         if self.duration.subsec_nanos() == 0 {
             ProtocolVersion::V1
         } else {
@@ -198,21 +259,21 @@ mod test {
 
     #[test]
     fn test_title() {
-        assert_eq!(ExtInf::new(Duration::from_secs(5)).title(), None);
+        assert_eq!(ExtInf::new(Duration::from_secs(5)).title(), &None);
         assert_eq!(
             ExtInf::with_title(Duration::from_secs(5), "title").title(),
-            Some(&"title".to_string())
+            &Some("title".to_string())
         );
     }
 
     #[test]
-    fn test_requires_version() {
+    fn test_required_version() {
         assert_eq!(
-            ExtInf::new(Duration::from_secs(4)).requires_version(),
+            ExtInf::new(Duration::from_secs(4)).required_version(),
             ProtocolVersion::V1
         );
         assert_eq!(
-            ExtInf::new(Duration::from_millis(4400)).requires_version(),
+            ExtInf::new(Duration::from_millis(4400)).required_version(),
             ProtocolVersion::V3
         );
     }

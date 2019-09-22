@@ -3,12 +3,23 @@ use std::ops::{Deref, DerefMut};
 use std::str::FromStr;
 
 use crate::attribute::AttributePairs;
-use crate::types::{ProtocolVersion, StreamInf};
+use crate::types::{ProtocolVersion, RequiredVersion, StreamInf};
 use crate::utils::{quote, tag, unquote};
 use crate::Error;
 
-/// [4.3.4.3. EXT-X-I-FRAME-STREAM-INF]
+/// # [4.3.4.3. EXT-X-I-FRAME-STREAM-INF]
+/// The [ExtXIFrameStreamInf] tag identifies a [Media Playlist] file
+/// containing the I-frames of a multimedia presentation. It stands
+/// alone, in that it does not apply to a particular `URI` in the [Master Playlist].
 ///
+/// Its format is:
+///
+/// ```text
+/// #EXT-X-I-FRAME-STREAM-INF:<attribute-list>
+/// ```
+///
+/// [Master Playlist]: crate::MasterPlaylist
+/// [Media Playlist]: crate::MediaPlaylist
 /// [4.3.4.3. EXT-X-I-FRAME-STREAM-INF]: https://tools.ietf.org/html/rfc8216#section-4.3.4.3
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub struct ExtXIFrameStreamInf {
@@ -19,7 +30,7 @@ pub struct ExtXIFrameStreamInf {
 impl ExtXIFrameStreamInf {
     pub(crate) const PREFIX: &'static str = "#EXT-X-I-FRAME-STREAM-INF:";
 
-    /// Makes a new `ExtXIFrameStreamInf` tag.
+    /// Makes a new [ExtXIFrameStreamInf] tag.
     pub fn new<T: ToString>(uri: T, bandwidth: u64) -> Self {
         ExtXIFrameStreamInf {
             uri: uri.to_string(),
@@ -27,7 +38,7 @@ impl ExtXIFrameStreamInf {
         }
     }
 
-    /// Returns the URI, that identifies the associated media playlist.
+    /// Returns the `URI`, that identifies the associated media playlist.
     ///
     /// # Example
     /// ```
@@ -40,7 +51,7 @@ impl ExtXIFrameStreamInf {
         &self.uri
     }
 
-    /// Sets the URI, that identifies the associated media playlist.
+    /// Sets the `URI`, that identifies the associated media playlist.
     ///
     /// # Example
     /// ```
@@ -55,9 +66,10 @@ impl ExtXIFrameStreamInf {
         self.uri = value.to_string();
         self
     }
+}
 
-    /// Returns the protocol compatibility version that this tag requires.
-    pub const fn requires_version(&self) -> ProtocolVersion {
+impl RequiredVersion for ExtXIFrameStreamInf {
+    fn required_version(&self) -> ProtocolVersion {
         ProtocolVersion::V1
     }
 }
@@ -114,28 +126,26 @@ mod test {
 
     #[test]
     fn test_display() {
-        let text = r#"#EXT-X-I-FRAME-STREAM-INF:URI="foo",BANDWIDTH=1000"#;
-        assert_eq!(ExtXIFrameStreamInf::new("foo", 1000).to_string(), text);
+        assert_eq!(
+            ExtXIFrameStreamInf::new("foo", 1000).to_string(),
+            "#EXT-X-I-FRAME-STREAM-INF:URI=\"foo\",BANDWIDTH=1000".to_string()
+        );
     }
 
     #[test]
     fn test_parser() {
-        let text = r#"#EXT-X-I-FRAME-STREAM-INF:URI="foo",BANDWIDTH=1000"#;
-        let i_frame_stream_inf = ExtXIFrameStreamInf::new("foo", 1000);
         assert_eq!(
-            text.parse::<ExtXIFrameStreamInf>().unwrap(),
-            i_frame_stream_inf.clone()
+            "#EXT-X-I-FRAME-STREAM-INF:URI=\"foo\",BANDWIDTH=1000"
+                .parse::<ExtXIFrameStreamInf>()
+                .unwrap(),
+            ExtXIFrameStreamInf::new("foo", 1000)
         );
-
-        assert_eq!(i_frame_stream_inf.uri(), "foo");
-        assert_eq!(i_frame_stream_inf.bandwidth(), 1000);
-        // TODO: test all the optional fields
     }
 
     #[test]
-    fn test_requires_version() {
+    fn test_required_version() {
         assert_eq!(
-            ExtXIFrameStreamInf::new("foo", 1000).requires_version(),
+            ExtXIFrameStreamInf::new("foo", 1000).required_version(),
             ProtocolVersion::V1
         );
     }

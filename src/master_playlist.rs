@@ -10,7 +10,7 @@ use crate::tags::{
     ExtM3u, ExtXIFrameStreamInf, ExtXIndependentSegments, ExtXMedia, ExtXSessionData,
     ExtXSessionKey, ExtXStart, ExtXStreamInf, ExtXVersion,
 };
-use crate::types::{ClosedCaptions, MediaType, ProtocolVersion};
+use crate::types::{ClosedCaptions, MediaType, ProtocolVersion, RequiredVersion};
 use crate::Error;
 
 /// Master playlist.
@@ -92,6 +92,12 @@ impl MasterPlaylist {
     }
 }
 
+impl RequiredVersion for MasterPlaylist {
+    fn required_version(&self) -> ProtocolVersion {
+        self.version_tag.version()
+    }
+}
+
 impl MasterPlaylistBuilder {
     fn validate(&self) -> Result<(), String> {
         let required_version = self.required_version();
@@ -118,43 +124,43 @@ impl MasterPlaylistBuilder {
             .chain(
                 self.independent_segments_tag
                     .iter()
-                    .map(|t| t.iter().map(|t| t.requires_version()))
+                    .map(|t| t.iter().map(|t| t.required_version()))
                     .flatten(),
             )
             .chain(
                 self.start_tag
                     .iter()
-                    .map(|t| t.iter().map(|t| t.requires_version()))
+                    .map(|t| t.iter().map(|t| t.required_version()))
                     .flatten(),
             )
             .chain(
                 self.media_tags
                     .iter()
-                    .map(|t| t.iter().map(|t| t.requires_version()))
+                    .map(|t| t.iter().map(|t| t.required_version()))
                     .flatten(),
             )
             .chain(
                 self.stream_inf_tags
                     .iter()
-                    .map(|t| t.iter().map(|t| t.requires_version()))
+                    .map(|t| t.iter().map(|t| t.required_version()))
                     .flatten(),
             )
             .chain(
                 self.i_frame_stream_inf_tags
                     .iter()
-                    .map(|t| t.iter().map(|t| t.requires_version()))
+                    .map(|t| t.iter().map(|t| t.required_version()))
                     .flatten(),
             )
             .chain(
                 self.session_data_tags
                     .iter()
-                    .map(|t| t.iter().map(|t| t.requires_version()))
+                    .map(|t| t.iter().map(|t| t.required_version()))
                     .flatten(),
             )
             .chain(
                 self.session_key_tags
                     .iter()
-                    .map(|t| t.iter().map(|t| t.requires_version()))
+                    .map(|t| t.iter().map(|t| t.required_version()))
                     .flatten(),
             )
             .max()

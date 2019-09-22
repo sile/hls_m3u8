@@ -1,25 +1,39 @@
 use std::fmt;
-use std::ops::Deref;
+use std::ops::{Deref, DerefMut};
 use std::str::FromStr;
 
-use crate::types::{ByteRange, ProtocolVersion};
+use crate::types::{ByteRange, ProtocolVersion, RequiredVersion};
 use crate::utils::tag;
 use crate::Error;
 
-/// [4.3.2.2. EXT-X-BYTERANGE]
+/// # [4.4.2.2. EXT-X-BYTERANGE]
 ///
-/// [4.3.2.2. EXT-X-BYTERANGE]: https://tools.ietf.org/html/rfc8216#section-4.3.2.2
+/// The [ExtXByteRange] tag indicates that a [Media Segment] is a sub-range
+/// of the resource identified by its `URI`.
+///
+/// Its format is:
+/// ```text
+/// #EXT-X-BYTERANGE:<n>[@<o>]
+/// ```
+///
+/// where `n` is a [usize] indicating the length of the sub-range in bytes.
+/// If present, `o` is a [usize] indicating the start of the sub-range,
+/// as a byte offset from the beginning of the resource.
+///
+/// [Media Segment]: crate::MediaSegment
+/// [4.4.2.2. EXT-X-BYTERANGE]:
+/// https://tools.ietf.org/html/draft-pantos-hls-rfc8216bis-04#section-4.4.2.2
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct ExtXByteRange(ByteRange);
 
 impl ExtXByteRange {
     pub(crate) const PREFIX: &'static str = "#EXT-X-BYTERANGE:";
 
-    /// Makes a new `ExtXByteRange` tag.
+    /// Makes a new [ExtXByteRange] tag.
+    ///
     /// # Example
     /// ```
-    /// use hls_m3u8::tags::ExtXByteRange;
-    ///
+    /// # use hls_m3u8::tags::ExtXByteRange;
     /// let byte_range = ExtXByteRange::new(20, Some(5));
     /// ```
     pub const fn new(length: usize, start: Option<usize>) -> Self {
@@ -27,9 +41,10 @@ impl ExtXByteRange {
     }
 
     /// Converts the [ExtXByteRange] to a [ByteRange].
+    ///
     /// # Example
     /// ```
-    /// use hls_m3u8::tags::ExtXByteRange;
+    /// # use hls_m3u8::tags::ExtXByteRange;
     /// use hls_m3u8::types::ByteRange;
     ///
     /// let byte_range = ExtXByteRange::new(20, Some(5));
@@ -38,17 +53,10 @@ impl ExtXByteRange {
     pub const fn to_range(&self) -> ByteRange {
         self.0
     }
+}
 
-    /// Returns the protocol compatibility version that this tag requires.
-    /// # Example
-    /// ```
-    /// use hls_m3u8::tags::ExtXByteRange;
-    /// use hls_m3u8::types::ProtocolVersion;
-    ///
-    /// let byte_range = ExtXByteRange::new(20, Some(5));
-    /// assert_eq!(byte_range.requires_version(), ProtocolVersion::V4);
-    /// ```
-    pub const fn requires_version(&self) -> ProtocolVersion {
+impl RequiredVersion for ExtXByteRange {
+    fn required_version(&self) -> ProtocolVersion {
         ProtocolVersion::V4
     }
 }
@@ -58,6 +66,12 @@ impl Deref for ExtXByteRange {
 
     fn deref(&self) -> &Self::Target {
         &self.0
+    }
+}
+
+impl DerefMut for ExtXByteRange {
+    fn deref_mut(&mut self) -> &mut Self::Target {
+        &mut self.0
     }
 }
 
@@ -76,6 +90,7 @@ impl FromStr for ExtXByteRange {
         let input = tag(input, Self::PREFIX)?;
 
         let tokens = input.splitn(2, '@').collect::<Vec<_>>();
+
         if tokens.is_empty() {
             return Err(Error::invalid_input());
         }
@@ -134,5 +149,24 @@ mod test {
 
         assert_eq!(byte_range.length(), 0);
         assert_eq!(byte_range.start(), Some(22));
+    }
+
+    #[test]
+    fn test_deref_mut() {
+        let mut byte_range = ExtXByteRange::new(0, Some(22));
+
+        byte_range.set_length(100);
+        byte_range.set_start(Some(50));
+
+        assert_eq!(byte_range.length(), 100);
+        assert_eq!(byte_range.start(), Some(50));
+    }
+
+    #[test]
+    fn test_required_version() {
+        assert_eq!(
+            ExtXByteRange::new(20, Some(5)).required_version(),
+            ProtocolVersion::V4
+        );
     }
 }

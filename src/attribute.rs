@@ -61,10 +61,10 @@ impl FromStr for AttributePairs {
             let key = pair[0].to_uppercase();
             let value = pair[1].to_string();
 
-            result.insert(key.to_string(), value.to_string());
+            result.insert(key.trim().to_string(), value.trim().to_string());
         }
 
-        #[cfg(test)]
+        #[cfg(test)] // this is very useful, when a test fails!
         dbg!(&result);
         Ok(result)
     }
@@ -110,7 +110,7 @@ mod test {
 
     #[test]
     fn test_parser() {
-        let pairs = ("FOO=BAR,BAR=\"baz,qux\",ABC=12.3")
+        let pairs = "FOO=BAR,BAR=\"baz,qux\",ABC=12.3"
             .parse::<AttributePairs>()
             .unwrap();
 

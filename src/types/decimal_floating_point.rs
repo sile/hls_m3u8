@@ -70,6 +70,18 @@ impl FromStr for DecimalFloatingPoint {
     }
 }
 
+impl From<f64> for DecimalFloatingPoint {
+    fn from(value: f64) -> Self {
+        Self(value)
+    }
+}
+
+impl From<f32> for DecimalFloatingPoint {
+    fn from(value: f32) -> Self {
+        Self(value.into())
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;

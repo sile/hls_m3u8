@@ -1,20 +1,32 @@
 use std::fmt;
 use std::str::FromStr;
 
-use crate::types::ProtocolVersion;
+use crate::types::{ProtocolVersion, RequiredVersion};
 use crate::utils::tag;
 use crate::Error;
 
-/// [4.3.3.4. EXT-X-ENDLIST]
+/// # [4.4.3.4. EXT-X-ENDLIST]
+/// The [ExtXEndList] tag indicates, that no more [Media Segment]s will be
+/// added to the [Media Playlist] file.
 ///
-/// [4.3.3.4. EXT-X-ENDLIST]: https://tools.ietf.org/html/rfc8216#section-4.3.3.4
+/// Its format is:
+/// ```text
+/// #EXT-X-ENDLIST
+/// ```
+///
+/// [Media Segment]: crate::MediaSegment
+/// [Media Playlist]: crate::MediaPlaylist
+/// [4.4.3.4. EXT-X-ENDLIST]:
+/// https://tools.ietf.org/html/draft-pantos-hls-rfc8216bis-04#section-4.4.3.4
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct ExtXEndList;
+
 impl ExtXEndList {
     pub(crate) const PREFIX: &'static str = "#EXT-X-ENDLIST";
+}
 
-    /// Returns the protocol compatibility version that this tag requires.
-    pub const fn requires_version(self) -> ProtocolVersion {
+impl RequiredVersion for ExtXEndList {
+    fn required_version(&self) -> ProtocolVersion {
         ProtocolVersion::V1
     }
 }
@@ -39,11 +51,17 @@ mod test {
     use super::*;
 
     #[test]
-    fn ext_x_endlist() {
-        let tag = ExtXEndList;
-        let text = "#EXT-X-ENDLIST";
-        assert_eq!(text.parse().ok(), Some(tag));
-        assert_eq!(tag.to_string(), text);
-        assert_eq!(tag.requires_version(), ProtocolVersion::V1);
+    fn test_display() {
+        assert_eq!(ExtXEndList.to_string(), "#EXT-X-ENDLIST".to_string());
+    }
+
+    #[test]
+    fn test_parser() {
+        assert_eq!(ExtXEndList, "#EXT-X-ENDLIST".parse().unwrap());
+    }
+
+    #[test]
+    fn test_required_version() {
+        assert_eq!(ExtXEndList.required_version(), ProtocolVersion::V1);
     }
 }

@@ -4,38 +4,48 @@ use std::str::FromStr;
 use derive_builder::Builder;
 
 use crate::attribute::AttributePairs;
-use crate::types::{EncryptionMethod, InitializationVector, ProtocolVersion};
+use crate::types::{
+    EncryptionMethod, InitializationVector, KeyFormat, KeyFormatVersions, ProtocolVersion,
+    RequiredVersion,
+};
 use crate::utils::{quote, unquote};
 use crate::Error;
 
 #[derive(Builder, Debug, Clone, PartialEq, Eq, Hash)]
 #[builder(setter(into))]
+/// [DecryptionKey] contains data, that is shared between [ExtXSessionKey] and [ExtXKey].
+///
+/// [ExtXSessionKey]: crate::tags::ExtXSessionKey
+/// [ExtXKey]: crate::tags::ExtXKey
 pub struct DecryptionKey {
+    /// The [EncryptionMethod].
     pub(crate) method: EncryptionMethod,
     #[builder(setter(into, strip_option), default)]
+    /// An `URI`, that specifies how to obtain the key.
     pub(crate) uri: Option<String>,
     #[builder(setter(into, strip_option), default)]
+    /// The IV (Initialization Vector) attribute.
     pub(crate) iv: Option<InitializationVector>,
     #[builder(setter(into, strip_option), default)]
-    pub(crate) key_format: Option<String>,
-    #[builder(setter(into, strip_option), default)]
-    pub(crate) key_format_versions: Option<String>,
+    /// A string that specifies how the key is
+    /// represented in the resource identified by the `URI`.
+    pub(crate) key_format: Option<KeyFormat>,
+    #[builder(setter(into), default)]
+    /// The `KEYFORMATVERSIONS` attribute.
+    pub(crate) key_format_versions: KeyFormatVersions,
 }
 
 impl DecryptionKey {
-    /// Makes a new `DecryptionKey`.
+    /// Makes a new [DecryptionKey].
+    ///
     /// # Example
     /// ```
-    /// use hls_m3u8::types::{EncryptionMethod, DecryptionKey};
+    /// # use hls_m3u8::types::DecryptionKey;
+    /// use hls_m3u8::types::EncryptionMethod;
     ///
     /// let key = DecryptionKey::new(
     ///     EncryptionMethod::Aes128,
     ///     "https://www.example.com/"
-    /// );
-    ///
-    /// assert_eq!(
-    ///     key.to_string(),
-    ///     "METHOD=AES-128,URI=\"https://www.example.com/\""
     /// );
     /// ```
     pub fn new<T: ToString>(method: EncryptionMethod, uri: T) -> Self {
@@ -44,14 +54,16 @@ impl DecryptionKey {
             uri: Some(uri.to_string()),
             iv: None,
             key_format: None,
-            key_format_versions: None,
+            key_format_versions: KeyFormatVersions::new(),
         }
     }
 
     /// Returns the [EncryptionMethod].
+    ///
     /// # Example
     /// ```
-    /// use hls_m3u8::types::{DecryptionKey, EncryptionMethod};
+    /// # use hls_m3u8::types::DecryptionKey;
+    /// use hls_m3u8::types::EncryptionMethod;
     ///
     /// let key = DecryptionKey::new(
     ///     EncryptionMethod::Aes128,
@@ -67,15 +79,17 @@ impl DecryptionKey {
         self.method
     }
 
-    /// Returns a Builder to build a `DecryptionKey`.
+    /// Returns a Builder to build a [DecryptionKey].
     pub fn builder() -> DecryptionKeyBuilder {
         DecryptionKeyBuilder::default()
     }
 
     /// Sets the [EncryptionMethod].
+    ///
     /// # Example
     /// ```
-    /// use hls_m3u8::types::{DecryptionKey, EncryptionMethod};
+    /// # use hls_m3u8::types::DecryptionKey;
+    /// use hls_m3u8::types::EncryptionMethod;
     ///
     /// let mut key = DecryptionKey::new(
     ///     EncryptionMethod::Aes128,
@@ -93,12 +107,14 @@ impl DecryptionKey {
         self.method = value;
     }
 
-    /// Returns an `URI` that specifies how to obtain the key.
+    /// Returns an `URI`, that specifies how to obtain the key.
     ///
     /// This attribute is required, if the [EncryptionMethod] is not None.
+    ///
     /// # Example
     /// ```
-    /// use hls_m3u8::types::{DecryptionKey, EncryptionMethod};
+    /// # use hls_m3u8::types::DecryptionKey;
+    /// use hls_m3u8::types::EncryptionMethod;
     ///
     /// let key = DecryptionKey::new(
     ///     EncryptionMethod::Aes128,
@@ -121,7 +137,8 @@ impl DecryptionKey {
     ///
     /// # Example
     /// ```
-    /// use hls_m3u8::types::{DecryptionKey, EncryptionMethod};
+    /// # use hls_m3u8::types::DecryptionKey;
+    /// use hls_m3u8::types::EncryptionMethod;
     ///
     /// let mut key = DecryptionKey::new(
     ///     EncryptionMethod::Aes128,
@@ -142,9 +159,11 @@ impl DecryptionKey {
     /// Returns the IV (Initialization Vector) attribute.
     ///
     /// This attribute is optional.
+    ///
     /// # Example
     /// ```
-    /// use hls_m3u8::types::{DecryptionKey, EncryptionMethod};
+    /// # use hls_m3u8::types::DecryptionKey;
+    /// use hls_m3u8::types::EncryptionMethod;
     ///
     /// let mut key = DecryptionKey::new(
     ///     EncryptionMethod::Aes128,
@@ -171,9 +190,11 @@ impl DecryptionKey {
     /// Sets the `IV` attribute.
     ///
     /// This attribute is optional.
+    ///
     /// # Example
     /// ```
-    /// use hls_m3u8::types::{DecryptionKey, EncryptionMethod};
+    /// # use hls_m3u8::types::DecryptionKey;
+    /// use hls_m3u8::types::EncryptionMethod;
     ///
     /// let mut key = DecryptionKey::new(
     ///     EncryptionMethod::Aes128,
@@ -197,119 +218,110 @@ impl DecryptionKey {
     }
 
     /// Returns a string that specifies how the key is
-    /// represented in the resource identified by the URI.
+    /// represented in the resource identified by the `URI`.
     ///
-    //// This attribute is optional.
+    /// This attribute is optional.
+    ///
     /// # Example
     /// ```
-    /// use hls_m3u8::types::{DecryptionKey, EncryptionMethod};
+    /// # use hls_m3u8::types::DecryptionKey;
+    /// use hls_m3u8::types::{KeyFormat, EncryptionMethod};
     ///
     /// let mut key = DecryptionKey::new(
     ///     EncryptionMethod::Aes128,
     ///     "https://www.example.com/"
     /// );
     ///
-    /// key.set_key_format("key_format_attribute");
+    /// key.set_key_format(Some(KeyFormat::Identity));
     ///
     /// assert_eq!(
     ///     key.key_format(),
-    ///     &Some("key_format_attribute".to_string())
+    ///     Some(KeyFormat::Identity)
     /// );
     /// ```
-    pub const fn key_format(&self) -> &Option<String> {
-        &self.key_format
+    pub const fn key_format(&self) -> Option<KeyFormat> {
+        self.key_format
     }
 
     /// Sets the `KEYFORMAT` attribute.
     ///
     /// This attribute is optional.
+    ///
     /// # Example
     /// ```
-    /// use hls_m3u8::types::{DecryptionKey, EncryptionMethod};
+    /// # use hls_m3u8::types::DecryptionKey;
+    /// use hls_m3u8::types::{KeyFormat, EncryptionMethod};
     ///
     /// let mut key = DecryptionKey::new(
     ///     EncryptionMethod::Aes128,
     ///     "https://www.example.com/"
     /// );
     ///
-    /// key.set_key_format("key_format_attribute");
+    /// key.set_key_format(Some(KeyFormat::Identity));
     ///
     /// assert_eq!(
-    ///     key.to_string(),
-    ///     "METHOD=AES-128,URI=\"https://www.example.com/\",KEYFORMAT=\"key_format_attribute\"".to_string()
+    ///     key.key_format(),
+    ///     Some(KeyFormat::Identity)
     /// );
     /// ```
-    pub fn set_key_format<T: ToString>(&mut self, value: T) {
-        self.key_format = Some(value.to_string());
+    pub fn set_key_format<T: Into<KeyFormat>>(&mut self, value: Option<T>) {
+        self.key_format = value.map(|v| v.into());
     }
 
-    /// Returns a string containing one or more positive
-    /// integers separated by the "/" character (for example, "1", "1/2",
-    /// or "1/2/5").  If more than one version of a particular `KEYFORMAT`
-    /// is defined, this attribute can be used to indicate which
-    /// version(s) this instance complies with.
+    /// Returns the [KeyFormatVersions] attribute.
     ///
     /// This attribute is optional.
+    ///
     /// # Example
     /// ```
-    /// use hls_m3u8::types::{DecryptionKey, EncryptionMethod};
+    /// # use hls_m3u8::types::DecryptionKey;
+    /// use hls_m3u8::types::{KeyFormatVersions, EncryptionMethod};
     ///
     /// let mut key = DecryptionKey::new(
     ///     EncryptionMethod::Aes128,
     ///     "https://www.example.com/"
     /// );
     ///
-    /// key.set_key_format_versions("1/2/3/4/5");
+    /// key.set_key_format_versions(vec![1, 2, 3, 4, 5]);
     ///
     /// assert_eq!(
     ///     key.key_format_versions(),
-    ///     &Some("1/2/3/4/5".to_string())
+    ///     &KeyFormatVersions::from(vec![1, 2, 3, 4, 5])
     /// );
     /// ```
-    pub const fn key_format_versions(&self) -> &Option<String> {
+    pub const fn key_format_versions(&self) -> &KeyFormatVersions {
         &self.key_format_versions
     }
 
-    /// Sets the `KEYFORMATVERSIONS` attribute.
+    /// Sets the [KeyFormatVersions] attribute.
     ///
     /// This attribute is optional.
+    ///
     /// # Example
     /// ```
-    /// use hls_m3u8::types::{DecryptionKey, EncryptionMethod};
+    /// # use hls_m3u8::types::DecryptionKey;
+    /// use hls_m3u8::types::EncryptionMethod;
     ///
     /// let mut key = DecryptionKey::new(
     ///     EncryptionMethod::Aes128,
     ///     "https://www.example.com/"
     /// );
     ///
-    /// key.set_key_format_versions("1/2/3/4/5");
+    /// key.set_key_format_versions(vec![1, 2, 3, 4, 5]);
     ///
     /// assert_eq!(
     ///     key.to_string(),
     ///     "METHOD=AES-128,URI=\"https://www.example.com/\",KEYFORMATVERSIONS=\"1/2/3/4/5\"".to_string()
     /// );
     /// ```
-    pub fn set_key_format_versions<T: ToString>(&mut self, value: T) {
-        self.key_format_versions = Some(value.to_string());
+    pub fn set_key_format_versions<T: Into<KeyFormatVersions>>(&mut self, value: T) {
+        self.key_format_versions = value.into();
     }
+}
 
-    /// Returns the protocol compatibility version that this tag requires.
-    /// # Example
-    /// ```
-    /// use hls_m3u8::types::{EncryptionMethod, ProtocolVersion, DecryptionKey};
-    ///
-    /// let mut key = DecryptionKey::new(
-    ///     EncryptionMethod::Aes128,
-    ///     "https://www.example.com/"
-    /// );
-    ///
-    /// assert_eq!(
-    ///     key.requires_version(),
-    ///     ProtocolVersion::V1
-    /// );
-    /// ```
-    pub fn requires_version(&self) -> ProtocolVersion {
-        if self.key_format.is_some() || self.key_format_versions.is_some() {
+impl RequiredVersion for DecryptionKey {
+    fn required_version(&self) -> ProtocolVersion {
+        if self.key_format.is_some() || !self.key_format_versions.is_default() {
             ProtocolVersion::V5
         } else if self.iv.is_some() {
             ProtocolVersion::V2
@@ -331,11 +343,11 @@ impl FromStr for DecryptionKey {
 
         for (key, value) in input.parse::<AttributePairs>()? {
             match key.as_str() {
-                "METHOD" => method = Some((value.parse())?),
+                "METHOD" => method = Some(value.parse()?),
                 "URI" => uri = Some(unquote(value)),
-                "IV" => iv = Some((value.parse())?),
-                "KEYFORMAT" => key_format = Some(unquote(value)),
-                "KEYFORMATVERSIONS" => key_format_versions = Some(unquote(value)),
+                "IV" => iv = Some(value.parse()?),
+                "KEYFORMAT" => key_format = Some(value.parse()?),
+                "KEYFORMATVERSIONS" => key_format_versions = Some(value.parse()?),
                 _ => {
                     // [6.3.1. General Client Responsibilities]
                     // > ignore any attribute/value pair with an unrecognized AttributeName.
@@ -353,7 +365,7 @@ impl FromStr for DecryptionKey {
             uri,
             iv,
             key_format,
-            key_format_versions,
+            key_format_versions: key_format_versions.unwrap_or(KeyFormatVersions::new()),
         })
     }
 }
@@ -374,8 +386,8 @@ impl fmt::Display for DecryptionKey {
         if let Some(value) = &self.key_format {
             write!(f, ",KEYFORMAT={}", quote(value))?;
         }
-        if let Some(value) = &self.key_format_versions {
-            write!(f, ",KEYFORMATVERSIONS={}", quote(value))?;
+        if !self.key_format_versions.is_default() {
+            write!(f, ",KEYFORMATVERSIONS={}", &self.key_format_versions)?;
         }
         Ok(())
     }
@@ -394,13 +406,19 @@ mod test {
             .iv([
                 16, 239, 143, 117, 140, 165, 85, 17, 85, 132, 187, 91, 60, 104, 127, 82,
             ])
-            .key_format("ABC123")
-            .key_format_versions("1,2,3,4,5/12345")
+            .key_format(KeyFormat::Identity)
+            .key_format_versions(vec![1, 2, 3, 4, 5])
             .build()
             .unwrap();
         assert_eq!(
             key.to_string(),
-            "METHOD=AES-128,URI=\"https://www.example.com/\",IV=0x10ef8f758ca555115584bb5b3c687f52,KEYFORMAT=\"ABC123\",KEYFORMATVERSIONS=\"1,2,3,4,5/12345\"".to_string()
+            "METHOD=AES-128,\
+             URI=\"https://www.example.com/\",\
+             IV=0x10ef8f758ca555115584bb5b3c687f52,\
+             KEYFORMAT=\"identity\",\
+             KEYFORMATVERSIONS=\"1/2/3/4/5\"\
+             "
+            .to_string()
         )
     }
 
@@ -426,7 +444,8 @@ mod test {
     #[test]
     fn test_parser() {
         assert_eq!(
-            r#"METHOD=AES-128,URI="https://priv.example.com/key.php?r=52""#
+            "METHOD=AES-128,\
+             URI=\"https://priv.example.com/key.php?r=52\""
                 .parse::<DecryptionKey>()
                 .unwrap(),
             DecryptionKey::new(
@@ -456,12 +475,25 @@ mod test {
         key.set_iv([
             16, 239, 143, 117, 140, 165, 85, 17, 85, 132, 187, 91, 60, 104, 127, 82,
         ]);
-        key.set_key_format("baz");
+        key.set_key_format(Some(KeyFormat::Identity));
 
         assert_eq!(
-            r#"METHOD=AES-128,URI="http://www.example.com",IV=0x10ef8f758ca555115584bb5b3c687f52,KEYFORMAT="baz""#
-            .parse::<DecryptionKey>().unwrap(),
+            "METHOD=AES-128,\
+             URI=\"http://www.example.com\",\
+             IV=0x10ef8f758ca555115584bb5b3c687f52,\
+             KEYFORMAT=\"identity\""
+                .parse::<DecryptionKey>()
+                .unwrap(),
             key
+        )
+    }
+
+    #[test]
+    fn test_required_version() {
+        assert_eq!(
+            DecryptionKey::new(EncryptionMethod::Aes128, "https://www.example.com/")
+                .required_version(),
+            ProtocolVersion::V1
         )
     }
 }

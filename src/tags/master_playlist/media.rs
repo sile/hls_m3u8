@@ -1,199 +1,110 @@
 use std::fmt;
 use std::str::FromStr;
 
+use derive_builder::Builder;
+
 use crate::attribute::AttributePairs;
-use crate::types::{InStreamId, MediaType, ProtocolVersion};
+use crate::types::{InStreamId, MediaType, ProtocolVersion, RequiredVersion};
 use crate::utils::{parse_yes_or_no, quote, tag, unquote};
 use crate::Error;
 
-/// `ExtXMedia` builder.
-#[derive(Debug, Clone)]
-pub struct ExtXMediaBuilder {
-    media_type: Option<MediaType>,
+/// # [4.4.4.1. EXT-X-MEDIA]
+/// The [ExtXMedia] tag is used to relate [Media Playlist]s that contain
+/// alternative Renditions of the same content. For
+/// example, three [ExtXMedia] tags can be used to identify audio-only
+/// [Media Playlist]s, that contain English, French, and Spanish Renditions
+/// of the same presentation. Or, two [ExtXMedia] tags can be used to
+/// identify video-only [Media Playlist]s that show two different camera
+/// angles.
+///
+/// Its format is:
+/// ```text
+/// #EXT-X-MEDIA:<attribute-list>
+/// ```
+///
+/// [Media Playlist]: crate::MediaPlaylist
+/// [4.4.4.1. EXT-X-MEDIA]:
+/// https://tools.ietf.org/html/draft-pantos-hls-rfc8216bis-04#section-4.4.4.1
+#[derive(Builder, Debug, Clone, PartialEq, Eq, Hash)]
+#[builder(setter(into))]
+#[builder(build_fn(validate = "Self::validate"))]
+pub struct ExtXMedia {
+    /// Sets the media type of the rendition.
+    media_type: MediaType,
+    #[builder(setter(strip_option, into), default)]
+    /// Sets the URI that identifies the media playlist.
     uri: Option<String>,
-    group_id: Option<String>,
+    /// Sets the identifier that specifies the group to which the rendition belongs.
+    group_id: String,
+    /// Sets the name of the primary language used in the rendition.
+    #[builder(setter(strip_option, into), default)]
     language: Option<String>,
+    /// Sets the name of a language associated with the rendition.
+    #[builder(setter(strip_option, into), default)]
     assoc_language: Option<String>,
-    name: Option<String>,
-    default: bool,
-    autoselect: Option<bool>,
-    forced: Option<bool>,
+    /// Sets a human-readable description of the rendition.
+    name: String,
+    /// Sets the value of the `default` flag.
+    #[builder(default)]
+    is_default: bool,
+    /// Sets the value of the `autoselect` flag.
+    #[builder(default)]
+    is_autoselect: bool,
+    /// Sets the value of the `forced` flag.
+    #[builder(default)]
+    is_forced: bool,
+    /// Sets the identifier that specifies a rendition within the segments in the media playlist.
+    #[builder(setter(strip_option, into), default)]
     instream_id: Option<InStreamId>,
+    /// Sets the string that represents uniform type identifiers (UTI).
+    #[builder(setter(strip_option, into), default)]
     characteristics: Option<String>,
+    /// Sets the string that represents the parameters of the rendition.
+    #[builder(setter(strip_option, into), default)]
     channels: Option<String>,
 }
 
 impl ExtXMediaBuilder {
-    /// Makes a `ExtXMediaBuilder` instance.
-    pub const fn new() -> Self {
-        ExtXMediaBuilder {
-            media_type: None,
-            uri: None,
-            group_id: None,
-            language: None,
-            assoc_language: None,
-            name: None,
-            default: false,
-            autoselect: None,
-            forced: None,
-            instream_id: None,
-            characteristics: None,
-            channels: None,
-        }
-    }
-
-    /// Sets the media type of the rendition.
-    pub fn media_type(&mut self, media_type: MediaType) -> &mut Self {
-        self.media_type = Some(media_type);
-        self
-    }
-
-    /// Sets the identifier that specifies the group to which the rendition belongs.
-    pub fn group_id<T: ToString>(&mut self, group_id: T) -> &mut Self {
-        self.group_id = Some(group_id.to_string());
-        self
-    }
-
-    /// Sets a human-readable description of the rendition.
-    pub fn name<T: ToString>(&mut self, name: T) -> &mut Self {
-        self.name = Some(name.to_string());
-        self
-    }
-
-    /// Sets the URI that identifies the media playlist.
-    pub fn uri<T: ToString>(&mut self, uri: T) -> &mut Self {
-        self.uri = Some(uri.to_string());
-        self
-    }
-
-    /// Sets the name of the primary language used in the rendition.
-    pub fn language<T: ToString>(&mut self, language: T) -> &mut Self {
-        self.language = Some(language.to_string());
-        self
-    }
-
-    /// Sets the name of a language associated with the rendition.
-    pub fn assoc_language<T: ToString>(&mut self, language: T) -> &mut Self {
-        self.assoc_language = Some(language.to_string());
-        self
-    }
-
-    /// Sets the value of the `default` flag.
-    pub fn default(&mut self, b: bool) -> &mut Self {
-        self.default = b;
-        self
-    }
-
-    /// Sets the value of the `autoselect` flag.
-    pub fn autoselect(&mut self, b: bool) -> &mut Self {
-        self.autoselect = Some(b);
-        self
-    }
-
-    /// Sets the value of the `forced` flag.
-    pub fn forced(&mut self, b: bool) -> &mut Self {
-        self.forced = Some(b);
-        self
-    }
-
-    /// Sets the identifier that specifies a rendition within the segments in the media playlist.
-    pub fn instream_id(&mut self, id: InStreamId) -> &mut Self {
-        self.instream_id = Some(id);
-        self
-    }
-
-    /// Sets the string that represents uniform type identifiers (UTI).
-    pub fn characteristics<T: ToString>(&mut self, characteristics: T) -> &mut Self {
-        self.characteristics = Some(characteristics.to_string());
-        self
-    }
-
-    /// Sets the string that represents the parameters of the rendition.
-    pub fn channels<T: ToString>(&mut self, channels: T) -> &mut Self {
-        self.channels = Some(channels.to_string());
-        self
-    }
-
-    /// Builds a `ExtXMedia` instance.
-    pub fn finish(self) -> crate::Result<ExtXMedia> {
+    fn validate(&self) -> Result<(), String> {
         let media_type = self
             .media_type
-            .ok_or(Error::missing_value("self.media_type"))?;
-        let group_id = self.group_id.ok_or(Error::missing_value("self.group_id"))?;
-        let name = self.name.ok_or(Error::missing_value("self.name"))?;
+            .ok_or(Error::missing_attribute("MEDIA-TYPE").to_string())?;
 
         if MediaType::ClosedCaptions == media_type {
-            if let None = self.uri {
-                return Err(Error::missing_value("self.uri"));
+            if self.uri.is_some() {
+                return Err(Error::custom(
+                    "Unexpected attribute: \"URL\" for MediaType::ClosedCaptions!",
+                )
+                .to_string());
             }
             self.instream_id
-                .ok_or(Error::missing_value("self.instream_id"))?;
+                .ok_or(Error::missing_attribute("INSTREAM-ID").to_string())?;
         } else {
-            if let Some(_) = &self.instream_id {
-                Err(Error::invalid_input())?;
+            if self.instream_id.is_some() {
+                return Err(Error::custom("Unexpected attribute: \"INSTREAM-ID\"!").to_string());
             }
         }
 
-        if self.default && self.autoselect.is_some() {
-            if let Some(value) = &self.autoselect {
-                if *value {
-                    Err(Error::invalid_input())?;
-                }
-            }
+        if self.is_default.unwrap_or(false) && !self.is_autoselect.unwrap_or(false) {
+            return Err(
+                Error::custom("If `DEFAULT` is true, `AUTOSELECT` has to be true too!").to_string(),
+            );
         }
 
         if MediaType::Subtitles != media_type {
-            if self.forced.is_some() {
-                Err(Error::invalid_input())?;
+            if self.is_forced.is_some() {
+                return Err(Error::invalid_input().to_string());
             }
         }
 
-        Ok(ExtXMedia {
-            media_type,
-            uri: self.uri,
-            group_id,
-            language: self.language,
-            assoc_language: self.assoc_language,
-            name,
-            default: self.default,
-            autoselect: self.autoselect.unwrap_or(false),
-            forced: self.forced.unwrap_or(false),
-            instream_id: self.instream_id,
-            characteristics: self.characteristics,
-            channels: self.channels,
-        })
+        Ok(())
     }
-}
-
-impl Default for ExtXMediaBuilder {
-    fn default() -> Self {
-        Self::new()
-    }
-}
-
-/// [4.3.4.1. EXT-X-MEDIA]
-///
-/// [4.3.4.1. EXT-X-MEDIA]: https://tools.ietf.org/html/rfc8216#section-4.3.4.1
-#[derive(Debug, Clone, PartialEq, Eq, Hash)]
-pub struct ExtXMedia {
-    media_type: MediaType,
-    uri: Option<String>,
-    group_id: String,
-    language: Option<String>,
-    assoc_language: Option<String>,
-    name: String,
-    default: bool,
-    autoselect: bool,
-    forced: bool,
-    instream_id: Option<InStreamId>,
-    characteristics: Option<String>,
-    channels: Option<String>,
 }
 
 impl ExtXMedia {
     pub(crate) const PREFIX: &'static str = "#EXT-X-MEDIA:";
 
-    /// Makes a new `ExtXMedia` tag.
+    /// Makes a new [ExtXMedia] tag.
     pub fn new<T: ToString>(media_type: MediaType, group_id: T, name: T) -> Self {
         ExtXMedia {
             media_type,
@@ -202,13 +113,18 @@ impl ExtXMedia {
             language: None,
             assoc_language: None,
             name: name.to_string(),
-            default: false,
-            autoselect: false,
-            forced: false,
+            is_default: false,
+            is_autoselect: false,
+            is_forced: false,
             instream_id: None,
             characteristics: None,
             channels: None,
         }
+    }
+
+    /// Makes a [ExtXMediaBuilder] for [ExtXMedia].
+    pub fn builder() -> ExtXMediaBuilder {
+        ExtXMediaBuilder::default()
     }
 
     /// Returns the type of the media associated with this tag.
@@ -242,19 +158,19 @@ impl ExtXMedia {
     }
 
     /// Returns whether this is the default rendition.
-    pub const fn default(&self) -> bool {
-        self.default
+    pub const fn is_default(&self) -> bool {
+        self.is_default
     }
 
     /// Returns whether the client may choose to
     /// play this rendition in the absence of explicit user preference.
     pub const fn autoselect(&self) -> bool {
-        self.autoselect
+        self.is_autoselect
     }
 
     /// Returns whether the rendition contains content that is considered essential to play.
-    pub const fn forced(&self) -> bool {
-        self.forced
+    pub const fn is_forced(&self) -> bool {
+        self.is_forced
     }
 
     /// Returns the identifier that specifies a rendition within the segments in the media playlist.
@@ -273,9 +189,10 @@ impl ExtXMedia {
     pub fn channels(&self) -> Option<&String> {
         self.channels.as_ref()
     }
+}
 
-    /// Returns the protocol compatibility version that this tag requires.
-    pub fn requires_version(&self) -> ProtocolVersion {
+impl RequiredVersion for ExtXMedia {
+    fn required_version(&self) -> ProtocolVersion {
         match self.instream_id {
             None
             | Some(InStreamId::Cc1)
@@ -302,13 +219,13 @@ impl fmt::Display for ExtXMedia {
             write!(f, ",ASSOC-LANGUAGE={}", quote(value))?;
         }
         write!(f, ",NAME={}", quote(&self.name))?;
-        if self.default {
+        if self.is_default {
             write!(f, ",DEFAULT=YES")?;
         }
-        if self.autoselect {
+        if self.is_autoselect {
             write!(f, ",AUTOSELECT=YES")?;
         }
-        if self.forced {
+        if self.is_forced {
             write!(f, ",FORCED=YES")?;
         }
         if let Some(value) = &self.instream_id {
@@ -330,12 +247,12 @@ impl FromStr for ExtXMedia {
     fn from_str(input: &str) -> Result<Self, Self::Err> {
         let input = tag(input, Self::PREFIX)?;
 
-        let mut builder = ExtXMediaBuilder::new();
+        let mut builder = ExtXMedia::builder();
 
         for (key, value) in input.parse::<AttributePairs>()? {
             match key.as_str() {
                 "TYPE" => {
-                    builder.media_type(value.parse()?);
+                    builder.media_type(value.parse::<MediaType>()?);
                 }
                 "URI" => {
                     builder.uri(unquote(value));
@@ -353,16 +270,16 @@ impl FromStr for ExtXMedia {
                     builder.name(unquote(value));
                 }
                 "DEFAULT" => {
-                    builder.default((parse_yes_or_no(value))?);
+                    builder.is_default(parse_yes_or_no(value)?);
                 }
                 "AUTOSELECT" => {
-                    builder.autoselect((parse_yes_or_no(value))?);
+                    builder.is_autoselect(parse_yes_or_no(value)?);
                 }
                 "FORCED" => {
-                    builder.forced((parse_yes_or_no(value))?);
+                    builder.is_forced(parse_yes_or_no(value)?);
                 }
                 "INSTREAM-ID" => {
-                    builder.instream_id(unquote(value).parse()?);
+                    builder.instream_id(unquote(value).parse::<InStreamId>()?);
                 }
                 "CHARACTERISTICS" => {
                     builder.characteristics(unquote(value));
@@ -376,7 +293,7 @@ impl FromStr for ExtXMedia {
                 }
             }
         }
-        (builder.finish())
+        builder.build().map_err(Error::builder_error)
     }
 }
 
@@ -385,11 +302,74 @@ mod test {
     use super::*;
 
     #[test]
-    fn ext_x_media() {
-        let tag = ExtXMedia::new(MediaType::Audio, "foo", "bar");
-        let text = r#"#EXT-X-MEDIA:TYPE=AUDIO,GROUP-ID="foo",NAME="bar""#;
-        assert_eq!(text.parse().ok(), Some(tag.clone()));
-        assert_eq!(tag.to_string(), text);
-        assert_eq!(tag.requires_version(), ProtocolVersion::V1);
+    fn test_display() {
+        // TODO: https://developer.apple.com/documentation/http_live_streaming/example_playlists_for_http_live_streaming/adding_alternate_media_to_a_playlist
+        assert_eq!(
+            ExtXMedia::builder()
+                .media_type(MediaType::Audio)
+                .group_id("audio")
+                .language("eng")
+                .name("English")
+                .is_autoselect(true)
+                .is_default(true)
+                .uri("eng/prog_index.m3u8")
+                .build()
+                .unwrap()
+                .to_string(),
+            "#EXT-X-MEDIA:\
+             TYPE=AUDIO,\
+             URI=\"eng/prog_index.m3u8\",\
+             GROUP-ID=\"audio\",\
+             LANGUAGE=\"eng\",\
+             NAME=\"English\",\
+             DEFAULT=YES,\
+             AUTOSELECT=YES"
+                .to_string()
+        );
+
+        assert_eq!(
+            ExtXMedia::builder()
+                .media_type(MediaType::Audio)
+                .group_id("audio")
+                .language("fre")
+                .name("Français")
+                .is_autoselect(true)
+                .is_default(false)
+                .uri("fre/prog_index.m3u8")
+                .build()
+                .unwrap()
+                .to_string(),
+            "#EXT-X-MEDIA:\
+             TYPE=AUDIO,\
+             URI=\"fre/prog_index.m3u8\",\
+             GROUP-ID=\"audio\",\
+             LANGUAGE=\"fre\",\
+             NAME=\"Français\",\
+             AUTOSELECT=YES"
+                .to_string()
+        );
+
+        assert_eq!(
+            ExtXMedia::new(MediaType::Audio, "foo", "bar").to_string(),
+            "#EXT-X-MEDIA:TYPE=AUDIO,GROUP-ID=\"foo\",NAME=\"bar\"".to_string()
+        )
+    }
+
+    #[test]
+    fn test_parser() {
+        assert_eq!(
+            ExtXMedia::new(MediaType::Audio, "foo", "bar"),
+            "#EXT-X-MEDIA:TYPE=AUDIO,GROUP-ID=\"foo\",NAME=\"bar\""
+                .parse()
+                .unwrap()
+        )
+    }
+
+    #[test]
+    fn test_required_version() {
+        assert_eq!(
+            ExtXMedia::new(MediaType::Audio, "foo", "bar").required_version(),
+            ProtocolVersion::V1
+        )
     }
 }

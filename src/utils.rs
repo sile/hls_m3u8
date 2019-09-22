@@ -46,7 +46,7 @@ pub(crate) fn tag<T>(input: &str, tag: T) -> crate::Result<&str>
 where
     T: AsRef<str>,
 {
-    if !input.starts_with(tag.as_ref()) {
+    if !input.trim().starts_with(tag.as_ref()) {
         return Err(Error::missing_tag(tag.as_ref(), input));
     }
     let result = input.split_at(tag.as_ref().len()).1;

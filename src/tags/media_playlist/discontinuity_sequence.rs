@@ -1,40 +1,81 @@
 use std::fmt;
 use std::str::FromStr;
 
-use crate::types::ProtocolVersion;
+use crate::types::{ProtocolVersion, RequiredVersion};
 use crate::utils::tag;
 
-/// [4.3.3.3. EXT-X-DISCONTINUITY-SEQUENCE]
+/// # [4.4.3.3. EXT-X-DISCONTINUITY-SEQUENCE]
 ///
-/// [4.3.3.3. EXT-X-DISCONTINUITY-SEQUENCE]: https://tools.ietf.org/html/rfc8216#section-4.3.3.3
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct ExtXDiscontinuitySequence {
-    seq_num: u64,
-}
+/// The [ExtXDiscontinuitySequence] tag allows synchronization between
+/// different Renditions of the same Variant Stream or different Variant
+/// Streams that have [ExtXDiscontinuity] tags in their [Media Playlist]s.
+///
+/// Its format is:
+/// ```text
+/// #EXT-X-DISCONTINUITY-SEQUENCE:<number>
+/// ```
+/// where `number` is a [u64].
+///
+/// [ExtXDiscontinuity]: crate::tags::ExtXDiscontinuity
+/// [Media Playlist]: crate::MediaPlaylist
+/// [4.4.3.3. EXT-X-DISCONTINUITY-SEQUENCE]:
+/// https://tools.ietf.org/html/draft-pantos-hls-rfc8216bis-04#section-4.4.3.3
+#[derive(Default, Debug, Clone, Copy, PartialEq, Eq, Hash, Ord, PartialOrd)]
+pub struct ExtXDiscontinuitySequence(u64);
 
 impl ExtXDiscontinuitySequence {
     pub(crate) const PREFIX: &'static str = "#EXT-X-DISCONTINUITY-SEQUENCE:";
 
-    /// Makes a new `ExtXDiscontinuitySequence` tag.
+    /// Makes a new [ExtXDiscontinuitySequence] tag.
+    ///
+    /// # Example
+    /// ```
+    /// # use hls_m3u8::tags::ExtXDiscontinuitySequence;
+    /// let discontinuity_sequence = ExtXDiscontinuitySequence::new(5);
+    /// ```
     pub const fn new(seq_num: u64) -> Self {
-        ExtXDiscontinuitySequence { seq_num }
+        Self(seq_num)
     }
 
     /// Returns the discontinuity sequence number of
     /// the first media segment that appears in the associated playlist.
-    pub const fn seq_num(self) -> u64 {
-        self.seq_num
+    ///
+    /// # Example
+    /// ```
+    /// # use hls_m3u8::tags::ExtXDiscontinuitySequence;
+    /// let discontinuity_sequence = ExtXDiscontinuitySequence::new(5);
+    ///
+    /// assert_eq!(discontinuity_sequence.seq_num(), 5);
+    /// ```
+    pub const fn seq_num(&self) -> u64 {
+        self.0
     }
 
-    /// Returns the protocol compatibility version that this tag requires.
-    pub const fn requires_version(self) -> ProtocolVersion {
+    /// Sets the sequence number.
+    ///
+    /// # Example
+    /// ```
+    /// # use hls_m3u8::tags::ExtXDiscontinuitySequence;
+    /// let mut discontinuity_sequence = ExtXDiscontinuitySequence::new(5);
+    ///
+    /// discontinuity_sequence.set_seq_num(10);
+    /// assert_eq!(discontinuity_sequence.seq_num(), 10);
+    /// ```
+    pub fn set_seq_num(&mut self, value: u64) -> &mut Self {
+        self.0 = value;
+        self
+    }
+}
+
+impl RequiredVersion for ExtXDiscontinuitySequence {
+    fn required_version(&self) -> ProtocolVersion {
         ProtocolVersion::V1
     }
 }
 
 impl fmt::Display for ExtXDiscontinuitySequence {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(f, "{}{}", Self::PREFIX, self.seq_num)
+        write!(f, "{}{}", Self::PREFIX, self.0)
     }
 }
 
@@ -42,7 +83,7 @@ impl FromStr for ExtXDiscontinuitySequence {
     type Err = crate::Error;
 
     fn from_str(input: &str) -> Result<Self, Self::Err> {
-        let seq_num = tag(input, Self::PREFIX)?.parse().unwrap(); // TODO!
+        let seq_num = tag(input, Self::PREFIX)?.parse()?;
         Ok(Self::new(seq_num))
     }
 }
@@ -52,11 +93,26 @@ mod test {
     use super::*;
 
     #[test]
-    fn ext_x_discontinuity_sequence() {
-        let tag = ExtXDiscontinuitySequence::new(123);
-        let text = "#EXT-X-DISCONTINUITY-SEQUENCE:123";
-        assert_eq!(text.parse().ok(), Some(tag));
-        assert_eq!(tag.to_string(), text);
-        assert_eq!(tag.requires_version(), ProtocolVersion::V1);
+    fn test_display() {
+        assert_eq!(
+            ExtXDiscontinuitySequence::new(123).to_string(),
+            "#EXT-X-DISCONTINUITY-SEQUENCE:123".to_string()
+        );
+    }
+
+    #[test]
+    fn test_required_version() {
+        assert_eq!(
+            ExtXDiscontinuitySequence::new(123).required_version(),
+            ProtocolVersion::V1
+        )
+    }
+
+    #[test]
+    fn test_parser() {
+        assert_eq!(
+            ExtXDiscontinuitySequence::new(123),
+            "#EXT-X-DISCONTINUITY-SEQUENCE:123".parse().unwrap()
+        );
     }
 }

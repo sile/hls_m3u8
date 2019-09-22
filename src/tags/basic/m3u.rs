@@ -1,21 +1,30 @@
 use std::fmt;
 use std::str::FromStr;
 
-use crate::types::ProtocolVersion;
+use crate::types::{ProtocolVersion, RequiredVersion};
 use crate::utils::tag;
 use crate::Error;
 
-/// [4.3.1.1. EXTM3U]
+/// # [4.3.1.1. EXTM3U]
+/// The [ExtM3u] tag indicates that the file is an Extended [M3U]
+/// Playlist file.
 ///
+/// Its format is:
+/// ```text
+/// #EXTM3U
+/// ```
+///
+/// [M3U]: https://en.wikipedia.org/wiki/M3U
 /// [4.3.1.1. EXTM3U]: https://tools.ietf.org/html/rfc8216#section-4.3.1.1
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+#[derive(Copy, Clone, Eq, PartialEq, Ord, PartialOrd, Hash, Debug, Default)]
 pub struct ExtM3u;
 
 impl ExtM3u {
     pub(crate) const PREFIX: &'static str = "#EXTM3U";
+}
 
-    /// Returns the protocol compatibility version that this tag requires.
-    pub const fn requires_version(&self) -> ProtocolVersion {
+impl RequiredVersion for ExtM3u {
+    fn required_version(&self) -> ProtocolVersion {
         ProtocolVersion::V1
     }
 }
@@ -50,7 +59,7 @@ mod test {
     }
 
     #[test]
-    fn test_requires_version() {
-        assert_eq!(ExtM3u.requires_version(), ProtocolVersion::V1);
+    fn test_required_version() {
+        assert_eq!(ExtM3u.required_version(), ProtocolVersion::V1);
     }
 }

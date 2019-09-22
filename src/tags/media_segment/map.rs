@@ -2,13 +2,22 @@ use std::fmt;
 use std::str::FromStr;
 
 use crate::attribute::AttributePairs;
-use crate::types::{ByteRange, ProtocolVersion};
+use crate::types::{ByteRange, ProtocolVersion, RequiredVersion};
 use crate::utils::{quote, tag, unquote};
 use crate::Error;
 
-/// [4.3.2.5. EXT-X-MAP]
+/// # [4.4.2.5. EXT-X-MAP]
+/// The [ExtXMap] tag specifies how to obtain the Media Initialization
+/// Section, required to parse the applicable [Media Segment]s.
 ///
-/// [4.3.2.5. EXT-X-MAP]: https://tools.ietf.org/html/rfc8216#section-4.3.2.5
+/// Its format is:
+/// ```text
+/// #EXT-X-MAP:<attribute-list>
+/// ```
+///
+/// [Media Segment]: crate::MediaSegment
+/// [4.4.2.5. EXT-X-MAP]:
+/// https://tools.ietf.org/html/draft-pantos-hls-rfc8216bis-04#section-4.4.2.5
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub struct ExtXMap {
     uri: String,
@@ -43,9 +52,10 @@ impl ExtXMap {
     pub const fn range(&self) -> Option<ByteRange> {
         self.range
     }
+}
 
-    /// Returns the protocol compatibility version that this tag requires.
-    pub const fn requires_version(&self) -> ProtocolVersion {
+impl RequiredVersion for ExtXMap {
+    fn required_version(&self) -> ProtocolVersion {
         ProtocolVersion::V6
     }
 }
@@ -93,19 +103,37 @@ mod test {
     use super::*;
 
     #[test]
-    fn ext_x_map() {
-        let tag = ExtXMap::new("foo");
-        let text = r#"#EXT-X-MAP:URI="foo""#;
-        assert_eq!(text.parse().ok(), Some(tag.clone()));
-        assert_eq!(tag.to_string(), text);
-        assert_eq!(tag.requires_version(), ProtocolVersion::V6);
+    fn test_display() {
+        assert_eq!(
+            ExtXMap::new("foo").to_string(),
+            "#EXT-X-MAP:URI=\"foo\"".to_string(),
+        );
 
-        let tag = ExtXMap::with_range("foo", ByteRange::new(9, Some(2)));
-        let text = r#"#EXT-X-MAP:URI="foo",BYTERANGE="9@2""#;
-        ExtXMap::from_str(text).unwrap();
+        assert_eq!(
+            ExtXMap::with_range("foo", ByteRange::new(9, Some(2))).to_string(),
+            "#EXT-X-MAP:URI=\"foo\",BYTERANGE=\"9@2\"".to_string(),
+        );
+    }
 
-        assert_eq!(text.parse().ok(), Some(tag.clone()));
-        assert_eq!(tag.to_string(), text);
-        assert_eq!(tag.requires_version(), ProtocolVersion::V6);
+    #[test]
+    fn test_parser() {
+        assert_eq!(
+            ExtXMap::new("foo"),
+            "#EXT-X-MAP:URI=\"foo\"".parse().unwrap()
+        );
+
+        assert_eq!(
+            ExtXMap::with_range("foo", ByteRange::new(9, Some(2))),
+            "#EXT-X-MAP:URI=\"foo\",BYTERANGE=\"9@2\"".parse().unwrap()
+        );
+    }
+
+    #[test]
+    fn test_required_version() {
+        assert_eq!(ExtXMap::new("foo").required_version(), ProtocolVersion::V6);
+        assert_eq!(
+            ExtXMap::with_range("foo", ByteRange::new(9, Some(2))).required_version(),
+            ProtocolVersion::V6
+        );
     }
 }

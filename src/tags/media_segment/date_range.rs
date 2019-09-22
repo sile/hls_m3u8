@@ -6,7 +6,7 @@ use std::time::Duration;
 use chrono::{DateTime, FixedOffset};
 
 use crate::attribute::AttributePairs;
-use crate::types::{DecimalFloatingPoint, ProtocolVersion};
+use crate::types::{DecimalFloatingPoint, ProtocolVersion, RequiredVersion};
 use crate::utils::{quote, tag, unquote};
 use crate::Error;
 
@@ -18,8 +18,8 @@ use crate::Error;
 #[allow(missing_docs)]
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub struct ExtXDateRange {
-    /// A string that uniquely identifies a Date Range in the Playlist.
-    /// This attribute is REQUIRED.
+    /// A string that uniquely identifies a [ExtXDateRange] in the Playlist.
+    /// This attribute is required.
     id: String,
     /// A client-defined string that specifies some set of attributes and their associated value
     /// semantics. All Date Ranges with the same CLASS attribute value MUST adhere to these
@@ -63,9 +63,10 @@ pub struct ExtXDateRange {
 
 impl ExtXDateRange {
     pub(crate) const PREFIX: &'static str = "#EXT-X-DATERANGE:";
+}
 
-    /// Returns the protocol compatibility version that this tag requires.
-    pub const fn requires_version(&self) -> ProtocolVersion {
+impl RequiredVersion for ExtXDateRange {
+    fn required_version(&self) -> ProtocolVersion {
         ProtocolVersion::V1
     }
 }
