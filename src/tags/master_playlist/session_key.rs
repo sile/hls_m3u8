@@ -100,9 +100,9 @@ mod test {
             EncryptionMethod::Aes128,
             "https://www.example.com/hls-key/key.bin",
         );
-        key.set_iv([
+        key.set_iv(Some([
             16, 239, 143, 117, 140, 165, 85, 17, 85, 132, 187, 91, 60, 104, 127, 82,
-        ]);
+        ]));
 
         assert_eq!(
             key.to_string(),
@@ -129,9 +129,9 @@ mod test {
             EncryptionMethod::Aes128,
             "https://www.example.com/hls-key/key.bin",
         );
-        key.set_iv([
+        key.set_iv(Some([
             16, 239, 143, 117, 140, 165, 85, 17, 85, 132, 187, 91, 60, 104, 127, 82,
-        ]);
+        ]));
 
         assert_eq!(
             "#EXT-X-SESSION-KEY:METHOD=AES-128,\
@@ -163,5 +163,37 @@ mod test {
                 .required_version(),
             ProtocolVersion::V1
         );
+    }
+
+    #[test]
+    #[should_panic]
+    // ExtXSessionKey::new should panic, if the provided
+    // EncryptionMethod is None!
+    fn test_new_panic() {
+        ExtXSessionKey::new(EncryptionMethod::None, "");
+    }
+
+    #[test]
+    #[should_panic]
+    fn test_display_err() {
+        ExtXSessionKey(DecryptionKey::new(EncryptionMethod::None, "")).to_string();
+    }
+
+    #[test]
+    fn test_deref() {
+        let key = ExtXSessionKey::new(EncryptionMethod::Aes128, "https://www.example.com/");
+
+        assert_eq!(key.method(), EncryptionMethod::Aes128);
+        assert_eq!(key.uri(), &Some("https://www.example.com/".into()));
+    }
+
+    #[test]
+    fn test_deref_mut() {
+        let mut key = ExtXSessionKey::new(EncryptionMethod::Aes128, "https://www.example.com/");
+
+        key.set_method(EncryptionMethod::None);
+        assert_eq!(key.method(), EncryptionMethod::None);
+        key.set_uri(Some("https://www.github.com/"));
+        assert_eq!(key.uri(), &Some("https://www.github.com/".into()));
     }
 }

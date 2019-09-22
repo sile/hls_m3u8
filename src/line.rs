@@ -26,8 +26,7 @@ impl FromStr for Lines {
         for l in input.lines() {
             let line = l.trim();
 
-            // ignore empty lines
-            if line.len() == 0 {
+            if line.is_empty() {
                 continue;
             }
 
@@ -39,7 +38,7 @@ impl FromStr for Lines {
                     continue;
                 } else if line.starts_with("#EXT") {
                     Line::Tag(line.parse()?)
-                } else if line.starts_with("#") {
+                } else if line.starts_with('#') {
                     continue; // ignore comments
                 } else {
                     // stream inf line needs special treatment

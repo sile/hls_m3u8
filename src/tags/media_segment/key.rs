@@ -2,7 +2,7 @@ use std::fmt;
 use std::ops::{Deref, DerefMut};
 use std::str::FromStr;
 
-use crate::types::{DecryptionKey, EncryptionMethod, KeyFormatVersions};
+use crate::types::{DecryptionKey, EncryptionMethod};
 use crate::utils::tag;
 use crate::Error;
 
@@ -64,13 +64,13 @@ impl ExtXKey {
     ///     "#EXT-X-KEY:METHOD=NONE"
     /// );
     /// ```
-    pub fn empty() -> Self {
+    pub const fn empty() -> Self {
         Self(DecryptionKey {
             method: EncryptionMethod::None,
             uri: None,
             iv: None,
             key_format: None,
-            key_format_versions: KeyFormatVersions::new(),
+            key_format_versions: None,
         })
     }
 
@@ -134,13 +134,13 @@ mod test {
         );
 
         let mut key = ExtXKey::empty();
-        // it is expected, that all attributes will be ignored in an empty key!
+        // it is expected, that all attributes will be ignored for an empty key!
         key.set_key_format(Some(KeyFormat::Identity));
-        key.set_iv([
+        key.set_iv(Some([
             16, 239, 143, 117, 140, 165, 85, 17, 85, 132, 187, 91, 60, 104, 127, 82,
-        ]);
+        ]));
         key.set_uri(Some("https://www.example.com"));
-        key.set_key_format_versions(vec![1, 2, 3]);
+        key.set_key_format_versions(Some(vec![1, 2, 3]));
 
         assert_eq!(key.to_string(), "#EXT-X-KEY:METHOD=NONE".to_string());
     }
@@ -163,8 +163,8 @@ mod test {
             EncryptionMethod::Aes128,
             "https://www.example.com/hls-key/key.bin",
         );
-        key.set_iv([
+        key.set_iv(Some([
             16, 239, 143, 117, 140, 165, 85, 17, 85, 132, 187, 91, 60, 104, 127, 82,
-        ]);
+        ]));
     }
 }

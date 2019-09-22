@@ -103,7 +103,7 @@ impl MasterPlaylistBuilder {
         let required_version = self.required_version();
         let specified_version = self
             .version_tag
-            .unwrap_or(required_version.into())
+            .unwrap_or_else(|| required_version.into())
             .version();
 
         if required_version > specified_version {
@@ -164,7 +164,7 @@ impl MasterPlaylistBuilder {
                     .flatten(),
             )
             .max()
-            .unwrap_or(ProtocolVersion::latest())
+            .unwrap_or_else(ProtocolVersion::latest)
     }
 
     fn validate_stream_inf_tags(&self) -> crate::Result<()> {
@@ -188,24 +188,23 @@ impl MasterPlaylistBuilder {
                     }
                 }
                 match t.closed_captions() {
-                    Some(&ClosedCaptions::GroupId(ref group_id)) => {
+                    &Some(ClosedCaptions::GroupId(ref group_id)) => {
                         if !self.check_media_group(MediaType::ClosedCaptions, group_id) {
                             return Err(Error::unmatched_group(group_id));
                         }
                     }
-                    Some(&ClosedCaptions::None) => {
+                    &Some(ClosedCaptions::None) => {
                         has_none_closed_captions = true;
                     }
                     None => {}
                 }
             }
-            if has_none_closed_captions {
-                if !value
+            if has_none_closed_captions
+                && !value
                     .iter()
-                    .all(|t| t.closed_captions() == Some(&ClosedCaptions::None))
-                {
-                    return Err(Error::invalid_input());
-                }
+                    .all(|t| t.closed_captions() == &Some(ClosedCaptions::None))
+            {
+                return Err(Error::invalid_input());
             }
         }
         Ok(())

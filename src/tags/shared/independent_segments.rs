@@ -8,7 +8,7 @@ use crate::Error;
 /// [4.3.5.1. EXT-X-INDEPENDENT-SEGMENTS]
 ///
 /// [4.3.5.1. EXT-X-INDEPENDENT-SEGMENTS]: https://tools.ietf.org/html/rfc8216#section-4.3.5.1
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Ord, PartialOrd)]
 pub struct ExtXIndependentSegments;
 
 impl ExtXIndependentSegments {

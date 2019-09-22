@@ -70,7 +70,7 @@ impl MediaPlaylistBuilder {
         let required_version = self.required_version();
         let specified_version = self
             .version_tag
-            .unwrap_or(required_version.into())
+            .unwrap_or_else(|| required_version.into())
             .version();
 
         if required_version > specified_version {
@@ -109,7 +109,7 @@ impl MediaPlaylistBuilder {
                     }
                 };
 
-                if !(rounded_segment_duration <= max_segment_duration) {
+                if rounded_segment_duration > max_segment_duration {
                     return Err(Error::custom(format!(
                         "Too large segment duration: actual={:?}, max={:?}, target_duration={:?}, uri={:?}",
                         segment_duration,
@@ -122,7 +122,7 @@ impl MediaPlaylistBuilder {
                 // CHECK: `#EXT-X-BYTE-RANGE`
                 if let Some(tag) = s.byte_range_tag() {
                     if tag.to_range().start().is_none() {
-                        let last_uri = last_range_uri.ok_or(Error::invalid_input())?;
+                        let last_uri = last_range_uri.ok_or_else(Error::invalid_input)?;
                         if last_uri != s.uri() {
                             return Err(Error::invalid_input());
                         }
@@ -200,7 +200,7 @@ impl MediaPlaylistBuilder {
                     .unwrap_or(ProtocolVersion::V1)
             }))
             .max()
-            .unwrap_or(ProtocolVersion::latest())
+            .unwrap_or_else(ProtocolVersion::latest)
     }
 
     /// Adds a media segment to the resulting playlist.

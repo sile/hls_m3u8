@@ -47,7 +47,7 @@ impl ExtXDiscontinuitySequence {
     ///
     /// assert_eq!(discontinuity_sequence.seq_num(), 5);
     /// ```
-    pub const fn seq_num(&self) -> u64 {
+    pub const fn seq_num(self) -> u64 {
         self.0
     }
 
@@ -114,5 +114,13 @@ mod test {
             ExtXDiscontinuitySequence::new(123),
             "#EXT-X-DISCONTINUITY-SEQUENCE:123".parse().unwrap()
         );
+    }
+
+    #[test]
+    fn test_seq_num() {
+        let mut sequence = ExtXDiscontinuitySequence::new(123);
+        assert_eq!(sequence.seq_num(), 123);
+        sequence.set_seq_num(1);
+        assert_eq!(sequence.seq_num(), 1);
     }
 }

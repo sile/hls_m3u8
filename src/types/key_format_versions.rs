@@ -37,7 +37,7 @@ impl KeyFormatVersions {
 
     /// Returns `true`, if [KeyFormatVersions] has the default value of `vec![1]`.
     pub fn is_default(&self) -> bool {
-        self.0 == vec![1] || self.0.is_empty()
+        self.0 == vec![1] && self.0.len() == 1 || self.0.is_empty()
     }
 }
 
@@ -66,7 +66,7 @@ impl FromStr for KeyFormatVersions {
 
     fn from_str(input: &str) -> Result<Self, Self::Err> {
         let mut result = unquote(input)
-            .split("/")
+            .split('/')
             .filter_map(|v| v.parse().ok())
             .collect::<Vec<_>>();
 

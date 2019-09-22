@@ -1,4 +1,3 @@
-use std::error;
 use std::fmt;
 
 use failure::{Backtrace, Context, Fail};
@@ -118,13 +117,6 @@ impl From<Context<ErrorKind>> for Error {
 }
 
 impl Error {
-    pub(crate) fn unknown<T>(value: T) -> Self
-    where
-        T: error::Error,
-    {
-        Self::from(ErrorKind::UnknownError(value.to_string()))
-    }
-
     pub(crate) fn missing_value<T: ToString>(value: T) -> Self {
         Self::from(ErrorKind::MissingValue(value.to_string()))
     }
@@ -216,5 +208,11 @@ impl From<::std::io::Error> for Error {
 impl From<::chrono::ParseError> for Error {
     fn from(value: ::chrono::ParseError) -> Self {
         Error::chrono(value)
+    }
+}
+
+impl From<::strum::ParseError> for Error {
+    fn from(value: ::strum::ParseError) -> Self {
+        Error::custom(value) // TODO!
     }
 }

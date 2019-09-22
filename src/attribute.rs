@@ -55,11 +55,14 @@ impl FromStr for AttributePairs {
             let pair = split(line.trim(), '=');
 
             if pair.len() < 2 {
-                return Err(Error::invalid_input());
+                continue;
             }
 
-            let key = pair[0].to_uppercase();
-            let value = pair[1].to_string();
+            let key = pair[0].trim().to_uppercase();
+            let value = pair[1].trim().to_string();
+            if value.is_empty() {
+                continue;
+            }
 
             result.insert(key.trim().to_string(), value.trim().to_string());
         }
@@ -122,6 +125,11 @@ mod test {
 
         let mut iterator = pairs.iter();
         assert!(iterator.any(|(k, v)| k == "ABC" && v == "12.3"));
+
+        let mut pairs = AttributePairs::new();
+        pairs.insert("FOO".to_string(), "BAR".to_string());
+
+        assert_eq!("FOO=BAR,VAL".parse::<AttributePairs>().unwrap(), pairs);
     }
 
     #[test]
@@ -135,5 +143,19 @@ mod test {
 
         let mut iterator = attrs.iter();
         assert!(iterator.any(|(k, v)| k == "key_02" && v == "value_02"));
+    }
+
+    #[test]
+    fn test_into_iter() {
+        let mut map = HashMap::new();
+        map.insert("k".to_string(), "v".to_string());
+
+        let mut attrs = AttributePairs::new();
+        attrs.insert("k".to_string(), "v".to_string());
+
+        assert_eq!(
+            attrs.into_iter().collect::<Vec<_>>(),
+            map.into_iter().collect::<Vec<_>>()
+        );
     }
 }
