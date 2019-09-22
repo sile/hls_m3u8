@@ -97,7 +97,7 @@ impl FromStr for ExtXStart {
             }
         }
 
-        let time_offset = time_offset.ok_or(Error::missing_value("EXT-X-TIME-OFFSET"))?;
+        let time_offset = time_offset.ok_or_else(|| Error::missing_value("EXT-X-TIME-OFFSET"))?;
 
         Ok(ExtXStart {
             time_offset,

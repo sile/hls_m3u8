@@ -97,11 +97,11 @@ impl FromStr for ByteRange {
         let length = tokens[0].parse()?;
 
         let start = {
-            let mut result = None;
             if tokens.len() == 2 {
-                result = Some(tokens[1].parse()?);
+                Some(tokens[1].parse()?)
+            } else {
+                None
             }
-            result
         };
         Ok(ByteRange::new(length, start))
     }

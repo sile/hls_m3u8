@@ -68,7 +68,7 @@ impl ExtXMediaBuilder {
     fn validate(&self) -> Result<(), String> {
         let media_type = self
             .media_type
-            .ok_or(Error::missing_attribute("MEDIA-TYPE").to_string())?;
+            .ok_or_else(|| Error::missing_attribute("MEDIA-TYPE").to_string())?;
 
         if MediaType::ClosedCaptions == media_type {
             if self.uri.is_some() {
@@ -78,11 +78,9 @@ impl ExtXMediaBuilder {
                 .to_string());
             }
             self.instream_id
-                .ok_or(Error::missing_attribute("INSTREAM-ID").to_string())?;
-        } else {
-            if self.instream_id.is_some() {
-                return Err(Error::custom("Unexpected attribute: \"INSTREAM-ID\"!").to_string());
-            }
+                .ok_or_else(|| Error::missing_attribute("INSTREAM-ID").to_string())?;
+        } else if self.instream_id.is_some() {
+            return Err(Error::custom("Unexpected attribute: \"INSTREAM-ID\"!").to_string());
         }
 
         if self.is_default.unwrap_or(false) && !self.is_autoselect.unwrap_or(false) {
@@ -91,10 +89,8 @@ impl ExtXMediaBuilder {
             );
         }
 
-        if MediaType::Subtitles != media_type {
-            if self.is_forced.is_some() {
-                return Err(Error::invalid_input().to_string());
-            }
+        if MediaType::Subtitles != media_type && self.is_forced.is_some() {
+            return Err(Error::invalid_input().to_string());
         }
 
         Ok(())

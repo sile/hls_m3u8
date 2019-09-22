@@ -66,7 +66,7 @@ impl FromStr for KeyFormatVersions {
 
     fn from_str(input: &str) -> Result<Self, Self::Err> {
         let mut result = unquote(input)
-            .split("/")
+            .split('/')
             .filter_map(|v| v.parse().ok())
             .collect::<Vec<_>>();
 

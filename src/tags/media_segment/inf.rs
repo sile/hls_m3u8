@@ -173,7 +173,7 @@ impl FromStr for ExtInf {
         dbg!(&input);
         let tokens = input.splitn(2, ',').collect::<Vec<_>>();
 
-        if tokens.len() == 0 {
+        if tokens.is_empty() {
             return Err(Error::custom(format!(
                 "failed to parse #EXTINF tag, couldn't split input: {:?}",
                 input

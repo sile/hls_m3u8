@@ -355,7 +355,7 @@ impl FromStr for DecryptionKey {
             }
         }
 
-        let method = method.ok_or(Error::missing_value("METHOD"))?;
+        let method = method.ok_or_else(|| Error::missing_value("METHOD"))?;
         if method != EncryptionMethod::None && uri.is_none() {
             return Err(Error::missing_value("URI"));
         }
@@ -365,7 +365,7 @@ impl FromStr for DecryptionKey {
             uri,
             iv,
             key_format,
-            key_format_versions: key_format_versions.unwrap_or(KeyFormatVersions::new()),
+            key_format_versions: key_format_versions.unwrap_or_default(),
         })
     }
 }

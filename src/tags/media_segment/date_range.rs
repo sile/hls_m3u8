@@ -164,15 +164,13 @@ impl FromStr for ExtXDateRange {
             }
         }
 
-        let id = id.ok_or(Error::missing_value("EXT-X-ID"))?;
+        let id = id.ok_or_else(|| Error::missing_value("EXT-X-ID"))?;
         let start_date = start_date
-            .ok_or(Error::missing_value("EXT-X-START-DATE"))?
+            .ok_or_else(|| Error::missing_value("EXT-X-START-DATE"))?
             .parse()?;
 
-        if end_on_next {
-            if class.is_none() {
-                return Err(Error::invalid_input());
-            }
+        if end_on_next && class.is_none() {
+            return Err(Error::invalid_input());
         }
         Ok(ExtXDateRange {
             id,

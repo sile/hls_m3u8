@@ -47,7 +47,7 @@ impl ExtXDiscontinuitySequence {
     ///
     /// assert_eq!(discontinuity_sequence.seq_num(), 5);
     /// ```
-    pub const fn seq_num(&self) -> u64 {
+    pub const fn seq_num(self) -> u64 {
         self.0
     }
 

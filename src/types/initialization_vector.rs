@@ -61,8 +61,8 @@ impl FromStr for InitializationVector {
 
         let mut v = [0; 16];
         for (i, c) in s.as_bytes().chunks(2).skip(1).enumerate() {
-            let d = std::str::from_utf8(c).map_err(|e| Error::custom(e))?;
-            let b = u8::from_str_radix(d, 16).map_err(|e| Error::custom(e))?;
+            let d = std::str::from_utf8(c).map_err(Error::custom)?;
+            let b = u8::from_str_radix(d, 16).map_err(Error::custom)?;
             v[i] = b;
         }
 

@@ -50,7 +50,7 @@ impl ExtXVersion {
     ///     ProtocolVersion::V6
     /// );
     /// ```
-    pub const fn version(&self) -> ProtocolVersion {
+    pub const fn version(self) -> ProtocolVersion {
         self.0
     }
 }

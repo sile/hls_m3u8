@@ -291,7 +291,7 @@ impl FromStr for ExtXSessionData {
             }
         }
 
-        let data_id = data_id.ok_or(Error::missing_value("EXT-X-DATA-ID"))?;
+        let data_id = data_id.ok_or_else(|| Error::missing_value("EXT-X-DATA-ID"))?;
         let data = {
             if let Some(value) = session_value {
                 if uri.is_some() {

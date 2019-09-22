@@ -272,7 +272,7 @@ impl FromStr for StreamInf {
             }
         }
 
-        let bandwidth = bandwidth.ok_or(Error::missing_value("BANDWIDTH"))?;
+        let bandwidth = bandwidth.ok_or_else(|| Error::missing_value("BANDWIDTH"))?;
 
         Ok(Self {
             bandwidth,

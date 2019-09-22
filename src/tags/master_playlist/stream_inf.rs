@@ -63,7 +63,7 @@ impl ExtXStreamInf {
 
     /// Returns the maximum frame rate for all the video in the variant stream.
     pub fn frame_rate(&self) -> Option<f64> {
-        self.frame_rate.map_or(None, |v| Some(v.as_f64()))
+        self.frame_rate.map(|v| v.as_f64())
     }
 
     /// Returns the group identifier for the audio in the variant stream.
@@ -113,8 +113,10 @@ impl FromStr for ExtXStreamInf {
 
     fn from_str(input: &str) -> Result<Self, Self::Err> {
         let mut lines = input.lines();
-        let first_line = lines.next().ok_or(Error::missing_value("first_line"))?;
-        let uri = lines.next().ok_or(Error::missing_value("URI"))?;
+        let first_line = lines
+            .next()
+            .ok_or_else(|| Error::missing_value("first_line"))?;
+        let uri = lines.next().ok_or_else(|| Error::missing_value("URI"))?;
 
         let input = tag(first_line, Self::PREFIX)?;
 

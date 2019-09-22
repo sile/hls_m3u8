@@ -91,13 +91,12 @@ impl FromStr for ExtXIFrameStreamInf {
         let mut uri = None;
 
         for (key, value) in input.parse::<AttributePairs>()? {
-            match key.as_str() {
-                "URI" => uri = Some(unquote(value)),
-                _ => {}
+            if let "URI" = key.as_str() {
+                uri = Some(unquote(value));
             }
         }
 
-        let uri = uri.ok_or(Error::missing_value("URI"))?;
+        let uri = uri.ok_or_else(|| Error::missing_value("URI"))?;
 
         Ok(Self {
             uri,
