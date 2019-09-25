@@ -32,21 +32,17 @@ impl DecimalFloatingPoint {
     }
 
     pub(crate) fn to_duration(self) -> Duration {
-        let secs = self.0 as u64;
-        let nanos = (self.0.fract() * 1_000_000_000.0) as u32;
-        Duration::new(secs, nanos)
+        Duration::from_secs_f64(self.0)
     }
 
     pub(crate) fn from_duration(duration: Duration) -> Self {
-        let n =
-            (duration.as_secs() as f64) + (f64::from(duration.subsec_nanos()) / 1_000_000_000.0);
-        DecimalFloatingPoint(n)
+        Self(duration.as_secs_f64())
     }
 }
 
 impl From<u32> for DecimalFloatingPoint {
     fn from(f: u32) -> Self {
-        DecimalFloatingPoint(f64::from(f))
+        Self(f64::from(f))
     }
 }
 
@@ -107,6 +103,45 @@ mod tests {
         assert_eq!(
             decimal_floating_point,
             "4.1".parse::<DecimalFloatingPoint>().unwrap()
+        );
+
+        assert!("1#".parse::<DecimalFloatingPoint>().is_err());
+    }
+
+    #[test]
+    fn test_new() {
+        assert!(DecimalFloatingPoint::new(std::f64::INFINITY).is_err());
+        assert!(DecimalFloatingPoint::new(-1.0).is_err());
+    }
+
+    #[test]
+    fn test_as_f64() {
+        assert_eq!(DecimalFloatingPoint::new(1.0).unwrap().as_f64(), 1.0);
+    }
+
+    #[test]
+    fn test_from_duration() {
+        assert_eq!(
+            DecimalFloatingPoint::from_duration(Duration::from_nanos(11_234_500_112_345)),
+            DecimalFloatingPoint::new(11234.500112345).unwrap()
+        );
+    }
+
+    #[test]
+    fn test_from() {
+        assert_eq!(
+            DecimalFloatingPoint::from(1u32),
+            DecimalFloatingPoint::new(1.0).unwrap()
+        );
+
+        assert_eq!(
+            DecimalFloatingPoint::from(1 as f64),
+            DecimalFloatingPoint::new(1.0).unwrap()
+        );
+
+        assert_eq!(
+            DecimalFloatingPoint::from(1 as f32),
+            DecimalFloatingPoint::new(1.0).unwrap()
         );
     }
 }

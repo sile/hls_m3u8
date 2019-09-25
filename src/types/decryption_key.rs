@@ -494,6 +494,29 @@ mod test {
             DecryptionKey::new(EncryptionMethod::Aes128, "https://www.example.com/")
                 .required_version(),
             ProtocolVersion::V1
-        )
+        );
+
+        assert_eq!(
+            DecryptionKey::builder()
+                .method(EncryptionMethod::Aes128)
+                .uri("https://www.example.com/")
+                .key_format(KeyFormat::Identity)
+                .key_format_versions(vec![1, 2, 3])
+                .build()
+                .unwrap()
+                .required_version(),
+            ProtocolVersion::V5
+        );
+
+        assert_eq!(
+            DecryptionKey::builder()
+                .method(EncryptionMethod::Aes128)
+                .uri("https://www.example.com/")
+                .iv([1, 2, 3, 4, 5, 6, 7, 8, 9, 1, 2, 3, 4, 5, 6, 7])
+                .build()
+                .unwrap()
+                .required_version(),
+            ProtocolVersion::V2
+        );
     }
 }

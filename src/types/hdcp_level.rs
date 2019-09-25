@@ -56,5 +56,7 @@ mod tests {
 
         let level = HdcpLevel::None;
         assert_eq!(level, "NONE".parse::<HdcpLevel>().unwrap());
+
+        assert!("unk".parse::<HdcpLevel>().is_err());
     }
 }

@@ -104,5 +104,7 @@ mod tests {
             EncryptionMethod::None,
             "NONE".parse::<EncryptionMethod>().unwrap()
         );
+
+        assert!("unknown".parse::<EncryptionMethod>().is_err());
     }
 }
