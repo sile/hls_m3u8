@@ -61,7 +61,7 @@ impl ExtXSessionData {
     /// );
     /// ```
     pub fn new<T: ToString>(data_id: T, data: SessionData) -> Self {
-        ExtXSessionData {
+        Self {
             data_id: data_id.to_string(),
             data,
             language: None,
@@ -107,7 +107,7 @@ impl ExtXSessionData {
     /// );
     /// ```
     pub fn with_language<T: ToString>(data_id: T, data: SessionData, language: T) -> Self {
-        ExtXSessionData {
+        Self {
             data_id: data_id.to_string(),
             data,
             language: Some(language.to_string()),
@@ -256,13 +256,16 @@ impl fmt::Display for ExtXSessionData {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         write!(f, "{}", Self::PREFIX)?;
         write!(f, "DATA-ID={}", quote(&self.data_id))?;
+
         match &self.data {
             SessionData::Value(value) => write!(f, ",VALUE={}", quote(value))?,
             SessionData::Uri(value) => write!(f, ",URI={}", quote(value))?,
         }
+
         if let Some(value) = &self.language {
             write!(f, ",LANGUAGE={}", quote(value))?;
         }
+
         Ok(())
     }
 }
@@ -306,7 +309,7 @@ impl FromStr for ExtXSessionData {
             }
         };
 
-        Ok(ExtXSessionData {
+        Ok(Self {
             data_id,
             data,
             language,
@@ -426,6 +429,10 @@ mod test {
                 .unwrap(),
             ExtXSessionData::with_language("foo", SessionData::Value("bar".into()), "baz")
         );
+
+        assert!("#EXT-X-SESSION-DATA:DATA-ID=\"foo\",LANGUAGE=\"baz\""
+            .parse::<ExtXSessionData>()
+            .is_err())
     }
 
     #[test]

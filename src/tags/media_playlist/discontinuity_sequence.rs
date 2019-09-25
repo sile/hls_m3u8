@@ -115,4 +115,12 @@ mod test {
             "#EXT-X-DISCONTINUITY-SEQUENCE:123".parse().unwrap()
         );
     }
+
+    #[test]
+    fn test_seq_num() {
+        let mut sequence = ExtXDiscontinuitySequence::new(123);
+        assert_eq!(sequence.seq_num(), 123);
+        sequence.set_seq_num(1);
+        assert_eq!(sequence.seq_num(), 1);
+    }
 }
