@@ -1,5 +1,9 @@
 language: rust
 sudo: required
+
+before_install:
+  - curl -L https://github.com/mozilla/grcov/releases/latest/download/grcov-linux-x86_64.tar.bz2 | tar jxf -
+
 rust:
   - stable
   - beta
@@ -23,17 +27,26 @@ addons:
       - binutils-dev
       - libiberty-dev
 
-after_success: |
-  wget https://github.com/SimonKagstrom/kcov/archive/master.tar.gz &&
-  tar xzf master.tar.gz &&
-  cd kcov-master &&
-  mkdir build &&
-  cd build &&
-  cmake .. &&
-  make &&
-  make install DESTDIR=../../kcov-build &&
-  cd ../.. &&
-  rm -rf kcov-master &&
-  for file in target/debug/hls_m3u8-*[^\.d]; do mkdir -p "target/cov/$(basename $file)"; ./kcov-build/usr/local/bin/kcov --exclude-pattern=/.cargo,/usr/lib --verify "target/cov/$(basename $file)" "$file"; done &&
-  bash <(curl -s https://codecov.io/bash) &&
-  echo "Uploaded code coverage"
+#after_success: |
+#  wget https://github.com/SimonKagstrom/kcov/archive/master.tar.gz &&
+#  tar xzf master.tar.gz &&
+#  cd kcov-master &&
+#  mkdir build &&
+#  cd build &&
+#  cmake .. &&
+#  make &&
+#  make install DESTDIR=../../kcov-build &&
+#  cd ../.. &&
+#  rm -rf kcov-master &&
+#  for file in target/debug/hls_m3u8-*[^\.d]; do mkdir -p "target/cov/$(basename $file)"; ./kcov-build/usr/local/bin/kcov --exclude-pattern=/.cargo,/usr/lib --verify "target/cov/$(basename $file)" "$file"; done &&
+#  bash <(curl -s https://codecov.io/bash) &&
+#  echo "Uploaded code coverage"
+script:
+    - export CARGO_INCREMENTAL=0
+    - export RUSTFLAGS="-Zprofile -Ccodegen-units=1 -Cinline-threshold=0 -Clink-dead-code -Coverflow-checks=off -Zno-landing-pads"
+    - cargo build --verbose $CARGO_OPTIONS
+    - cargo test --verbose $CARGO_OPTIONS
+    - |
+      zip -0 ccov.zip `find . \( -name "hls_m3u8*.gc*" \) -print`;
+      ./grcov ccov.zip -s . -t lcov --llvm --branch --ignore-not-existing --ignore-dir "/*" -o lcov.info;
+      bash <(curl -s https://codecov.io/bash) -f lcov.info;
