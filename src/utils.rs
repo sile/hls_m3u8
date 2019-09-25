@@ -61,7 +61,7 @@ mod tests {
     fn test_parse_yes_or_no() {
         assert!(parse_yes_or_no("YES").unwrap());
         assert!(!parse_yes_or_no("NO").unwrap());
-        // TODO: test for error
+        assert!(parse_yes_or_no("garbage").is_err());
     }
 
     #[test]
@@ -99,5 +99,7 @@ mod tests {
 
         let input = tag(input, "A").unwrap();
         assert_eq!(input, "SampleString");
+
+        assert!(tag(input, "B").is_err());
     }
 }

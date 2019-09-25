@@ -151,5 +151,7 @@ mod tests {
             start: None,
         };
         assert_eq!(byte_range, "99999".parse::<ByteRange>().unwrap());
+
+        assert!("".parse::<ByteRange>().is_err());
     }
 }

@@ -122,6 +122,8 @@ mod test {
 
         let mut iterator = pairs.iter();
         assert!(iterator.any(|(k, v)| k == "ABC" && v == "12.3"));
+
+        assert!("FOO=BAR,VAL".parse::<AttributePairs>().is_err());
     }
 
     #[test]
@@ -135,5 +137,19 @@ mod test {
 
         let mut iterator = attrs.iter();
         assert!(iterator.any(|(k, v)| k == "key_02" && v == "value_02"));
+    }
+
+    #[test]
+    fn test_into_iter() {
+        let mut map = HashMap::new();
+        map.insert("k".to_string(), "v".to_string());
+
+        let mut attrs = AttributePairs::new();
+        attrs.insert("k".to_string(), "v".to_string());
+
+        assert_eq!(
+            attrs.into_iter().collect::<Vec<_>>(),
+            map.into_iter().collect::<Vec<_>>()
+        );
     }
 }
