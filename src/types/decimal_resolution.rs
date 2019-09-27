@@ -49,6 +49,17 @@ impl fmt::Display for DecimalResolution {
     }
 }
 
+/// [DecimalResolution] can be constructed from a tuple; (width, height).
+impl<T, U> From<(T, U)> for DecimalResolution
+where
+    T: Into<usize>,
+    U: Into<usize>,
+{
+    fn from(value: (T, U)) -> Self {
+        Self::new(value.0.into(), value.1.into())
+    }
+}
+
 impl FromStr for DecimalResolution {
     type Err = Error;
 
@@ -65,7 +76,7 @@ impl FromStr for DecimalResolution {
         let width = tokens[0];
         let height = tokens[1];
 
-        Ok(DecimalResolution {
+        Ok(Self {
             width: width.parse()?,
             height: height.parse()?,
         })

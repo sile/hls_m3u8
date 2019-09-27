@@ -23,12 +23,8 @@ impl ExtXStart {
     /// # Panic
     /// Panics if the time_offset value is infinite.
     pub fn new(time_offset: f64) -> Self {
-        if time_offset.is_infinite() {
-            panic!("EXT-X-START: Floating point value must be finite!");
-        }
-
-        ExtXStart {
-            time_offset: SignedDecimalFloatingPoint::new(time_offset).unwrap(),
+        Self {
+            time_offset: SignedDecimalFloatingPoint::new(time_offset),
             precise: false,
         }
     }
@@ -38,12 +34,8 @@ impl ExtXStart {
     /// # Panic
     /// Panics if the time_offset value is infinite.
     pub fn with_precise(time_offset: f64, precise: bool) -> Self {
-        if time_offset.is_infinite() {
-            panic!("EXT-X-START: Floating point value must be finite!");
-        }
-
-        ExtXStart {
-            time_offset: SignedDecimalFloatingPoint::new(time_offset).unwrap(),
+        Self {
+            time_offset: SignedDecimalFloatingPoint::new(time_offset),
             precise,
         }
     }

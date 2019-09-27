@@ -16,11 +16,18 @@ pub struct ByteRange {
 
 impl ByteRange {
     /// Creates a new [ByteRange].
+    ///
+    /// # Example
+    /// ```
+    /// # use hls_m3u8::types::ByteRange;
+    /// ByteRange::new(22, Some(12));
+    /// ```
     pub const fn new(length: usize, start: Option<usize>) -> Self {
         Self { length, start }
     }
 
     /// Returns the length of the range.
+    ///
     /// # Example
     /// ```
     /// # use hls_m3u8::types::ByteRange;
@@ -32,6 +39,7 @@ impl ByteRange {
     }
 
     /// Sets the length of the range.
+    ///
     /// # Example
     /// ```
     /// # use hls_m3u8::types::ByteRange;
@@ -48,6 +56,7 @@ impl ByteRange {
     }
 
     /// Returns the start of the range.
+    ///
     /// # Example
     /// ```
     /// # use hls_m3u8::types::ByteRange;
@@ -59,6 +68,7 @@ impl ByteRange {
     }
 
     /// Sets the start of the range.
+    ///
     /// # Example
     /// ```
     /// # use hls_m3u8::types::ByteRange;
@@ -103,7 +113,7 @@ impl FromStr for ByteRange {
                 None
             }
         };
-        Ok(ByteRange::new(length, start))
+        Ok(Self::new(length, start))
     }
 }
 

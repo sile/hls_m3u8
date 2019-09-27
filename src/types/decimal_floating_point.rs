@@ -20,10 +20,10 @@ impl DecimalFloatingPoint {
     /// The given value must have a positive sign and be finite,
     /// otherwise this function will return an error that has the kind `ErrorKind::InvalidInput`.
     pub fn new(n: f64) -> crate::Result<Self> {
-        if !n.is_sign_positive() || !n.is_finite() {
+        if n.is_sign_negative() || n.is_infinite() {
             return Err(Error::invalid_input());
         }
-        Ok(DecimalFloatingPoint(n))
+        Ok(Self(n))
     }
 
     /// Converts `DecimalFloatingPoint` to `f64`.
@@ -61,8 +61,7 @@ impl FromStr for DecimalFloatingPoint {
         if !input.chars().all(|c| c.is_digit(10) || c == '.') {
             return Err(Error::invalid_input());
         }
-        let n = input.parse()?;
-        DecimalFloatingPoint::new(n)
+        Self::new(input.parse()?)
     }
 }
 
@@ -110,7 +109,7 @@ mod tests {
 
     #[test]
     fn test_new() {
-        assert!(DecimalFloatingPoint::new(std::f64::INFINITY).is_err());
+        assert!(DecimalFloatingPoint::new(::std::f64::INFINITY).is_err());
         assert!(DecimalFloatingPoint::new(-1.0).is_err());
     }
 
