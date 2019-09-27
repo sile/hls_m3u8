@@ -1,27 +1,12 @@
-#language: rust
-#sudo: required
-#rust:
-#  - stable
-#  - beta
-#  - nightly
-#matrix:
-#  allow_failures:
-#    - rust: nightly
+language: rust
 
-#env:
-#  global:
-#  - RUSTFLAGS="-Zprofile -Ccodegen-units=1 -Cinline-threshold=0 -Clink-dead-code -Coverflow-checks=off -Zno-landing-pads"
-
-#addons:
-#  apt:
-#    packages:
-#      - libcurl4-openssl-dev
-#      - libelf-dev
-#      - libdw-dev
-#      - cmake
-#      - gcc
-#      - binutils-dev
-#      - libiberty-dev
+rust:
+  - stable
+  - beta
+  - nightly
+matrix:
+  allow_failures:
+    - rust: nightly
 
 #after_success: |
 #  wget https://github.com/SimonKagstrom/kcov/archive/master.tar.gz &&
@@ -37,23 +22,17 @@
 #  for file in target/debug/hls_m3u8-*[^\.d]; do mkdir -p "target/cov/$(basename $file)"; ./kcov-build/usr/local/bin/kcov --exclude-pattern=/.cargo,/usr/lib --verify "target/cov/$(basename $file)" "$file"; done &&
 #  bash <(curl -s https://codecov.io/bash) &&
 #  echo "Uploaded code coverage"
+before_cache: |
+  if [[ "$TRAVIS_RUST_VERSION" == stable ]]; then
+    cargo install cargo-tarpaulin -f
+  fi
 
-language: rust
+after_success: |
+  if [[ "$TRAVIS_RUST_VERSION" == stable ]]; then
+    # Uncomment the following line for coveralls.io
+    # cargo tarpaulin --ciserver travis-ci --coveralls $TRAVIS_JOB_ID
 
-before_install:
-  - curl -L https://github.com/mozilla/grcov/releases/latest/download/grcov-linux-x86_64.tar.bz2 | tar jxf -
-
-matrix:
-  include:
-    - os: linux
-      rust: nightly
-
-script:
-    - export CARGO_INCREMENTAL=0
-    - export RUSTFLAGS="-Zprofile -Ccodegen-units=1 -Cinline-threshold=0 -Clink-dead-code -Coverflow-checks=off -Zno-landing-pads"
-    - cargo build --verbose $CARGO_OPTIONS
-    - cargo test --verbose $CARGO_OPTIONS
-    - |
-      zip -0 ccov.zip `find . \( -name "hls_m3u8*.gc*" \) -print`;
-      ./grcov ccov.zip -s . -t lcov --llvm --branch --ignore-not-existing --ignore-dir "/*" -o lcov.info;
-      bash <(curl -s https://codecov.io/bash) -f lcov.info;
+    # Uncomment the following two lines create and upload a report for codecov.io
+    # cargo tarpaulin --out Xml
+    # bash <(curl -s https://codecov.io/bash)
+  fi
