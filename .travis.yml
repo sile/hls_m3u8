@@ -22,7 +22,7 @@ matrix:
 #  for file in target/debug/hls_m3u8-*[^\.d]; do mkdir -p "target/cov/$(basename $file)"; ./kcov-build/usr/local/bin/kcov --exclude-pattern=/.cargo,/usr/lib --verify "target/cov/$(basename $file)" "$file"; done &&
 #  bash <(curl -s https://codecov.io/bash) &&
 #  echo "Uploaded code coverage"
-before_cache: |
+before_install: |
   if [[ "$TRAVIS_RUST_VERSION" == stable ]]; then
     cargo install cargo-tarpaulin -f
   fi
@@ -30,9 +30,9 @@ before_cache: |
 after_success: |
   if [[ "$TRAVIS_RUST_VERSION" == stable ]]; then
     # Uncomment the following line for coveralls.io
-    # cargo tarpaulin --ciserver travis-ci --coveralls $TRAVIS_JOB_ID
+    cargo tarpaulin --ciserver travis-ci --coveralls $TRAVIS_JOB_ID
 
     # Uncomment the following two lines create and upload a report for codecov.io
-    # cargo tarpaulin --out Xml
-    # bash <(curl -s https://codecov.io/bash)
+    cargo tarpaulin --out Xml
+    bash <(curl -s https://codecov.io/bash)
   fi
