@@ -1,31 +1,30 @@
 language: rust
 
+# before_cache: |
+#   if [[ "$TRAVIS_RUST_VERSION" == stable ]]; then
+#     cargo install cargo-tarpaulin -f
+#   fi
+
+before_cache: |
+    bash <(curl https://raw.githubusercontent.com/xd009642/tarpaulin/master/travis-install.sh)
+
+cache: cargo
+
 rust:
   - stable
-  #- beta
-  #- nightly
-#matrix:
-#  allow_failures:
-#    - rust: nightly
+  - beta
+  - nightly
+matrix:
+  allow_failures:
+    - rust: nightly
 
-#after_success: |
-#  wget https://github.com/SimonKagstrom/kcov/archive/master.tar.gz &&
-#  tar xzf master.tar.gz &&
-#  cd kcov-master &&
-#  mkdir build &&
-#  cd build &&
-#  cmake .. &&
-#  make &&
-#  make install DESTDIR=../../kcov-build &&
-#  cd ../.. &&
-#  rm -rf kcov-master &&
-#  for file in target/debug/hls_m3u8-*[^\.d]; do mkdir -p "target/cov/$(basename $file)"; ./kcov-build/usr/local/bin/kcov --exclude-pattern=/.cargo,/usr/lib --verify "target/cov/$(basename $file)" "$file"; done &&
-#  bash <(curl -s https://codecov.io/bash) &&
-#  echo "Uploaded code coverage"
+script:
+- cargo clean
+- cargo build
+- cargo test
 
 after_success: |
   if [[ "$TRAVIS_RUST_VERSION" == stable ]]; then
-    cargo install cargo-tarpaulin -f
     # Uncomment the following line for coveralls.io
     cargo tarpaulin --ciserver travis-ci --coveralls $TRAVIS_JOB_ID
 
