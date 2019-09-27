@@ -35,14 +35,20 @@ impl DecimalFloatingPoint {
         Duration::from_secs_f64(self.0)
     }
 
-    pub(crate) fn from_duration(duration: Duration) -> Self {
-        Self(duration.as_secs_f64())
+    pub(crate) fn from_duration(value: Duration) -> Self {
+        Self::from(value)
     }
 }
 
 impl From<u32> for DecimalFloatingPoint {
     fn from(f: u32) -> Self {
         Self(f64::from(f))
+    }
+}
+
+impl From<Duration> for DecimalFloatingPoint {
+    fn from(value: Duration) -> Self {
+        Self(value.as_secs_f64())
     }
 }
 
