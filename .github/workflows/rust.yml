@@ -4,85 +4,81 @@ name: Rust
 on: [push, pull_request]
 
 jobs:
-  build:
-    name: Build
-    runs-on: ${{ matrix.os }}
-    strategy:
-      matrix:
-        rust:
-          - stable
-        os:
-          - ubuntu-latest
-    # execute cargo build
-    steps:
-      - uses: actions/checkout@v1
-      - uses: actions-rs/toolchain@v1
-        with:
-          toolchain: ${{ matrix.rust }}
-          override: true
-      - uses: actions-rs/cargo@v1
-        with:
-          command: build
-          arguments: --all-features
+#  build:
+#    runs-on: ${{ matrix.os }}
+#    strategy:
+#      matrix:
+#        rust:
+#          - stable
+#        os:
+#          - ubuntu-latest
+#    # execute cargo build
+#    steps:
+#      - uses: actions/checkout@v1
+#      - uses: actions-rs/toolchain@v1
+#        with:
+#          toolchain: ${{ matrix.rust }}
+#          override: true
+#      - uses: actions-rs/cargo@v1
+#        with:
+#          command: build
+#          arguments: --all-features
+#
+#  test:
+#    runs-on: ${{ matrix.os }}
+#    strategy:
+#      matrix:
+#        rust:
+#          - stable
+#        os:
+#          - ubuntu-latest
+#    # execute cargo test
+#    steps:
+#      - uses: actions/checkout@v1
+#      - uses: actions-rs/toolchain@v1
+#        with:
+#          toolchain: ${{ matrix.rust }}
+#          override: true
+#      - uses: actions-rs/cargo@v1
+#        with:
+#          command: test
 
-  test:
-    name: Test
-    runs-on: ${{ matrix.os }}
-    strategy:
-      matrix:
-        rust:
-          - stable
-        os:
-          - ubuntu-latest
-    # execute cargo test
-    steps:
-      - uses: actions/checkout@v1
-      - uses: actions-rs/toolchain@v1
-        with:
-          toolchain: ${{ matrix.rust }}
-          override: true
-      - uses: actions-rs/cargo@v1
-        with:
-          command: test
-
-  rustfmt:
-    name: Rustfmt
-    runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        rust:
-          - stable
-    steps:
-      - uses: actions/checkout@v1
-      - uses: actions-rs/toolchain@v1
-        with:
-          toolchain: ${{ matrix.rust }}
-          override: true
-      - run: rustup component add rustfmt
-      - uses: actions-rs/cargo@v1
-        with:
-          command: fmt
-          args: --all -- --check
-
-  clippy:
-    name: Clippy
-    runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        rust:
-          - stable
-    steps:
-      - uses: actions/checkout@v1
-      - uses: actions-rs/toolchain@v1
-        with:
-          toolchain: ${{ matrix.rust }}
-          override: true
-      - run: rustup component add clippy
-      - uses: actions-rs/cargo@v1
-        with:
-          command: clippy
-          # args: -- -D warnings
-
+#  rustfmt:
+#    runs-on: ubuntu-latest
+#    strategy:
+#      matrix:
+#        rust:
+#          - stable
+#    steps:
+#      - uses: actions/checkout@v1
+#      - uses: actions-rs/toolchain@v1
+#        with:
+#          toolchain: ${{ matrix.rust }}
+#          override: true
+#      - run: rustup component add rustfmt
+#      - uses: actions-rs/cargo@v1
+#        with:
+#          command: fmt
+#          args: --all -- --check
+#
+#  clippy:
+#    runs-on: ubuntu-latest
+#    strategy:
+#      matrix:
+#        rust:
+#          - stable
+#    steps:
+#      - uses: actions/checkout@v1
+#      - uses: actions-rs/toolchain@v1
+#        with:
+#          toolchain: ${{ matrix.rust }}
+#          override: true
+#      - run: rustup component add clippy
+#      - uses: actions-rs/cargo@v1
+#        with:
+#          command: clippy
+#          # args: -- -D warnings
+#
   lint:
     runs-on: ubuntu-latest
     steps:
@@ -99,7 +95,7 @@ jobs:
           'CARGO_INCREMENTAL': '0'
           'RUSTFLAGS': '-Zprofile -Ccodegen-units=1 -Cinline-threshold=0 -Clink-dead-code -Coverflow-checks=off -Zno-landing-pads'
       - uses: actions-rs/grcov@v0.1
-      - name: Coveralls upload
+      - name: codecov upload
         uses: codecov/codecov-action@v1.0.2
         with:
-            token: ${{secrets.CODECOV_TOKEN}}
+            token: 8bedf116-6403-4c64-b3f6-3dcb7aa73848
