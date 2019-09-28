@@ -1116,6 +1116,55 @@ mod test {
                 .parse()
                 .unwrap()
         );
+
+        assert_eq!(
+            ExtXMedia::builder()
+                .media_type(MediaType::Audio)
+                .group_id("audio-aacl-312")
+                .language("en")
+                .name("English")
+                .is_autoselect(true)
+                .is_default(true)
+                .channels("2")
+                .build()
+                .unwrap(),
+            "#EXT-X-MEDIA:\
+             TYPE=AUDIO,\
+             GROUP-ID=\"audio-aacl-312\",\
+             LANGUAGE=\"en\",\
+             NAME=\"English\",\
+             DEFAULT=YES,\
+             AUTOSELECT=YES,\
+             CHANNELS=\"2\""
+                .parse()
+                .unwrap()
+        );
+
+        assert_eq!(
+            ExtXMedia::builder()
+                .media_type(MediaType::Subtitles)
+                .uri("french/ed.ttml")
+                .group_id("subs")
+                .language("fra")
+                .assoc_language("fra")
+                .name("French")
+                .is_autoselect(true)
+                .characteristics("public.accessibility.transcribes-spoken-dialog,public.accessibility.describes-music-and-sound")
+                .build()
+                .unwrap(),
+            "#EXT-X-MEDIA:\
+            URI=\"french/ed.ttml\",\
+            TYPE=SUBTITLES,\
+            GROUP-ID=\"subs\",\
+            LANGUAGE=\"fra\",\
+            ASSOC-LANGUAGE=\"fra\",\
+            NAME=\"French\",\
+            AUTOSELECT=YES,\
+            FORCED=NO,\
+            CHARACTERISTICS=\"public.accessibility.transcribes-spoken-dialog,public.accessibility.describes-music-and-sound\"".parse().unwrap()
+        );
+        //
+
         // ----
         assert_eq!(
             ExtXMedia::new(MediaType::Audio, "foo", "bar"),
