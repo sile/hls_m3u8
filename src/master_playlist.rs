@@ -188,12 +188,12 @@ impl MasterPlaylistBuilder {
                     }
                 }
                 match t.closed_captions() {
-                    Some(&ClosedCaptions::GroupId(ref group_id)) => {
+                    &Some(ClosedCaptions::GroupId(ref group_id)) => {
                         if !self.check_media_group(MediaType::ClosedCaptions, group_id) {
                             return Err(Error::unmatched_group(group_id));
                         }
                     }
-                    Some(&ClosedCaptions::None) => {
+                    &Some(ClosedCaptions::None) => {
                         has_none_closed_captions = true;
                     }
                     None => {}
@@ -202,7 +202,7 @@ impl MasterPlaylistBuilder {
             if has_none_closed_captions
                 && !value
                     .iter()
-                    .all(|t| t.closed_captions() == Some(&ClosedCaptions::None))
+                    .all(|t| t.closed_captions() == &Some(ClosedCaptions::None))
             {
                 return Err(Error::invalid_input());
             }

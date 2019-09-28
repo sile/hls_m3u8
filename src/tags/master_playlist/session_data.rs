@@ -465,7 +465,15 @@ mod test {
                  DATA-ID=\"foo\",\
                  LANGUAGE=\"baz\""
             .parse::<ExtXSessionData>()
-            .is_err())
+            .is_err());
+
+        assert!("#EXT-X-SESSION-DATA:\
+                 DATA-ID=\"foo\",\
+                 LANGUAGE=\"baz\",\
+                 VALUE=\"VALUE\",\
+                 URI=\"https://www.example.com/\""
+            .parse::<ExtXSessionData>()
+            .is_err());
     }
 
     #[test]
