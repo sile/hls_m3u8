@@ -324,7 +324,10 @@ mod test {
     #[test]
     fn test_display() {
         assert_eq!(
-            "#EXT-X-SESSION-DATA:DATA-ID=\"com.example.lyrics\",URI=\"lyrics.json\"".to_string(),
+            "#EXT-X-SESSION-DATA:\
+             DATA-ID=\"com.example.lyrics\",\
+             URI=\"lyrics.json\""
+                .to_string(),
             ExtXSessionData::new(
                 "com.example.lyrics",
                 SessionData::Uri("lyrics.json".to_string())
@@ -333,8 +336,10 @@ mod test {
         );
 
         assert_eq!(
-            "#EXT-X-SESSION-DATA:DATA-ID=\"com.example.title\",\
-             VALUE=\"This is an example\",LANGUAGE=\"en\""
+            "#EXT-X-SESSION-DATA:\
+             DATA-ID=\"com.example.title\",\
+             VALUE=\"This is an example\",\
+             LANGUAGE=\"en\""
                 .to_string(),
             ExtXSessionData::with_language(
                 "com.example.title",
@@ -345,8 +350,10 @@ mod test {
         );
 
         assert_eq!(
-            "#EXT-X-SESSION-DATA:DATA-ID=\"com.example.title\",\
-             VALUE=\"Este es un ejemplo\",LANGUAGE=\"es\""
+            "#EXT-X-SESSION-DATA:\
+             DATA-ID=\"com.example.title\",\
+             VALUE=\"Este es un ejemplo\",\
+             LANGUAGE=\"es\""
                 .to_string(),
             ExtXSessionData::with_language(
                 "com.example.title",
@@ -357,17 +364,27 @@ mod test {
         );
 
         assert_eq!(
-            "#EXT-X-SESSION-DATA:DATA-ID=\"foo\",VALUE=\"bar\"".to_string(),
+            "#EXT-X-SESSION-DATA:\
+             DATA-ID=\"foo\",\
+             VALUE=\"bar\""
+                .to_string(),
             ExtXSessionData::new("foo", SessionData::Value("bar".into())).to_string()
         );
 
         assert_eq!(
-            "#EXT-X-SESSION-DATA:DATA-ID=\"foo\",URI=\"bar\"".to_string(),
+            "#EXT-X-SESSION-DATA:\
+             DATA-ID=\"foo\",\
+             URI=\"bar\""
+                .to_string(),
             ExtXSessionData::new("foo", SessionData::Uri("bar".into())).to_string()
         );
 
         assert_eq!(
-            "#EXT-X-SESSION-DATA:DATA-ID=\"foo\",VALUE=\"bar\",LANGUAGE=\"baz\"".to_string(),
+            "#EXT-X-SESSION-DATA:\
+             DATA-ID=\"foo\",\
+             VALUE=\"bar\",\
+             LANGUAGE=\"baz\""
+                .to_string(),
             ExtXSessionData::with_language("foo", SessionData::Value("bar".into()), "baz")
                 .to_string()
         );
@@ -376,7 +393,9 @@ mod test {
     #[test]
     fn test_parser() {
         assert_eq!(
-            "#EXT-X-SESSION-DATA:DATA-ID=\"com.example.lyrics\",URI=\"lyrics.json\""
+            "#EXT-X-SESSION-DATA:\
+             DATA-ID=\"com.example.lyrics\",\
+             URI=\"lyrics.json\""
                 .parse::<ExtXSessionData>()
                 .unwrap(),
             ExtXSessionData::new(
@@ -386,8 +405,10 @@ mod test {
         );
 
         assert_eq!(
-            "#EXT-X-SESSION-DATA:DATA-ID=\"com.example.title\",\
-             LANGUAGE=\"en\", VALUE=\"This is an example\""
+            "#EXT-X-SESSION-DATA:\
+             DATA-ID=\"com.example.title\",\
+             LANGUAGE=\"en\",\
+             VALUE=\"This is an example\""
                 .parse::<ExtXSessionData>()
                 .unwrap(),
             ExtXSessionData::with_language(
@@ -398,8 +419,10 @@ mod test {
         );
 
         assert_eq!(
-            "#EXT-X-SESSION-DATA:DATA-ID=\"com.example.title\",\
-             LANGUAGE=\"es\", VALUE=\"Este es un ejemplo\""
+            "#EXT-X-SESSION-DATA:\
+             DATA-ID=\"com.example.title\",\
+             LANGUAGE=\"es\",\
+             VALUE=\"Este es un ejemplo\""
                 .parse::<ExtXSessionData>()
                 .unwrap(),
             ExtXSessionData::with_language(
@@ -410,27 +433,37 @@ mod test {
         );
 
         assert_eq!(
-            "#EXT-X-SESSION-DATA:DATA-ID=\"foo\",VALUE=\"bar\""
+            "#EXT-X-SESSION-DATA:\
+             DATA-ID=\"foo\",\
+             VALUE=\"bar\""
                 .parse::<ExtXSessionData>()
                 .unwrap(),
             ExtXSessionData::new("foo", SessionData::Value("bar".into()))
         );
 
         assert_eq!(
-            "#EXT-X-SESSION-DATA:DATA-ID=\"foo\",URI=\"bar\""
+            "#EXT-X-SESSION-DATA:\
+             DATA-ID=\"foo\",\
+             URI=\"bar\""
                 .parse::<ExtXSessionData>()
                 .unwrap(),
             ExtXSessionData::new("foo", SessionData::Uri("bar".into()))
         );
 
         assert_eq!(
-            "#EXT-X-SESSION-DATA:DATA-ID=\"foo\",VALUE=\"bar\",LANGUAGE=\"baz\""
+            "#EXT-X-SESSION-DATA:\
+             DATA-ID=\"foo\",\
+             VALUE=\"bar\",\
+             LANGUAGE=\"baz\",\
+             UNKNOWN=TAG"
                 .parse::<ExtXSessionData>()
                 .unwrap(),
             ExtXSessionData::with_language("foo", SessionData::Value("bar".into()), "baz")
         );
 
-        assert!("#EXT-X-SESSION-DATA:DATA-ID=\"foo\",LANGUAGE=\"baz\""
+        assert!("#EXT-X-SESSION-DATA:\
+                 DATA-ID=\"foo\",\
+                 LANGUAGE=\"baz\""
             .parse::<ExtXSessionData>()
             .is_err())
     }

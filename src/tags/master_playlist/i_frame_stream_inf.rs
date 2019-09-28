@@ -31,6 +31,12 @@ impl ExtXIFrameStreamInf {
     pub(crate) const PREFIX: &'static str = "#EXT-X-I-FRAME-STREAM-INF:";
 
     /// Makes a new [ExtXIFrameStreamInf] tag.
+    ///
+    /// # Example
+    /// ```
+    /// # use hls_m3u8::tags::ExtXIFrameStreamInf;
+    /// let stream = ExtXIFrameStreamInf::new("https://www.example.com", 20);
+    /// ```
     pub fn new<T: ToString>(uri: T, bandwidth: u64) -> Self {
         ExtXIFrameStreamInf {
             uri: uri.to_string(),
@@ -43,7 +49,6 @@ impl ExtXIFrameStreamInf {
     /// # Example
     /// ```
     /// # use hls_m3u8::tags::ExtXIFrameStreamInf;
-    /// #
     /// let stream = ExtXIFrameStreamInf::new("https://www.example.com", 20);
     /// assert_eq!(stream.uri(), &"https://www.example.com".to_string());
     /// ```
@@ -139,6 +144,8 @@ mod test {
                 .unwrap(),
             ExtXIFrameStreamInf::new("foo", 1000)
         );
+
+        assert!("garbage".parse::<ExtXIFrameStreamInf>().is_err());
     }
 
     #[test]
@@ -147,5 +154,23 @@ mod test {
             ExtXIFrameStreamInf::new("foo", 1000).required_version(),
             ProtocolVersion::V1
         );
+    }
+
+    #[test]
+    fn test_deref() {
+        assert_eq!(
+            ExtXIFrameStreamInf::new("https://www.example.com", 20).average_bandwidth(),
+            None
+        )
+    }
+
+    #[test]
+    fn test_deref_mut() {
+        assert_eq!(
+            ExtXIFrameStreamInf::new("https://www.example.com", 20)
+                .set_average_bandwidth(Some(4))
+                .average_bandwidth(),
+            Some(4)
+        )
     }
 }

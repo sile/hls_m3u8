@@ -18,10 +18,16 @@ pub struct ExtXStart {
 impl ExtXStart {
     pub(crate) const PREFIX: &'static str = "#EXT-X-START:";
 
-    /// Makes a new `ExtXStart` tag.
+    /// Makes a new [ExtXStart] tag.
     ///
     /// # Panic
     /// Panics if the time_offset value is infinite.
+    ///
+    /// # Example
+    /// ```
+    /// # use hls_m3u8::tags::ExtXStart;
+    /// ExtXStart::new(20.123456);
+    /// ```
     pub fn new(time_offset: f64) -> Self {
         Self {
             time_offset: SignedDecimalFloatingPoint::new(time_offset),
@@ -29,10 +35,17 @@ impl ExtXStart {
         }
     }
 
-    /// Makes a new `ExtXStart` tag with the given `precise` flag.
+    /// Makes a new [ExtXStart] tag with the given `precise` flag.
     ///
     /// # Panic
     /// Panics if the time_offset value is infinite.
+    ///
+    /// # Example
+    /// ```
+    /// # use hls_m3u8::tags::ExtXStart;
+    /// let start = ExtXStart::with_precise(20.123456, true);
+    /// assert_eq!(start.precise(), true);
+    /// ```
     pub fn with_precise(time_offset: f64, precise: bool) -> Self {
         Self {
             time_offset: SignedDecimalFloatingPoint::new(time_offset),
@@ -41,14 +54,62 @@ impl ExtXStart {
     }
 
     /// Returns the time offset of the media segments in the playlist.
+    ///
+    /// # Example
+    /// ```
+    /// # use hls_m3u8::tags::ExtXStart;
+    /// let start = ExtXStart::new(20.123456);
+    /// assert_eq!(start.time_offset(), 20.123456);
+    /// ```
     pub const fn time_offset(&self) -> f64 {
         self.time_offset.as_f64()
     }
 
+    /// Sets the time offset of the media segments in the playlist.
+    ///
+    /// # Example
+    /// ```
+    /// # use hls_m3u8::tags::ExtXStart;
+    /// let mut start = ExtXStart::new(20.123456);
+    /// # assert_eq!(start.time_offset(), 20.123456);
+    ///
+    /// start.set_time_offset(1.0);
+    ///
+    /// assert_eq!(start.time_offset(), 1.0);
+    /// ```
+    pub fn set_time_offset(&mut self, value: f64) -> &mut Self {
+        self.time_offset = SignedDecimalFloatingPoint::new(value);
+        self
+    }
+
     /// Returns whether clients should not render media stream whose presentation times are
     /// prior to the specified time offset.
+    ///
+    /// # Example
+    /// ```
+    /// # use hls_m3u8::tags::ExtXStart;
+    /// let start = ExtXStart::with_precise(20.123456, true);
+    /// assert_eq!(start.precise(), true);
+    /// ```
     pub const fn precise(&self) -> bool {
         self.precise
+    }
+
+    /// Sets the `precise` flag.
+    ///
+    /// # Example
+    /// ```
+    /// # use hls_m3u8::tags::ExtXStart;
+    /// let mut start = ExtXStart::new(20.123456);
+    /// # assert_eq!(start.precise(), false);
+    ///
+    /// start.set_precise(true);
+    ///
+    /// assert_eq!(start.precise(), true);
+    /// ```
+    pub fn set_precise(&mut self, value: bool) -> &mut Self {
+        self.precise = value;
+        self
     }
 }
 
@@ -91,7 +152,7 @@ impl FromStr for ExtXStart {
 
         let time_offset = time_offset.ok_or_else(|| Error::missing_value("EXT-X-TIME-OFFSET"))?;
 
-        Ok(ExtXStart {
+        Ok(Self {
             time_offset,
             precise,
         })
@@ -138,6 +199,13 @@ mod test {
         assert_eq!(
             ExtXStart::with_precise(1.23, true),
             "#EXT-X-START:TIME-OFFSET=1.23,PRECISE=YES".parse().unwrap(),
+        );
+
+        assert_eq!(
+            ExtXStart::with_precise(1.23, true),
+            "#EXT-X-START:TIME-OFFSET=1.23,PRECISE=YES,UNKNOWN=TAG"
+                .parse()
+                .unwrap(),
         );
     }
 }
