@@ -1251,11 +1251,11 @@ mod test {
              LANGUAGE=\"sp\",\
              NAME=\"CC2\",\
              AUTOSELECT=YES,\
-             INSTREAM-ID=\"CC2\""
+             INSTREAM-ID=\"CC2\",\
+             UNKNOWN=TAG"
                 .parse()
                 .unwrap()
         );
-
         // ----
         assert_eq!(
             ExtXMedia::new(MediaType::Audio, "foo", "bar"),
