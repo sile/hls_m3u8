@@ -955,6 +955,28 @@ mod test {
             FORCED=YES,\
             CHARACTERISTICS=\"public.accessibility.transcribes-spoken-dialog,public.accessibility.describes-music-and-sound\"".to_string()
         );
+
+        assert_eq!(
+            ExtXMedia::builder()
+                .media_type(MediaType::ClosedCaptions)
+                .group_id("cc")
+                .language("sp")
+                .name("CC2")
+                .instream_id(InStreamId::Cc2)
+                .is_autoselect(true)
+                .build()
+                .unwrap()
+                .to_string(),
+            "#EXT-X-MEDIA:\
+             TYPE=CLOSED-CAPTIONS,\
+             GROUP-ID=\"cc\",\
+             LANGUAGE=\"sp\",\
+             NAME=\"CC2\",\
+             AUTOSELECT=YES,\
+             INSTREAM-ID=\"CC2\""
+                .to_string()
+        );
+
         // ----
         assert_eq!(
             ExtXMedia::new(MediaType::Audio, "foo", "bar").to_string(),
@@ -1166,7 +1188,6 @@ mod test {
                 .unwrap()
         );
 
-        // TODO add below to test_parser
         assert_eq!(
             ExtXMedia::builder()
                 .media_type(MediaType::Audio)
@@ -1213,7 +1234,27 @@ mod test {
             FORCED=NO,\
             CHARACTERISTICS=\"public.accessibility.transcribes-spoken-dialog,public.accessibility.describes-music-and-sound\"".parse().unwrap()
         );
-        //
+
+        assert_eq!(
+            ExtXMedia::builder()
+                .media_type(MediaType::ClosedCaptions)
+                .group_id("cc")
+                .language("sp")
+                .name("CC2")
+                .instream_id(InStreamId::Cc2)
+                .is_autoselect(true)
+                .build()
+                .unwrap(),
+            "#EXT-X-MEDIA:\
+             TYPE=CLOSED-CAPTIONS,\
+             GROUP-ID=\"cc\",\
+             LANGUAGE=\"sp\",\
+             NAME=\"CC2\",\
+             AUTOSELECT=YES,\
+             INSTREAM-ID=\"CC2\""
+                .parse()
+                .unwrap()
+        );
 
         // ----
         assert_eq!(
