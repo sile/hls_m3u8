@@ -906,6 +906,55 @@ mod test {
              AUTOSELECT=YES"
                 .to_string()
         );
+
+        assert_eq!(
+            ExtXMedia::builder()
+                .media_type(MediaType::Audio)
+                .group_id("audio-aacl-312")
+                .language("en")
+                .name("English")
+                .is_autoselect(true)
+                .is_default(true)
+                .channels("2")
+                .build()
+                .unwrap()
+                .to_string(),
+            "#EXT-X-MEDIA:\
+             TYPE=AUDIO,\
+             GROUP-ID=\"audio-aacl-312\",\
+             LANGUAGE=\"en\",\
+             NAME=\"English\",\
+             DEFAULT=YES,\
+             AUTOSELECT=YES,\
+             CHANNELS=\"2\""
+                .to_string()
+        );
+
+        assert_eq!(
+            ExtXMedia::builder()
+                .media_type(MediaType::Subtitles)
+                .uri("french/ed.ttml")
+                .group_id("subs")
+                .language("fra")
+                .assoc_language("fra")
+                .name("French")
+                .is_autoselect(true)
+                .is_forced(true)
+                .characteristics("public.accessibility.transcribes-spoken-dialog,public.accessibility.describes-music-and-sound")
+                .build()
+                .unwrap()
+                .to_string(),
+            "#EXT-X-MEDIA:\
+            TYPE=SUBTITLES,\
+            URI=\"french/ed.ttml\",\
+            GROUP-ID=\"subs\",\
+            LANGUAGE=\"fra\",\
+            ASSOC-LANGUAGE=\"fra\",\
+            NAME=\"French\",\
+            AUTOSELECT=YES,\
+            FORCED=YES,\
+            CHARACTERISTICS=\"public.accessibility.transcribes-spoken-dialog,public.accessibility.describes-music-and-sound\"".to_string()
+        );
         // ----
         assert_eq!(
             ExtXMedia::new(MediaType::Audio, "foo", "bar").to_string(),
@@ -1117,6 +1166,7 @@ mod test {
                 .unwrap()
         );
 
+        // TODO add below to test_parser
         assert_eq!(
             ExtXMedia::builder()
                 .media_type(MediaType::Audio)
