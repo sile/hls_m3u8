@@ -54,6 +54,8 @@ mod tests {
         assert_eq!(KeyFormat::Identity, quote("identity").parse().unwrap());
 
         assert_eq!(KeyFormat::Identity, "identity".parse().unwrap());
+
+        assert!("garbage".parse::<KeyFormat>().is_err());
     }
 
     #[test]

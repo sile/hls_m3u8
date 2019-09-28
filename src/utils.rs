@@ -1,16 +1,32 @@
 use crate::Error;
 
+macro_rules! impl_from {
+    ( $($( $type:tt ),* => $target:path ),* ) => {
+        use ::core::convert::From;
+
+        $( // repeat $target
+            $( // repeat $type
+                impl From<$type> for $target {
+                    fn from(value: $type) -> Self {
+                        Self::from_f64_unchecked(value.into())
+                    }
+                }
+            )*
+        )*
+    };
+}
+
+impl_from![
+    u8, u16, u32 => crate::types::DecimalFloatingPoint,
+    u8, i8, u16, i16, u32, i32, f32, f64 => crate::types::SignedDecimalFloatingPoint
+];
+
 pub(crate) fn parse_yes_or_no<T: AsRef<str>>(s: T) -> crate::Result<bool> {
     match s.as_ref() {
         "YES" => Ok(true),
         "NO" => Ok(false),
         _ => Err(Error::invalid_input()),
     }
-}
-
-pub(crate) fn parse_u64<T: AsRef<str>>(s: T) -> crate::Result<u64> {
-    let n = s.as_ref().parse().map_err(Error::unknown)?; // TODO: Error::number
-    Ok(n)
 }
 
 /// According to the documentation the following characters are forbidden
@@ -62,13 +78,6 @@ mod tests {
         assert!(parse_yes_or_no("YES").unwrap());
         assert!(!parse_yes_or_no("NO").unwrap());
         assert!(parse_yes_or_no("garbage").is_err());
-    }
-
-    #[test]
-    fn test_parse_u64() {
-        assert_eq!(parse_u64("1").unwrap(), 1);
-        assert_eq!(parse_u64("25").unwrap(), 25);
-        // TODO: test for error
     }
 
     #[test]

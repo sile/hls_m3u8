@@ -2,7 +2,7 @@ use std::fmt;
 use std::str::FromStr;
 use std::time::Duration;
 
-use crate::types::{DecimalFloatingPoint, ProtocolVersion, RequiredVersion};
+use crate::types::{ProtocolVersion, RequiredVersion};
 use crate::utils::tag;
 use crate::Error;
 
@@ -39,7 +39,7 @@ impl ExtInf {
     /// let ext_inf = ExtInf::new(Duration::from_secs(5));
     /// ```
     pub const fn new(duration: Duration) -> Self {
-        ExtInf {
+        Self {
             duration,
             title: None,
         }
@@ -55,7 +55,7 @@ impl ExtInf {
     /// let ext_inf = ExtInf::with_title(Duration::from_secs(5), "title");
     /// ```
     pub fn with_title<T: ToString>(duration: Duration, title: T) -> Self {
-        ExtInf {
+        Self {
             duration,
             title: Some(title.to_string()),
         }
@@ -170,7 +170,6 @@ impl FromStr for ExtInf {
 
     fn from_str(input: &str) -> Result<Self, Self::Err> {
         let input = tag(input, Self::PREFIX)?;
-        dbg!(&input);
         let tokens = input.splitn(2, ',').collect::<Vec<_>>();
 
         if tokens.is_empty() {
@@ -180,7 +179,7 @@ impl FromStr for ExtInf {
             )));
         }
 
-        let duration = tokens[0].parse::<DecimalFloatingPoint>()?.to_duration();
+        let duration = Duration::from_secs_f64(tokens[0].parse()?);
 
         let title = {
             if tokens.len() >= 2 {
@@ -194,7 +193,7 @@ impl FromStr for ExtInf {
             }
         };
 
-        Ok(ExtInf { duration, title })
+        Ok(Self { duration, title })
     }
 }
 

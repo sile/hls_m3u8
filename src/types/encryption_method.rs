@@ -1,7 +1,4 @@
-use std::fmt;
-use std::str::FromStr;
-
-use crate::Error;
+use strum::{Display, EnumString};
 
 /// Encryption method.
 ///
@@ -9,7 +6,8 @@ use crate::Error;
 ///
 /// [4.3.2.4. EXT-X-KEY]: https://tools.ietf.org/html/rfc8216#section-4.3.2.4
 #[allow(missing_docs)]
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+#[derive(Ord, PartialOrd, Debug, Clone, Copy, PartialEq, Eq, Hash, Display, EnumString)]
+#[strum(serialize_all = "SCREAMING-KEBAB-CASE")]
 pub enum EncryptionMethod {
     /// `None` means that [MediaSegment]s are not encrypted.
     ///
@@ -26,6 +24,7 @@ pub enum EncryptionMethod {
     /// [MediaSegment]: crate::MediaSegment
     /// [AES_128]: http://nvlpubs.nist.gov/nistpubs/FIPS/NIST.FIPS.197.pdf
     /// [Public-Key Cryptography Standards #7 (PKCS7)]: https://tools.ietf.org/html/rfc5652
+    #[strum(serialize = "AES-128")]
     Aes128,
     /// `SampleAes` means that the [MediaSegment]s
     /// contain media samples, such as audio or video, that are encrypted
@@ -46,32 +45,6 @@ pub enum EncryptionMethod {
     /// [AC-3]: https://tools.ietf.org/html/rfc8216#ref-AC_3
     /// [SampleEncryption specification]: https://tools.ietf.org/html/rfc8216#ref-SampleEnc
     SampleAes,
-}
-
-impl fmt::Display for EncryptionMethod {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        match &self {
-            EncryptionMethod::Aes128 => "AES-128".fmt(f),
-            EncryptionMethod::SampleAes => "SAMPLE-AES".fmt(f),
-            EncryptionMethod::None => "NONE".fmt(f),
-        }
-    }
-}
-
-impl FromStr for EncryptionMethod {
-    type Err = Error;
-
-    fn from_str(input: &str) -> Result<Self, Self::Err> {
-        match input {
-            "AES-128" => Ok(EncryptionMethod::Aes128),
-            "SAMPLE-AES" => Ok(EncryptionMethod::SampleAes),
-            "NONE" => Ok(EncryptionMethod::None),
-            _ => Err(Error::custom(format!(
-                "Unknown encryption method: {:?}",
-                input
-            ))),
-        }
-    }
 }
 
 #[cfg(test)]

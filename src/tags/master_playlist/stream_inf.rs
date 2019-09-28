@@ -12,7 +12,7 @@ use crate::Error;
 /// [4.3.4.2. EXT-X-STREAM-INF]
 ///
 /// [4.3.4.2. EXT-X-STREAM-INF]: https://tools.ietf.org/html/rfc8216#section-4.3.4.2
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(PartialOrd, Debug, Clone, PartialEq, Eq)]
 pub struct ExtXStreamInf {
     uri: String,
     frame_rate: Option<DecimalFloatingPoint>,
@@ -57,7 +57,7 @@ impl ExtXStreamInf {
 
     /// Sets the maximum frame rate for all the video in the variant stream.
     pub fn set_frame_rate(&mut self, value: Option<f64>) -> &mut Self {
-        self.frame_rate = value.map(|v| v.into());
+        self.frame_rate = value.map(|v| (v as u32).into());
         self
     }
 

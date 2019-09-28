@@ -12,7 +12,7 @@ use crate::utils::{quote, unquote};
 use crate::Error;
 
 #[derive(Builder, Debug, Clone, PartialEq, Eq, Hash)]
-#[builder(setter(into))]
+#[builder(setter(into), build_fn(validate = "Self::validate"))]
 /// [DecryptionKey] contains data, that is shared between [ExtXSessionKey] and [ExtXKey].
 ///
 /// [ExtXSessionKey]: crate::tags::ExtXSessionKey
@@ -30,9 +30,18 @@ pub struct DecryptionKey {
     /// A string that specifies how the key is
     /// represented in the resource identified by the `URI`.
     pub(crate) key_format: Option<KeyFormat>,
-    #[builder(setter(into), default)]
-    /// The `KEYFORMATVERSIONS` attribute.
-    pub(crate) key_format_versions: KeyFormatVersions,
+    #[builder(setter(into, strip_option), default)]
+    /// The [KeyFormatVersions] attribute.
+    pub(crate) key_format_versions: Option<KeyFormatVersions>,
+}
+
+impl DecryptionKeyBuilder {
+    fn validate(&self) -> Result<(), String> {
+        if self.method != Some(EncryptionMethod::None) && self.uri.is_none() {
+            return Err(Error::custom("Missing URL").to_string());
+        }
+        Ok(())
+    }
 }
 
 impl DecryptionKey {
@@ -54,7 +63,7 @@ impl DecryptionKey {
             uri: Some(uri.to_string()),
             iv: None,
             key_format: None,
-            key_format_versions: KeyFormatVersions::new(),
+            key_format_versions: None,
         }
     }
 
@@ -103,13 +112,15 @@ impl DecryptionKey {
     ///     "METHOD=SAMPLE-AES,URI=\"https://www.example.com/\"".to_string()
     /// );
     /// ```
-    pub fn set_method(&mut self, value: EncryptionMethod) {
+    pub fn set_method(&mut self, value: EncryptionMethod) -> &mut Self {
         self.method = value;
+        self
     }
 
     /// Returns an `URI`, that specifies how to obtain the key.
     ///
-    /// This attribute is required, if the [EncryptionMethod] is not None.
+    /// # Note
+    /// This attribute is required, if the [EncryptionMethod] is not `None`.
     ///
     /// # Example
     /// ```
@@ -152,13 +163,12 @@ impl DecryptionKey {
     ///     "METHOD=AES-128,URI=\"http://www.google.com/\"".to_string()
     /// );
     /// ```
-    pub fn set_uri<T: ToString>(&mut self, value: Option<T>) {
+    pub fn set_uri<T: ToString>(&mut self, value: Option<T>) -> &mut Self {
         self.uri = value.map(|v| v.to_string());
+        self
     }
 
     /// Returns the IV (Initialization Vector) attribute.
-    ///
-    /// This attribute is optional.
     ///
     /// # Example
     /// ```
@@ -170,9 +180,10 @@ impl DecryptionKey {
     ///     "https://www.example.com/"
     /// );
     ///
-    /// key.set_iv([
+    /// # assert_eq!(key.iv(), None);
+    /// key.set_iv(Some([
     ///    1, 2, 3, 4, 5, 6, 7, 8, 9, 1, 2, 3, 4, 5, 6, 7
-    /// ]);
+    /// ]));
     ///
     /// assert_eq!(
     ///     key.iv(),
@@ -189,8 +200,6 @@ impl DecryptionKey {
 
     /// Sets the `IV` attribute.
     ///
-    /// This attribute is optional.
-    ///
     /// # Example
     /// ```
     /// # use hls_m3u8::types::DecryptionKey;
@@ -201,26 +210,25 @@ impl DecryptionKey {
     ///     "https://www.example.com/"
     /// );
     ///
-    /// key.set_iv([
+    /// key.set_iv(Some([
     ///    1, 2, 3, 4, 5, 6, 7, 8, 9, 1, 2, 3, 4, 5, 6, 7
-    /// ]);
+    /// ]));
     ///
     /// assert_eq!(
     ///     key.to_string(),
     ///     "METHOD=AES-128,URI=\"https://www.example.com/\",IV=0x01020304050607080901020304050607".to_string()
     /// );
     /// ```
-    pub fn set_iv<T>(&mut self, value: T)
+    pub fn set_iv<T>(&mut self, value: Option<T>) -> &mut Self
     where
         T: Into<[u8; 16]>,
     {
-        self.iv = Some(InitializationVector(value.into()));
+        self.iv = value.map(|v| InitializationVector(v.into()));
+        self
     }
 
     /// Returns a string that specifies how the key is
     /// represented in the resource identified by the `URI`.
-    ///
-    /// This attribute is optional.
     ///
     /// # Example
     /// ```
@@ -243,9 +251,7 @@ impl DecryptionKey {
         self.key_format
     }
 
-    /// Sets the `KEYFORMAT` attribute.
-    ///
-    /// This attribute is optional.
+    /// Sets the [KeyFormat] attribute.
     ///
     /// # Example
     /// ```
@@ -264,13 +270,12 @@ impl DecryptionKey {
     ///     Some(KeyFormat::Identity)
     /// );
     /// ```
-    pub fn set_key_format<T: Into<KeyFormat>>(&mut self, value: Option<T>) {
+    pub fn set_key_format<T: Into<KeyFormat>>(&mut self, value: Option<T>) -> &mut Self {
         self.key_format = value.map(|v| v.into());
+        self
     }
 
     /// Returns the [KeyFormatVersions] attribute.
-    ///
-    /// This attribute is optional.
     ///
     /// # Example
     /// ```
@@ -282,20 +287,18 @@ impl DecryptionKey {
     ///     "https://www.example.com/"
     /// );
     ///
-    /// key.set_key_format_versions(vec![1, 2, 3, 4, 5]);
+    /// key.set_key_format_versions(Some(vec![1, 2, 3, 4, 5]));
     ///
     /// assert_eq!(
     ///     key.key_format_versions(),
-    ///     &KeyFormatVersions::from(vec![1, 2, 3, 4, 5])
+    ///     &Some(KeyFormatVersions::from(vec![1, 2, 3, 4, 5]))
     /// );
     /// ```
-    pub const fn key_format_versions(&self) -> &KeyFormatVersions {
+    pub const fn key_format_versions(&self) -> &Option<KeyFormatVersions> {
         &self.key_format_versions
     }
 
     /// Sets the [KeyFormatVersions] attribute.
-    ///
-    /// This attribute is optional.
     ///
     /// # Example
     /// ```
@@ -307,21 +310,25 @@ impl DecryptionKey {
     ///     "https://www.example.com/"
     /// );
     ///
-    /// key.set_key_format_versions(vec![1, 2, 3, 4, 5]);
+    /// key.set_key_format_versions(Some(vec![1, 2, 3, 4, 5]));
     ///
     /// assert_eq!(
     ///     key.to_string(),
     ///     "METHOD=AES-128,URI=\"https://www.example.com/\",KEYFORMATVERSIONS=\"1/2/3/4/5\"".to_string()
     /// );
     /// ```
-    pub fn set_key_format_versions<T: Into<KeyFormatVersions>>(&mut self, value: T) {
-        self.key_format_versions = value.into();
+    pub fn set_key_format_versions<T: Into<KeyFormatVersions>>(
+        &mut self,
+        value: Option<T>,
+    ) -> &mut Self {
+        self.key_format_versions = value.map(|v| v.into());
+        self
     }
 }
 
 impl RequiredVersion for DecryptionKey {
     fn required_version(&self) -> ProtocolVersion {
-        if self.key_format.is_some() || !self.key_format_versions.is_default() {
+        if self.key_format.is_some() || self.key_format_versions.is_some() {
             ProtocolVersion::V5
         } else if self.iv.is_some() {
             ProtocolVersion::V2
@@ -360,12 +367,12 @@ impl FromStr for DecryptionKey {
             return Err(Error::missing_value("URI"));
         }
 
-        Ok(DecryptionKey {
+        Ok(Self {
             method,
             uri,
             iv,
             key_format,
-            key_format_versions: key_format_versions.unwrap_or_default(),
+            key_format_versions,
         })
     }
 }
@@ -386,8 +393,11 @@ impl fmt::Display for DecryptionKey {
         if let Some(value) = &self.key_format {
             write!(f, ",KEYFORMAT={}", quote(value))?;
         }
-        if !self.key_format_versions.is_default() {
-            write!(f, ",KEYFORMATVERSIONS={}", &self.key_format_versions)?;
+
+        if let Some(key_format_versions) = &self.key_format_versions {
+            if !key_format_versions.is_default() {
+                write!(f, ",KEYFORMATVERSIONS={}", key_format_versions)?;
+            }
         }
         Ok(())
     }
@@ -410,6 +420,7 @@ mod test {
             .key_format_versions(vec![1, 2, 3, 4, 5])
             .build()
             .unwrap();
+
         assert_eq!(
             key.to_string(),
             "METHOD=AES-128,\
@@ -419,7 +430,13 @@ mod test {
              KEYFORMATVERSIONS=\"1/2/3/4/5\"\
              "
             .to_string()
-        )
+        );
+
+        assert!(DecryptionKey::builder().build().is_err());
+        assert!(DecryptionKey::builder()
+            .method(EncryptionMethod::Aes128)
+            .build()
+            .is_err());
     }
 
     #[test]
@@ -428,9 +445,9 @@ mod test {
             EncryptionMethod::Aes128,
             "https://www.example.com/hls-key/key.bin",
         );
-        key.set_iv([
+        key.set_iv(Some([
             16, 239, 143, 117, 140, 165, 85, 17, 85, 132, 187, 91, 60, 104, 127, 82,
-        ]);
+        ]));
 
         assert_eq!(
             key.to_string(),
@@ -458,9 +475,9 @@ mod test {
             EncryptionMethod::Aes128,
             "https://www.example.com/hls-key/key.bin",
         );
-        key.set_iv([
+        key.set_iv(Some([
             16, 239, 143, 117, 140, 165, 85, 17, 85, 132, 187, 91, 60, 104, 127, 82,
-        ]);
+        ]));
 
         assert_eq!(
             "METHOD=AES-128,\
@@ -472,9 +489,9 @@ mod test {
         );
 
         let mut key = DecryptionKey::new(EncryptionMethod::Aes128, "http://www.example.com");
-        key.set_iv([
+        key.set_iv(Some([
             16, 239, 143, 117, 140, 165, 85, 17, 85, 132, 187, 91, 60, 104, 127, 82,
-        ]);
+        ]));
         key.set_key_format(Some(KeyFormat::Identity));
 
         assert_eq!(
@@ -485,7 +502,30 @@ mod test {
                 .parse::<DecryptionKey>()
                 .unwrap(),
             key
-        )
+        );
+
+        key.set_key_format_versions(Some(vec![1, 2, 3]));
+        assert_eq!(
+            "METHOD=AES-128,\
+             URI=\"http://www.example.com\",\
+             IV=0x10ef8f758ca555115584bb5b3c687f52,\
+             KEYFORMAT=\"identity\",\
+             KEYFORMATVERSIONS=\"1/2/3\""
+                .parse::<DecryptionKey>()
+                .unwrap(),
+            key
+        );
+
+        assert_eq!(
+            "METHOD=AES-128,\
+             URI=\"http://www.example.com\",\
+             UNKNOWNTAG=abcd"
+                .parse::<DecryptionKey>()
+                .unwrap(),
+            DecryptionKey::new(EncryptionMethod::Aes128, "http://www.example.com")
+        );
+        assert!("METHOD=AES-128,URI=".parse::<DecryptionKey>().is_err());
+        assert!("garbage".parse::<DecryptionKey>().is_err());
     }
 
     #[test]

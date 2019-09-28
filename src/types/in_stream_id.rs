@@ -1,7 +1,4 @@
-use std::fmt;
-use std::str::FromStr;
-
-use crate::Error;
+use strum::{Display, EnumString};
 
 /// Identifier of a rendition within the segments in a media playlist.
 ///
@@ -9,7 +6,8 @@ use crate::Error;
 ///
 /// [4.3.4.1. EXT-X-MEDIA]: https://tools.ietf.org/html/rfc8216#section-4.3.4.1
 #[allow(missing_docs)]
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+#[derive(Ord, PartialOrd, Debug, Clone, Copy, PartialEq, Eq, Hash, Display, EnumString)]
+#[strum(serialize_all = "UPPERCASE")]
 pub enum InStreamId {
     Cc1,
     Cc2,
@@ -78,89 +76,6 @@ pub enum InStreamId {
     Service61,
     Service62,
     Service63,
-}
-
-impl fmt::Display for InStreamId {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        format!("{:?}", self).to_uppercase().fmt(f)
-    }
-}
-
-impl FromStr for InStreamId {
-    type Err = Error;
-
-    fn from_str(input: &str) -> Result<Self, Self::Err> {
-        Ok(match input {
-            "CC1" => Self::Cc1,
-            "CC2" => Self::Cc2,
-            "CC3" => Self::Cc3,
-            "CC4" => Self::Cc4,
-            "SERVICE1" => Self::Service1,
-            "SERVICE2" => Self::Service2,
-            "SERVICE3" => Self::Service3,
-            "SERVICE4" => Self::Service4,
-            "SERVICE5" => Self::Service5,
-            "SERVICE6" => Self::Service6,
-            "SERVICE7" => Self::Service7,
-            "SERVICE8" => Self::Service8,
-            "SERVICE9" => Self::Service9,
-            "SERVICE10" => Self::Service10,
-            "SERVICE11" => Self::Service11,
-            "SERVICE12" => Self::Service12,
-            "SERVICE13" => Self::Service13,
-            "SERVICE14" => Self::Service14,
-            "SERVICE15" => Self::Service15,
-            "SERVICE16" => Self::Service16,
-            "SERVICE17" => Self::Service17,
-            "SERVICE18" => Self::Service18,
-            "SERVICE19" => Self::Service19,
-            "SERVICE20" => Self::Service20,
-            "SERVICE21" => Self::Service21,
-            "SERVICE22" => Self::Service22,
-            "SERVICE23" => Self::Service23,
-            "SERVICE24" => Self::Service24,
-            "SERVICE25" => Self::Service25,
-            "SERVICE26" => Self::Service26,
-            "SERVICE27" => Self::Service27,
-            "SERVICE28" => Self::Service28,
-            "SERVICE29" => Self::Service29,
-            "SERVICE30" => Self::Service30,
-            "SERVICE31" => Self::Service31,
-            "SERVICE32" => Self::Service32,
-            "SERVICE33" => Self::Service33,
-            "SERVICE34" => Self::Service34,
-            "SERVICE35" => Self::Service35,
-            "SERVICE36" => Self::Service36,
-            "SERVICE37" => Self::Service37,
-            "SERVICE38" => Self::Service38,
-            "SERVICE39" => Self::Service39,
-            "SERVICE40" => Self::Service40,
-            "SERVICE41" => Self::Service41,
-            "SERVICE42" => Self::Service42,
-            "SERVICE43" => Self::Service43,
-            "SERVICE44" => Self::Service44,
-            "SERVICE45" => Self::Service45,
-            "SERVICE46" => Self::Service46,
-            "SERVICE47" => Self::Service47,
-            "SERVICE48" => Self::Service48,
-            "SERVICE49" => Self::Service49,
-            "SERVICE50" => Self::Service50,
-            "SERVICE51" => Self::Service51,
-            "SERVICE52" => Self::Service52,
-            "SERVICE53" => Self::Service53,
-            "SERVICE54" => Self::Service54,
-            "SERVICE55" => Self::Service55,
-            "SERVICE56" => Self::Service56,
-            "SERVICE57" => Self::Service57,
-            "SERVICE58" => Self::Service58,
-            "SERVICE59" => Self::Service59,
-            "SERVICE60" => Self::Service60,
-            "SERVICE61" => Self::Service61,
-            "SERVICE62" => Self::Service62,
-            "SERVICE63" => Self::Service63,
-            _ => return Err(Error::custom(format!("Unknown instream id: {:?}", input))),
-        })
-    }
 }
 
 #[cfg(test)]

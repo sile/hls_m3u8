@@ -6,13 +6,13 @@ use std::time::Duration;
 use chrono::{DateTime, FixedOffset};
 
 use crate::attribute::AttributePairs;
-use crate::types::{DecimalFloatingPoint, ProtocolVersion, RequiredVersion};
+use crate::types::{ProtocolVersion, RequiredVersion};
 use crate::utils::{quote, tag, unquote};
 use crate::Error;
 
-/// [4.3.2.7.  EXT-X-DATERANGE]
+/// [4.3.2.7. EXT-X-DATERANGE]
 ///
-/// [4.3.2.7.  EXT-X-DATERANGE]: https://tools.ietf.org/html/rfc8216#section-4.3.2.7
+/// [4.3.2.7. EXT-X-DATERANGE]: https://tools.ietf.org/html/rfc8216#section-4.3.2.7
 ///
 /// TODO: Implement properly
 #[allow(missing_docs)]
@@ -63,6 +63,36 @@ pub struct ExtXDateRange {
 
 impl ExtXDateRange {
     pub(crate) const PREFIX: &'static str = "#EXT-X-DATERANGE:";
+
+    /// Makes a new [ExtXDateRange] tag.
+    ///
+    /// # Example
+    /// ```
+    /// # use hls_m3u8::tags::ExtXDateRange;
+    /// use chrono::{DateTime, FixedOffset};
+    /// use chrono::offset::TimeZone;
+    ///
+    /// const HOURS_IN_SECS: i32 = 3600; // 1 hour = 3600 seconds
+    ///
+    /// ExtXDateRange::new("id", FixedOffset::east(8 * HOURS_IN_SECS)
+    ///                    .ymd(2010, 2, 19)
+    ///                    .and_hms_milli(14, 54, 23, 31));
+    /// ```
+    pub fn new<T: ToString>(id: T, start_date: DateTime<FixedOffset>) -> Self {
+        Self {
+            id: id.to_string(),
+            class: None,
+            start_date,
+            end_date: None,
+            duration: None,
+            planned_duration: None,
+            scte35_cmd: None,
+            scte35_out: None,
+            scte35_in: None,
+            end_on_next: false,
+            client_attributes: BTreeMap::new(),
+        }
+    }
 }
 
 impl RequiredVersion for ExtXDateRange {
@@ -82,15 +112,11 @@ impl fmt::Display for ExtXDateRange {
         if let Some(value) = &self.end_date {
             write!(f, ",END-DATE={}", quote(value))?;
         }
-        if let Some(x) = self.duration {
-            write!(f, ",DURATION={}", DecimalFloatingPoint::from_duration(x))?;
+        if let Some(value) = &self.duration {
+            write!(f, ",DURATION={}", value.as_secs_f64())?;
         }
-        if let Some(x) = self.planned_duration {
-            write!(
-                f,
-                ",PLANNED-DURATION={}",
-                DecimalFloatingPoint::from_duration(x)
-            )?;
+        if let Some(value) = &self.planned_duration {
+            write!(f, ",PLANNED-DURATION={}", value.as_secs_f64())?;
         }
         if let Some(value) = &self.scte35_cmd {
             write!(f, ",SCTE35-CMD={}", quote(value))?;
@@ -137,12 +163,10 @@ impl FromStr for ExtXDateRange {
                 "START-DATE" => start_date = Some(unquote(value)),
                 "END-DATE" => end_date = Some(unquote(value).parse()?),
                 "DURATION" => {
-                    let seconds: DecimalFloatingPoint = (value.parse())?;
-                    duration = Some(seconds.to_duration());
+                    duration = Some(Duration::from_secs_f64(value.parse()?));
                 }
                 "PLANNED-DURATION" => {
-                    let seconds: DecimalFloatingPoint = (value.parse())?;
-                    planned_duration = Some(seconds.to_duration());
+                    planned_duration = Some(Duration::from_secs_f64(value.parse()?));
                 }
                 "SCTE35-CMD" => scte35_cmd = Some(unquote(value)),
                 "SCTE35-OUT" => scte35_out = Some(unquote(value)),
@@ -164,15 +188,15 @@ impl FromStr for ExtXDateRange {
             }
         }
 
-        let id = id.ok_or_else(|| Error::missing_value("EXT-X-ID"))?;
+        let id = id.ok_or_else(|| Error::missing_value("ID"))?;
         let start_date = start_date
-            .ok_or_else(|| Error::missing_value("EXT-X-START-DATE"))?
+            .ok_or_else(|| Error::missing_value("START-DATE"))?
             .parse()?;
 
         if end_on_next && class.is_none() {
             return Err(Error::invalid_input());
         }
-        Ok(ExtXDateRange {
+        Ok(Self {
             id,
             class,
             start_date,
@@ -191,7 +215,21 @@ impl FromStr for ExtXDateRange {
 #[cfg(test)]
 mod test {
     use super::*;
+    use chrono::offset::TimeZone;
 
-    #[test] // TODO; write some tests
-    fn it_works() {}
+    const HOURS_IN_SECS: i32 = 3600; // 1 hour = 3600 seconds
+
+    #[test]
+    fn test_required_version() {
+        assert_eq!(
+            ExtXDateRange::new(
+                "id",
+                FixedOffset::east(8 * HOURS_IN_SECS)
+                    .ymd(2010, 2, 19)
+                    .and_hms_milli(14, 54, 23, 31)
+            )
+            .required_version(),
+            ProtocolVersion::V1
+        );
+    }
 }

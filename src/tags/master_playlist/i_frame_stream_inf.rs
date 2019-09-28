@@ -21,7 +21,7 @@ use crate::Error;
 /// [Master Playlist]: crate::MasterPlaylist
 /// [Media Playlist]: crate::MediaPlaylist
 /// [4.3.4.3. EXT-X-I-FRAME-STREAM-INF]: https://tools.ietf.org/html/rfc8216#section-4.3.4.3
-#[derive(Debug, Clone, PartialEq, Eq, Hash)]
+#[derive(PartialOrd, Debug, Clone, PartialEq, Eq, Hash)]
 pub struct ExtXIFrameStreamInf {
     uri: String,
     stream_inf: StreamInf,

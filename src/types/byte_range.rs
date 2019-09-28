@@ -144,23 +144,29 @@ mod tests {
 
     #[test]
     fn test_parser() {
-        let byte_range = ByteRange {
-            length: 99999,
-            start: Some(2),
-        };
-        assert_eq!(byte_range, "99999@2".parse::<ByteRange>().unwrap());
+        assert_eq!(
+            ByteRange {
+                length: 99999,
+                start: Some(2),
+            },
+            "99999@2".parse::<ByteRange>().unwrap()
+        );
 
-        let byte_range = ByteRange {
-            length: 99999,
-            start: Some(2),
-        };
-        assert_eq!(byte_range, "99999@2".parse::<ByteRange>().unwrap());
+        assert_eq!(
+            ByteRange {
+                length: 99999,
+                start: Some(2),
+            },
+            "99999@2".parse::<ByteRange>().unwrap()
+        );
 
-        let byte_range = ByteRange {
-            length: 99999,
-            start: None,
-        };
-        assert_eq!(byte_range, "99999".parse::<ByteRange>().unwrap());
+        assert_eq!(
+            ByteRange {
+                length: 99999,
+                start: None,
+            },
+            "99999".parse::<ByteRange>().unwrap()
+        );
 
         assert!("".parse::<ByteRange>().is_err());
     }

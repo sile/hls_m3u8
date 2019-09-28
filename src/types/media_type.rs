@@ -1,15 +1,9 @@
-use std::fmt;
-use std::str::FromStr;
+use strum::{Display, EnumString};
 
-use crate::Error;
-
-/// Media type.
-///
-/// See: [4.3.4.1. EXT-X-MEDIA]
-///
-/// [4.3.4.1. EXT-X-MEDIA]: https://tools.ietf.org/html/rfc8216#section-4.3.4.1
+/// Specifies the media type.
 #[allow(missing_docs)]
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+#[derive(Ord, PartialOrd, Display, EnumString, Debug, Clone, Copy, PartialEq, Eq, Hash)]
+#[strum(serialize_all = "SCREAMING-KEBAB-CASE")]
 pub enum MediaType {
     Audio,
     Video,
@@ -17,29 +11,29 @@ pub enum MediaType {
     ClosedCaptions,
 }
 
-impl fmt::Display for MediaType {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        match &self {
-            MediaType::Audio => "AUDIO".fmt(f),
-            MediaType::Video => "VIDEO".fmt(f),
-            MediaType::Subtitles => "SUBTITLES".fmt(f),
-            MediaType::ClosedCaptions => "CLOSED-CAPTIONS".fmt(f),
-        }
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_parser() {
+        assert_eq!(MediaType::Audio, "AUDIO".parse().unwrap());
+        assert_eq!(MediaType::Video, "VIDEO".parse().unwrap());
+        assert_eq!(MediaType::Subtitles, "SUBTITLES".parse().unwrap());
+        assert_eq!(
+            MediaType::ClosedCaptions,
+            "CLOSED-CAPTIONS".parse().unwrap()
+        );
     }
-}
 
-impl FromStr for MediaType {
-    type Err = Error;
-
-    fn from_str(input: &str) -> Result<Self, Self::Err> {
-        Ok(match input {
-            "AUDIO" => MediaType::Audio,
-            "VIDEO" => MediaType::Video,
-            "SUBTITLES" => MediaType::Subtitles,
-            "CLOSED-CAPTIONS" => MediaType::ClosedCaptions,
-            _ => {
-                return Err(Error::invalid_input());
-            }
-        })
+    #[test]
+    fn test_display() {
+        assert_eq!(MediaType::Audio.to_string(), "AUDIO".to_string());
+        assert_eq!(MediaType::Video.to_string(), "VIDEO".to_string());
+        assert_eq!(MediaType::Subtitles.to_string(), "SUBTITLES".to_string());
+        assert_eq!(
+            MediaType::ClosedCaptions.to_string(),
+            "CLOSED-CAPTIONS".to_string()
+        );
     }
 }

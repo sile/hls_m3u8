@@ -3,14 +3,13 @@ use std::str::FromStr;
 
 use crate::attribute::AttributePairs;
 use crate::types::{DecimalResolution, HdcpLevel};
-use crate::utils::parse_u64;
 use crate::utils::{quote, unquote};
 use crate::Error;
 
 /// [4.3.4.2. EXT-X-STREAM-INF]
 ///
 /// [4.3.4.2. EXT-X-STREAM-INF]: https://tools.ietf.org/html/rfc8216#section-4.3.4.2
-#[derive(Debug, Clone, PartialEq, Eq, Hash)]
+#[derive(PartialOrd, Debug, Clone, PartialEq, Eq, Hash)]
 pub struct StreamInf {
     bandwidth: u64,
     average_bandwidth: Option<u64>,
@@ -182,6 +181,8 @@ impl StreamInf {
     ///
     /// stream.set_resolution(1920, 1080);
     /// assert_eq!(stream.resolution(), Some((1920, 1080)));
+    /// # stream.set_resolution(1280, 10);
+    /// # assert_eq!(stream.resolution(), Some((1280, 10)));
     /// ```
     pub fn set_resolution(&mut self, width: usize, height: usize) -> &mut Self {
         if let Some(res) = &mut self.resolution {
@@ -259,8 +260,8 @@ impl FromStr for StreamInf {
 
         for (key, value) in input.parse::<AttributePairs>()? {
             match key.as_str() {
-                "BANDWIDTH" => bandwidth = Some(parse_u64(value)?),
-                "AVERAGE-BANDWIDTH" => average_bandwidth = Some(parse_u64(value)?),
+                "BANDWIDTH" => bandwidth = Some(value.parse::<u64>()?),
+                "AVERAGE-BANDWIDTH" => average_bandwidth = Some(value.parse::<u64>()?),
                 "CODECS" => codecs = Some(unquote(value)),
                 "RESOLUTION" => resolution = Some(value.parse()?),
                 "HDCP-LEVEL" => hdcp_level = Some(value.parse()?),
@@ -282,5 +283,68 @@ impl FromStr for StreamInf {
             hdcp_level,
             video,
         })
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_display() {
+        let mut stream_inf = StreamInf::new(200);
+        stream_inf.set_average_bandwidth(Some(15));
+        stream_inf.set_codecs(Some("mp4a.40.2,avc1.4d401e"));
+        stream_inf.set_resolution(1920, 1080);
+        stream_inf.set_hdcp_level(Some(HdcpLevel::Type0));
+        stream_inf.set_video(Some("video"));
+
+        assert_eq!(
+            stream_inf.to_string(),
+            "BANDWIDTH=200,\
+             AVERAGE-BANDWIDTH=15,\
+             CODECS=\"mp4a.40.2,avc1.4d401e\",\
+             RESOLUTION=1920x1080,\
+             HDCP-LEVEL=TYPE-0,\
+             VIDEO=\"video\""
+                .to_string()
+        );
+    }
+
+    #[test]
+    fn test_parser() {
+        let mut stream_inf = StreamInf::new(200);
+        stream_inf.set_average_bandwidth(Some(15));
+        stream_inf.set_codecs(Some("mp4a.40.2,avc1.4d401e"));
+        stream_inf.set_resolution(1920, 1080);
+        stream_inf.set_hdcp_level(Some(HdcpLevel::Type0));
+        stream_inf.set_video(Some("video"));
+
+        assert_eq!(
+            stream_inf,
+            "BANDWIDTH=200,\
+             AVERAGE-BANDWIDTH=15,\
+             CODECS=\"mp4a.40.2,avc1.4d401e\",\
+             RESOLUTION=1920x1080,\
+             HDCP-LEVEL=TYPE-0,\
+             VIDEO=\"video\""
+                .parse()
+                .unwrap()
+        );
+
+        assert_eq!(
+            stream_inf,
+            "BANDWIDTH=200,\
+             AVERAGE-BANDWIDTH=15,\
+             CODECS=\"mp4a.40.2,avc1.4d401e\",\
+             RESOLUTION=1920x1080,\
+             HDCP-LEVEL=TYPE-0,\
+             VIDEO=\"video\",\
+             UNKNOWN=\"value\""
+                .parse()
+                .unwrap()
+        );
+
+        assert!("garbage".parse::<StreamInf>().is_err());
     }
 }

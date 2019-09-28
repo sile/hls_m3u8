@@ -100,9 +100,9 @@ mod test {
             EncryptionMethod::Aes128,
             "https://www.example.com/hls-key/key.bin",
         );
-        key.set_iv([
+        key.set_iv(Some([
             16, 239, 143, 117, 140, 165, 85, 17, 85, 132, 187, 91, 60, 104, 127, 82,
-        ]);
+        ]));
 
         assert_eq!(
             key.to_string(),
@@ -129,9 +129,9 @@ mod test {
             EncryptionMethod::Aes128,
             "https://www.example.com/hls-key/key.bin",
         );
-        key.set_iv([
+        key.set_iv(Some([
             16, 239, 143, 117, 140, 165, 85, 17, 85, 132, 187, 91, 60, 104, 127, 82,
-        ]);
+        ]));
 
         assert_eq!(
             "#EXT-X-SESSION-KEY:METHOD=AES-128,\

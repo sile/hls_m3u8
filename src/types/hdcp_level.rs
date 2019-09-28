@@ -1,7 +1,4 @@
-use std::fmt;
-use std::str::FromStr;
-
-use crate::Error;
+use strum::{Display, EnumString};
 
 /// HDCP level.
 ///
@@ -9,31 +6,12 @@ use crate::Error;
 ///
 /// [4.3.4.2. EXT-X-STREAM-INF]: https://tools.ietf.org/html/rfc8216#section-4.3.4.2
 #[allow(missing_docs)]
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+#[derive(Ord, PartialOrd, Debug, Clone, Copy, PartialEq, Eq, Hash, Display, EnumString)]
+#[strum(serialize_all = "SCREAMING-KEBAB-CASE")]
 pub enum HdcpLevel {
+    #[strum(serialize = "TYPE-0")]
     Type0,
     None,
-}
-
-impl fmt::Display for HdcpLevel {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        match &self {
-            HdcpLevel::Type0 => "TYPE-0".fmt(f),
-            HdcpLevel::None => "NONE".fmt(f),
-        }
-    }
-}
-
-impl FromStr for HdcpLevel {
-    type Err = Error;
-
-    fn from_str(input: &str) -> Result<Self, Self::Err> {
-        match input {
-            "TYPE-0" => Ok(HdcpLevel::Type0),
-            "NONE" => Ok(HdcpLevel::None),
-            _ => Err(Error::custom(format!("Unknown HDCP level: {:?}", input))),
-        }
-    }
 }
 
 #[cfg(test)]
