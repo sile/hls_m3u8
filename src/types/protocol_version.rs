@@ -27,9 +27,12 @@ pub trait RequiredVersion {
     fn required_version(&self) -> ProtocolVersion;
 }
 
-/// [7. Protocol Version Compatibility]
+/// # [7. Protocol Version Compatibility]
+/// The [`ProtocolVersion`] specifies, which m3u8 revision is required, to parse
+/// a certain tag correctly.
 ///
-/// [7. Protocol Version Compatibility]: https://tools.ietf.org/html/rfc8216#section-7
+/// [7. Protocol Version Compatibility]:
+/// https://tools.ietf.org/html/draft-pantos-hls-rfc8216bis-05#section-7
 #[allow(missing_docs)]
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub enum ProtocolVersion {
@@ -43,26 +46,28 @@ pub enum ProtocolVersion {
 }
 
 impl ProtocolVersion {
-    /// Returns the newest ProtocolVersion, that is supported by this library.
-    pub const fn latest() -> Self {
-        Self::V7
-    }
+    /// Returns the newest [`ProtocolVersion`], that is supported by
+    /// this library.
+    ///
+    /// # Example
+    /// ```
+    /// # use hls_m3u8::types::ProtocolVersion;
+    /// assert_eq!(ProtocolVersion::latest(), ProtocolVersion::V7);
+    /// ```
+    pub const fn latest() -> Self { Self::V7 }
 }
 
 impl fmt::Display for ProtocolVersion {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        let n = {
-            match &self {
-                Self::V1 => 1,
-                Self::V2 => 2,
-                Self::V3 => 3,
-                Self::V4 => 4,
-                Self::V5 => 5,
-                Self::V6 => 6,
-                Self::V7 => 7,
-            }
-        };
-        write!(f, "{}", n)
+        match &self {
+            Self::V1 => write!(f, "1"),
+            Self::V2 => write!(f, "2"),
+            Self::V3 => write!(f, "3"),
+            Self::V4 => write!(f, "4"),
+            Self::V5 => write!(f, "5"),
+            Self::V6 => write!(f, "6"),
+            Self::V7 => write!(f, "7"),
+        }
     }
 }
 
@@ -86,9 +91,7 @@ impl FromStr for ProtocolVersion {
 }
 
 impl Default for ProtocolVersion {
-    fn default() -> Self {
-        Self::V1
-    }
+    fn default() -> Self { Self::V1 }
 }
 
 #[cfg(test)]
@@ -115,5 +118,18 @@ mod tests {
         assert_eq!(ProtocolVersion::V5, "5".parse().unwrap());
         assert_eq!(ProtocolVersion::V6, "6".parse().unwrap());
         assert_eq!(ProtocolVersion::V7, "7".parse().unwrap());
+
+        assert_eq!(ProtocolVersion::V7, " 7 ".parse().unwrap());
+        assert!("garbage".parse::<ProtocolVersion>().is_err());
+    }
+
+    #[test]
+    fn test_default() {
+        assert_eq!(ProtocolVersion::default(), ProtocolVersion::V1);
+    }
+
+    #[test]
+    fn test_latest() {
+        assert_eq!(ProtocolVersion::latest(), ProtocolVersion::V7);
     }
 }

@@ -76,48 +76,34 @@ impl fmt::Display for MediaSegment {
 
 impl MediaSegment {
     /// Creates a [MediaSegmentBuilder].
-    pub fn builder() -> MediaSegmentBuilder {
-        MediaSegmentBuilder::default()
-    }
+    pub fn builder() -> MediaSegmentBuilder { MediaSegmentBuilder::default() }
+
     /// Returns the URI of the media segment.
-    pub const fn uri(&self) -> &String {
-        &self.uri
-    }
+    pub const fn uri(&self) -> &String { &self.uri }
 
     /// Returns the `EXT-X-INF` tag associated with the media segment.
-    pub const fn inf_tag(&self) -> &ExtInf {
-        &self.inf_tag
-    }
+    pub const fn inf_tag(&self) -> &ExtInf { &self.inf_tag }
 
     /// Returns the `EXT-X-BYTERANGE` tag associated with the media segment.
-    pub const fn byte_range_tag(&self) -> Option<ExtXByteRange> {
-        self.byte_range_tag
-    }
+    pub const fn byte_range_tag(&self) -> Option<ExtXByteRange> { self.byte_range_tag }
 
     /// Returns the `EXT-X-DATERANGE` tag associated with the media segment.
-    pub fn date_range_tag(&self) -> Option<&ExtXDateRange> {
-        self.date_range_tag.as_ref()
-    }
+    pub fn date_range_tag(&self) -> Option<&ExtXDateRange> { self.date_range_tag.as_ref() }
 
     /// Returns the `EXT-X-DISCONTINUITY` tag associated with the media segment.
-    pub const fn discontinuity_tag(&self) -> Option<ExtXDiscontinuity> {
-        self.discontinuity_tag
-    }
+    pub const fn discontinuity_tag(&self) -> Option<ExtXDiscontinuity> { self.discontinuity_tag }
 
-    /// Returns the `EXT-X-PROGRAM-DATE-TIME` tag associated with the media segment.
+    /// Returns the `EXT-X-PROGRAM-DATE-TIME` tag associated with the media
+    /// segment.
     pub fn program_date_time_tag(&self) -> Option<&ExtXProgramDateTime> {
         self.program_date_time_tag.as_ref()
     }
 
     /// Returns the `EXT-X-MAP` tag associated with the media segment.
-    pub fn map_tag(&self) -> Option<&ExtXMap> {
-        self.map_tag.as_ref()
-    }
+    pub fn map_tag(&self) -> Option<&ExtXMap> { self.map_tag.as_ref() }
 
     /// Returns the `EXT-X-KEY` tags associated with the media segment.
-    pub fn key_tags(&self) -> &[ExtXKey] {
-        &self.key_tags
-    }
+    pub fn key_tags(&self) -> &[ExtXKey] { &self.key_tags }
 }
 
 impl RequiredVersion for MediaSegment {

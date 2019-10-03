@@ -8,25 +8,21 @@ use crate::Error;
 
 /// A list of [usize], that can be used to indicate which version(s)
 /// this instance complies with, if more than one version of a particular
-/// [KeyFormat] is defined.
+/// [`KeyFormat`] is defined.
 ///
-/// [KeyFormat]: crate::types::KeyFormat
+/// [`KeyFormat`]: crate::types::KeyFormat
 #[derive(Clone, Eq, PartialEq, Ord, PartialOrd, Hash, Debug)]
 pub struct KeyFormatVersions(Vec<usize>);
 
 impl Default for KeyFormatVersions {
-    fn default() -> Self {
-        Self(vec![1])
-    }
+    fn default() -> Self { Self(vec![1]) }
 }
 
 impl KeyFormatVersions {
-    /// Makes a new [KeyFormatVersions].
-    pub fn new() -> Self {
-        Self::default()
-    }
+    /// Makes a new [`KeyFormatVersions`].
+    pub fn new() -> Self { Self::default() }
 
-    /// Add a value to the [KeyFormatVersions].
+    /// Add a value to the [`KeyFormatVersions`].
     pub fn push(&mut self, value: usize) {
         if self.is_default() {
             self.0 = vec![value];
@@ -35,30 +31,23 @@ impl KeyFormatVersions {
         }
     }
 
-    /// Returns `true`, if [KeyFormatVersions] has the default value of `vec![1]`.
-    pub fn is_default(&self) -> bool {
-        self.0 == vec![1] || self.0.is_empty()
-    }
+    /// Returns `true`, if [`KeyFormatVersions`] has the default value of
+    /// `vec![1]`.
+    pub fn is_default(&self) -> bool { self.0 == vec![1] && self.0.len() == 1 || self.0.is_empty() }
 }
 
 impl Deref for KeyFormatVersions {
     type Target = Vec<usize>;
 
-    fn deref(&self) -> &Self::Target {
-        &self.0
-    }
+    fn deref(&self) -> &Self::Target { &self.0 }
 }
 
 impl DerefMut for KeyFormatVersions {
-    fn deref_mut(&mut self) -> &mut Self::Target {
-        &mut self.0
-    }
+    fn deref_mut(&mut self) -> &mut Self::Target { &mut self.0 }
 }
 
 impl RequiredVersion for KeyFormatVersions {
-    fn required_version(&self) -> ProtocolVersion {
-        ProtocolVersion::V5
-    }
+    fn required_version(&self) -> ProtocolVersion { ProtocolVersion::V5 }
 }
 
 impl FromStr for KeyFormatVersions {
@@ -66,7 +55,7 @@ impl FromStr for KeyFormatVersions {
 
     fn from_str(input: &str) -> Result<Self, Self::Err> {
         let mut result = unquote(input)
-            .split("/")
+            .split('/')
             .filter_map(|v| v.parse().ok())
             .collect::<Vec<_>>();
 
@@ -100,9 +89,7 @@ impl fmt::Display for KeyFormatVersions {
 }
 
 impl<T: Into<Vec<usize>>> From<T> for KeyFormatVersions {
-    fn from(value: T) -> Self {
-        Self(value.into())
-    }
+    fn from(value: T) -> Self { Self(value.into()) }
 }
 
 #[cfg(test)]

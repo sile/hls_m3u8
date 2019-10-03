@@ -6,9 +6,9 @@ use crate::utils::tag;
 
 /// # [4.4.3.3. EXT-X-DISCONTINUITY-SEQUENCE]
 ///
-/// The [ExtXDiscontinuitySequence] tag allows synchronization between
+/// The [`ExtXDiscontinuitySequence`] tag allows synchronization between
 /// different Renditions of the same Variant Stream or different Variant
-/// Streams that have [ExtXDiscontinuity] tags in their [Media Playlist]s.
+/// Streams that have [`ExtXDiscontinuity`] tags in their [`Media Playlist`]s.
 ///
 /// Its format is:
 /// ```text
@@ -16,8 +16,8 @@ use crate::utils::tag;
 /// ```
 /// where `number` is a [u64].
 ///
-/// [ExtXDiscontinuity]: crate::tags::ExtXDiscontinuity
-/// [Media Playlist]: crate::MediaPlaylist
+/// [`ExtXDiscontinuity`]: crate::tags::ExtXDiscontinuity
+/// [`Media Playlist`]: crate::MediaPlaylist
 /// [4.4.3.3. EXT-X-DISCONTINUITY-SEQUENCE]:
 /// https://tools.ietf.org/html/draft-pantos-hls-rfc8216bis-04#section-4.4.3.3
 #[derive(Default, Debug, Clone, Copy, PartialEq, Eq, Hash, Ord, PartialOrd)]
@@ -33,9 +33,7 @@ impl ExtXDiscontinuitySequence {
     /// # use hls_m3u8::tags::ExtXDiscontinuitySequence;
     /// let discontinuity_sequence = ExtXDiscontinuitySequence::new(5);
     /// ```
-    pub const fn new(seq_num: u64) -> Self {
-        Self(seq_num)
-    }
+    pub const fn new(seq_num: u64) -> Self { Self(seq_num) }
 
     /// Returns the discontinuity sequence number of
     /// the first media segment that appears in the associated playlist.
@@ -47,9 +45,7 @@ impl ExtXDiscontinuitySequence {
     ///
     /// assert_eq!(discontinuity_sequence.seq_num(), 5);
     /// ```
-    pub const fn seq_num(&self) -> u64 {
-        self.0
-    }
+    pub const fn seq_num(self) -> u64 { self.0 }
 
     /// Sets the sequence number.
     ///
@@ -68,15 +64,11 @@ impl ExtXDiscontinuitySequence {
 }
 
 impl RequiredVersion for ExtXDiscontinuitySequence {
-    fn required_version(&self) -> ProtocolVersion {
-        ProtocolVersion::V1
-    }
+    fn required_version(&self) -> ProtocolVersion { ProtocolVersion::V1 }
 }
 
 impl fmt::Display for ExtXDiscontinuitySequence {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(f, "{}{}", Self::PREFIX, self.0)
-    }
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result { write!(f, "{}{}", Self::PREFIX, self.0) }
 }
 
 impl FromStr for ExtXDiscontinuitySequence {
@@ -114,5 +106,13 @@ mod test {
             ExtXDiscontinuitySequence::new(123),
             "#EXT-X-DISCONTINUITY-SEQUENCE:123".parse().unwrap()
         );
+    }
+
+    #[test]
+    fn test_seq_num() {
+        let mut sequence = ExtXDiscontinuitySequence::new(123);
+        assert_eq!(sequence.seq_num(), 123);
+        sequence.set_seq_num(1);
+        assert_eq!(sequence.seq_num(), 1);
     }
 }

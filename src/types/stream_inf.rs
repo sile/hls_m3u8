@@ -3,14 +3,13 @@ use std::str::FromStr;
 
 use crate::attribute::AttributePairs;
 use crate::types::{DecimalResolution, HdcpLevel};
-use crate::utils::parse_u64;
 use crate::utils::{quote, unquote};
 use crate::Error;
 
 /// [4.3.4.2. EXT-X-STREAM-INF]
 ///
 /// [4.3.4.2. EXT-X-STREAM-INF]: https://tools.ietf.org/html/rfc8216#section-4.3.4.2
-#[derive(Debug, Clone, PartialEq, Eq, Hash)]
+#[derive(PartialOrd, Debug, Clone, PartialEq, Eq, Hash)]
 pub struct StreamInf {
     bandwidth: u64,
     average_bandwidth: Option<u64>,
@@ -48,9 +47,7 @@ impl StreamInf {
     /// let stream = StreamInf::new(20);
     /// assert_eq!(stream.bandwidth(), 20);
     /// ```
-    pub const fn bandwidth(&self) -> u64 {
-        self.bandwidth
-    }
+    pub const fn bandwidth(&self) -> u64 { self.bandwidth }
 
     /// Sets the peak segment bit rate of the variant stream.
     ///
@@ -77,9 +74,7 @@ impl StreamInf {
     /// let stream = StreamInf::new(20);
     /// assert_eq!(stream.video(), &None);
     /// ```
-    pub const fn video(&self) -> &Option<String> {
-        &self.video
-    }
+    pub const fn video(&self) -> &Option<String> { &self.video }
 
     /// Sets the group identifier for the video in the variant stream.
     ///
@@ -106,9 +101,7 @@ impl StreamInf {
     /// let stream = StreamInf::new(20);
     /// assert_eq!(stream.average_bandwidth(), None);
     /// ```
-    pub const fn average_bandwidth(&self) -> Option<u64> {
-        self.average_bandwidth
-    }
+    pub const fn average_bandwidth(&self) -> Option<u64> { self.average_bandwidth }
 
     /// Sets the average segment bit rate of the variant stream.
     ///
@@ -126,7 +119,8 @@ impl StreamInf {
         self
     }
 
-    /// A string that represents the list of codec types contained the variant stream.
+    /// A string that represents the list of codec types contained the variant
+    /// stream.
     ///
     /// # Examples
     /// ```
@@ -135,11 +129,10 @@ impl StreamInf {
     /// let stream = StreamInf::new(20);
     /// assert_eq!(stream.codecs(), &None);
     /// ```
-    pub const fn codecs(&self) -> &Option<String> {
-        &self.codecs
-    }
+    pub const fn codecs(&self) -> &Option<String> { &self.codecs }
 
-    /// A string that represents the list of codec types contained the variant stream.
+    /// A string that represents the list of codec types contained the variant
+    /// stream.
     ///
     /// # Examples
     /// ```
@@ -182,6 +175,8 @@ impl StreamInf {
     ///
     /// stream.set_resolution(1920, 1080);
     /// assert_eq!(stream.resolution(), Some((1920, 1080)));
+    /// # stream.set_resolution(1280, 10);
+    /// # assert_eq!(stream.resolution(), Some((1280, 10)));
     /// ```
     pub fn set_resolution(&mut self, width: usize, height: usize) -> &mut Self {
         if let Some(res) = &mut self.resolution {
@@ -202,9 +197,7 @@ impl StreamInf {
     /// let stream = StreamInf::new(20);
     /// assert_eq!(stream.hdcp_level(), None);
     /// ```
-    pub const fn hdcp_level(&self) -> Option<HdcpLevel> {
-        self.hdcp_level
-    }
+    pub const fn hdcp_level(&self) -> Option<HdcpLevel> { self.hdcp_level }
 
     /// The HDCP level of the variant stream.
     ///
@@ -259,20 +252,21 @@ impl FromStr for StreamInf {
 
         for (key, value) in input.parse::<AttributePairs>()? {
             match key.as_str() {
-                "BANDWIDTH" => bandwidth = Some(parse_u64(value)?),
-                "AVERAGE-BANDWIDTH" => average_bandwidth = Some(parse_u64(value)?),
+                "BANDWIDTH" => bandwidth = Some(value.parse::<u64>()?),
+                "AVERAGE-BANDWIDTH" => average_bandwidth = Some(value.parse::<u64>()?),
                 "CODECS" => codecs = Some(unquote(value)),
                 "RESOLUTION" => resolution = Some(value.parse()?),
                 "HDCP-LEVEL" => hdcp_level = Some(value.parse()?),
                 "VIDEO" => video = Some(unquote(value)),
                 _ => {
                     // [6.3.1. General Client Responsibilities]
-                    // > ignore any attribute/value pair with an unrecognized AttributeName.
+                    // > ignore any attribute/value pair with an unrecognized
+                    // AttributeName.
                 }
             }
         }
 
-        let bandwidth = bandwidth.ok_or(Error::missing_value("BANDWIDTH"))?;
+        let bandwidth = bandwidth.ok_or_else(|| Error::missing_value("BANDWIDTH"))?;
 
         Ok(Self {
             bandwidth,
@@ -282,5 +276,68 @@ impl FromStr for StreamInf {
             hdcp_level,
             video,
         })
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_display() {
+        let mut stream_inf = StreamInf::new(200);
+        stream_inf.set_average_bandwidth(Some(15));
+        stream_inf.set_codecs(Some("mp4a.40.2,avc1.4d401e"));
+        stream_inf.set_resolution(1920, 1080);
+        stream_inf.set_hdcp_level(Some(HdcpLevel::Type0));
+        stream_inf.set_video(Some("video"));
+
+        assert_eq!(
+            stream_inf.to_string(),
+            "BANDWIDTH=200,\
+             AVERAGE-BANDWIDTH=15,\
+             CODECS=\"mp4a.40.2,avc1.4d401e\",\
+             RESOLUTION=1920x1080,\
+             HDCP-LEVEL=TYPE-0,\
+             VIDEO=\"video\""
+                .to_string()
+        );
+    }
+
+    #[test]
+    fn test_parser() {
+        let mut stream_inf = StreamInf::new(200);
+        stream_inf.set_average_bandwidth(Some(15));
+        stream_inf.set_codecs(Some("mp4a.40.2,avc1.4d401e"));
+        stream_inf.set_resolution(1920, 1080);
+        stream_inf.set_hdcp_level(Some(HdcpLevel::Type0));
+        stream_inf.set_video(Some("video"));
+
+        assert_eq!(
+            stream_inf,
+            "BANDWIDTH=200,\
+             AVERAGE-BANDWIDTH=15,\
+             CODECS=\"mp4a.40.2,avc1.4d401e\",\
+             RESOLUTION=1920x1080,\
+             HDCP-LEVEL=TYPE-0,\
+             VIDEO=\"video\""
+                .parse()
+                .unwrap()
+        );
+
+        assert_eq!(
+            stream_inf,
+            "BANDWIDTH=200,\
+             AVERAGE-BANDWIDTH=15,\
+             CODECS=\"mp4a.40.2,avc1.4d401e\",\
+             RESOLUTION=1920x1080,\
+             HDCP-LEVEL=TYPE-0,\
+             VIDEO=\"video\",\
+             UNKNOWN=\"value\""
+                .parse()
+                .unwrap()
+        );
+
+        assert!("garbage".parse::<StreamInf>().is_err());
     }
 }

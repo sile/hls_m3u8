@@ -6,14 +6,14 @@ use crate::utils::tag;
 use crate::Error;
 
 /// # [4.4.3.2. EXT-X-MEDIA-SEQUENCE]
-/// The [ExtXMediaSequence] tag indicates the Media Sequence Number of
-/// the first [Media Segment] that appears in a Playlist file.
+/// The [`ExtXMediaSequence`] tag indicates the Media Sequence Number of
+/// the first [`Media Segment`] that appears in a Playlist file.
 ///
 /// Its format is:
 /// ```text
 /// #EXT-X-MEDIA-SEQUENCE:<number>
 /// ```
-/// where `number` is a [u64].
+/// where `number` is a [`u64`].
 ///
 /// [Media Segment]: crate::MediaSegment
 /// [4.4.3.2. EXT-X-MEDIA-SEQUENCE]:
@@ -24,16 +24,14 @@ pub struct ExtXMediaSequence(u64);
 impl ExtXMediaSequence {
     pub(crate) const PREFIX: &'static str = "#EXT-X-MEDIA-SEQUENCE:";
 
-    /// Makes a new [ExtXMediaSequence] tag.
+    /// Makes a new [`ExtXMediaSequence`] tag.
     ///
     /// # Example
     /// ```
     /// # use hls_m3u8::tags::ExtXMediaSequence;
     /// let media_sequence = ExtXMediaSequence::new(5);
     /// ```
-    pub const fn new(seq_num: u64) -> Self {
-        Self(seq_num)
-    }
+    pub const fn new(seq_num: u64) -> Self { Self(seq_num) }
 
     /// Returns the sequence number of the first media segment,
     /// that appears in the associated playlist.
@@ -45,9 +43,7 @@ impl ExtXMediaSequence {
     ///
     /// assert_eq!(media_sequence.seq_num(), 5);
     /// ```
-    pub const fn seq_num(&self) -> u64 {
-        self.0
-    }
+    pub const fn seq_num(self) -> u64 { self.0 }
 
     /// Sets the sequence number.
     ///
@@ -66,15 +62,11 @@ impl ExtXMediaSequence {
 }
 
 impl RequiredVersion for ExtXMediaSequence {
-    fn required_version(&self) -> ProtocolVersion {
-        ProtocolVersion::V1
-    }
+    fn required_version(&self) -> ProtocolVersion { ProtocolVersion::V1 }
 }
 
 impl fmt::Display for ExtXMediaSequence {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(f, "{}{}", Self::PREFIX, self.0)
-    }
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result { write!(f, "{}{}", Self::PREFIX, self.0) }
 }
 
 impl FromStr for ExtXMediaSequence {
@@ -112,5 +104,13 @@ mod test {
             ExtXMediaSequence::new(123),
             "#EXT-X-MEDIA-SEQUENCE:123".parse().unwrap()
         );
+    }
+
+    #[test]
+    fn test_seq_num() {
+        let mut sequence = ExtXMediaSequence::new(123);
+        assert_eq!(sequence.seq_num(), 123);
+        sequence.set_seq_num(1);
+        assert_eq!(sequence.seq_num(), 1);
     }
 }

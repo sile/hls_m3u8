@@ -7,21 +7,18 @@ use crate::types::{ProtocolVersion, RequiredVersion, StreamInf};
 use crate::utils::{quote, tag, unquote};
 use crate::Error;
 
-/// # [4.3.4.3. EXT-X-I-FRAME-STREAM-INF]
-/// The [ExtXIFrameStreamInf] tag identifies a [Media Playlist] file
-/// containing the I-frames of a multimedia presentation. It stands
-/// alone, in that it does not apply to a particular `URI` in the [Master Playlist].
+/// # [4.4.5.3. EXT-X-I-FRAME-STREAM-INF]
+/// The [`ExtXIFrameStreamInf`] tag identifies a [`Media Playlist`] file,
+/// containing the I-frames of a multimedia presentation.
 ///
-/// Its format is:
+/// I-frames are encoded video frames, whose decoding
+/// does not depend on any other frame.
 ///
-/// ```text
-/// #EXT-X-I-FRAME-STREAM-INF:<attribute-list>
-/// ```
-///
-/// [Master Playlist]: crate::MasterPlaylist
-/// [Media Playlist]: crate::MediaPlaylist
-/// [4.3.4.3. EXT-X-I-FRAME-STREAM-INF]: https://tools.ietf.org/html/rfc8216#section-4.3.4.3
-#[derive(Debug, Clone, PartialEq, Eq, Hash)]
+/// [`Master Playlist`]: crate::MasterPlaylist
+/// [`Media Playlist`]: crate::MediaPlaylist
+/// [4.4.5.3. EXT-X-I-FRAME-STREAM-INF]:
+/// https://tools.ietf.org/html/draft-pantos-hls-rfc8216bis-05#section-4.4.5.3
+#[derive(PartialOrd, Debug, Clone, PartialEq, Eq, Hash)]
 pub struct ExtXIFrameStreamInf {
     uri: String,
     stream_inf: StreamInf,
@@ -30,7 +27,13 @@ pub struct ExtXIFrameStreamInf {
 impl ExtXIFrameStreamInf {
     pub(crate) const PREFIX: &'static str = "#EXT-X-I-FRAME-STREAM-INF:";
 
-    /// Makes a new [ExtXIFrameStreamInf] tag.
+    /// Makes a new [`ExtXIFrameStreamInf`] tag.
+    ///
+    /// # Example
+    /// ```
+    /// # use hls_m3u8::tags::ExtXIFrameStreamInf;
+    /// let stream = ExtXIFrameStreamInf::new("https://www.example.com", 20);
+    /// ```
     pub fn new<T: ToString>(uri: T, bandwidth: u64) -> Self {
         ExtXIFrameStreamInf {
             uri: uri.to_string(),
@@ -38,20 +41,19 @@ impl ExtXIFrameStreamInf {
         }
     }
 
-    /// Returns the `URI`, that identifies the associated media playlist.
+    /// Returns the `URI`, that identifies the associated [`media playlist`].
     ///
     /// # Example
     /// ```
     /// # use hls_m3u8::tags::ExtXIFrameStreamInf;
-    /// #
     /// let stream = ExtXIFrameStreamInf::new("https://www.example.com", 20);
     /// assert_eq!(stream.uri(), &"https://www.example.com".to_string());
     /// ```
-    pub const fn uri(&self) -> &String {
-        &self.uri
-    }
+    ///
+    /// [`media playlist`]: crate::MediaPlaylist
+    pub const fn uri(&self) -> &String { &self.uri }
 
-    /// Sets the `URI`, that identifies the associated media playlist.
+    /// Sets the `URI`, that identifies the associated [`media playlist`].
     ///
     /// # Example
     /// ```
@@ -62,16 +64,17 @@ impl ExtXIFrameStreamInf {
     /// stream.set_uri("../new/uri");
     /// assert_eq!(stream.uri(), &"../new/uri".to_string());
     /// ```
+    ///
+    /// [`media playlist`]: crate::MediaPlaylist
     pub fn set_uri<T: ToString>(&mut self, value: T) -> &mut Self {
         self.uri = value.to_string();
         self
     }
 }
 
+/// This tag requires [`ProtocolVersion::V1`].
 impl RequiredVersion for ExtXIFrameStreamInf {
-    fn required_version(&self) -> ProtocolVersion {
-        ProtocolVersion::V1
-    }
+    fn required_version(&self) -> ProtocolVersion { ProtocolVersion::V1 }
 }
 
 impl fmt::Display for ExtXIFrameStreamInf {
@@ -91,13 +94,12 @@ impl FromStr for ExtXIFrameStreamInf {
         let mut uri = None;
 
         for (key, value) in input.parse::<AttributePairs>()? {
-            match key.as_str() {
-                "URI" => uri = Some(unquote(value)),
-                _ => {}
+            if let "URI" = key.as_str() {
+                uri = Some(unquote(value));
             }
         }
 
-        let uri = uri.ok_or(Error::missing_value("URI"))?;
+        let uri = uri.ok_or_else(|| Error::missing_value("URI"))?;
 
         Ok(Self {
             uri,
@@ -109,15 +111,11 @@ impl FromStr for ExtXIFrameStreamInf {
 impl Deref for ExtXIFrameStreamInf {
     type Target = StreamInf;
 
-    fn deref(&self) -> &Self::Target {
-        &self.stream_inf
-    }
+    fn deref(&self) -> &Self::Target { &self.stream_inf }
 }
 
 impl DerefMut for ExtXIFrameStreamInf {
-    fn deref_mut(&mut self) -> &mut Self::Target {
-        &mut self.stream_inf
-    }
+    fn deref_mut(&mut self) -> &mut Self::Target { &mut self.stream_inf }
 }
 
 #[cfg(test)]
@@ -140,6 +138,8 @@ mod test {
                 .unwrap(),
             ExtXIFrameStreamInf::new("foo", 1000)
         );
+
+        assert!("garbage".parse::<ExtXIFrameStreamInf>().is_err());
     }
 
     #[test]
@@ -148,5 +148,23 @@ mod test {
             ExtXIFrameStreamInf::new("foo", 1000).required_version(),
             ProtocolVersion::V1
         );
+    }
+
+    #[test]
+    fn test_deref() {
+        assert_eq!(
+            ExtXIFrameStreamInf::new("https://www.example.com", 20).average_bandwidth(),
+            None
+        )
+    }
+
+    #[test]
+    fn test_deref_mut() {
+        assert_eq!(
+            ExtXIFrameStreamInf::new("https://www.example.com", 20)
+                .set_average_bandwidth(Some(4))
+                .average_bandwidth(),
+            Some(4)
+        )
     }
 }

@@ -15,23 +15,27 @@ pub struct ByteRange {
 }
 
 impl ByteRange {
-    /// Creates a new [ByteRange].
-    pub const fn new(length: usize, start: Option<usize>) -> Self {
-        Self { length, start }
-    }
+    /// Creates a new [`ByteRange`].
+    ///
+    /// # Example
+    /// ```
+    /// # use hls_m3u8::types::ByteRange;
+    /// ByteRange::new(22, Some(12));
+    /// ```
+    pub const fn new(length: usize, start: Option<usize>) -> Self { Self { length, start } }
 
     /// Returns the length of the range.
+    ///
     /// # Example
     /// ```
     /// # use hls_m3u8::types::ByteRange;
     /// #
     /// assert_eq!(ByteRange::new(20, Some(3)).length(), 20);
     /// ```
-    pub const fn length(&self) -> usize {
-        self.length
-    }
+    pub const fn length(&self) -> usize { self.length }
 
     /// Sets the length of the range.
+    ///
     /// # Example
     /// ```
     /// # use hls_m3u8::types::ByteRange;
@@ -48,17 +52,17 @@ impl ByteRange {
     }
 
     /// Returns the start of the range.
+    ///
     /// # Example
     /// ```
     /// # use hls_m3u8::types::ByteRange;
     /// #
     /// assert_eq!(ByteRange::new(20, Some(3)).start(), Some(3));
     /// ```
-    pub const fn start(&self) -> Option<usize> {
-        self.start
-    }
+    pub const fn start(&self) -> Option<usize> { self.start }
 
     /// Sets the start of the range.
+    ///
     /// # Example
     /// ```
     /// # use hls_m3u8::types::ByteRange;
@@ -97,13 +101,13 @@ impl FromStr for ByteRange {
         let length = tokens[0].parse()?;
 
         let start = {
-            let mut result = None;
             if tokens.len() == 2 {
-                result = Some(tokens[1].parse()?);
+                Some(tokens[1].parse()?)
+            } else {
+                None
             }
-            result
         };
-        Ok(ByteRange::new(length, start))
+        Ok(Self::new(length, start))
     }
 }
 
@@ -134,22 +138,30 @@ mod tests {
 
     #[test]
     fn test_parser() {
-        let byte_range = ByteRange {
-            length: 99999,
-            start: Some(2),
-        };
-        assert_eq!(byte_range, "99999@2".parse::<ByteRange>().unwrap());
+        assert_eq!(
+            ByteRange {
+                length: 99999,
+                start: Some(2),
+            },
+            "99999@2".parse::<ByteRange>().unwrap()
+        );
 
-        let byte_range = ByteRange {
-            length: 99999,
-            start: Some(2),
-        };
-        assert_eq!(byte_range, "99999@2".parse::<ByteRange>().unwrap());
+        assert_eq!(
+            ByteRange {
+                length: 99999,
+                start: Some(2),
+            },
+            "99999@2".parse::<ByteRange>().unwrap()
+        );
 
-        let byte_range = ByteRange {
-            length: 99999,
-            start: None,
-        };
-        assert_eq!(byte_range, "99999".parse::<ByteRange>().unwrap());
+        assert_eq!(
+            ByteRange {
+                length: 99999,
+                start: None,
+            },
+            "99999".parse::<ByteRange>().unwrap()
+        );
+
+        assert!("".parse::<ByteRange>().is_err());
     }
 }

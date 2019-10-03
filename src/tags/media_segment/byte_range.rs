@@ -8,7 +8,7 @@ use crate::Error;
 
 /// # [4.4.2.2. EXT-X-BYTERANGE]
 ///
-/// The [ExtXByteRange] tag indicates that a [Media Segment] is a sub-range
+/// The [`ExtXByteRange`] tag indicates that a [`Media Segment`] is a sub-range
 /// of the resource identified by its `URI`.
 ///
 /// Its format is:
@@ -20,7 +20,7 @@ use crate::Error;
 /// If present, `o` is a [usize] indicating the start of the sub-range,
 /// as a byte offset from the beginning of the resource.
 ///
-/// [Media Segment]: crate::MediaSegment
+/// [`Media Segment`]: crate::MediaSegment
 /// [4.4.2.2. EXT-X-BYTERANGE]:
 /// https://tools.ietf.org/html/draft-pantos-hls-rfc8216bis-04#section-4.4.2.2
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
@@ -29,7 +29,7 @@ pub struct ExtXByteRange(ByteRange);
 impl ExtXByteRange {
     pub(crate) const PREFIX: &'static str = "#EXT-X-BYTERANGE:";
 
-    /// Makes a new [ExtXByteRange] tag.
+    /// Makes a new [`ExtXByteRange`] tag.
     ///
     /// # Example
     /// ```
@@ -40,7 +40,7 @@ impl ExtXByteRange {
         Self(ByteRange::new(length, start))
     }
 
-    /// Converts the [ExtXByteRange] to a [ByteRange].
+    /// Converts the [`ExtXByteRange`] to a [`ByteRange`].
     ///
     /// # Example
     /// ```
@@ -50,29 +50,21 @@ impl ExtXByteRange {
     /// let byte_range = ExtXByteRange::new(20, Some(5));
     /// let range: ByteRange = byte_range.to_range();
     /// ```
-    pub const fn to_range(&self) -> ByteRange {
-        self.0
-    }
+    pub const fn to_range(&self) -> ByteRange { self.0 }
 }
 
 impl RequiredVersion for ExtXByteRange {
-    fn required_version(&self) -> ProtocolVersion {
-        ProtocolVersion::V4
-    }
+    fn required_version(&self) -> ProtocolVersion { ProtocolVersion::V4 }
 }
 
 impl Deref for ExtXByteRange {
     type Target = ByteRange;
 
-    fn deref(&self) -> &Self::Target {
-        &self.0
-    }
+    fn deref(&self) -> &Self::Target { &self.0 }
 }
 
 impl DerefMut for ExtXByteRange {
-    fn deref_mut(&mut self) -> &mut Self::Target {
-        &mut self.0
-    }
+    fn deref_mut(&mut self) -> &mut Self::Target { &mut self.0 }
 }
 
 impl fmt::Display for ExtXByteRange {
@@ -98,11 +90,11 @@ impl FromStr for ExtXByteRange {
         let length = tokens[0].parse()?;
 
         let start = {
-            let mut result = None;
             if tokens.len() == 2 {
-                result = Some(tokens[1].parse()?);
+                Some(tokens[1].parse()?)
+            } else {
+                None
             }
-            result
         };
 
         Ok(ExtXByteRange::new(length, start))

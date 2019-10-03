@@ -1,9 +1,17 @@
+#![forbid(unsafe_code)]
 #![warn(
     //clippy::pedantic,
     clippy::nursery,
     clippy::cargo
 )]
-#![warn(missing_docs)]
+#![allow(clippy::multiple_crate_versions)]
+#![warn(
+    missing_docs,
+    missing_copy_implementations,
+    missing_debug_implementations,
+    trivial_casts, // TODO (needed?)
+    trivial_numeric_casts
+)]
 //! [HLS] m3u8 parser/generator.
 //!
 //! [HLS]: https://tools.ietf.org/html/rfc8216

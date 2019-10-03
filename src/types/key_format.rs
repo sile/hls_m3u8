@@ -6,16 +6,15 @@ use crate::utils::{quote, tag, unquote};
 use crate::Error;
 
 #[derive(Copy, Clone, Eq, PartialEq, Ord, PartialOrd, Hash, Debug)]
-/// KeyFormat specifies, how the key is represented in the resource identified by the URI
+/// [`KeyFormat`] specifies, how the key is represented in the
+/// resource identified by the `URI`.
 pub enum KeyFormat {
     /// The key is a single packed array of 16 octets in binary format.
     Identity,
 }
 
 impl Default for KeyFormat {
-    fn default() -> Self {
-        Self::Identity
-    }
+    fn default() -> Self { Self::Identity }
 }
 
 impl FromStr for KeyFormat {
@@ -29,15 +28,11 @@ impl FromStr for KeyFormat {
 }
 
 impl fmt::Display for KeyFormat {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(f, "{}", quote("identity"))
-    }
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result { write!(f, "{}", quote("identity")) }
 }
 
 impl RequiredVersion for KeyFormat {
-    fn required_version(&self) -> ProtocolVersion {
-        ProtocolVersion::V5
-    }
+    fn required_version(&self) -> ProtocolVersion { ProtocolVersion::V5 }
 }
 
 #[cfg(test)]
@@ -54,6 +49,8 @@ mod tests {
         assert_eq!(KeyFormat::Identity, quote("identity").parse().unwrap());
 
         assert_eq!(KeyFormat::Identity, "identity".parse().unwrap());
+
+        assert!("garbage".parse::<KeyFormat>().is_err());
     }
 
     #[test]

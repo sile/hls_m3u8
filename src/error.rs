@@ -1,4 +1,3 @@
-use std::error;
 use std::fmt;
 
 use failure::{Backtrace, Context, Fail};
@@ -6,7 +5,7 @@ use failure::{Backtrace, Context, Fail};
 /// This crate specific `Result` type.
 pub type Result<T> = std::result::Result<T, Error>;
 
-/// The ErrorKind.
+/// The [`ErrorKind`].
 #[derive(Debug, Fail, Clone, PartialEq, Eq)]
 pub enum ErrorKind {
     #[fail(display = "ChronoParseError: {}", _0)]
@@ -73,6 +72,10 @@ pub enum ErrorKind {
     /// An attribute is missing.
     MissingAttribute(String),
 
+    #[fail(display = "Unexpected Attribute: {:?}", _0)]
+    /// An unexpected value.
+    UnexpectedAttribute(String),
+
     /// Hints that destructuring should not be exhaustive.
     ///
     /// This enum may grow additional variants, so this makes sure clients
@@ -90,48 +93,33 @@ pub struct Error {
 }
 
 impl Fail for Error {
-    fn cause(&self) -> Option<&dyn Fail> {
-        self.inner.cause()
-    }
+    fn cause(&self) -> Option<&dyn Fail> { self.inner.cause() }
 
-    fn backtrace(&self) -> Option<&Backtrace> {
-        self.inner.backtrace()
-    }
+    fn backtrace(&self) -> Option<&Backtrace> { self.inner.backtrace() }
 }
 
 impl fmt::Display for Error {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        self.inner.fmt(f)
-    }
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result { self.inner.fmt(f) }
 }
 
 impl From<ErrorKind> for Error {
-    fn from(kind: ErrorKind) -> Error {
-        Error::from(Context::new(kind))
-    }
+    fn from(kind: ErrorKind) -> Error { Error::from(Context::new(kind)) }
 }
 
 impl From<Context<ErrorKind>> for Error {
-    fn from(inner: Context<ErrorKind>) -> Error {
-        Error { inner }
-    }
+    fn from(inner: Context<ErrorKind>) -> Error { Error { inner } }
 }
 
 impl Error {
-    pub(crate) fn unknown<T>(value: T) -> Self
-    where
-        T: error::Error,
-    {
-        Self::from(ErrorKind::UnknownError(value.to_string()))
-    }
-
     pub(crate) fn missing_value<T: ToString>(value: T) -> Self {
         Self::from(ErrorKind::MissingValue(value.to_string()))
     }
 
-    pub(crate) fn invalid_input() -> Self {
-        Self::from(ErrorKind::InvalidInput)
+    pub(crate) fn unexpected_attribute<T: ToString>(value: T) -> Self {
+        Self::from(ErrorKind::UnexpectedAttribute(value.to_string()))
     }
+
+    pub(crate) fn invalid_input() -> Self { Self::from(ErrorKind::InvalidInput) }
 
     pub(crate) fn parse_int_error<T: ToString>(value: T) -> Self {
         Self::from(ErrorKind::ParseIntError(value.to_string()))
@@ -167,9 +155,7 @@ impl Error {
         Self::from(ErrorKind::UnknownProtocolVersion(value.to_string()))
     }
 
-    pub(crate) fn io<T: ToString>(value: T) -> Self {
-        Self::from(ErrorKind::Io(value.to_string()))
-    }
+    pub(crate) fn io<T: ToString>(value: T) -> Self { Self::from(ErrorKind::Io(value.to_string())) }
 
     pub(crate) fn required_version<T, U>(required_version: T, specified_version: U) -> Self
     where
@@ -196,25 +182,23 @@ impl Error {
 }
 
 impl From<::std::num::ParseIntError> for Error {
-    fn from(value: ::std::num::ParseIntError) -> Self {
-        Error::parse_int_error(value)
-    }
+    fn from(value: ::std::num::ParseIntError) -> Self { Error::parse_int_error(value) }
 }
 
 impl From<::std::num::ParseFloatError> for Error {
-    fn from(value: ::std::num::ParseFloatError) -> Self {
-        Error::parse_float_error(value)
-    }
+    fn from(value: ::std::num::ParseFloatError) -> Self { Error::parse_float_error(value) }
 }
 
 impl From<::std::io::Error> for Error {
-    fn from(value: ::std::io::Error) -> Self {
-        Error::io(value)
-    }
+    fn from(value: ::std::io::Error) -> Self { Error::io(value) }
 }
 
 impl From<::chrono::ParseError> for Error {
-    fn from(value: ::chrono::ParseError) -> Self {
-        Error::chrono(value)
+    fn from(value: ::chrono::ParseError) -> Self { Error::chrono(value) }
+}
+
+impl From<::strum::ParseError> for Error {
+    fn from(value: ::strum::ParseError) -> Self {
+        Error::custom(value) // TODO!
     }
 }

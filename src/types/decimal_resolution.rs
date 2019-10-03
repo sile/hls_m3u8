@@ -1,5 +1,6 @@
-use std::fmt;
 use std::str::FromStr;
+
+use derive_more::Display;
 
 use crate::Error;
 
@@ -8,22 +9,19 @@ use crate::Error;
 /// See: [4.2. Attribute Lists]
 ///
 /// [4.2. Attribute Lists]: https://tools.ietf.org/html/rfc8216#section-4.2
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+#[derive(Ord, PartialOrd, Debug, Clone, Copy, PartialEq, Eq, Hash, Display)]
+#[display(fmt = "{}x{}", width, height)]
 pub(crate) struct DecimalResolution {
     width: usize,
     height: usize,
 }
 
 impl DecimalResolution {
-    /// Creates a new DecimalResolution.
-    pub const fn new(width: usize, height: usize) -> Self {
-        Self { width, height }
-    }
+    /// Creates a new [`DecimalResolution`].
+    pub const fn new(width: usize, height: usize) -> Self { Self { width, height } }
 
     /// Horizontal pixel dimension.
-    pub const fn width(&self) -> usize {
-        self.width
-    }
+    pub const fn width(&self) -> usize { self.width }
 
     /// Sets Horizontal pixel dimension.
     pub fn set_width(&mut self, value: usize) -> &mut Self {
@@ -32,9 +30,7 @@ impl DecimalResolution {
     }
 
     /// Vertical pixel dimension.
-    pub const fn height(&self) -> usize {
-        self.height
-    }
+    pub const fn height(&self) -> usize { self.height }
 
     /// Sets Vertical pixel dimension.
     pub fn set_height(&mut self, value: usize) -> &mut Self {
@@ -43,10 +39,9 @@ impl DecimalResolution {
     }
 }
 
-impl fmt::Display for DecimalResolution {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(f, "{}x{}", self.width, self.height)
-    }
+/// [`DecimalResolution`] can be constructed from a tuple; `(width, height)`.
+impl From<(usize, usize)> for DecimalResolution {
+    fn from(value: (usize, usize)) -> Self { DecimalResolution::new(value.0, value.1) }
 }
 
 impl FromStr for DecimalResolution {
@@ -62,12 +57,9 @@ impl FromStr for DecimalResolution {
             )));
         }
 
-        let width = tokens[0];
-        let height = tokens[1];
-
-        Ok(DecimalResolution {
-            width: width.parse()?,
-            height: height.parse()?,
+        Ok(Self {
+            width: tokens[0].parse()?,
+            height: tokens[1].parse()?,
         })
     }
 }
@@ -116,6 +108,14 @@ mod tests {
         assert_eq!(
             DecimalResolution::new(1920, 1080).set_height(12).height(),
             12
+        );
+    }
+
+    #[test]
+    fn test_from() {
+        assert_eq!(
+            DecimalResolution::from((1920, 1080)),
+            DecimalResolution::new(1920, 1080)
         );
     }
 }

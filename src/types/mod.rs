@@ -1,5 +1,6 @@
 //! Miscellaneous types.
 mod byte_range;
+mod channels;
 mod closed_captions;
 mod decimal_floating_point;
 mod decimal_resolution;
@@ -16,6 +17,7 @@ mod signed_decimal_floating_point;
 mod stream_inf;
 
 pub use byte_range::*;
+pub use channels::*;
 pub use closed_captions::*;
 pub(crate) use decimal_floating_point::*;
 pub(crate) use decimal_resolution::*;

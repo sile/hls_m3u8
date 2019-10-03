@@ -7,8 +7,8 @@ use crate::Error;
 
 /// # [4.4.3.5. EXT-X-PLAYLIST-TYPE]
 ///
-/// The [ExtXPlaylistType] tag provides mutability information about the
-/// [Media Playlist]. It applies to the entire [Media Playlist].
+/// The [`ExtXPlaylistType`] tag provides mutability information about the
+/// [`Media Playlist`]. It applies to the entire [`Media Playlist`].
 ///
 /// Its format is:
 /// ```text
@@ -20,10 +20,10 @@ use crate::Error;
 /// https://tools.ietf.org/html/draft-pantos-hls-rfc8216bis-04#section-4.4.3.5
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum ExtXPlaylistType {
-    /// If the [ExtXPlaylistType] is Event, Media Segments can only be added to
-    /// the end of the Media Playlist.
+    /// If the [`ExtXPlaylistType`] is Event, Media Segments
+    /// can only be added to the end of the Media Playlist.
     Event,
-    /// If the [ExtXPlaylistType] is Video On Demand (Vod),
+    /// If the [`ExtXPlaylistType`] is Video On Demand (Vod),
     /// the Media Playlist cannot change.
     Vod,
 }
@@ -33,9 +33,7 @@ impl ExtXPlaylistType {
 }
 
 impl RequiredVersion for ExtXPlaylistType {
-    fn required_version(&self) -> ProtocolVersion {
-        ProtocolVersion::V1
-    }
+    fn required_version(&self) -> ProtocolVersion { ProtocolVersion::V1 }
 }
 
 impl fmt::Display for ExtXPlaylistType {

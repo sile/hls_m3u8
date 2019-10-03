@@ -2,14 +2,14 @@ use std::fmt;
 use std::str::FromStr;
 use std::time::Duration;
 
-use crate::types::{DecimalFloatingPoint, ProtocolVersion, RequiredVersion};
+use crate::types::{ProtocolVersion, RequiredVersion};
 use crate::utils::tag;
 use crate::Error;
 
 /// # [4.4.2.1. EXTINF]
 ///
-/// The [ExtInf] tag specifies the duration of a [Media Segment]. It applies
-/// only to the next [Media Segment].
+/// The [`ExtInf`] tag specifies the duration of a [`Media Segment`]. It applies
+/// only to the next [`Media Segment`].
 ///
 /// Its format is:
 /// ```text
@@ -17,7 +17,7 @@ use crate::Error;
 /// ```
 /// The title is an optional informative title about the [Media Segment].
 ///
-/// [Media Segment]: crate::media_segment::MediaSegment
+/// [`Media Segment`]: crate::media_segment::MediaSegment
 /// [4.4.2.1. EXTINF]:
 /// https://tools.ietf.org/html/draft-pantos-hls-rfc8216bis-04#section-4.4.2.1
 #[derive(Default, Debug, Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]
@@ -29,7 +29,7 @@ pub struct ExtInf {
 impl ExtInf {
     pub(crate) const PREFIX: &'static str = "#EXTINF:";
 
-    /// Makes a new [ExtInf] tag.
+    /// Makes a new [`ExtInf`] tag.
     ///
     /// # Example
     /// ```
@@ -39,13 +39,13 @@ impl ExtInf {
     /// let ext_inf = ExtInf::new(Duration::from_secs(5));
     /// ```
     pub const fn new(duration: Duration) -> Self {
-        ExtInf {
+        Self {
             duration,
             title: None,
         }
     }
 
-    /// Makes a new [ExtInf] tag with the given title.
+    /// Makes a new [`ExtInf`] tag with the given title.
     ///
     /// # Example
     /// ```
@@ -55,7 +55,7 @@ impl ExtInf {
     /// let ext_inf = ExtInf::with_title(Duration::from_secs(5), "title");
     /// ```
     pub fn with_title<T: ToString>(duration: Duration, title: T) -> Self {
-        ExtInf {
+        Self {
             duration,
             title: Some(title.to_string()),
         }
@@ -70,14 +70,9 @@ impl ExtInf {
     ///
     /// let ext_inf = ExtInf::new(Duration::from_secs(5));
     ///
-    /// assert_eq!(
-    ///     ext_inf.duration(),
-    ///     Duration::from_secs(5)
-    /// );
+    /// assert_eq!(ext_inf.duration(), Duration::from_secs(5));
     /// ```
-    pub const fn duration(&self) -> Duration {
-        self.duration
-    }
+    pub const fn duration(&self) -> Duration { self.duration }
 
     /// Sets the duration of the associated media segment.
     ///
@@ -90,10 +85,7 @@ impl ExtInf {
     ///
     /// ext_inf.set_duration(Duration::from_secs(10));
     ///
-    /// assert_eq!(
-    ///     ext_inf.duration(),
-    ///     Duration::from_secs(10)
-    /// );
+    /// assert_eq!(ext_inf.duration(), Duration::from_secs(10));
     /// ```
     pub fn set_duration(&mut self, value: Duration) -> &mut Self {
         self.duration = value;
@@ -109,14 +101,9 @@ impl ExtInf {
     ///
     /// let ext_inf = ExtInf::with_title(Duration::from_secs(5), "title");
     ///
-    /// assert_eq!(
-    ///     ext_inf.title(),
-    ///     &Some("title".to_string())
-    /// );
+    /// assert_eq!(ext_inf.title(), &Some("title".to_string()));
     /// ```
-    pub const fn title(&self) -> &Option<String> {
-        &self.title
-    }
+    pub const fn title(&self) -> &Option<String> { &self.title }
 
     /// Sets the title of the associated media segment.
     ///
@@ -129,10 +116,7 @@ impl ExtInf {
     ///
     /// ext_inf.set_title(Some("better title"));
     ///
-    /// assert_eq!(
-    ///     ext_inf.title(),
-    ///     &Some("better title".to_string())
-    /// );
+    /// assert_eq!(ext_inf.title(), &Some("better title".to_string()));
     /// ```
     pub fn set_title<T: ToString>(&mut self, value: Option<T>) -> &mut Self {
         self.title = value.map(|v| v.to_string());
@@ -170,17 +154,16 @@ impl FromStr for ExtInf {
 
     fn from_str(input: &str) -> Result<Self, Self::Err> {
         let input = tag(input, Self::PREFIX)?;
-        dbg!(&input);
         let tokens = input.splitn(2, ',').collect::<Vec<_>>();
 
-        if tokens.len() == 0 {
+        if tokens.is_empty() {
             return Err(Error::custom(format!(
                 "failed to parse #EXTINF tag, couldn't split input: {:?}",
                 input
             )));
         }
 
-        let duration = tokens[0].parse::<DecimalFloatingPoint>()?.to_duration();
+        let duration = Duration::from_secs_f64(tokens[0].parse()?);
 
         let title = {
             if tokens.len() >= 2 {
@@ -194,14 +177,12 @@ impl FromStr for ExtInf {
             }
         };
 
-        Ok(ExtInf { duration, title })
+        Ok(Self { duration, title })
     }
 }
 
 impl From<Duration> for ExtInf {
-    fn from(value: Duration) -> Self {
-        Self::new(value)
-    }
+    fn from(value: Duration) -> Self { Self::new(value) }
 }
 
 #[cfg(test)]

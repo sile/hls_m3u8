@@ -1,16 +1,32 @@
 use crate::Error;
 
+macro_rules! impl_from {
+    ( $($( $type:tt ),* => $target:path ),* ) => {
+        use ::core::convert::From;
+
+        $( // repeat $target
+            $( // repeat $type
+                impl From<$type> for $target {
+                    fn from(value: $type) -> Self {
+                        Self::from_f64_unchecked(value.into())
+                    }
+                }
+            )*
+        )*
+    };
+}
+
+impl_from![
+    u8, u16, u32 => crate::types::DecimalFloatingPoint,
+    u8, i8, u16, i16, u32, i32, f32, f64 => crate::types::SignedDecimalFloatingPoint
+];
+
 pub(crate) fn parse_yes_or_no<T: AsRef<str>>(s: T) -> crate::Result<bool> {
     match s.as_ref() {
         "YES" => Ok(true),
         "NO" => Ok(false),
         _ => Err(Error::invalid_input()),
     }
-}
-
-pub(crate) fn parse_u64<T: AsRef<str>>(s: T) -> crate::Result<u64> {
-    let n = s.as_ref().parse().map_err(Error::unknown)?; // TODO: Error::number
-    Ok(n)
 }
 
 /// According to the documentation the following characters are forbidden
@@ -31,17 +47,17 @@ pub(crate) fn unquote<T: ToString>(value: T) -> String {
 
 /// Puts a string inside quotes.
 pub(crate) fn quote<T: ToString>(value: T) -> String {
-    // the replace is for the case, that quote is called on an already quoted string, which could
-    // cause problems!
+    // the replace is for the case, that quote is called on an already quoted
+    // string, which could cause problems!
     format!("\"{}\"", value.to_string().replace("\"", ""))
 }
 
-/// Checks, if the given tag is at the start of the input. If this is the case, it will remove it
-/// and return the rest of the input.
+/// Checks, if the given tag is at the start of the input. If this is the case,
+/// it will remove it and return the rest of the input.
 ///
 /// # Error
-/// This function will return `Error::MissingTag`, if the input doesn't start with the tag, that
-/// has been passed to this function.
+/// This function will return `Error::MissingTag`, if the input doesn't start
+/// with the tag, that has been passed to this function.
 pub(crate) fn tag<T>(input: &str, tag: T) -> crate::Result<&str>
 where
     T: AsRef<str>,
@@ -61,14 +77,7 @@ mod tests {
     fn test_parse_yes_or_no() {
         assert!(parse_yes_or_no("YES").unwrap());
         assert!(!parse_yes_or_no("NO").unwrap());
-        // TODO: test for error
-    }
-
-    #[test]
-    fn test_parse_u64() {
-        assert_eq!(parse_u64("1").unwrap(), 1);
-        assert_eq!(parse_u64("25").unwrap(), 25);
-        // TODO: test for error
+        assert!(parse_yes_or_no("garbage").is_err());
     }
 
     #[test]
@@ -99,5 +108,7 @@ mod tests {
 
         let input = tag(input, "A").unwrap();
         assert_eq!(input, "SampleString");
+
+        assert!(tag(input, "B").is_err());
     }
 }

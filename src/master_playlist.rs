@@ -21,8 +21,8 @@ pub struct MasterPlaylist {
     #[builder(default, setter(name = "version"))]
     /// Sets the protocol compatibility version of the resulting playlist.
     ///
-    /// If the resulting playlist has tags which requires a compatibility version greater than
-    /// `version`,
+    /// If the resulting playlist has tags which requires a compatibility
+    /// version greater than `version`,
     /// `build()` method will fail with an `ErrorKind::InvalidInput` error.
     ///
     /// The default is the maximum version among the tags in the playlist.
@@ -47,14 +47,10 @@ pub struct MasterPlaylist {
 
 impl MasterPlaylist {
     /// Returns a Builder for a MasterPlaylist.
-    pub fn builder() -> MasterPlaylistBuilder {
-        MasterPlaylistBuilder::default()
-    }
+    pub fn builder() -> MasterPlaylistBuilder { MasterPlaylistBuilder::default() }
 
     /// Returns the `EXT-X-VERSION` tag contained in the playlist.
-    pub const fn version_tag(&self) -> ExtXVersion {
-        self.version_tag
-    }
+    pub const fn version_tag(&self) -> ExtXVersion { self.version_tag }
 
     /// Returns the `EXT-X-INDEPENDENT-SEGMENTS` tag contained in the playlist.
     pub const fn independent_segments_tag(&self) -> Option<ExtXIndependentSegments> {
@@ -62,19 +58,13 @@ impl MasterPlaylist {
     }
 
     /// Returns the `EXT-X-START` tag contained in the playlist.
-    pub const fn start_tag(&self) -> Option<ExtXStart> {
-        self.start_tag
-    }
+    pub const fn start_tag(&self) -> Option<ExtXStart> { self.start_tag }
 
     /// Returns the `EXT-X-MEDIA` tags contained in the playlist.
-    pub fn media_tags(&self) -> &[ExtXMedia] {
-        &self.media_tags
-    }
+    pub fn media_tags(&self) -> &[ExtXMedia] { &self.media_tags }
 
     /// Returns the `EXT-X-STREAM-INF` tags contained in the playlist.
-    pub fn stream_inf_tags(&self) -> &[ExtXStreamInf] {
-        &self.stream_inf_tags
-    }
+    pub fn stream_inf_tags(&self) -> &[ExtXStreamInf] { &self.stream_inf_tags }
 
     /// Returns the `EXT-X-I-FRAME-STREAM-INF` tags contained in the playlist.
     pub fn i_frame_stream_inf_tags(&self) -> &[ExtXIFrameStreamInf] {
@@ -82,20 +72,14 @@ impl MasterPlaylist {
     }
 
     /// Returns the `EXT-X-SESSION-DATA` tags contained in the playlist.
-    pub fn session_data_tags(&self) -> &[ExtXSessionData] {
-        &self.session_data_tags
-    }
+    pub fn session_data_tags(&self) -> &[ExtXSessionData] { &self.session_data_tags }
 
     /// Returns the `EXT-X-SESSION-KEY` tags contained in the playlist.
-    pub fn session_key_tags(&self) -> &[ExtXSessionKey] {
-        &self.session_key_tags
-    }
+    pub fn session_key_tags(&self) -> &[ExtXSessionKey] { &self.session_key_tags }
 }
 
 impl RequiredVersion for MasterPlaylist {
-    fn required_version(&self) -> ProtocolVersion {
-        self.version_tag.version()
-    }
+    fn required_version(&self) -> ProtocolVersion { self.version_tag.version() }
 }
 
 impl MasterPlaylistBuilder {
@@ -103,7 +87,7 @@ impl MasterPlaylistBuilder {
         let required_version = self.required_version();
         let specified_version = self
             .version_tag
-            .unwrap_or(required_version.into())
+            .unwrap_or_else(|| required_version.into())
             .version();
 
         if required_version > specified_version {
@@ -164,7 +148,7 @@ impl MasterPlaylistBuilder {
                     .flatten(),
             )
             .max()
-            .unwrap_or(ProtocolVersion::latest())
+            .unwrap_or_else(ProtocolVersion::latest)
     }
 
     fn validate_stream_inf_tags(&self) -> crate::Result<()> {
@@ -188,24 +172,23 @@ impl MasterPlaylistBuilder {
                     }
                 }
                 match t.closed_captions() {
-                    Some(&ClosedCaptions::GroupId(ref group_id)) => {
+                    &Some(ClosedCaptions::GroupId(ref group_id)) => {
                         if !self.check_media_group(MediaType::ClosedCaptions, group_id) {
                             return Err(Error::unmatched_group(group_id));
                         }
                     }
-                    Some(&ClosedCaptions::None) => {
+                    &Some(ClosedCaptions::None) => {
                         has_none_closed_captions = true;
                     }
                     None => {}
                 }
             }
-            if has_none_closed_captions {
-                if !value
+            if has_none_closed_captions
+                && !value
                     .iter()
-                    .all(|t| t.closed_captions() == Some(&ClosedCaptions::None))
-                {
-                    return Err(Error::invalid_input());
-                }
+                    .all(|t| t.closed_captions() == &Some(ClosedCaptions::None))
+            {
+                return Err(Error::invalid_input());
             }
         }
         Ok(())

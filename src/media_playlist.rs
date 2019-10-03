@@ -53,7 +53,8 @@ pub struct MediaPlaylist {
     end_list_tag: Option<ExtXEndList>,
     /// Sets all [MediaSegment]s.
     segments: Vec<MediaSegment>,
-    /// Sets the allowable excess duration of each media segment in the associated playlist.
+    /// Sets the allowable excess duration of each media segment in the
+    /// associated playlist.
     ///
     /// # Error
     /// If there is a media segment of which duration exceeds
@@ -70,7 +71,7 @@ impl MediaPlaylistBuilder {
         let required_version = self.required_version();
         let specified_version = self
             .version_tag
-            .unwrap_or(required_version.into())
+            .unwrap_or_else(|| required_version.into())
             .version();
 
         if required_version > specified_version {
@@ -109,7 +110,7 @@ impl MediaPlaylistBuilder {
                     }
                 };
 
-                if !(rounded_segment_duration <= max_segment_duration) {
+                if rounded_segment_duration > max_segment_duration {
                     return Err(Error::custom(format!(
                         "Too large segment duration: actual={:?}, max={:?}, target_duration={:?}, uri={:?}",
                         segment_duration,
@@ -122,7 +123,7 @@ impl MediaPlaylistBuilder {
                 // CHECK: `#EXT-X-BYTE-RANGE`
                 if let Some(tag) = s.byte_range_tag() {
                     if tag.to_range().start().is_none() {
-                        let last_uri = last_range_uri.ok_or(Error::invalid_input())?;
+                        let last_uri = last_range_uri.ok_or_else(Error::invalid_input)?;
                         if last_uri != s.uri() {
                             return Err(Error::invalid_input());
                         }
@@ -200,7 +201,7 @@ impl MediaPlaylistBuilder {
                     .unwrap_or(ProtocolVersion::V1)
             }))
             .max()
-            .unwrap_or(ProtocolVersion::latest())
+            .unwrap_or_else(ProtocolVersion::latest)
     }
 
     /// Adds a media segment to the resulting playlist.
@@ -221,38 +222,28 @@ impl MediaPlaylistBuilder {
 
 impl MediaPlaylist {
     /// Creates a [MediaPlaylistBuilder].
-    pub fn builder() -> MediaPlaylistBuilder {
-        MediaPlaylistBuilder::default()
-    }
+    pub fn builder() -> MediaPlaylistBuilder { MediaPlaylistBuilder::default() }
+
     /// Returns the `EXT-X-VERSION` tag contained in the playlist.
-    pub const fn version_tag(&self) -> ExtXVersion {
-        self.version_tag
-    }
+    pub const fn version_tag(&self) -> ExtXVersion { self.version_tag }
 
     /// Returns the `EXT-X-TARGETDURATION` tag contained in the playlist.
-    pub const fn target_duration_tag(&self) -> ExtXTargetDuration {
-        self.target_duration_tag
-    }
+    pub const fn target_duration_tag(&self) -> ExtXTargetDuration { self.target_duration_tag }
 
     /// Returns the `EXT-X-MEDIA-SEQUENCE` tag contained in the playlist.
-    pub const fn media_sequence_tag(&self) -> Option<ExtXMediaSequence> {
-        self.media_sequence_tag
-    }
+    pub const fn media_sequence_tag(&self) -> Option<ExtXMediaSequence> { self.media_sequence_tag }
 
-    /// Returns the `EXT-X-DISCONTINUITY-SEQUENCE` tag contained in the playlist.
+    /// Returns the `EXT-X-DISCONTINUITY-SEQUENCE` tag contained in the
+    /// playlist.
     pub const fn discontinuity_sequence_tag(&self) -> Option<ExtXDiscontinuitySequence> {
         self.discontinuity_sequence_tag
     }
 
     /// Returns the `EXT-X-PLAYLIST-TYPE` tag contained in the playlist.
-    pub const fn playlist_type_tag(&self) -> Option<ExtXPlaylistType> {
-        self.playlist_type_tag
-    }
+    pub const fn playlist_type_tag(&self) -> Option<ExtXPlaylistType> { self.playlist_type_tag }
 
     /// Returns the `EXT-X-I-FRAMES-ONLY` tag contained in the playlist.
-    pub const fn i_frames_only_tag(&self) -> Option<ExtXIFramesOnly> {
-        self.i_frames_only_tag
-    }
+    pub const fn i_frames_only_tag(&self) -> Option<ExtXIFramesOnly> { self.i_frames_only_tag }
 
     /// Returns the `EXT-X-INDEPENDENT-SEGMENTS` tag contained in the playlist.
     pub const fn independent_segments_tag(&self) -> Option<ExtXIndependentSegments> {
@@ -260,19 +251,13 @@ impl MediaPlaylist {
     }
 
     /// Returns the `EXT-X-START` tag contained in the playlist.
-    pub const fn start_tag(&self) -> Option<ExtXStart> {
-        self.start_tag
-    }
+    pub const fn start_tag(&self) -> Option<ExtXStart> { self.start_tag }
 
     /// Returns the `EXT-X-ENDLIST` tag contained in the playlist.
-    pub const fn end_list_tag(&self) -> Option<ExtXEndList> {
-        self.end_list_tag
-    }
+    pub const fn end_list_tag(&self) -> Option<ExtXEndList> { self.end_list_tag }
 
     /// Returns the media segments contained in the playlist.
-    pub fn segments(&self) -> &[MediaSegment] {
-        &self.segments
-    }
+    pub fn segments(&self) -> &[MediaSegment] { &self.segments }
 }
 
 impl fmt::Display for MediaPlaylist {

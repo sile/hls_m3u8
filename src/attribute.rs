@@ -8,41 +8,31 @@ use crate::Error;
 pub struct AttributePairs(HashMap<String, String>);
 
 impl AttributePairs {
-    pub fn new() -> Self {
-        Self::default()
-    }
+    pub fn new() -> Self { Self::default() }
 }
 
 impl Deref for AttributePairs {
     type Target = HashMap<String, String>;
 
-    fn deref(&self) -> &Self::Target {
-        &self.0
-    }
+    fn deref(&self) -> &Self::Target { &self.0 }
 }
 
 impl DerefMut for AttributePairs {
-    fn deref_mut(&mut self) -> &mut Self::Target {
-        &mut self.0
-    }
+    fn deref_mut(&mut self) -> &mut Self::Target { &mut self.0 }
 }
 
 impl IntoIterator for AttributePairs {
-    type Item = (String, String);
     type IntoIter = ::std::collections::hash_map::IntoIter<String, String>;
+    type Item = (String, String);
 
-    fn into_iter(self) -> Self::IntoIter {
-        self.0.into_iter()
-    }
+    fn into_iter(self) -> Self::IntoIter { self.0.into_iter() }
 }
 
 impl<'a> IntoIterator for &'a AttributePairs {
-    type Item = (&'a String, &'a String);
     type IntoIter = ::std::collections::hash_map::Iter<'a, String, String>;
+    type Item = (&'a String, &'a String);
 
-    fn into_iter(self) -> Self::IntoIter {
-        self.0.iter()
-    }
+    fn into_iter(self) -> Self::IntoIter { self.0.iter() }
 }
 
 impl FromStr for AttributePairs {
@@ -55,11 +45,14 @@ impl FromStr for AttributePairs {
             let pair = split(line.trim(), '=');
 
             if pair.len() < 2 {
-                return Err(Error::invalid_input());
+                continue;
             }
 
-            let key = pair[0].to_uppercase();
-            let value = pair[1].to_string();
+            let key = pair[0].trim().to_uppercase();
+            let value = pair[1].trim().to_string();
+            if value.is_empty() {
+                continue;
+            }
 
             result.insert(key.trim().to_string(), value.trim().to_string());
         }
@@ -87,11 +80,11 @@ fn split(value: &str, terminator: char) -> Vec<String> {
                 temp_string.push(c);
             }
             k if (k == terminator) => {
-                if !inside_quotes {
+                if inside_quotes {
+                    temp_string.push(c);
+                } else {
                     result.push(temp_string);
                     temp_string = String::new();
-                } else {
-                    temp_string.push(c);
                 }
             }
             _ => {
@@ -122,6 +115,11 @@ mod test {
 
         let mut iterator = pairs.iter();
         assert!(iterator.any(|(k, v)| k == "ABC" && v == "12.3"));
+
+        let mut pairs = AttributePairs::new();
+        pairs.insert("FOO".to_string(), "BAR".to_string());
+
+        assert_eq!("FOO=BAR,VAL".parse::<AttributePairs>().unwrap(), pairs);
     }
 
     #[test]
@@ -135,5 +133,19 @@ mod test {
 
         let mut iterator = attrs.iter();
         assert!(iterator.any(|(k, v)| k == "key_02" && v == "value_02"));
+    }
+
+    #[test]
+    fn test_into_iter() {
+        let mut map = HashMap::new();
+        map.insert("k".to_string(), "v".to_string());
+
+        let mut attrs = AttributePairs::new();
+        attrs.insert("k".to_string(), "v".to_string());
+
+        assert_eq!(
+            attrs.into_iter().collect::<Vec<_>>(),
+            map.into_iter().collect::<Vec<_>>()
+        );
     }
 }
