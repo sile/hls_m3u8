@@ -11,37 +11,41 @@ use crate::Error;
 /// The data of an [ExtXSessionData] tag.
 #[derive(Hash, Eq, Ord, Debug, PartialEq, Clone, PartialOrd)]
 pub enum SessionData {
-    /// A String, that contains the data identified by [data_id](ExtXSessionData::data_id).
-    /// If a [language](ExtXSessionData::language) is specified, the value should
+    /// A String, that contains the data identified by [`data_id`](ExtXSessionData::data_id).
+    /// If a [`language`](ExtXSessionData::language) is specified, the value should
     /// contain a human-readable string written in the specified language.
     Value(String),
-    /// An [uri], which points to a [json].
+    /// An [`uri`], which points to a [`json`].
     ///
-    /// [json]: https://tools.ietf.org/html/rfc8259
-    /// [uri]: https://tools.ietf.org/html/rfc3986
+    /// [`json`]: https://tools.ietf.org/html/rfc8259
+    /// [`uri`]: https://tools.ietf.org/html/rfc3986
     Uri(String),
 }
 
 /// # [4.3.4.4. EXT-X-SESSION-DATA]
 ///
-/// The [ExtXSessionData] tag allows arbitrary session data to be
-/// carried in a [Master Playlist].
+/// The [`ExtXSessionData`] tag allows arbitrary session data to be
+/// carried in a [`Master Playlist`].
 ///
-/// [Master Playlist]: crate::MasterPlaylist
+/// [`Master Playlist`]: crate::MasterPlaylist
 /// [4.3.4.4. EXT-X-SESSION-DATA]: https://tools.ietf.org/html/rfc8216#section-4.3.4.4
 #[derive(Builder, Hash, Eq, Ord, Debug, PartialEq, Clone, PartialOrd)]
 #[builder(setter(into))]
 pub struct ExtXSessionData {
-    /// The identifier of the data. For more information look [here](ExtXSessionData::set_data_id).
+    /// The identifier of the data.
+    /// For more information look [`here`](ExtXSessionData::set_data_id).
+    ///
     /// # Note
     /// This field is required.
     data_id: String,
-    /// The data associated with the [data_id](ExtXSessionDataBuilder::data_id).
-    /// For more information look [here](SessionData).
+    /// The data associated with the
+    /// [`data_id`](ExtXSessionDataBuilder::data_id).
+    /// For more information look [`here`](SessionData).
+    ///
     /// # Note
     /// This field is required.
     data: SessionData,
-    /// The language of the [data](ExtXSessionDataBuilder::data).
+    /// The language of the [`data`](ExtXSessionDataBuilder::data).
     #[builder(setter(into, strip_option), default)]
     language: Option<String>,
 }
@@ -49,7 +53,7 @@ pub struct ExtXSessionData {
 impl ExtXSessionData {
     pub(crate) const PREFIX: &'static str = "#EXT-X-SESSION-DATA:";
 
-    /// Makes a new [ExtXSessionData] tag.
+    /// Makes a new [`ExtXSessionData`] tag.
     ///
     /// # Example
     /// ```
@@ -68,7 +72,7 @@ impl ExtXSessionData {
         }
     }
 
-    /// Returns a new Builder for [ExtXSessionData].
+    /// Returns a new Builder for [`ExtXSessionData`].
     ///
     /// # Example
     /// ```
@@ -94,7 +98,7 @@ impl ExtXSessionData {
         ExtXSessionDataBuilder::default()
     }
 
-    /// Makes a new [ExtXSessionData] tag, with the given language.
+    /// Makes a new [`ExtXSessionData`] tag, with the given language.
     ///
     /// # Example
     /// ```
@@ -154,7 +158,7 @@ impl ExtXSessionData {
         &self.data
     }
 
-    /// Returns the `language` tag, that identifies the language of [SessionData].
+    /// Returns the `language` tag, that identifies the language of [`SessionData`].
     ///
     /// # Example
     /// ```
@@ -175,7 +179,7 @@ impl ExtXSessionData {
         &self.language
     }
 
-    /// Sets the `language` attribute, that identifies the language of [SessionData].
+    /// Sets the `language` attribute, that identifies the language of [`SessionData`].
     /// See [rfc5646](https://tools.ietf.org/html/rfc5646).
     ///
     /// # Example
@@ -224,7 +228,7 @@ impl ExtXSessionData {
         self
     }
 
-    /// Sets the [data](ExtXSessionData::data) of this tag.
+    /// Sets the [`data`](ExtXSessionData::data) of this tag.
     ///
     /// # Example
     /// ```

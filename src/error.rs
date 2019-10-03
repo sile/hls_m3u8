@@ -5,7 +5,7 @@ use failure::{Backtrace, Context, Fail};
 /// This crate specific `Result` type.
 pub type Result<T> = std::result::Result<T, Error>;
 
-/// The ErrorKind.
+/// The [`ErrorKind`].
 #[derive(Debug, Fail, Clone, PartialEq, Eq)]
 pub enum ErrorKind {
     #[fail(display = "ChronoParseError: {}", _0)]
@@ -72,6 +72,10 @@ pub enum ErrorKind {
     /// An attribute is missing.
     MissingAttribute(String),
 
+    #[fail(display = "Unexpected Attribute: {:?}", _0)]
+    /// An unexpected value.
+    UnexpectedAttribute(String),
+
     /// Hints that destructuring should not be exhaustive.
     ///
     /// This enum may grow additional variants, so this makes sure clients
@@ -119,6 +123,10 @@ impl From<Context<ErrorKind>> for Error {
 impl Error {
     pub(crate) fn missing_value<T: ToString>(value: T) -> Self {
         Self::from(ErrorKind::MissingValue(value.to_string()))
+    }
+
+    pub(crate) fn unexpected_attribute<T: ToString>(value: T) -> Self {
+        Self::from(ErrorKind::UnexpectedAttribute(value.to_string()))
     }
 
     pub(crate) fn invalid_input() -> Self {

@@ -6,9 +6,9 @@ use crate::utils::tag;
 
 /// # [4.4.3.3. EXT-X-DISCONTINUITY-SEQUENCE]
 ///
-/// The [ExtXDiscontinuitySequence] tag allows synchronization between
+/// The [`ExtXDiscontinuitySequence`] tag allows synchronization between
 /// different Renditions of the same Variant Stream or different Variant
-/// Streams that have [ExtXDiscontinuity] tags in their [Media Playlist]s.
+/// Streams that have [`ExtXDiscontinuity`] tags in their [`Media Playlist`]s.
 ///
 /// Its format is:
 /// ```text
@@ -16,8 +16,8 @@ use crate::utils::tag;
 /// ```
 /// where `number` is a [u64].
 ///
-/// [ExtXDiscontinuity]: crate::tags::ExtXDiscontinuity
-/// [Media Playlist]: crate::MediaPlaylist
+/// [`ExtXDiscontinuity`]: crate::tags::ExtXDiscontinuity
+/// [`Media Playlist`]: crate::MediaPlaylist
 /// [4.4.3.3. EXT-X-DISCONTINUITY-SEQUENCE]:
 /// https://tools.ietf.org/html/draft-pantos-hls-rfc8216bis-04#section-4.4.3.3
 #[derive(Default, Debug, Clone, Copy, PartialEq, Eq, Hash, Ord, PartialOrd)]

@@ -9,10 +9,10 @@ use crate::utils::tag;
 use crate::Error;
 
 /// # [4.3.2.6. EXT-X-PROGRAM-DATE-TIME]
-/// The [ExtXProgramDateTime] tag associates the first sample of a
-/// [Media Segment] with an absolute date and/or time.
+/// The [`ExtXProgramDateTime`] tag associates the first sample of a
+/// [`Media Segment`] with an absolute date and/or time.
 ///
-/// [Media Segment]: crate::MediaSegment
+/// [`Media Segment`]: crate::MediaSegment
 /// [4.3.2.6. EXT-X-PROGRAM-DATE-TIME]: https://tools.ietf.org/html/rfc8216#section-4.3.2.6
 #[derive(Debug, Copy, Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]
 pub struct ExtXProgramDateTime(DateTime<FixedOffset>);
@@ -20,7 +20,7 @@ pub struct ExtXProgramDateTime(DateTime<FixedOffset>);
 impl ExtXProgramDateTime {
     pub(crate) const PREFIX: &'static str = "#EXT-X-PROGRAM-DATE-TIME:";
 
-    /// Makes a new `ExtXProgramDateTime` tag.
+    /// Makes a new [`ExtXProgramDateTime`] tag.
     ///
     /// # Example
     /// ```

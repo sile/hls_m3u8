@@ -8,7 +8,7 @@ use crate::Error;
 
 /// # [4.4.2.2. EXT-X-BYTERANGE]
 ///
-/// The [ExtXByteRange] tag indicates that a [Media Segment] is a sub-range
+/// The [`ExtXByteRange`] tag indicates that a [`Media Segment`] is a sub-range
 /// of the resource identified by its `URI`.
 ///
 /// Its format is:
@@ -20,7 +20,7 @@ use crate::Error;
 /// If present, `o` is a [usize] indicating the start of the sub-range,
 /// as a byte offset from the beginning of the resource.
 ///
-/// [Media Segment]: crate::MediaSegment
+/// [`Media Segment`]: crate::MediaSegment
 /// [4.4.2.2. EXT-X-BYTERANGE]:
 /// https://tools.ietf.org/html/draft-pantos-hls-rfc8216bis-04#section-4.4.2.2
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
@@ -29,7 +29,7 @@ pub struct ExtXByteRange(ByteRange);
 impl ExtXByteRange {
     pub(crate) const PREFIX: &'static str = "#EXT-X-BYTERANGE:";
 
-    /// Makes a new [ExtXByteRange] tag.
+    /// Makes a new [`ExtXByteRange`] tag.
     ///
     /// # Example
     /// ```
@@ -40,7 +40,7 @@ impl ExtXByteRange {
         Self(ByteRange::new(length, start))
     }
 
-    /// Converts the [ExtXByteRange] to a [ByteRange].
+    /// Converts the [`ExtXByteRange`] to a [`ByteRange`].
     ///
     /// # Example
     /// ```

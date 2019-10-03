@@ -6,14 +6,14 @@ use crate::utils::tag;
 use crate::Error;
 
 /// # [4.4.3.2. EXT-X-MEDIA-SEQUENCE]
-/// The [ExtXMediaSequence] tag indicates the Media Sequence Number of
-/// the first [Media Segment] that appears in a Playlist file.
+/// The [`ExtXMediaSequence`] tag indicates the Media Sequence Number of
+/// the first [`Media Segment`] that appears in a Playlist file.
 ///
 /// Its format is:
 /// ```text
 /// #EXT-X-MEDIA-SEQUENCE:<number>
 /// ```
-/// where `number` is a [u64].
+/// where `number` is a [`u64`].
 ///
 /// [Media Segment]: crate::MediaSegment
 /// [4.4.3.2. EXT-X-MEDIA-SEQUENCE]:
@@ -24,7 +24,7 @@ pub struct ExtXMediaSequence(u64);
 impl ExtXMediaSequence {
     pub(crate) const PREFIX: &'static str = "#EXT-X-MEDIA-SEQUENCE:";
 
-    /// Makes a new [ExtXMediaSequence] tag.
+    /// Makes a new [`ExtXMediaSequence`] tag.
     ///
     /// # Example
     /// ```

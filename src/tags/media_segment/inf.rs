@@ -8,8 +8,8 @@ use crate::Error;
 
 /// # [4.4.2.1. EXTINF]
 ///
-/// The [ExtInf] tag specifies the duration of a [Media Segment]. It applies
-/// only to the next [Media Segment].
+/// The [`ExtInf`] tag specifies the duration of a [`Media Segment`]. It applies
+/// only to the next [`Media Segment`].
 ///
 /// Its format is:
 /// ```text
@@ -17,7 +17,7 @@ use crate::Error;
 /// ```
 /// The title is an optional informative title about the [Media Segment].
 ///
-/// [Media Segment]: crate::media_segment::MediaSegment
+/// [`Media Segment`]: crate::media_segment::MediaSegment
 /// [4.4.2.1. EXTINF]:
 /// https://tools.ietf.org/html/draft-pantos-hls-rfc8216bis-04#section-4.4.2.1
 #[derive(Default, Debug, Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]
@@ -29,7 +29,7 @@ pub struct ExtInf {
 impl ExtInf {
     pub(crate) const PREFIX: &'static str = "#EXTINF:";
 
-    /// Makes a new [ExtInf] tag.
+    /// Makes a new [`ExtInf`] tag.
     ///
     /// # Example
     /// ```
@@ -45,7 +45,7 @@ impl ExtInf {
         }
     }
 
-    /// Makes a new [ExtInf] tag with the given title.
+    /// Makes a new [`ExtInf`] tag with the given title.
     ///
     /// # Example
     /// ```

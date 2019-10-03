@@ -25,7 +25,7 @@ pub struct ExtXStreamInf {
 impl ExtXStreamInf {
     pub(crate) const PREFIX: &'static str = "#EXT-X-STREAM-INF:";
 
-    /// Creates a new [ExtXStreamInf] tag.
+    /// Creates a new [`ExtXStreamInf`] tag.
     ///
     /// # Example
     /// ```
@@ -164,7 +164,7 @@ impl ExtXStreamInf {
         self
     }
 
-    /// Returns the value of [ClosedCaptions] attribute.
+    /// Returns the value of [`ClosedCaptions`] attribute.
     ///
     /// # Example
     /// ```
@@ -181,7 +181,7 @@ impl ExtXStreamInf {
         &self.closed_captions
     }
 
-    /// Returns the value of [ClosedCaptions] attribute.
+    /// Returns the value of [`ClosedCaptions`] attribute.
     ///
     /// # Example
     /// ```

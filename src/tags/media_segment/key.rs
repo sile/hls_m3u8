@@ -7,11 +7,11 @@ use crate::utils::tag;
 use crate::Error;
 
 /// # [4.4.2.4. EXT-X-KEY]
-/// [Media Segment]s may be encrypted. The [ExtXKey] tag specifies how to
-/// decrypt them. It applies to every [Media Segment] and to every Media
-/// Initialization Section declared by an [ExtXMap] tag, that appears
-/// between it and the next [ExtXKey] tag in the Playlist file with the
-/// same [KeyFormat] attribute (or the end of the Playlist file).
+/// [`Media Segment`]s may be encrypted. The [`ExtXKey`] tag specifies how to
+/// decrypt them. It applies to every [`Media Segment`] and to every Media
+/// Initialization Section declared by an [`ExtXMap`] tag, that appears
+/// between it and the next [`ExtXKey`] tag in the Playlist file with the
+/// same [`KeyFormat`] attribute (or the end of the Playlist file).
 ///
 /// The format is:
 /// ```text
@@ -19,11 +19,12 @@ use crate::Error;
 /// ```
 ///
 /// # Note
-/// In case of an empty key (`EncryptionMethod::None`), all attributes will be ignored.
+/// In case of an empty key (`EncryptionMethod::None`),
+/// all attributes will be ignored.
 ///
-/// [KeyFormat]: crate::types::KeyFormat
-/// [ExtXMap]: crate::tags::ExtXMap
-/// [Media Segment]: crate::MediaSegment
+/// [`KeyFormat`]: crate::types::KeyFormat
+/// [`ExtXMap`]: crate::tags::ExtXMap
+/// [`Media Segment`]: crate::MediaSegment
 /// [4.4.2.4. EXT-X-KEY]:
 /// https://tools.ietf.org/html/draft-pantos-hls-rfc8216bis-04#section-4.4.2.4
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
@@ -32,8 +33,9 @@ pub struct ExtXKey(DecryptionKey);
 impl ExtXKey {
     pub(crate) const PREFIX: &'static str = "#EXT-X-KEY:";
 
-    /// Makes a new `ExtXKey` tag.
-    /// # Examples
+    /// Makes a new [`ExtXKey`] tag.
+    ///
+    /// # Example
     /// ```
     /// use hls_m3u8::tags::ExtXKey;
     /// use hls_m3u8::types::EncryptionMethod;
@@ -52,8 +54,9 @@ impl ExtXKey {
         Self(DecryptionKey::new(method, uri))
     }
 
-    /// Makes a new `ExtXKey` tag without a decryption key.
-    /// # Examples
+    /// Makes a new [`ExtXKey`] tag without a decryption key.
+    ///
+    /// # Example
     /// ```
     /// use hls_m3u8::tags::ExtXKey;
     ///
@@ -74,8 +77,10 @@ impl ExtXKey {
         })
     }
 
-    /// Returns whether the [EncryptionMethod] is [None](EncryptionMethod::None).
-    /// # Examples
+    /// Returns whether the [`EncryptionMethod`] is
+    /// [`None`](EncryptionMethod::None).
+    ///
+    /// # Example
     /// ```
     /// use hls_m3u8::tags::ExtXKey;
     /// use hls_m3u8::types::EncryptionMethod;

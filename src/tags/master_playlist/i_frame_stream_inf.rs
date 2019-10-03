@@ -7,20 +7,17 @@ use crate::types::{ProtocolVersion, RequiredVersion, StreamInf};
 use crate::utils::{quote, tag, unquote};
 use crate::Error;
 
-/// # [4.3.4.3. EXT-X-I-FRAME-STREAM-INF]
-/// The [ExtXIFrameStreamInf] tag identifies a [Media Playlist] file
-/// containing the I-frames of a multimedia presentation. It stands
-/// alone, in that it does not apply to a particular `URI` in the [Master Playlist].
+/// # [4.4.5.3. EXT-X-I-FRAME-STREAM-INF]
+/// The [`ExtXIFrameStreamInf`] tag identifies a [`Media Playlist`] file,
+/// containing the I-frames of a multimedia presentation.
 ///
-/// Its format is:
+/// I-frames are encoded video frames, whose decoding
+/// does not depend on any other frame.
 ///
-/// ```text
-/// #EXT-X-I-FRAME-STREAM-INF:<attribute-list>
-/// ```
-///
-/// [Master Playlist]: crate::MasterPlaylist
-/// [Media Playlist]: crate::MediaPlaylist
-/// [4.3.4.3. EXT-X-I-FRAME-STREAM-INF]: https://tools.ietf.org/html/rfc8216#section-4.3.4.3
+/// [`Master Playlist`]: crate::MasterPlaylist
+/// [`Media Playlist`]: crate::MediaPlaylist
+/// [4.4.5.3. EXT-X-I-FRAME-STREAM-INF]:
+/// https://tools.ietf.org/html/draft-pantos-hls-rfc8216bis-05#section-4.4.5.3
 #[derive(PartialOrd, Debug, Clone, PartialEq, Eq, Hash)]
 pub struct ExtXIFrameStreamInf {
     uri: String,
@@ -30,7 +27,7 @@ pub struct ExtXIFrameStreamInf {
 impl ExtXIFrameStreamInf {
     pub(crate) const PREFIX: &'static str = "#EXT-X-I-FRAME-STREAM-INF:";
 
-    /// Makes a new [ExtXIFrameStreamInf] tag.
+    /// Makes a new [`ExtXIFrameStreamInf`] tag.
     ///
     /// # Example
     /// ```
@@ -44,7 +41,7 @@ impl ExtXIFrameStreamInf {
         }
     }
 
-    /// Returns the `URI`, that identifies the associated media playlist.
+    /// Returns the `URI`, that identifies the associated [`media playlist`].
     ///
     /// # Example
     /// ```
@@ -52,11 +49,13 @@ impl ExtXIFrameStreamInf {
     /// let stream = ExtXIFrameStreamInf::new("https://www.example.com", 20);
     /// assert_eq!(stream.uri(), &"https://www.example.com".to_string());
     /// ```
+    ///
+    /// [`media playlist`]: crate::MediaPlaylist
     pub const fn uri(&self) -> &String {
         &self.uri
     }
 
-    /// Sets the `URI`, that identifies the associated media playlist.
+    /// Sets the `URI`, that identifies the associated [`media playlist`].
     ///
     /// # Example
     /// ```
@@ -67,12 +66,15 @@ impl ExtXIFrameStreamInf {
     /// stream.set_uri("../new/uri");
     /// assert_eq!(stream.uri(), &"../new/uri".to_string());
     /// ```
+    ///
+    /// [`media playlist`]: crate::MediaPlaylist
     pub fn set_uri<T: ToString>(&mut self, value: T) -> &mut Self {
         self.uri = value.to_string();
         self
     }
 }
 
+/// This tag requires [`ProtocolVersion::V1`].
 impl RequiredVersion for ExtXIFrameStreamInf {
     fn required_version(&self) -> ProtocolVersion {
         ProtocolVersion::V1

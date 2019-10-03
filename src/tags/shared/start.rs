@@ -18,7 +18,7 @@ pub struct ExtXStart {
 impl ExtXStart {
     pub(crate) const PREFIX: &'static str = "#EXT-X-START:";
 
-    /// Makes a new [ExtXStart] tag.
+    /// Makes a new [`ExtXStart`] tag.
     ///
     /// # Panic
     /// Panics if the time_offset value is infinite.
@@ -35,7 +35,7 @@ impl ExtXStart {
         }
     }
 
-    /// Makes a new [ExtXStart] tag with the given `precise` flag.
+    /// Makes a new [`ExtXStart`] tag with the given `precise` flag.
     ///
     /// # Panic
     /// Panics if the time_offset value is infinite.

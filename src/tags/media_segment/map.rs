@@ -7,7 +7,7 @@ use crate::utils::{quote, tag, unquote};
 use crate::Error;
 
 /// # [4.4.2.5. EXT-X-MAP]
-/// The [ExtXMap] tag specifies how to obtain the Media Initialization
+/// The [`ExtXMap`] tag specifies how to obtain the Media Initialization
 /// Section, required to parse the applicable [Media Segment]s.
 ///
 /// Its format is:
@@ -27,7 +27,7 @@ pub struct ExtXMap {
 impl ExtXMap {
     pub(crate) const PREFIX: &'static str = "#EXT-X-MAP:";
 
-    /// Makes a new `ExtXMap` tag.
+    /// Makes a new [`ExtXMap`] tag.
     pub fn new<T: ToString>(uri: T) -> Self {
         ExtXMap {
             uri: uri.to_string(),
@@ -35,7 +35,7 @@ impl ExtXMap {
         }
     }
 
-    /// Makes a new `ExtXMap` tag with the given range.
+    /// Makes a new [`ExtXMap`] tag with the given range.
     pub fn with_range<T: ToString>(uri: T, range: ByteRange) -> Self {
         ExtXMap {
             uri: uri.to_string(),
@@ -43,7 +43,8 @@ impl ExtXMap {
         }
     }
 
-    /// Returns the URI that identifies a resource that contains the media initialization section.
+    /// Returns the `URI` that identifies a resource,
+    /// that contains the media initialization section.
     pub const fn uri(&self) -> &String {
         &self.uri
     }

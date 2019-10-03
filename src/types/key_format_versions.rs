@@ -8,9 +8,9 @@ use crate::Error;
 
 /// A list of [usize], that can be used to indicate which version(s)
 /// this instance complies with, if more than one version of a particular
-/// [KeyFormat] is defined.
+/// [`KeyFormat`] is defined.
 ///
-/// [KeyFormat]: crate::types::KeyFormat
+/// [`KeyFormat`]: crate::types::KeyFormat
 #[derive(Clone, Eq, PartialEq, Ord, PartialOrd, Hash, Debug)]
 pub struct KeyFormatVersions(Vec<usize>);
 
@@ -21,12 +21,12 @@ impl Default for KeyFormatVersions {
 }
 
 impl KeyFormatVersions {
-    /// Makes a new [KeyFormatVersions].
+    /// Makes a new [`KeyFormatVersions`].
     pub fn new() -> Self {
         Self::default()
     }
 
-    /// Add a value to the [KeyFormatVersions].
+    /// Add a value to the [`KeyFormatVersions`].
     pub fn push(&mut self, value: usize) {
         if self.is_default() {
             self.0 = vec![value];
@@ -35,7 +35,7 @@ impl KeyFormatVersions {
         }
     }
 
-    /// Returns `true`, if [KeyFormatVersions] has the default value of `vec![1]`.
+    /// Returns `true`, if [`KeyFormatVersions`] has the default value of `vec![1]`.
     pub fn is_default(&self) -> bool {
         self.0 == vec![1] && self.0.len() == 1 || self.0.is_empty()
     }

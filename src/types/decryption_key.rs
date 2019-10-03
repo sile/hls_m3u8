@@ -13,10 +13,10 @@ use crate::Error;
 
 #[derive(Builder, Debug, Clone, PartialEq, Eq, Hash)]
 #[builder(setter(into), build_fn(validate = "Self::validate"))]
-/// [DecryptionKey] contains data, that is shared between [ExtXSessionKey] and [ExtXKey].
+/// [`DecryptionKey`] contains data, that is shared between [`ExtXSessionKey`] and [`ExtXKey`].
 ///
-/// [ExtXSessionKey]: crate::tags::ExtXSessionKey
-/// [ExtXKey]: crate::tags::ExtXKey
+/// [`ExtXSessionKey`]: crate::tags::ExtXSessionKey
+/// [`ExtXKey`]: crate::tags::ExtXKey
 pub struct DecryptionKey {
     /// The [EncryptionMethod].
     pub(crate) method: EncryptionMethod,

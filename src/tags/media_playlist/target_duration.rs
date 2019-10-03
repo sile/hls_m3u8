@@ -7,39 +7,52 @@ use crate::utils::tag;
 use crate::Error;
 
 /// # [4.4.3.1. EXT-X-TARGETDURATION]
-/// The [ExtXTargetDuration] tag specifies the maximum [Media Segment]
+/// The [`ExtXTargetDuration`] tag specifies the maximum [`Media Segment`]
 /// duration.
 ///
-/// Its format is:
-/// ```text
-/// #EXT-X-TARGETDURATION:<s>
-/// ```
-/// where `s` is the target [Duration] in seconds.
-///
-/// [Media Segment]: crate::MediaSegment
+/// [`Media Segment`]: crate::MediaSegment
 /// [4.4.3.1. EXT-X-TARGETDURATION]:
-/// https://tools.ietf.org/html/draft-pantos-hls-rfc8216bis-04#section-4.4.3.1
+/// https://tools.ietf.org/html/draft-pantos-hls-rfc8216bis-05#section-4.4.3.1
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Default)]
 pub struct ExtXTargetDuration(Duration);
 
 impl ExtXTargetDuration {
     pub(crate) const PREFIX: &'static str = "#EXT-X-TARGETDURATION:";
 
-    /// Makes a new [ExtXTargetduration] tag.
+    /// Makes a new [`ExtXTargetDuration`] tag.
+    ///
+    /// # Example
+    /// ```
+    /// # use hls_m3u8::tags::ExtXTargetDuration;
+    /// use std::time::Duration;
+    ///
+    /// let target_duration = ExtXTargetDuration::new(Duration::from_secs(20));
+    /// ```
     ///
     /// # Note
-    /// The nanoseconds part of the [Duration] will be discarded.
+    /// The nanoseconds part of the [`Duration`] will be discarded.
     pub const fn new(duration: Duration) -> Self {
         // TOOD: round instead of discarding?
         Self(Duration::from_secs(duration.as_secs()))
     }
 
-    /// Returns the maximum media segment duration in the associated playlist.
+    /// Returns the maximum media segment duration.
+    ///
+    /// # Example
+    /// ```
+    /// # use hls_m3u8::tags::ExtXTargetDuration;
+    /// use std::time::Duration;
+    ///
+    /// let target_duration = ExtXTargetDuration::new(Duration::from_nanos(2_000_000_000));
+    ///
+    /// assert_eq!(target_duration.duration(), Duration::from_secs(2));
+    /// ```
     pub const fn duration(&self) -> Duration {
         self.0
     }
 }
 
+/// This tag requires [`ProtocolVersion::V1`].
 impl RequiredVersion for ExtXTargetDuration {
     fn required_version(&self) -> ProtocolVersion {
         ProtocolVersion::V1

@@ -28,7 +28,7 @@ pub trait RequiredVersion {
 }
 
 /// # [7. Protocol Version Compatibility]
-/// The [ProtocolVersion] specifies, which m3u8 revision is required, to parse
+/// The [`ProtocolVersion`] specifies, which m3u8 revision is required, to parse
 /// a certain tag correctly.
 ///
 /// [7. Protocol Version Compatibility]:
@@ -46,7 +46,8 @@ pub enum ProtocolVersion {
 }
 
 impl ProtocolVersion {
-    /// Returns the newest [ProtocolVersion], that is supported by this library.
+    /// Returns the newest [`ProtocolVersion`], that is supported by
+    /// this library.
     ///
     /// # Example
     /// ```

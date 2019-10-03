@@ -17,7 +17,7 @@ pub(crate) struct DecimalResolution {
 }
 
 impl DecimalResolution {
-    /// Creates a new DecimalResolution.
+    /// Creates a new [`DecimalResolution`].
     pub const fn new(width: usize, height: usize) -> Self {
         Self { width, height }
     }
@@ -45,7 +45,7 @@ impl DecimalResolution {
     }
 }
 
-/// [DecimalResolution] can be constructed from a tuple; `(width, height)`.
+/// [`DecimalResolution`] can be constructed from a tuple; `(width, height)`.
 impl From<(usize, usize)> for DecimalResolution {
     fn from(value: (usize, usize)) -> Self {
         DecimalResolution::new(value.0, value.1)

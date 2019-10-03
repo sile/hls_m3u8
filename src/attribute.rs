@@ -90,11 +90,11 @@ fn split(value: &str, terminator: char) -> Vec<String> {
                 temp_string.push(c);
             }
             k if (k == terminator) => {
-                if !inside_quotes {
+                if inside_quotes {
+                    temp_string.push(c);
+                } else {
                     result.push(temp_string);
                     temp_string = String::new();
-                } else {
-                    temp_string.push(c);
                 }
             }
             _ => {

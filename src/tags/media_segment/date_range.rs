@@ -10,7 +10,7 @@ use crate::types::{ProtocolVersion, RequiredVersion};
 use crate::utils::{quote, tag, unquote};
 use crate::Error;
 
-/// [4.3.2.7. EXT-X-DATERANGE]
+/// # [4.3.2.7. EXT-X-DATERANGE]
 ///
 /// [4.3.2.7. EXT-X-DATERANGE]: https://tools.ietf.org/html/rfc8216#section-4.3.2.7
 ///
@@ -18,7 +18,7 @@ use crate::Error;
 #[allow(missing_docs)]
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub struct ExtXDateRange {
-    /// A string that uniquely identifies a [ExtXDateRange] in the Playlist.
+    /// A string that uniquely identifies a [`ExtXDateRange`] in the Playlist.
     /// This attribute is required.
     id: String,
     /// A client-defined string that specifies some set of attributes and their associated value
@@ -64,7 +64,7 @@ pub struct ExtXDateRange {
 impl ExtXDateRange {
     pub(crate) const PREFIX: &'static str = "#EXT-X-DATERANGE:";
 
-    /// Makes a new [ExtXDateRange] tag.
+    /// Makes a new [`ExtXDateRange`] tag.
     ///
     /// # Example
     /// ```
@@ -74,7 +74,7 @@ impl ExtXDateRange {
     ///
     /// const HOURS_IN_SECS: i32 = 3600; // 1 hour = 3600 seconds
     ///
-    /// ExtXDateRange::new("id", FixedOffset::east(8 * HOURS_IN_SECS)
+    /// let date_range = ExtXDateRange::new("id", FixedOffset::east(8 * HOURS_IN_SECS)
     ///                    .ymd(2010, 2, 19)
     ///                    .and_hms_milli(14, 54, 23, 31));
     /// ```
@@ -95,6 +95,22 @@ impl ExtXDateRange {
     }
 }
 
+/// This tag requires [`ProtocolVersion::V1`].
+///
+/// # Example
+/// ```
+/// # use hls_m3u8::tags::ExtXDateRange;
+/// use hls_m3u8::types::{RequiredVersion, ProtocolVersion};
+/// use chrono::{DateTime, FixedOffset};
+/// use chrono::offset::TimeZone;
+///
+/// const HOURS_IN_SECS: i32 = 3600; // 1 hour = 3600 seconds
+///
+/// let date_range = ExtXDateRange::new("id", FixedOffset::east(8 * HOURS_IN_SECS)
+///                    .ymd(2010, 2, 19)
+///                    .and_hms_milli(14, 54, 23, 31));
+/// assert_eq!(date_range.required_version(), ProtocolVersion::V1);
+/// ```
 impl RequiredVersion for ExtXDateRange {
     fn required_version(&self) -> ProtocolVersion {
         ProtocolVersion::V1

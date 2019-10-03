@@ -15,7 +15,7 @@ pub struct ByteRange {
 }
 
 impl ByteRange {
-    /// Creates a new [ByteRange].
+    /// Creates a new [`ByteRange`].
     ///
     /// # Example
     /// ```

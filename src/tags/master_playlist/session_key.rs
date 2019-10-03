@@ -7,9 +7,9 @@ use crate::utils::tag;
 use crate::Error;
 
 /// # [4.3.4.5. EXT-X-SESSION-KEY]
-/// The [ExtXSessionKey] tag allows encryption keys from [Media Playlist]s
-/// to be specified in a [Master Playlist]. This allows the client to
-/// preload these keys without having to read the [Media Playlist]s
+/// The [`ExtXSessionKey`] tag allows encryption keys from [`Media Playlist`]s
+/// to be specified in a [`Master Playlist`]. This allows the client to
+/// preload these keys without having to read the [`Media Playlist`]s
 /// first.
 ///
 /// Its format is:
@@ -17,8 +17,8 @@ use crate::Error;
 /// #EXT-X-SESSION-KEY:<attribute-list>
 /// ```
 ///
-/// [Media Playlist]: crate::MediaPlaylist
-/// [Master Playlist]: crate::MasterPlaylist
+/// [`Media Playlist`]: crate::MediaPlaylist
+/// [`Master Playlist`]: crate::MasterPlaylist
 /// [4.3.4.5. EXT-X-SESSION-KEY]: https://tools.ietf.org/html/rfc8216#section-4.3.4.5
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub struct ExtXSessionKey(DecryptionKey);
@@ -26,11 +26,13 @@ pub struct ExtXSessionKey(DecryptionKey);
 impl ExtXSessionKey {
     pub(crate) const PREFIX: &'static str = "#EXT-X-SESSION-KEY:";
 
-    /// Makes a new [ExtXSessionKey] tag.
+    /// Makes a new [`ExtXSessionKey`] tag.
     ///
     /// # Panic
-    /// An [ExtXSessionKey] should only be used, if the segments of the stream are encrypted.
-    /// Therefore this function will panic, if the `method` is [EncryptionMethod::None].
+    /// An [`ExtXSessionKey`] should only be used,
+    /// if the segments of the stream are encrypted.
+    /// Therefore this function will panic,
+    /// if the `method` is [`EncryptionMethod::None`].
     ///
     /// # Example
     /// ```
