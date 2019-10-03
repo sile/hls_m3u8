@@ -58,9 +58,7 @@ impl ExtXVersion {
     ///
     /// let version = ExtXVersion::new(ProtocolVersion::V2);
     /// ```
-    pub const fn new(version: ProtocolVersion) -> Self {
-        Self(version)
-    }
+    pub const fn new(version: ProtocolVersion) -> Self { Self(version) }
 
     /// Returns the [`ProtocolVersion`] of the playlist, containing this tag.
     ///
@@ -74,34 +72,24 @@ impl ExtXVersion {
     ///     ProtocolVersion::V6
     /// );
     /// ```
-    pub const fn version(self) -> ProtocolVersion {
-        self.0
-    }
+    pub const fn version(self) -> ProtocolVersion { self.0 }
 }
 
 /// This tag requires [`ProtocolVersion::V1`].
 impl RequiredVersion for ExtXVersion {
-    fn required_version(&self) -> ProtocolVersion {
-        ProtocolVersion::V1
-    }
+    fn required_version(&self) -> ProtocolVersion { ProtocolVersion::V1 }
 }
 
 impl fmt::Display for ExtXVersion {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(f, "{}{}", Self::PREFIX, self.0)
-    }
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result { write!(f, "{}{}", Self::PREFIX, self.0) }
 }
 
 impl Default for ExtXVersion {
-    fn default() -> Self {
-        Self(ProtocolVersion::V1)
-    }
+    fn default() -> Self { Self(ProtocolVersion::V1) }
 }
 
 impl From<ProtocolVersion> for ExtXVersion {
-    fn from(value: ProtocolVersion) -> Self {
-        Self(value)
-    }
+    fn from(value: ProtocolVersion) -> Self { Self(value) }
 }
 
 impl FromStr for ExtXVersion {

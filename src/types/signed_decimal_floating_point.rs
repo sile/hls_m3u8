@@ -21,22 +21,16 @@ impl SignedDecimalFloatingPoint {
         Self(value)
     }
 
-    pub(crate) const fn from_f64_unchecked(value: f64) -> Self {
-        Self(value)
-    }
+    pub(crate) const fn from_f64_unchecked(value: f64) -> Self { Self(value) }
 
     /// Converts [DecimalFloatingPoint] to [f64].
-    pub const fn as_f64(self) -> f64 {
-        self.0
-    }
+    pub const fn as_f64(self) -> f64 { self.0 }
 }
 
 impl Deref for SignedDecimalFloatingPoint {
     type Target = f64;
 
-    fn deref(&self) -> &Self::Target {
-        &self.0
-    }
+    fn deref(&self) -> &Self::Target { &self.0 }
 }
 
 impl Eq for SignedDecimalFloatingPoint {}
@@ -82,9 +76,7 @@ mod tests {
 
     #[test]
     #[should_panic]
-    fn test_new_panic() {
-        SignedDecimalFloatingPoint::new(::std::f64::INFINITY);
-    }
+    fn test_new_panic() { SignedDecimalFloatingPoint::new(::std::f64::INFINITY); }
 
     #[test]
     fn test_parser() {

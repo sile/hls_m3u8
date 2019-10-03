@@ -14,28 +14,21 @@ pub struct InitializationVector(pub [u8; 16]);
 
 impl InitializationVector {
     /// Converts the [InitializationVector] to a slice.
-    pub const fn to_slice(&self) -> [u8; 16] {
-        self.0
-    }
+    pub const fn to_slice(&self) -> [u8; 16] { self.0 }
 }
 
 impl From<[u8; 16]> for InitializationVector {
-    fn from(value: [u8; 16]) -> Self {
-        Self(value)
-    }
+    fn from(value: [u8; 16]) -> Self { Self(value) }
 }
 
 impl Deref for InitializationVector {
     type Target = [u8];
-    fn deref(&self) -> &Self::Target {
-        &self.0
-    }
+
+    fn deref(&self) -> &Self::Target { &self.0 }
 }
 
 impl AsRef<[u8]> for InitializationVector {
-    fn as_ref(&self) -> &[u8] {
-        &self.0
-    }
+    fn as_ref(&self) -> &[u8] { &self.0 }
 }
 
 impl fmt::Display for InitializationVector {

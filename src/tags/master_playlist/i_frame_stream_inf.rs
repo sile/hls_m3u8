@@ -51,9 +51,7 @@ impl ExtXIFrameStreamInf {
     /// ```
     ///
     /// [`media playlist`]: crate::MediaPlaylist
-    pub const fn uri(&self) -> &String {
-        &self.uri
-    }
+    pub const fn uri(&self) -> &String { &self.uri }
 
     /// Sets the `URI`, that identifies the associated [`media playlist`].
     ///
@@ -76,9 +74,7 @@ impl ExtXIFrameStreamInf {
 
 /// This tag requires [`ProtocolVersion::V1`].
 impl RequiredVersion for ExtXIFrameStreamInf {
-    fn required_version(&self) -> ProtocolVersion {
-        ProtocolVersion::V1
-    }
+    fn required_version(&self) -> ProtocolVersion { ProtocolVersion::V1 }
 }
 
 impl fmt::Display for ExtXIFrameStreamInf {
@@ -115,15 +111,11 @@ impl FromStr for ExtXIFrameStreamInf {
 impl Deref for ExtXIFrameStreamInf {
     type Target = StreamInf;
 
-    fn deref(&self) -> &Self::Target {
-        &self.stream_inf
-    }
+    fn deref(&self) -> &Self::Target { &self.stream_inf }
 }
 
 impl DerefMut for ExtXIFrameStreamInf {
-    fn deref_mut(&mut self) -> &mut Self::Target {
-        &mut self.stream_inf
-    }
+    fn deref_mut(&mut self) -> &mut Self::Target { &mut self.stream_inf }
 }
 
 #[cfg(test)]

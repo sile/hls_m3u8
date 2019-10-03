@@ -61,9 +61,7 @@ impl ExtXStart {
     /// let start = ExtXStart::new(20.123456);
     /// assert_eq!(start.time_offset(), 20.123456);
     /// ```
-    pub const fn time_offset(&self) -> f64 {
-        self.time_offset.as_f64()
-    }
+    pub const fn time_offset(&self) -> f64 { self.time_offset.as_f64() }
 
     /// Sets the time offset of the media segments in the playlist.
     ///
@@ -82,8 +80,8 @@ impl ExtXStart {
         self
     }
 
-    /// Returns whether clients should not render media stream whose presentation times are
-    /// prior to the specified time offset.
+    /// Returns whether clients should not render media stream whose
+    /// presentation times are prior to the specified time offset.
     ///
     /// # Example
     /// ```
@@ -91,9 +89,7 @@ impl ExtXStart {
     /// let start = ExtXStart::with_precise(20.123456, true);
     /// assert_eq!(start.precise(), true);
     /// ```
-    pub const fn precise(&self) -> bool {
-        self.precise
-    }
+    pub const fn precise(&self) -> bool { self.precise }
 
     /// Sets the `precise` flag.
     ///
@@ -114,9 +110,7 @@ impl ExtXStart {
 }
 
 impl RequiredVersion for ExtXStart {
-    fn required_version(&self) -> ProtocolVersion {
-        ProtocolVersion::V1
-    }
+    fn required_version(&self) -> ProtocolVersion { ProtocolVersion::V1 }
 }
 
 impl fmt::Display for ExtXStart {
@@ -145,7 +139,8 @@ impl FromStr for ExtXStart {
                 "PRECISE" => precise = (parse_yes_or_no(value))?,
                 _ => {
                     // [6.3.1. General Client Responsibilities]
-                    // > ignore any attribute/value pair with an unrecognized AttributeName.
+                    // > ignore any attribute/value pair with an unrecognized
+                    // AttributeName.
                 }
             }
         }

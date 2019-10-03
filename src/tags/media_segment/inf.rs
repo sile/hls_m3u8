@@ -70,14 +70,9 @@ impl ExtInf {
     ///
     /// let ext_inf = ExtInf::new(Duration::from_secs(5));
     ///
-    /// assert_eq!(
-    ///     ext_inf.duration(),
-    ///     Duration::from_secs(5)
-    /// );
+    /// assert_eq!(ext_inf.duration(), Duration::from_secs(5));
     /// ```
-    pub const fn duration(&self) -> Duration {
-        self.duration
-    }
+    pub const fn duration(&self) -> Duration { self.duration }
 
     /// Sets the duration of the associated media segment.
     ///
@@ -90,10 +85,7 @@ impl ExtInf {
     ///
     /// ext_inf.set_duration(Duration::from_secs(10));
     ///
-    /// assert_eq!(
-    ///     ext_inf.duration(),
-    ///     Duration::from_secs(10)
-    /// );
+    /// assert_eq!(ext_inf.duration(), Duration::from_secs(10));
     /// ```
     pub fn set_duration(&mut self, value: Duration) -> &mut Self {
         self.duration = value;
@@ -109,14 +101,9 @@ impl ExtInf {
     ///
     /// let ext_inf = ExtInf::with_title(Duration::from_secs(5), "title");
     ///
-    /// assert_eq!(
-    ///     ext_inf.title(),
-    ///     &Some("title".to_string())
-    /// );
+    /// assert_eq!(ext_inf.title(), &Some("title".to_string()));
     /// ```
-    pub const fn title(&self) -> &Option<String> {
-        &self.title
-    }
+    pub const fn title(&self) -> &Option<String> { &self.title }
 
     /// Sets the title of the associated media segment.
     ///
@@ -129,10 +116,7 @@ impl ExtInf {
     ///
     /// ext_inf.set_title(Some("better title"));
     ///
-    /// assert_eq!(
-    ///     ext_inf.title(),
-    ///     &Some("better title".to_string())
-    /// );
+    /// assert_eq!(ext_inf.title(), &Some("better title".to_string()));
     /// ```
     pub fn set_title<T: ToString>(&mut self, value: Option<T>) -> &mut Self {
         self.title = value.map(|v| v.to_string());
@@ -198,9 +182,7 @@ impl FromStr for ExtInf {
 }
 
 impl From<Duration> for ExtInf {
-    fn from(value: Duration) -> Self {
-        Self::new(value)
-    }
+    fn from(value: Duration) -> Self { Self::new(value) }
 }
 
 #[cfg(test)]

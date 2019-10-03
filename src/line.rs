@@ -9,9 +9,7 @@ use crate::Error;
 pub struct Lines(Vec<Line>);
 
 impl Lines {
-    pub fn new() -> Self {
-        Self::default()
-    }
+    pub fn new() -> Self { Self::default() }
 }
 
 impl FromStr for Lines {
@@ -65,26 +63,20 @@ impl FromStr for Lines {
 }
 
 impl IntoIterator for Lines {
-    type Item = Line;
     type IntoIter = ::std::vec::IntoIter<Line>;
+    type Item = Line;
 
-    fn into_iter(self) -> Self::IntoIter {
-        self.0.into_iter()
-    }
+    fn into_iter(self) -> Self::IntoIter { self.0.into_iter() }
 }
 
 impl Deref for Lines {
     type Target = Vec<Line>;
 
-    fn deref(&self) -> &Self::Target {
-        &self.0
-    }
+    fn deref(&self) -> &Self::Target { &self.0 }
 }
 
 impl DerefMut for Lines {
-    fn deref_mut(&mut self) -> &mut Self::Target {
-        &mut self.0
-    }
+    fn deref_mut(&mut self) -> &mut Self::Target { &mut self.0 }
 }
 
 #[derive(Debug, PartialEq, Eq)]

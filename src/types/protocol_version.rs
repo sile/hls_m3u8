@@ -54,9 +54,7 @@ impl ProtocolVersion {
     /// # use hls_m3u8::types::ProtocolVersion;
     /// assert_eq!(ProtocolVersion::latest(), ProtocolVersion::V7);
     /// ```
-    pub const fn latest() -> Self {
-        Self::V7
-    }
+    pub const fn latest() -> Self { Self::V7 }
 }
 
 impl fmt::Display for ProtocolVersion {
@@ -93,9 +91,7 @@ impl FromStr for ProtocolVersion {
 }
 
 impl Default for ProtocolVersion {
-    fn default() -> Self {
-        Self::V1
-    }
+    fn default() -> Self { Self::V1 }
 }
 
 #[cfg(test)]

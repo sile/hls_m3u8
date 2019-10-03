@@ -18,14 +18,10 @@ pub(crate) struct DecimalResolution {
 
 impl DecimalResolution {
     /// Creates a new [`DecimalResolution`].
-    pub const fn new(width: usize, height: usize) -> Self {
-        Self { width, height }
-    }
+    pub const fn new(width: usize, height: usize) -> Self { Self { width, height } }
 
     /// Horizontal pixel dimension.
-    pub const fn width(&self) -> usize {
-        self.width
-    }
+    pub const fn width(&self) -> usize { self.width }
 
     /// Sets Horizontal pixel dimension.
     pub fn set_width(&mut self, value: usize) -> &mut Self {
@@ -34,9 +30,7 @@ impl DecimalResolution {
     }
 
     /// Vertical pixel dimension.
-    pub const fn height(&self) -> usize {
-        self.height
-    }
+    pub const fn height(&self) -> usize { self.height }
 
     /// Sets Vertical pixel dimension.
     pub fn set_height(&mut self, value: usize) -> &mut Self {
@@ -47,9 +41,7 @@ impl DecimalResolution {
 
 /// [`DecimalResolution`] can be constructed from a tuple; `(width, height)`.
 impl From<(usize, usize)> for DecimalResolution {
-    fn from(value: (usize, usize)) -> Self {
-        DecimalResolution::new(value.0, value.1)
-    }
+    fn from(value: (usize, usize)) -> Self { DecimalResolution::new(value.0, value.1) }
 }
 
 impl FromStr for DecimalResolution {

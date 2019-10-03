@@ -39,10 +39,7 @@ impl ExtXSessionKey {
     /// # use hls_m3u8::tags::ExtXSessionKey;
     /// use hls_m3u8::types::EncryptionMethod;
     ///
-    /// let session_key = ExtXSessionKey::new(
-    ///     EncryptionMethod::Aes128,
-    ///     "https://www.example.com/"
-    /// );
+    /// let session_key = ExtXSessionKey::new(EncryptionMethod::Aes128, "https://www.example.com/");
     /// ```
     pub fn new<T: ToString>(method: EncryptionMethod, uri: T) -> Self {
         if method == EncryptionMethod::None {
@@ -54,9 +51,7 @@ impl ExtXSessionKey {
 }
 
 impl RequiredVersion for ExtXSessionKey {
-    fn required_version(&self) -> ProtocolVersion {
-        self.0.required_version()
-    }
+    fn required_version(&self) -> ProtocolVersion { self.0.required_version() }
 }
 
 impl fmt::Display for ExtXSessionKey {
@@ -80,15 +75,11 @@ impl FromStr for ExtXSessionKey {
 impl Deref for ExtXSessionKey {
     type Target = DecryptionKey;
 
-    fn deref(&self) -> &Self::Target {
-        &self.0
-    }
+    fn deref(&self) -> &Self::Target { &self.0 }
 }
 
 impl DerefMut for ExtXSessionKey {
-    fn deref_mut(&mut self) -> &mut Self::Target {
-        &mut self.0
-    }
+    fn deref_mut(&mut self) -> &mut Self::Target { &mut self.0 }
 }
 
 #[cfg(test)]
@@ -171,9 +162,7 @@ mod test {
     #[should_panic]
     // ExtXSessionKey::new should panic, if the provided
     // EncryptionMethod is None!
-    fn test_new_panic() {
-        ExtXSessionKey::new(EncryptionMethod::None, "");
-    }
+    fn test_new_panic() { ExtXSessionKey::new(EncryptionMethod::None, ""); }
 
     #[test]
     #[should_panic]

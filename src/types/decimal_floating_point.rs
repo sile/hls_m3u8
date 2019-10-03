@@ -20,7 +20,8 @@ impl DecimalFloatingPoint {
     /// # Errors
     ///
     /// The given value must have a positive sign and be finite,
-    /// otherwise this function will return an error that has the kind `ErrorKind::InvalidInput`.
+    /// otherwise this function will return an error that has the kind
+    /// `ErrorKind::InvalidInput`.
     pub fn new(value: f64) -> crate::Result<Self> {
         if value.is_sign_negative() || value.is_infinite() {
             return Err(Error::invalid_input());
@@ -28,34 +29,26 @@ impl DecimalFloatingPoint {
         Ok(Self(value))
     }
 
-    pub(crate) const fn from_f64_unchecked(value: f64) -> Self {
-        Self(value)
-    }
+    pub(crate) const fn from_f64_unchecked(value: f64) -> Self { Self(value) }
 
     /// Converts [`DecimalFloatingPoint`] to [`f64`].
-    pub const fn as_f64(self) -> f64 {
-        self.0
-    }
+    pub const fn as_f64(self) -> f64 { self.0 }
 }
 
 impl Eq for DecimalFloatingPoint {}
 
-// this trait is implemented manually, so it doesn't construct a [`DecimalFloatingPoint`],
-// with a negative value.
+// this trait is implemented manually, so it doesn't construct a
+// [`DecimalFloatingPoint`], with a negative value.
 impl FromStr for DecimalFloatingPoint {
     type Err = Error;
 
-    fn from_str(input: &str) -> Result<Self, Self::Err> {
-        Self::new(input.parse()?)
-    }
+    fn from_str(input: &str) -> Result<Self, Self::Err> { Self::new(input.parse()?) }
 }
 
 impl Deref for DecimalFloatingPoint {
     type Target = f64;
 
-    fn deref(&self) -> &Self::Target {
-        &self.0
-    }
+    fn deref(&self) -> &Self::Target { &self.0 }
 }
 
 impl From<f64> for DecimalFloatingPoint {
@@ -72,9 +65,7 @@ impl From<f64> for DecimalFloatingPoint {
 }
 
 impl From<f32> for DecimalFloatingPoint {
-    fn from(value: f32) -> Self {
-        (value as f64).into()
-    }
+    fn from(value: f32) -> Self { (value as f64).into() }
 }
 
 #[cfg(test)]

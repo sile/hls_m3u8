@@ -47,9 +47,7 @@ impl StreamInf {
     /// let stream = StreamInf::new(20);
     /// assert_eq!(stream.bandwidth(), 20);
     /// ```
-    pub const fn bandwidth(&self) -> u64 {
-        self.bandwidth
-    }
+    pub const fn bandwidth(&self) -> u64 { self.bandwidth }
 
     /// Sets the peak segment bit rate of the variant stream.
     ///
@@ -76,9 +74,7 @@ impl StreamInf {
     /// let stream = StreamInf::new(20);
     /// assert_eq!(stream.video(), &None);
     /// ```
-    pub const fn video(&self) -> &Option<String> {
-        &self.video
-    }
+    pub const fn video(&self) -> &Option<String> { &self.video }
 
     /// Sets the group identifier for the video in the variant stream.
     ///
@@ -105,9 +101,7 @@ impl StreamInf {
     /// let stream = StreamInf::new(20);
     /// assert_eq!(stream.average_bandwidth(), None);
     /// ```
-    pub const fn average_bandwidth(&self) -> Option<u64> {
-        self.average_bandwidth
-    }
+    pub const fn average_bandwidth(&self) -> Option<u64> { self.average_bandwidth }
 
     /// Sets the average segment bit rate of the variant stream.
     ///
@@ -125,7 +119,8 @@ impl StreamInf {
         self
     }
 
-    /// A string that represents the list of codec types contained the variant stream.
+    /// A string that represents the list of codec types contained the variant
+    /// stream.
     ///
     /// # Examples
     /// ```
@@ -134,11 +129,10 @@ impl StreamInf {
     /// let stream = StreamInf::new(20);
     /// assert_eq!(stream.codecs(), &None);
     /// ```
-    pub const fn codecs(&self) -> &Option<String> {
-        &self.codecs
-    }
+    pub const fn codecs(&self) -> &Option<String> { &self.codecs }
 
-    /// A string that represents the list of codec types contained the variant stream.
+    /// A string that represents the list of codec types contained the variant
+    /// stream.
     ///
     /// # Examples
     /// ```
@@ -203,9 +197,7 @@ impl StreamInf {
     /// let stream = StreamInf::new(20);
     /// assert_eq!(stream.hdcp_level(), None);
     /// ```
-    pub const fn hdcp_level(&self) -> Option<HdcpLevel> {
-        self.hdcp_level
-    }
+    pub const fn hdcp_level(&self) -> Option<HdcpLevel> { self.hdcp_level }
 
     /// The HDCP level of the variant stream.
     ///
@@ -268,7 +260,8 @@ impl FromStr for StreamInf {
                 "VIDEO" => video = Some(unquote(value)),
                 _ => {
                     // [6.3.1. General Client Responsibilities]
-                    // > ignore any attribute/value pair with an unrecognized AttributeName.
+                    // > ignore any attribute/value pair with an unrecognized
+                    // AttributeName.
                 }
             }
         }

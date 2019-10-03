@@ -22,9 +22,7 @@ impl ByteRange {
     /// # use hls_m3u8::types::ByteRange;
     /// ByteRange::new(22, Some(12));
     /// ```
-    pub const fn new(length: usize, start: Option<usize>) -> Self {
-        Self { length, start }
-    }
+    pub const fn new(length: usize, start: Option<usize>) -> Self { Self { length, start } }
 
     /// Returns the length of the range.
     ///
@@ -34,9 +32,7 @@ impl ByteRange {
     /// #
     /// assert_eq!(ByteRange::new(20, Some(3)).length(), 20);
     /// ```
-    pub const fn length(&self) -> usize {
-        self.length
-    }
+    pub const fn length(&self) -> usize { self.length }
 
     /// Sets the length of the range.
     ///
@@ -63,9 +59,7 @@ impl ByteRange {
     /// #
     /// assert_eq!(ByteRange::new(20, Some(3)).start(), Some(3));
     /// ```
-    pub const fn start(&self) -> Option<usize> {
-        self.start
-    }
+    pub const fn start(&self) -> Option<usize> { self.start }
 
     /// Sets the start of the range.
     ///

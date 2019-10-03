@@ -11,8 +11,8 @@ use crate::Error;
 /// present in any [`MediaSegment`] in the rendition. For example, an
 /// `AC-3 5.1` rendition would have a `CHANNELS="6"` attribute.
 ///
-/// The second parameter identifies the encoding of object-based audio used by the
-/// rendition. This parameter is a comma-separated list of Audio
+/// The second parameter identifies the encoding of object-based audio used by
+/// the rendition. This parameter is a comma-separated list of Audio
 /// Object Coding Identifiers. It is optional. An Audio Object
 /// Coding Identifier is a string containing characters from the set
 /// `[A..Z]`, `[0..9]`, and `'-'`.  They are codec-specific. A parameter
@@ -25,7 +25,10 @@ use crate::Error;
 /// # use hls_m3u8::types::Channels;
 /// let mut channels = Channels::new(6);
 ///
-/// assert_eq!(format!("CHANNELS=\"{}\"", channels), "CHANNELS=\"6\"".to_string());
+/// assert_eq!(
+///     format!("CHANNELS=\"{}\"", channels),
+///     "CHANNELS=\"6\"".to_string()
+/// );
 /// ```
 ///
 /// # Note
@@ -64,9 +67,7 @@ impl Channels {
     ///
     /// assert_eq!(channels.first_parameter(), 6);
     /// ```
-    pub const fn first_parameter(&self) -> u64 {
-        self.first_parameter
-    }
+    pub const fn first_parameter(&self) -> u64 { self.first_parameter }
 
     /// Sets the first parameter.
     ///
@@ -91,15 +92,16 @@ impl Channels {
     /// let mut channels = Channels::new(3);
     /// # assert_eq!(channels.second_parameter(), &None);
     ///
-    /// channels.set_second_parameter(Some(vec!["AAC","MP3"]));
-    /// assert_eq!(channels.second_parameter(), &Some(vec!["AAC".to_string(),"MP3".to_string()]))
+    /// channels.set_second_parameter(Some(vec!["AAC", "MP3"]));
+    /// assert_eq!(
+    ///     channels.second_parameter(),
+    ///     &Some(vec!["AAC".to_string(), "MP3".to_string()])
+    /// )
     /// ```
     ///
     /// # Note
     /// Currently there is no use for this parameter.
-    pub const fn second_parameter(&self) -> &Option<Vec<String>> {
-        &self.second_parameter
-    }
+    pub const fn second_parameter(&self) -> &Option<Vec<String>> { &self.second_parameter }
 
     /// Sets the second parameter.
     ///
@@ -109,8 +111,11 @@ impl Channels {
     /// let mut channels = Channels::new(3);
     /// # assert_eq!(channels.second_parameter(), &None);
     ///
-    /// channels.set_second_parameter(Some(vec!["AAC","MP3"]));
-    /// assert_eq!(channels.second_parameter(), &Some(vec!["AAC".to_string(),"MP3".to_string()]))
+    /// channels.set_second_parameter(Some(vec!["AAC", "MP3"]));
+    /// assert_eq!(
+    ///     channels.second_parameter(),
+    ///     &Some(vec!["AAC".to_string(), "MP3".to_string()])
+    /// )
     /// ```
     ///
     /// # Note

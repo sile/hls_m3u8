@@ -21,14 +21,15 @@ pub struct ExtXDateRange {
     /// A string that uniquely identifies a [`ExtXDateRange`] in the Playlist.
     /// This attribute is required.
     id: String,
-    /// A client-defined string that specifies some set of attributes and their associated value
-    /// semantics. All Date Ranges with the same CLASS attribute value MUST adhere to these
-    /// semantics. This attribute is OPTIONAL.
+    /// A client-defined string that specifies some set of attributes and their
+    /// associated value semantics. All Date Ranges with the same CLASS
+    /// attribute value MUST adhere to these semantics. This attribute is
+    /// OPTIONAL.
     class: Option<String>,
     /// The date at which the Date Range begins. This attribute is REQUIRED.
     start_date: DateTime<FixedOffset>,
-    /// The date at which the Date Range ends. It MUST be equal to or later than the value of the
-    /// START-DATE attribute.  This attribute is OPTIONAL.
+    /// The date at which the Date Range ends. It MUST be equal to or later than
+    /// the value of the START-DATE attribute.  This attribute is OPTIONAL.
     end_date: Option<DateTime<FixedOffset>>,
     /// The duration of the Date Range. It MUST NOT be negative. A single
     /// instant in time (e.g., crossing a finish line) SHOULD be
@@ -45,11 +46,11 @@ pub struct ExtXDateRange {
     scte35_out: Option<String>,
     ///
     scte35_in: Option<String>,
-    /// This attribute indicates that the end of the range containing it is equal to the
-    /// START-DATE of its Following Range. The Following Range is the
-    /// Date Range of the same CLASS, that has the earliest START-DATE
-    /// after the START-DATE of the range in question. This attribute is
-    /// OPTIONAL.
+    /// This attribute indicates that the end of the range containing it is
+    /// equal to the START-DATE of its Following Range. The Following Range
+    /// is the Date Range of the same CLASS, that has the earliest
+    /// START-DATE after the START-DATE of the range in question. This
+    /// attribute is OPTIONAL.
     end_on_next: bool,
     /// The "X-" prefix defines a namespace reserved for client-defined
     /// attributes. The client-attribute MUST be a legal AttributeName.
@@ -69,14 +70,17 @@ impl ExtXDateRange {
     /// # Example
     /// ```
     /// # use hls_m3u8::tags::ExtXDateRange;
-    /// use chrono::{DateTime, FixedOffset};
     /// use chrono::offset::TimeZone;
+    /// use chrono::{DateTime, FixedOffset};
     ///
     /// const HOURS_IN_SECS: i32 = 3600; // 1 hour = 3600 seconds
     ///
-    /// let date_range = ExtXDateRange::new("id", FixedOffset::east(8 * HOURS_IN_SECS)
-    ///                    .ymd(2010, 2, 19)
-    ///                    .and_hms_milli(14, 54, 23, 31));
+    /// let date_range = ExtXDateRange::new(
+    ///     "id",
+    ///     FixedOffset::east(8 * HOURS_IN_SECS)
+    ///         .ymd(2010, 2, 19)
+    ///         .and_hms_milli(14, 54, 23, 31),
+    /// );
     /// ```
     pub fn new<T: ToString>(id: T, start_date: DateTime<FixedOffset>) -> Self {
         Self {
@@ -100,21 +104,22 @@ impl ExtXDateRange {
 /// # Example
 /// ```
 /// # use hls_m3u8::tags::ExtXDateRange;
-/// use hls_m3u8::types::{RequiredVersion, ProtocolVersion};
-/// use chrono::{DateTime, FixedOffset};
 /// use chrono::offset::TimeZone;
+/// use chrono::{DateTime, FixedOffset};
+/// use hls_m3u8::types::{ProtocolVersion, RequiredVersion};
 ///
 /// const HOURS_IN_SECS: i32 = 3600; // 1 hour = 3600 seconds
 ///
-/// let date_range = ExtXDateRange::new("id", FixedOffset::east(8 * HOURS_IN_SECS)
-///                    .ymd(2010, 2, 19)
-///                    .and_hms_milli(14, 54, 23, 31));
+/// let date_range = ExtXDateRange::new(
+///     "id",
+///     FixedOffset::east(8 * HOURS_IN_SECS)
+///         .ymd(2010, 2, 19)
+///         .and_hms_milli(14, 54, 23, 31),
+/// );
 /// assert_eq!(date_range.required_version(), ProtocolVersion::V1);
 /// ```
 impl RequiredVersion for ExtXDateRange {
-    fn required_version(&self) -> ProtocolVersion {
-        ProtocolVersion::V1
-    }
+    fn required_version(&self) -> ProtocolVersion { ProtocolVersion::V1 }
 }
 
 impl fmt::Display for ExtXDateRange {
@@ -198,7 +203,8 @@ impl FromStr for ExtXDateRange {
                         client_attributes.insert(key.split_at(2).1.to_owned(), value.to_owned());
                     } else {
                         // [6.3.1. General Client Responsibilities]
-                        // > ignore any attribute/value pair with an unrecognized AttributeName.
+                        // > ignore any attribute/value pair with an
+                        // unrecognized AttributeName.
                     }
                 }
             }

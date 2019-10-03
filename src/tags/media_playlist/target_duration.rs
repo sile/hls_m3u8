@@ -47,16 +47,12 @@ impl ExtXTargetDuration {
     ///
     /// assert_eq!(target_duration.duration(), Duration::from_secs(2));
     /// ```
-    pub const fn duration(&self) -> Duration {
-        self.0
-    }
+    pub const fn duration(&self) -> Duration { self.0 }
 }
 
 /// This tag requires [`ProtocolVersion::V1`].
 impl RequiredVersion for ExtXTargetDuration {
-    fn required_version(&self) -> ProtocolVersion {
-        ProtocolVersion::V1
-    }
+    fn required_version(&self) -> ProtocolVersion { ProtocolVersion::V1 }
 }
 
 impl fmt::Display for ExtXTargetDuration {

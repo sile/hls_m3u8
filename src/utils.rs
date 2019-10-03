@@ -47,17 +47,17 @@ pub(crate) fn unquote<T: ToString>(value: T) -> String {
 
 /// Puts a string inside quotes.
 pub(crate) fn quote<T: ToString>(value: T) -> String {
-    // the replace is for the case, that quote is called on an already quoted string, which could
-    // cause problems!
+    // the replace is for the case, that quote is called on an already quoted
+    // string, which could cause problems!
     format!("\"{}\"", value.to_string().replace("\"", ""))
 }
 
-/// Checks, if the given tag is at the start of the input. If this is the case, it will remove it
-/// and return the rest of the input.
+/// Checks, if the given tag is at the start of the input. If this is the case,
+/// it will remove it and return the rest of the input.
 ///
 /// # Error
-/// This function will return `Error::MissingTag`, if the input doesn't start with the tag, that
-/// has been passed to this function.
+/// This function will return `Error::MissingTag`, if the input doesn't start
+/// with the tag, that has been passed to this function.
 pub(crate) fn tag<T>(input: &str, tag: T) -> crate::Result<&str>
 where
     T: AsRef<str>,

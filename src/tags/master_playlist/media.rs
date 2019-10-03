@@ -35,13 +35,15 @@ pub struct ExtXMedia {
     /// Sets the `URI` that identifies the [`Media Playlist`].
     ///
     /// # Note
-    /// - This attribute is **required**, if the [`MediaType`] is [`MediaType::Subtitles`].
+    /// - This attribute is **required**, if the [`MediaType`] is
+    ///   [`MediaType::Subtitles`].
     /// - This attribute is **not allowed**, if the [`MediaType`] is
     /// [`MediaType::ClosedCaptions`].
     ///
     /// [`Media Playlist`]: crate::MediaPlaylist
     uri: Option<String>,
-    /// Sets the identifier, that specifies the group to which the rendition belongs.
+    /// Sets the identifier, that specifies the group to which the rendition
+    /// belongs.
     ///
     /// # Note
     /// This attribute is **required**.
@@ -68,7 +70,8 @@ pub struct ExtXMedia {
     /// # Note
     /// This attribute is **required**.
     ///
-    /// If the [`language`] attribute is present, this attribute should be in that language.
+    /// If the [`language`] attribute is present, this attribute should be in
+    /// that language.
     ///
     /// [`language`]: #method.language
     name: String,
@@ -76,19 +79,22 @@ pub struct ExtXMedia {
     /// Sets the value of the `default` flag.
     ///
     /// # Note
-    /// This attribute is **optional**, its absence indicates an implicit value of `false`.
+    /// This attribute is **optional**, its absence indicates an implicit value
+    /// of `false`.
     is_default: bool,
     #[builder(default)]
     /// Sets the value of the `autoselect` flag.
     ///
     /// # Note
-    /// This attribute is **optional**, its absence indicates an implicit value of `false`.
+    /// This attribute is **optional**, its absence indicates an implicit value
+    /// of `false`.
     is_autoselect: bool,
     #[builder(default)]
     /// Sets the value of the `forced` flag.
     is_forced: bool,
     #[builder(setter(strip_option, into), default)]
-    /// Sets the identifier that specifies a rendition within the segments in the media playlist.
+    /// Sets the identifier that specifies a rendition within the segments in
+    /// the media playlist.
     instream_id: Option<InStreamId>,
     #[builder(setter(strip_option, into), default)]
     /// Sets the string that represents uniform type identifiers (UTI).
@@ -156,9 +162,7 @@ impl ExtXMedia {
     }
 
     /// Returns a builder for [`ExtXMedia`].
-    pub fn builder() -> ExtXMediaBuilder {
-        ExtXMediaBuilder::default()
-    }
+    pub fn builder() -> ExtXMediaBuilder { ExtXMediaBuilder::default() }
 
     /// Returns the type of the media, associated with this tag.
     ///
@@ -172,9 +176,7 @@ impl ExtXMedia {
     ///     MediaType::Audio
     /// );
     /// ```
-    pub const fn media_type(&self) -> MediaType {
-        self.media_type
-    }
+    pub const fn media_type(&self) -> MediaType { self.media_type }
 
     /// Sets the type of the media, associated with this tag.
     ///
@@ -187,17 +189,15 @@ impl ExtXMedia {
     ///
     /// media.set_media_type(MediaType::Video);
     ///
-    /// assert_eq!(
-    ///     media.media_type(),
-    ///     MediaType::Video
-    /// );
+    /// assert_eq!(media.media_type(), MediaType::Video);
     /// ```
     pub fn set_media_type(&mut self, value: MediaType) -> &mut Self {
         self.media_type = value;
         self
     }
 
-    /// Returns the identifier that specifies the group to which the rendition belongs.
+    /// Returns the identifier that specifies the group to which the rendition
+    /// belongs.
     ///
     /// # Example
     /// ```
@@ -209,11 +209,10 @@ impl ExtXMedia {
     ///     &"audio".to_string()
     /// );
     /// ```
-    pub const fn group_id(&self) -> &String {
-        &self.group_id
-    }
+    pub const fn group_id(&self) -> &String { &self.group_id }
 
-    /// Sets the identifier that specifies the group, to which the rendition belongs.
+    /// Sets the identifier that specifies the group, to which the rendition
+    /// belongs.
     ///
     /// # Example
     /// ```
@@ -224,10 +223,7 @@ impl ExtXMedia {
     ///
     /// media.set_group_id("video");
     ///
-    /// assert_eq!(
-    ///     media.group_id(),
-    ///     &"video".to_string()
-    /// );
+    /// assert_eq!(media.group_id(), &"video".to_string());
     /// ```
     pub fn set_group_id<T: Into<String>>(&mut self, value: T) -> &mut Self {
         self.group_id = value.into();
@@ -246,14 +242,13 @@ impl ExtXMedia {
     ///     &"name".to_string()
     /// );
     /// ```
-    pub const fn name(&self) -> &String {
-        &self.name
-    }
+    pub const fn name(&self) -> &String { &self.name }
 
     /// Sets a human-readable description of the rendition.
     ///
     /// # Note
-    /// If the [`language`] attribute is present, this attribute should be in that language.
+    /// If the [`language`] attribute is present, this attribute should be in
+    /// that language.
     ///
     /// # Example
     /// ```
@@ -264,10 +259,7 @@ impl ExtXMedia {
     ///
     /// media.set_name("new_name");
     ///
-    /// assert_eq!(
-    ///     media.name(),
-    ///     &"new_name".to_string()
-    /// );
+    /// assert_eq!(media.name(), &"new_name".to_string());
     /// ```
     ///
     /// [`language`]: #method.language
@@ -288,23 +280,18 @@ impl ExtXMedia {
     ///
     /// media.set_uri(Some("https://www.example.com/"));
     ///
-    /// assert_eq!(
-    ///     media.uri(),
-    ///     &Some("https://www.example.com/".into())
-    /// );
+    /// assert_eq!(media.uri(), &Some("https://www.example.com/".into()));
     /// ```
     ///
     /// [`Media Playlist`]: crate::MediaPlaylist
-    pub const fn uri(&self) -> &Option<String> {
-        &self.uri
-    }
+    pub const fn uri(&self) -> &Option<String> { &self.uri }
 
     /// Sets the `URI`, that identifies the [`Media Playlist`].
     ///
     /// # Note
-    /// This attribute is **required**, if the [`MediaType`] is [`MediaType::Subtitles`].
-    /// This attribute is **not allowed**, if the [`MediaType`] is
-    /// [`MediaType::ClosedCaptions`].
+    /// This attribute is **required**, if the [`MediaType`] is
+    /// [`MediaType::Subtitles`]. This attribute is **not allowed**, if the
+    /// [`MediaType`] is [`MediaType::ClosedCaptions`].
     ///
     /// # Example
     /// ```
@@ -316,10 +303,7 @@ impl ExtXMedia {
     ///
     /// media.set_uri(Some("https://www.example.com/"));
     ///
-    /// assert_eq!(
-    ///     media.uri(),
-    ///     &Some("https://www.example.com/".into())
-    /// );
+    /// assert_eq!(media.uri(), &Some("https://www.example.com/".into()));
     /// ```
     ///
     /// [`Media Playlist`]: crate::MediaPlaylist
@@ -340,14 +324,9 @@ impl ExtXMedia {
     ///
     /// media.set_language(Some("english"));
     ///
-    /// assert_eq!(
-    ///     media.language(),
-    ///     &Some("english".into())
-    /// );
+    /// assert_eq!(media.language(), &Some("english".into()));
     /// ```
-    pub const fn language(&self) -> &Option<String> {
-        &self.language
-    }
+    pub const fn language(&self) -> &Option<String> { &self.language }
 
     /// Sets the name of the primary language used in the rendition.
     /// The value has to conform to [`RFC5646`].
@@ -362,10 +341,7 @@ impl ExtXMedia {
     ///
     /// media.set_language(Some("english"));
     ///
-    /// assert_eq!(
-    ///     media.language(),
-    ///     &Some("english".into())
-    /// );
+    /// assert_eq!(media.language(), &Some("english".into()));
     /// ```
     ///
     /// [`RFC5646`]: https://tools.ietf.org/html/rfc5646
@@ -386,14 +362,9 @@ impl ExtXMedia {
     ///
     /// media.set_assoc_language(Some("spanish"));
     ///
-    /// assert_eq!(
-    ///     media.assoc_language(),
-    ///     &Some("spanish".into())
-    /// );
+    /// assert_eq!(media.assoc_language(), &Some("spanish".into()));
     /// ```
-    pub const fn assoc_language(&self) -> &Option<String> {
-        &self.assoc_language
-    }
+    pub const fn assoc_language(&self) -> &Option<String> { &self.assoc_language }
 
     /// Sets the name of a language associated with the rendition.
     /// An associated language is often used in a different role, than the
@@ -410,10 +381,7 @@ impl ExtXMedia {
     ///
     /// media.set_assoc_language(Some("spanish"));
     ///
-    /// assert_eq!(
-    ///     media.assoc_language(),
-    ///     &Some("spanish".into())
-    /// );
+    /// assert_eq!(media.assoc_language(), &Some("spanish".into()));
     /// ```
     ///
     /// [`language`]: #method.language
@@ -434,14 +402,9 @@ impl ExtXMedia {
     ///
     /// media.set_default(true);
     ///
-    /// assert_eq!(
-    ///     media.is_default(),
-    ///     true
-    /// );
+    /// assert_eq!(media.is_default(), true);
     /// ```
-    pub const fn is_default(&self) -> bool {
-        self.is_default
-    }
+    pub const fn is_default(&self) -> bool { self.is_default }
 
     /// Sets the `default` flag.
     /// A value of `true` indicates, that the client should play
@@ -480,9 +443,7 @@ impl ExtXMedia {
     ///
     /// assert_eq!(media.is_autoselect(), true);
     /// ```
-    pub const fn is_autoselect(&self) -> bool {
-        self.is_autoselect
-    }
+    pub const fn is_autoselect(&self) -> bool { self.is_autoselect }
 
     /// Sets the `autoselect` flag.
     ///
@@ -503,7 +464,8 @@ impl ExtXMedia {
         self
     }
 
-    /// Returns whether the rendition contains content that is considered essential to play.
+    /// Returns whether the rendition contains content that is considered
+    /// essential to play.
     ///
     /// # Example
     /// ```
@@ -517,9 +479,7 @@ impl ExtXMedia {
     ///
     /// assert_eq!(media.is_forced(), true);
     /// ```
-    pub const fn is_forced(&self) -> bool {
-        self.is_forced
-    }
+    pub const fn is_forced(&self) -> bool { self.is_forced }
 
     /// Sets the `forced` flag.
     ///
@@ -540,8 +500,8 @@ impl ExtXMedia {
         self
     }
 
-    /// Returns the identifier that specifies a rendition within the segments in the
-    /// [`Media Playlist`].
+    /// Returns the identifier that specifies a rendition within the segments in
+    /// the [`Media Playlist`].
     ///
     /// # Example
     /// ```
@@ -557,9 +517,7 @@ impl ExtXMedia {
     /// ```
     ///
     /// [`Media Playlist`]: crate::MediaPlaylist
-    pub const fn instream_id(&self) -> Option<InStreamId> {
-        self.instream_id
-    }
+    pub const fn instream_id(&self) -> Option<InStreamId> { self.instream_id }
 
     /// Sets the [`InStreamId`], that specifies a rendition within the
     /// segments in the [`Media Playlist`].
@@ -597,9 +555,7 @@ impl ExtXMedia {
     ///
     /// assert_eq!(media.characteristics(), &Some("characteristic".into()));
     /// ```
-    pub const fn characteristics(&self) -> &Option<String> {
-        &self.characteristics
-    }
+    pub const fn characteristics(&self) -> &Option<String> { &self.characteristics }
 
     /// Sets the characteristics attribute, containing one or more Uniform Type
     /// Identifiers separated by comma.
@@ -650,9 +606,7 @@ impl ExtXMedia {
     ///
     /// assert_eq!(media.channels(), &Some(Channels::new(6)));
     /// ```
-    pub const fn channels(&self) -> &Option<Channels> {
-        &self.channels
-    }
+    pub const fn channels(&self) -> &Option<Channels> { &self.channels }
 
     /// Sets the channels.
     ///
@@ -772,7 +726,8 @@ impl FromStr for ExtXMedia {
                 }
                 _ => {
                     // [6.3.1. General Client Responsibilities]
-                    // > ignore any attribute/value pair with an unrecognized AttributeName.
+                    // > ignore any attribute/value pair with an unrecognized
+                    // AttributeName.
                 }
             }
         }

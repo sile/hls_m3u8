@@ -50,29 +50,21 @@ impl ExtXByteRange {
     /// let byte_range = ExtXByteRange::new(20, Some(5));
     /// let range: ByteRange = byte_range.to_range();
     /// ```
-    pub const fn to_range(&self) -> ByteRange {
-        self.0
-    }
+    pub const fn to_range(&self) -> ByteRange { self.0 }
 }
 
 impl RequiredVersion for ExtXByteRange {
-    fn required_version(&self) -> ProtocolVersion {
-        ProtocolVersion::V4
-    }
+    fn required_version(&self) -> ProtocolVersion { ProtocolVersion::V4 }
 }
 
 impl Deref for ExtXByteRange {
     type Target = ByteRange;
 
-    fn deref(&self) -> &Self::Target {
-        &self.0
-    }
+    fn deref(&self) -> &Self::Target { &self.0 }
 }
 
 impl DerefMut for ExtXByteRange {
-    fn deref_mut(&mut self) -> &mut Self::Target {
-        &mut self.0
-    }
+    fn deref_mut(&mut self) -> &mut Self::Target { &mut self.0 }
 }
 
 impl fmt::Display for ExtXByteRange {

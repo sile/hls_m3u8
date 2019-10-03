@@ -40,10 +40,7 @@ impl ExtXKey {
     /// use hls_m3u8::tags::ExtXKey;
     /// use hls_m3u8::types::EncryptionMethod;
     ///
-    /// let key = ExtXKey::new(
-    ///     EncryptionMethod::Aes128,
-    ///     "https://www.example.com/"
-    /// );
+    /// let key = ExtXKey::new(EncryptionMethod::Aes128, "https://www.example.com/");
     ///
     /// assert_eq!(
     ///     key.to_string(),
@@ -62,10 +59,7 @@ impl ExtXKey {
     ///
     /// let key = ExtXKey::empty();
     ///
-    /// assert_eq!(
-    ///     key.to_string(),
-    ///     "#EXT-X-KEY:METHOD=NONE"
-    /// );
+    /// assert_eq!(key.to_string(), "#EXT-X-KEY:METHOD=NONE");
     /// ```
     pub const fn empty() -> Self {
         Self(DecryptionKey {
@@ -87,14 +81,9 @@ impl ExtXKey {
     ///
     /// let key = ExtXKey::empty();
     ///
-    /// assert_eq!(
-    ///     key.method() == EncryptionMethod::None,
-    ///     key.is_empty()
-    /// );
+    /// assert_eq!(key.method() == EncryptionMethod::None, key.is_empty());
     /// ```
-    pub fn is_empty(&self) -> bool {
-        self.0.method() == EncryptionMethod::None
-    }
+    pub fn is_empty(&self) -> bool { self.0.method() == EncryptionMethod::None }
 }
 
 impl FromStr for ExtXKey {
@@ -107,23 +96,17 @@ impl FromStr for ExtXKey {
 }
 
 impl fmt::Display for ExtXKey {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(f, "{}{}", Self::PREFIX, self.0)
-    }
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result { write!(f, "{}{}", Self::PREFIX, self.0) }
 }
 
 impl Deref for ExtXKey {
     type Target = DecryptionKey;
 
-    fn deref(&self) -> &Self::Target {
-        &self.0
-    }
+    fn deref(&self) -> &Self::Target { &self.0 }
 }
 
 impl DerefMut for ExtXKey {
-    fn deref_mut(&mut self) -> &mut Self::Target {
-        &mut self.0
-    }
+    fn deref_mut(&mut self) -> &mut Self::Target { &mut self.0 }
 }
 
 #[cfg(test)]

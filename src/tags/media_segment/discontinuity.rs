@@ -25,15 +25,11 @@ impl ExtXDiscontinuity {
 }
 
 impl RequiredVersion for ExtXDiscontinuity {
-    fn required_version(&self) -> ProtocolVersion {
-        ProtocolVersion::V1
-    }
+    fn required_version(&self) -> ProtocolVersion { ProtocolVersion::V1 }
 }
 
 impl fmt::Display for ExtXDiscontinuity {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        Self::PREFIX.fmt(f)
-    }
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result { Self::PREFIX.fmt(f) }
 }
 
 impl FromStr for ExtXDiscontinuity {
@@ -58,9 +54,7 @@ mod test {
     }
 
     #[test]
-    fn test_parser() {
-        assert_eq!(ExtXDiscontinuity, "#EXT-X-DISCONTINUITY".parse().unwrap())
-    }
+    fn test_parser() { assert_eq!(ExtXDiscontinuity, "#EXT-X-DISCONTINUITY".parse().unwrap()) }
 
     #[test]
     fn test_required_version() {

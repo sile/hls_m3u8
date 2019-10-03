@@ -33,9 +33,7 @@ impl ExtXPlaylistType {
 }
 
 impl RequiredVersion for ExtXPlaylistType {
-    fn required_version(&self) -> ProtocolVersion {
-        ProtocolVersion::V1
-    }
+    fn required_version(&self) -> ProtocolVersion { ProtocolVersion::V1 }
 }
 
 impl fmt::Display for ExtXPlaylistType {

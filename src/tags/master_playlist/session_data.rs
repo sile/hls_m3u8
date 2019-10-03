@@ -11,9 +11,11 @@ use crate::Error;
 /// The data of an [ExtXSessionData] tag.
 #[derive(Hash, Eq, Ord, Debug, PartialEq, Clone, PartialOrd)]
 pub enum SessionData {
-    /// A String, that contains the data identified by [`data_id`](ExtXSessionData::data_id).
-    /// If a [`language`](ExtXSessionData::language) is specified, the value should
-    /// contain a human-readable string written in the specified language.
+    /// A String, that contains the data identified by
+    /// [`data_id`](ExtXSessionData::data_id).
+    /// If a [`language`](ExtXSessionData::language) is specified, the value
+    /// should contain a human-readable string written in the specified
+    /// language.
     Value(String),
     /// An [`uri`], which points to a [`json`].
     ///
@@ -61,7 +63,7 @@ impl ExtXSessionData {
     ///
     /// ExtXSessionData::new(
     ///     "com.example.movie.title",
-    ///     SessionData::Uri("https://www.example.com/".to_string())
+    ///     SessionData::Uri("https://www.example.com/".to_string()),
     /// );
     /// ```
     pub fn new<T: ToString>(data_id: T, data: SessionData) -> Self {
@@ -94,9 +96,7 @@ impl ExtXSessionData {
     ///     )
     /// );
     /// ```
-    pub fn builder() -> ExtXSessionDataBuilder {
-        ExtXSessionDataBuilder::default()
-    }
+    pub fn builder() -> ExtXSessionDataBuilder { ExtXSessionDataBuilder::default() }
 
     /// Makes a new [`ExtXSessionData`] tag, with the given language.
     ///
@@ -107,7 +107,7 @@ impl ExtXSessionData {
     /// let session_data = ExtXSessionData::with_language(
     ///     "com.example.movie.title",
     ///     SessionData::Value("some data".to_string()),
-    ///     "english"
+    ///     "english",
     /// );
     /// ```
     pub fn with_language<T: ToString>(data_id: T, data: SessionData, language: T) -> Self {
@@ -134,9 +134,7 @@ impl ExtXSessionData {
     ///     &"com.example.movie.title".to_string()
     /// )
     /// ```
-    pub const fn data_id(&self) -> &String {
-        &self.data_id
-    }
+    pub const fn data_id(&self) -> &String { &self.data_id }
 
     /// Returns the `data`.
     ///
@@ -154,11 +152,10 @@ impl ExtXSessionData {
     ///     &SessionData::Value("some data".to_string())
     /// )
     /// ```
-    pub const fn data(&self) -> &SessionData {
-        &self.data
-    }
+    pub const fn data(&self) -> &SessionData { &self.data }
 
-    /// Returns the `language` tag, that identifies the language of [`SessionData`].
+    /// Returns the `language` tag, that identifies the language of
+    /// [`SessionData`].
     ///
     /// # Example
     /// ```
@@ -175,12 +172,10 @@ impl ExtXSessionData {
     ///     &Some("english".to_string())
     /// )
     /// ```
-    pub const fn language(&self) -> &Option<String> {
-        &self.language
-    }
+    pub const fn language(&self) -> &Option<String> { &self.language }
 
-    /// Sets the `language` attribute, that identifies the language of [`SessionData`].
-    /// See [rfc5646](https://tools.ietf.org/html/rfc5646).
+    /// Sets the `language` attribute, that identifies the language of
+    /// [`SessionData`]. See [rfc5646](https://tools.ietf.org/html/rfc5646).
     ///
     /// # Example
     /// ```
@@ -201,8 +196,8 @@ impl ExtXSessionData {
         self
     }
 
-    /// Sets the `data_id` attribute, that should conform to a [reverse DNS] naming convention,
-    /// such as `com.example.movie.title`.
+    /// Sets the `data_id` attribute, that should conform to a [reverse DNS]
+    /// naming convention, such as `com.example.movie.title`.
     ///
     /// # Note:
     /// There is no central registration authority, so a value
@@ -251,9 +246,7 @@ impl ExtXSessionData {
 }
 
 impl RequiredVersion for ExtXSessionData {
-    fn required_version(&self) -> ProtocolVersion {
-        ProtocolVersion::V1
-    }
+    fn required_version(&self) -> ProtocolVersion { ProtocolVersion::V1 }
 }
 
 impl fmt::Display for ExtXSessionData {
@@ -293,7 +286,8 @@ impl FromStr for ExtXSessionData {
                 "LANGUAGE" => language = Some(unquote(value)),
                 _ => {
                     // [6.3.1. General Client Responsibilities]
-                    // > ignore any attribute/value pair with an unrecognized AttributeName.
+                    // > ignore any attribute/value pair with an unrecognized
+                    // AttributeName.
                 }
             }
         }

@@ -28,15 +28,11 @@ impl ExtXIFramesOnly {
 }
 
 impl RequiredVersion for ExtXIFramesOnly {
-    fn required_version(&self) -> ProtocolVersion {
-        ProtocolVersion::V4
-    }
+    fn required_version(&self) -> ProtocolVersion { ProtocolVersion::V4 }
 }
 
 impl fmt::Display for ExtXIFramesOnly {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        Self::PREFIX.fmt(f)
-    }
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result { Self::PREFIX.fmt(f) }
 }
 
 impl FromStr for ExtXIFramesOnly {
@@ -61,9 +57,7 @@ mod test {
     }
 
     #[test]
-    fn test_parser() {
-        assert_eq!(ExtXIFramesOnly, "#EXT-X-I-FRAMES-ONLY".parse().unwrap(),)
-    }
+    fn test_parser() { assert_eq!(ExtXIFramesOnly, "#EXT-X-I-FRAMES-ONLY".parse().unwrap(),) }
 
     #[test]
     fn test_required_version() {

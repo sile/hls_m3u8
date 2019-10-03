@@ -8,41 +8,31 @@ use crate::Error;
 pub struct AttributePairs(HashMap<String, String>);
 
 impl AttributePairs {
-    pub fn new() -> Self {
-        Self::default()
-    }
+    pub fn new() -> Self { Self::default() }
 }
 
 impl Deref for AttributePairs {
     type Target = HashMap<String, String>;
 
-    fn deref(&self) -> &Self::Target {
-        &self.0
-    }
+    fn deref(&self) -> &Self::Target { &self.0 }
 }
 
 impl DerefMut for AttributePairs {
-    fn deref_mut(&mut self) -> &mut Self::Target {
-        &mut self.0
-    }
+    fn deref_mut(&mut self) -> &mut Self::Target { &mut self.0 }
 }
 
 impl IntoIterator for AttributePairs {
-    type Item = (String, String);
     type IntoIter = ::std::collections::hash_map::IntoIter<String, String>;
+    type Item = (String, String);
 
-    fn into_iter(self) -> Self::IntoIter {
-        self.0.into_iter()
-    }
+    fn into_iter(self) -> Self::IntoIter { self.0.into_iter() }
 }
 
 impl<'a> IntoIterator for &'a AttributePairs {
-    type Item = (&'a String, &'a String);
     type IntoIter = ::std::collections::hash_map::Iter<'a, String, String>;
+    type Item = (&'a String, &'a String);
 
-    fn into_iter(self) -> Self::IntoIter {
-        self.0.iter()
-    }
+    fn into_iter(self) -> Self::IntoIter { self.0.iter() }
 }
 
 impl FromStr for AttributePairs {

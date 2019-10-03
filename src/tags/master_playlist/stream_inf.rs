@@ -52,9 +52,7 @@ impl ExtXStreamInf {
     ///
     /// assert_eq!(stream.uri(), &"https://www.example.com/".to_string());
     /// ```
-    pub const fn uri(&self) -> &String {
-        &self.uri
-    }
+    pub const fn uri(&self) -> &String { &self.uri }
 
     /// Sets the `URI` that identifies the associated media playlist.
     ///
@@ -98,9 +96,7 @@ impl ExtXStreamInf {
     /// stream.set_frame_rate(Some(59.9));
     /// assert_eq!(stream.frame_rate(), Some(59.9));
     /// ```
-    pub fn frame_rate(&self) -> Option<f64> {
-        self.frame_rate.map(|v| v.as_f64())
-    }
+    pub fn frame_rate(&self) -> Option<f64> { self.frame_rate.map(|v| v.as_f64()) }
 
     /// Returns the group identifier for the audio in the variant stream.
     ///
@@ -113,9 +109,7 @@ impl ExtXStreamInf {
     /// stream.set_audio(Some("audio"));
     /// assert_eq!(stream.audio(), &Some("audio".to_string()));
     /// ```
-    pub const fn audio(&self) -> &Option<String> {
-        &self.audio
-    }
+    pub const fn audio(&self) -> &Option<String> { &self.audio }
 
     /// Sets the group identifier for the audio in the variant stream.
     ///
@@ -144,9 +138,7 @@ impl ExtXStreamInf {
     /// stream.set_subtitles(Some("subs"));
     /// assert_eq!(stream.subtitles(), &Some("subs".to_string()));
     /// ```
-    pub const fn subtitles(&self) -> &Option<String> {
-        &self.subtitles
-    }
+    pub const fn subtitles(&self) -> &Option<String> { &self.subtitles }
 
     /// Sets the group identifier for the subtitles in the variant stream.
     ///
@@ -177,9 +169,7 @@ impl ExtXStreamInf {
     /// stream.set_closed_captions(Some(ClosedCaptions::None));
     /// assert_eq!(stream.closed_captions(), &Some(ClosedCaptions::None));
     /// ```
-    pub const fn closed_captions(&self) -> &Option<ClosedCaptions> {
-        &self.closed_captions
-    }
+    pub const fn closed_captions(&self) -> &Option<ClosedCaptions> { &self.closed_captions }
 
     /// Returns the value of [`ClosedCaptions`] attribute.
     ///
@@ -201,9 +191,7 @@ impl ExtXStreamInf {
 }
 
 impl RequiredVersion for ExtXStreamInf {
-    fn required_version(&self) -> ProtocolVersion {
-        ProtocolVersion::V1
-    }
+    fn required_version(&self) -> ProtocolVersion { ProtocolVersion::V1 }
 }
 
 impl fmt::Display for ExtXStreamInf {
@@ -267,15 +255,11 @@ impl FromStr for ExtXStreamInf {
 impl Deref for ExtXStreamInf {
     type Target = StreamInf;
 
-    fn deref(&self) -> &Self::Target {
-        &self.stream_inf
-    }
+    fn deref(&self) -> &Self::Target { &self.stream_inf }
 }
 
 impl DerefMut for ExtXStreamInf {
-    fn deref_mut(&mut self) -> &mut Self::Target {
-        &mut self.stream_inf
-    }
+    fn deref_mut(&mut self) -> &mut Self::Target { &mut self.stream_inf }
 }
 
 #[cfg(test)]

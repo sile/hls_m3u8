@@ -24,25 +24,22 @@ impl ExtXProgramDateTime {
     ///
     /// # Example
     /// ```
-    /// use hls_m3u8::tags::ExtXProgramDateTime;
     /// use chrono::{FixedOffset, TimeZone};
+    /// use hls_m3u8::tags::ExtXProgramDateTime;
     ///
     /// const HOURS_IN_SECS: i32 = 3600; // 1 hour = 3600 seconds
     ///
     /// let program_date_time = ExtXProgramDateTime::new(
     ///     FixedOffset::east(8 * HOURS_IN_SECS)
     ///         .ymd(2010, 2, 19)
-    ///         .and_hms_milli(14, 54, 23, 31)
+    ///         .and_hms_milli(14, 54, 23, 31),
     /// );
     /// ```
-    pub const fn new(date_time: DateTime<FixedOffset>) -> Self {
-        Self(date_time)
-    }
+    pub const fn new(date_time: DateTime<FixedOffset>) -> Self { Self(date_time) }
 
-    /// Returns the date-time of the first sample of the associated media segment.
-    pub const fn date_time(&self) -> DateTime<FixedOffset> {
-        self.0
-    }
+    /// Returns the date-time of the first sample of the associated media
+    /// segment.
+    pub const fn date_time(&self) -> DateTime<FixedOffset> { self.0 }
 
     /// Sets the date-time of the first sample of the associated media segment.
     pub fn set_date_time(&mut self, value: DateTime<FixedOffset>) -> &mut Self {
@@ -52,9 +49,7 @@ impl ExtXProgramDateTime {
 }
 
 impl RequiredVersion for ExtXProgramDateTime {
-    fn required_version(&self) -> ProtocolVersion {
-        ProtocolVersion::V1
-    }
+    fn required_version(&self) -> ProtocolVersion { ProtocolVersion::V1 }
 }
 
 impl fmt::Display for ExtXProgramDateTime {
@@ -78,15 +73,11 @@ impl FromStr for ExtXProgramDateTime {
 impl Deref for ExtXProgramDateTime {
     type Target = DateTime<FixedOffset>;
 
-    fn deref(&self) -> &Self::Target {
-        &self.0
-    }
+    fn deref(&self) -> &Self::Target { &self.0 }
 }
 
 impl DerefMut for ExtXProgramDateTime {
-    fn deref_mut(&mut self) -> &mut Self::Target {
-        &mut self.0
-    }
+    fn deref_mut(&mut self) -> &mut Self::Target { &mut self.0 }
 }
 
 #[cfg(test)]

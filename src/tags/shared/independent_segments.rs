@@ -16,15 +16,11 @@ impl ExtXIndependentSegments {
 }
 
 impl RequiredVersion for ExtXIndependentSegments {
-    fn required_version(&self) -> ProtocolVersion {
-        ProtocolVersion::V1
-    }
+    fn required_version(&self) -> ProtocolVersion { ProtocolVersion::V1 }
 }
 
 impl fmt::Display for ExtXIndependentSegments {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        Self::PREFIX.fmt(f)
-    }
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result { Self::PREFIX.fmt(f) }
 }
 
 impl FromStr for ExtXIndependentSegments {

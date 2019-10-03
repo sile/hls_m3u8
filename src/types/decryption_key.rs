@@ -13,7 +13,8 @@ use crate::Error;
 
 #[derive(Builder, Debug, Clone, PartialEq, Eq, Hash)]
 #[builder(setter(into), build_fn(validate = "Self::validate"))]
-/// [`DecryptionKey`] contains data, that is shared between [`ExtXSessionKey`] and [`ExtXKey`].
+/// [`DecryptionKey`] contains data, that is shared between [`ExtXSessionKey`]
+/// and [`ExtXKey`].
 ///
 /// [`ExtXSessionKey`]: crate::tags::ExtXSessionKey
 /// [`ExtXKey`]: crate::tags::ExtXKey
@@ -52,10 +53,7 @@ impl DecryptionKey {
     /// # use hls_m3u8::types::DecryptionKey;
     /// use hls_m3u8::types::EncryptionMethod;
     ///
-    /// let key = DecryptionKey::new(
-    ///     EncryptionMethod::Aes128,
-    ///     "https://www.example.com/"
-    /// );
+    /// let key = DecryptionKey::new(EncryptionMethod::Aes128, "https://www.example.com/");
     /// ```
     pub fn new<T: ToString>(method: EncryptionMethod, uri: T) -> Self {
         Self {
@@ -74,24 +72,14 @@ impl DecryptionKey {
     /// # use hls_m3u8::types::DecryptionKey;
     /// use hls_m3u8::types::EncryptionMethod;
     ///
-    /// let key = DecryptionKey::new(
-    ///     EncryptionMethod::Aes128,
-    ///     "https://www.example.com/"
-    /// );
+    /// let key = DecryptionKey::new(EncryptionMethod::Aes128, "https://www.example.com/");
     ///
-    /// assert_eq!(
-    ///     key.method(),
-    ///     EncryptionMethod::Aes128
-    /// );
+    /// assert_eq!(key.method(), EncryptionMethod::Aes128);
     /// ```
-    pub const fn method(&self) -> EncryptionMethod {
-        self.method
-    }
+    pub const fn method(&self) -> EncryptionMethod { self.method }
 
     /// Returns a Builder to build a [DecryptionKey].
-    pub fn builder() -> DecryptionKeyBuilder {
-        DecryptionKeyBuilder::default()
-    }
+    pub fn builder() -> DecryptionKeyBuilder { DecryptionKeyBuilder::default() }
 
     /// Sets the [EncryptionMethod].
     ///
@@ -100,10 +88,7 @@ impl DecryptionKey {
     /// # use hls_m3u8::types::DecryptionKey;
     /// use hls_m3u8::types::EncryptionMethod;
     ///
-    /// let mut key = DecryptionKey::new(
-    ///     EncryptionMethod::Aes128,
-    ///     "https://www.example.com/"
-    /// );
+    /// let mut key = DecryptionKey::new(EncryptionMethod::Aes128, "https://www.example.com/");
     ///
     /// key.set_method(EncryptionMethod::SampleAes);
     ///
@@ -127,19 +112,11 @@ impl DecryptionKey {
     /// # use hls_m3u8::types::DecryptionKey;
     /// use hls_m3u8::types::EncryptionMethod;
     ///
-    /// let key = DecryptionKey::new(
-    ///     EncryptionMethod::Aes128,
-    ///     "https://www.example.com/"
-    /// );
+    /// let key = DecryptionKey::new(EncryptionMethod::Aes128, "https://www.example.com/");
     ///
-    /// assert_eq!(
-    ///     key.uri(),
-    ///     &Some("https://www.example.com/".to_string())
-    /// );
+    /// assert_eq!(key.uri(), &Some("https://www.example.com/".to_string()));
     /// ```
-    pub const fn uri(&self) -> &Option<String> {
-        &self.uri
-    }
+    pub const fn uri(&self) -> &Option<String> { &self.uri }
 
     /// Sets the `URI` attribute.
     ///
@@ -151,10 +128,7 @@ impl DecryptionKey {
     /// # use hls_m3u8::types::DecryptionKey;
     /// use hls_m3u8::types::EncryptionMethod;
     ///
-    /// let mut key = DecryptionKey::new(
-    ///     EncryptionMethod::Aes128,
-    ///     "https://www.example.com/"
-    /// );
+    /// let mut key = DecryptionKey::new(EncryptionMethod::Aes128, "https://www.example.com/");
     ///
     /// key.set_uri(Some("http://www.google.com/"));
     ///
@@ -175,15 +149,10 @@ impl DecryptionKey {
     /// # use hls_m3u8::types::DecryptionKey;
     /// use hls_m3u8::types::EncryptionMethod;
     ///
-    /// let mut key = DecryptionKey::new(
-    ///     EncryptionMethod::Aes128,
-    ///     "https://www.example.com/"
-    /// );
+    /// let mut key = DecryptionKey::new(EncryptionMethod::Aes128, "https://www.example.com/");
     ///
     /// # assert_eq!(key.iv(), None);
-    /// key.set_iv(Some([
-    ///    1, 2, 3, 4, 5, 6, 7, 8, 9, 1, 2, 3, 4, 5, 6, 7
-    /// ]));
+    /// key.set_iv(Some([1, 2, 3, 4, 5, 6, 7, 8, 9, 1, 2, 3, 4, 5, 6, 7]));
     ///
     /// assert_eq!(
     ///     key.iv(),
@@ -205,18 +174,14 @@ impl DecryptionKey {
     /// # use hls_m3u8::types::DecryptionKey;
     /// use hls_m3u8::types::EncryptionMethod;
     ///
-    /// let mut key = DecryptionKey::new(
-    ///     EncryptionMethod::Aes128,
-    ///     "https://www.example.com/"
-    /// );
+    /// let mut key = DecryptionKey::new(EncryptionMethod::Aes128, "https://www.example.com/");
     ///
-    /// key.set_iv(Some([
-    ///    1, 2, 3, 4, 5, 6, 7, 8, 9, 1, 2, 3, 4, 5, 6, 7
-    /// ]));
+    /// key.set_iv(Some([1, 2, 3, 4, 5, 6, 7, 8, 9, 1, 2, 3, 4, 5, 6, 7]));
     ///
     /// assert_eq!(
     ///     key.to_string(),
-    ///     "METHOD=AES-128,URI=\"https://www.example.com/\",IV=0x01020304050607080901020304050607".to_string()
+    ///     "METHOD=AES-128,URI=\"https://www.example.com/\",IV=0x01020304050607080901020304050607"
+    ///         .to_string()
     /// );
     /// ```
     pub fn set_iv<T>(&mut self, value: Option<T>) -> &mut Self
@@ -233,42 +198,28 @@ impl DecryptionKey {
     /// # Example
     /// ```
     /// # use hls_m3u8::types::DecryptionKey;
-    /// use hls_m3u8::types::{KeyFormat, EncryptionMethod};
+    /// use hls_m3u8::types::{EncryptionMethod, KeyFormat};
     ///
-    /// let mut key = DecryptionKey::new(
-    ///     EncryptionMethod::Aes128,
-    ///     "https://www.example.com/"
-    /// );
+    /// let mut key = DecryptionKey::new(EncryptionMethod::Aes128, "https://www.example.com/");
     ///
     /// key.set_key_format(Some(KeyFormat::Identity));
     ///
-    /// assert_eq!(
-    ///     key.key_format(),
-    ///     Some(KeyFormat::Identity)
-    /// );
+    /// assert_eq!(key.key_format(), Some(KeyFormat::Identity));
     /// ```
-    pub const fn key_format(&self) -> Option<KeyFormat> {
-        self.key_format
-    }
+    pub const fn key_format(&self) -> Option<KeyFormat> { self.key_format }
 
     /// Sets the [KeyFormat] attribute.
     ///
     /// # Example
     /// ```
     /// # use hls_m3u8::types::DecryptionKey;
-    /// use hls_m3u8::types::{KeyFormat, EncryptionMethod};
+    /// use hls_m3u8::types::{EncryptionMethod, KeyFormat};
     ///
-    /// let mut key = DecryptionKey::new(
-    ///     EncryptionMethod::Aes128,
-    ///     "https://www.example.com/"
-    /// );
+    /// let mut key = DecryptionKey::new(EncryptionMethod::Aes128, "https://www.example.com/");
     ///
     /// key.set_key_format(Some(KeyFormat::Identity));
     ///
-    /// assert_eq!(
-    ///     key.key_format(),
-    ///     Some(KeyFormat::Identity)
-    /// );
+    /// assert_eq!(key.key_format(), Some(KeyFormat::Identity));
     /// ```
     pub fn set_key_format<T: Into<KeyFormat>>(&mut self, value: Option<T>) -> &mut Self {
         self.key_format = value.map(|v| v.into());
@@ -280,12 +231,9 @@ impl DecryptionKey {
     /// # Example
     /// ```
     /// # use hls_m3u8::types::DecryptionKey;
-    /// use hls_m3u8::types::{KeyFormatVersions, EncryptionMethod};
+    /// use hls_m3u8::types::{EncryptionMethod, KeyFormatVersions};
     ///
-    /// let mut key = DecryptionKey::new(
-    ///     EncryptionMethod::Aes128,
-    ///     "https://www.example.com/"
-    /// );
+    /// let mut key = DecryptionKey::new(EncryptionMethod::Aes128, "https://www.example.com/");
     ///
     /// key.set_key_format_versions(Some(vec![1, 2, 3, 4, 5]));
     ///
@@ -305,16 +253,14 @@ impl DecryptionKey {
     /// # use hls_m3u8::types::DecryptionKey;
     /// use hls_m3u8::types::EncryptionMethod;
     ///
-    /// let mut key = DecryptionKey::new(
-    ///     EncryptionMethod::Aes128,
-    ///     "https://www.example.com/"
-    /// );
+    /// let mut key = DecryptionKey::new(EncryptionMethod::Aes128, "https://www.example.com/");
     ///
     /// key.set_key_format_versions(Some(vec![1, 2, 3, 4, 5]));
     ///
     /// assert_eq!(
     ///     key.to_string(),
-    ///     "METHOD=AES-128,URI=\"https://www.example.com/\",KEYFORMATVERSIONS=\"1/2/3/4/5\"".to_string()
+    ///     "METHOD=AES-128,URI=\"https://www.example.com/\",KEYFORMATVERSIONS=\"1/2/3/4/5\""
+    ///         .to_string()
     /// );
     /// ```
     pub fn set_key_format_versions<T: Into<KeyFormatVersions>>(
@@ -357,7 +303,8 @@ impl FromStr for DecryptionKey {
                 "KEYFORMATVERSIONS" => key_format_versions = Some(value.parse()?),
                 _ => {
                     // [6.3.1. General Client Responsibilities]
-                    // > ignore any attribute/value pair with an unrecognized AttributeName.
+                    // > ignore any attribute/value pair with an unrecognized
+                    // AttributeName.
                 }
             }
         }

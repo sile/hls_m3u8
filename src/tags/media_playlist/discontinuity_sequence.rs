@@ -33,9 +33,7 @@ impl ExtXDiscontinuitySequence {
     /// # use hls_m3u8::tags::ExtXDiscontinuitySequence;
     /// let discontinuity_sequence = ExtXDiscontinuitySequence::new(5);
     /// ```
-    pub const fn new(seq_num: u64) -> Self {
-        Self(seq_num)
-    }
+    pub const fn new(seq_num: u64) -> Self { Self(seq_num) }
 
     /// Returns the discontinuity sequence number of
     /// the first media segment that appears in the associated playlist.
@@ -47,9 +45,7 @@ impl ExtXDiscontinuitySequence {
     ///
     /// assert_eq!(discontinuity_sequence.seq_num(), 5);
     /// ```
-    pub const fn seq_num(self) -> u64 {
-        self.0
-    }
+    pub const fn seq_num(self) -> u64 { self.0 }
 
     /// Sets the sequence number.
     ///
@@ -68,15 +64,11 @@ impl ExtXDiscontinuitySequence {
 }
 
 impl RequiredVersion for ExtXDiscontinuitySequence {
-    fn required_version(&self) -> ProtocolVersion {
-        ProtocolVersion::V1
-    }
+    fn required_version(&self) -> ProtocolVersion { ProtocolVersion::V1 }
 }
 
 impl fmt::Display for ExtXDiscontinuitySequence {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(f, "{}{}", Self::PREFIX, self.0)
-    }
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result { write!(f, "{}{}", Self::PREFIX, self.0) }
 }
 
 impl FromStr for ExtXDiscontinuitySequence {
