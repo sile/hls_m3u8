@@ -1,9 +1,9 @@
 use std::fmt;
 use std::str::FromStr;
 
-use crate::types::{ProtocolVersion, RequiredVersion};
+use crate::types::ProtocolVersion;
 use crate::utils::{quote, tag, unquote};
-use crate::Error;
+use crate::{Error, RequiredVersion};
 
 #[derive(Copy, Clone, Eq, PartialEq, Ord, PartialOrd, Hash, Debug)]
 /// [`KeyFormat`] specifies, how the key is represented in the

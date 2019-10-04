@@ -4,9 +4,9 @@ use std::str::FromStr;
 use derive_builder::Builder;
 
 use crate::attribute::AttributePairs;
-use crate::types::{Channels, InStreamId, MediaType, ProtocolVersion, RequiredVersion};
+use crate::types::{Channels, InStreamId, MediaType, ProtocolVersion};
 use crate::utils::{parse_yes_or_no, quote, tag, unquote};
-use crate::Error;
+use crate::{Error, RequiredVersion};
 
 /// # [4.4.5.1. EXT-X-MEDIA]
 /// The [`ExtXMedia`] tag is used to relate [`Media Playlist`]s,

@@ -6,9 +6,9 @@ use std::time::Duration;
 use chrono::{DateTime, FixedOffset};
 
 use crate::attribute::AttributePairs;
-use crate::types::{ProtocolVersion, RequiredVersion};
+use crate::types::ProtocolVersion;
 use crate::utils::{quote, tag, unquote};
-use crate::Error;
+use crate::{Error, RequiredVersion};
 
 /// # [4.3.2.7. EXT-X-DATERANGE]
 ///
@@ -106,7 +106,8 @@ impl ExtXDateRange {
 /// # use hls_m3u8::tags::ExtXDateRange;
 /// use chrono::offset::TimeZone;
 /// use chrono::{DateTime, FixedOffset};
-/// use hls_m3u8::types::{ProtocolVersion, RequiredVersion};
+/// use hls_m3u8::types::ProtocolVersion;
+/// use hls_m3u8::RequiredVersion;
 ///
 /// const HOURS_IN_SECS: i32 = 3600; // 1 hour = 3600 seconds
 ///

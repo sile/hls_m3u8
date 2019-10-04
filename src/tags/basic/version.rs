@@ -1,9 +1,9 @@
 use std::fmt;
 use std::str::FromStr;
 
-use crate::types::{ProtocolVersion, RequiredVersion};
+use crate::types::ProtocolVersion;
 use crate::utils::tag;
-use crate::Error;
+use crate::{Error, RequiredVersion};
 
 /// # [4.4.1.2. EXT-X-VERSION]
 /// The [`ExtXVersion`] tag indicates the compatibility version of the

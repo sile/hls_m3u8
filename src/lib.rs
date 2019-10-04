@@ -1,4 +1,5 @@
 #![forbid(unsafe_code)]
+#![feature(option_flattening)]
 #![warn(
     //clippy::pedantic,
     clippy::nursery,
@@ -49,6 +50,8 @@ mod line;
 mod master_playlist;
 mod media_playlist;
 mod media_segment;
+mod traits;
 mod utils;
 
 pub use error::Result;
+pub use traits::*;

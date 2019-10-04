@@ -1,8 +1,9 @@
 use std::fmt;
 use std::str::FromStr;
 
-use crate::types::{ProtocolVersion, RequiredVersion};
+use crate::types::ProtocolVersion;
 use crate::utils::tag;
+use crate::RequiredVersion;
 
 /// # [4.4.3.3. EXT-X-DISCONTINUITY-SEQUENCE]
 ///

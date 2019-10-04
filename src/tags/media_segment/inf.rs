@@ -2,9 +2,9 @@ use std::fmt;
 use std::str::FromStr;
 use std::time::Duration;
 
-use crate::types::{ProtocolVersion, RequiredVersion};
+use crate::types::ProtocolVersion;
 use crate::utils::tag;
-use crate::Error;
+use crate::{Error, RequiredVersion};
 
 /// # [4.4.2.1. EXTINF]
 ///

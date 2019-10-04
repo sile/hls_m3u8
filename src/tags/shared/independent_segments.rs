@@ -1,9 +1,9 @@
 use std::fmt;
 use std::str::FromStr;
 
-use crate::types::{ProtocolVersion, RequiredVersion};
+use crate::types::ProtocolVersion;
 use crate::utils::tag;
-use crate::Error;
+use crate::{Error, RequiredVersion};
 
 /// [4.3.5.1. EXT-X-INDEPENDENT-SEGMENTS]
 ///

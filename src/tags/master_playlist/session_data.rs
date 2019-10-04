@@ -4,9 +4,9 @@ use std::str::FromStr;
 use derive_builder::Builder;
 
 use crate::attribute::AttributePairs;
-use crate::types::{ProtocolVersion, RequiredVersion};
+use crate::types::ProtocolVersion;
 use crate::utils::{quote, tag, unquote};
-use crate::Error;
+use crate::{Error, RequiredVersion};
 
 /// The data of an [ExtXSessionData] tag.
 #[derive(Hash, Eq, Ord, Debug, PartialEq, Clone, PartialOrd)]

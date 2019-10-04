@@ -2,9 +2,10 @@ use std::fmt;
 use std::str::FromStr;
 
 use crate::attribute::AttributePairs;
-use crate::types::{ByteRange, ProtocolVersion, RequiredVersion};
+use crate::tags::ExtXKey;
+use crate::types::{ByteRange, ProtocolVersion};
 use crate::utils::{quote, tag, unquote};
-use crate::Error;
+use crate::{Encrypted, Error, RequiredVersion};
 
 /// # [4.4.2.5. EXT-X-MAP]
 /// The [`ExtXMap`] tag specifies how to obtain the Media Initialization
@@ -22,6 +23,7 @@ use crate::Error;
 pub struct ExtXMap {
     uri: String,
     range: Option<ByteRange>,
+    keys: Vec<ExtXKey>,
 }
 
 impl ExtXMap {
@@ -29,17 +31,19 @@ impl ExtXMap {
 
     /// Makes a new [`ExtXMap`] tag.
     pub fn new<T: ToString>(uri: T) -> Self {
-        ExtXMap {
+        Self {
             uri: uri.to_string(),
             range: None,
+            keys: vec![],
         }
     }
 
     /// Makes a new [`ExtXMap`] tag with the given range.
     pub fn with_range<T: ToString>(uri: T, range: ByteRange) -> Self {
-        ExtXMap {
+        Self {
             uri: uri.to_string(),
             range: Some(range),
+            keys: vec![],
         }
     }
 
@@ -51,6 +55,13 @@ impl ExtXMap {
     pub const fn range(&self) -> Option<ByteRange> { self.range }
 }
 
+impl Encrypted for ExtXMap {
+    fn keys(&self) -> &Vec<ExtXKey> { &self.keys }
+
+    fn keys_mut(&mut self) -> &mut Vec<ExtXKey> { &mut self.keys }
+}
+
+/// This tag requires [`ProtocolVersion::V6`].
 impl RequiredVersion for ExtXMap {
     fn required_version(&self) -> ProtocolVersion { ProtocolVersion::V6 }
 }
@@ -59,9 +70,11 @@ impl fmt::Display for ExtXMap {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         write!(f, "{}", Self::PREFIX)?;
         write!(f, "URI={}", quote(&self.uri))?;
+
         if let Some(value) = &self.range {
             write!(f, ",BYTERANGE={}", quote(value))?;
         }
+
         Ok(())
     }
 }
@@ -90,7 +103,11 @@ impl FromStr for ExtXMap {
         }
 
         let uri = uri.ok_or_else(|| Error::missing_value("EXT-X-URI"))?;
-        Ok(ExtXMap { uri, range })
+        Ok(Self {
+            uri,
+            range,
+            keys: vec![],
+        })
     }
 }
 

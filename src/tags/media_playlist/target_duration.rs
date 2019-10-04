@@ -2,9 +2,9 @@ use std::fmt;
 use std::str::FromStr;
 use std::time::Duration;
 
-use crate::types::{ProtocolVersion, RequiredVersion};
+use crate::types::ProtocolVersion;
 use crate::utils::tag;
-use crate::Error;
+use crate::{Error, RequiredVersion};
 
 /// # [4.4.3.1. EXT-X-TARGETDURATION]
 /// The [`ExtXTargetDuration`] tag specifies the maximum [`Media Segment`]

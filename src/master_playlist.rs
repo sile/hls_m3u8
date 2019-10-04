@@ -10,8 +10,8 @@ use crate::tags::{
     ExtM3u, ExtXIFrameStreamInf, ExtXIndependentSegments, ExtXMedia, ExtXSessionData,
     ExtXSessionKey, ExtXStart, ExtXStreamInf, ExtXVersion,
 };
-use crate::types::{ClosedCaptions, MediaType, ProtocolVersion, RequiredVersion};
-use crate::Error;
+use crate::types::{ClosedCaptions, MediaType, ProtocolVersion};
+use crate::{Error, RequiredVersion};
 
 /// Master playlist.
 #[derive(Debug, Clone, Builder)]

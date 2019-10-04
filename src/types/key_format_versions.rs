@@ -2,9 +2,9 @@ use std::fmt;
 use std::ops::{Deref, DerefMut};
 use std::str::FromStr;
 
-use crate::types::{ProtocolVersion, RequiredVersion};
+use crate::types::ProtocolVersion;
 use crate::utils::{quote, unquote};
-use crate::Error;
+use crate::{Error, RequiredVersion};
 
 /// A list of [usize], that can be used to indicate which version(s)
 /// this instance complies with, if more than one version of a particular

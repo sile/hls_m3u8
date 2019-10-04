@@ -6,10 +6,9 @@ use derive_builder::Builder;
 use crate::attribute::AttributePairs;
 use crate::types::{
     EncryptionMethod, InitializationVector, KeyFormat, KeyFormatVersions, ProtocolVersion,
-    RequiredVersion,
 };
 use crate::utils::{quote, unquote};
-use crate::Error;
+use crate::{Error, RequiredVersion};
 
 #[derive(Builder, Debug, Clone, PartialEq, Eq, Hash)]
 #[builder(setter(into), build_fn(validate = "Self::validate"))]

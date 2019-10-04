@@ -2,9 +2,9 @@ use std::fmt;
 use std::ops::{Deref, DerefMut};
 use std::str::FromStr;
 
-use crate::types::{ByteRange, ProtocolVersion, RequiredVersion};
+use crate::types::{ByteRange, ProtocolVersion};
 use crate::utils::tag;
-use crate::Error;
+use crate::{Error, RequiredVersion};
 
 /// # [4.4.2.2. EXT-X-BYTERANGE]
 ///

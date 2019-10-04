@@ -4,9 +4,9 @@ use std::str::FromStr;
 
 use chrono::{DateTime, FixedOffset};
 
-use crate::types::{ProtocolVersion, RequiredVersion};
+use crate::types::ProtocolVersion;
 use crate::utils::tag;
-use crate::Error;
+use crate::{Error, RequiredVersion};
 
 /// # [4.3.2.6. EXT-X-PROGRAM-DATE-TIME]
 /// The [`ExtXProgramDateTime`] tag associates the first sample of a

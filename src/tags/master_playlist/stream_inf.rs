@@ -3,11 +3,9 @@ use std::ops::{Deref, DerefMut};
 use std::str::FromStr;
 
 use crate::attribute::AttributePairs;
-use crate::types::{
-    ClosedCaptions, DecimalFloatingPoint, ProtocolVersion, RequiredVersion, StreamInf,
-};
+use crate::types::{ClosedCaptions, DecimalFloatingPoint, ProtocolVersion, StreamInf};
 use crate::utils::{quote, tag, unquote};
-use crate::Error;
+use crate::{Error, RequiredVersion};
 
 /// [4.3.4.2. EXT-X-STREAM-INF]
 ///

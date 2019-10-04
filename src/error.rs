@@ -76,6 +76,10 @@ pub enum ErrorKind {
     /// An unexpected value.
     UnexpectedAttribute(String),
 
+    #[fail(display = "Unexpected Tag: {:?}", _0)]
+    /// An unexpected tag.
+    UnexpectedTag(String),
+
     /// Hints that destructuring should not be exhaustive.
     ///
     /// This enum may grow additional variants, so this makes sure clients
@@ -117,6 +121,10 @@ impl Error {
 
     pub(crate) fn unexpected_attribute<T: ToString>(value: T) -> Self {
         Self::from(ErrorKind::UnexpectedAttribute(value.to_string()))
+    }
+
+    pub(crate) fn unexpected_tag<T: ToString>(value: T) -> Self {
+        Self::from(ErrorKind::UnexpectedTag(value.to_string()))
     }
 
     pub(crate) fn invalid_input() -> Self { Self::from(ErrorKind::InvalidInput) }

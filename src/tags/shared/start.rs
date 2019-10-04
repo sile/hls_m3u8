@@ -2,9 +2,9 @@ use std::fmt;
 use std::str::FromStr;
 
 use crate::attribute::AttributePairs;
-use crate::types::{ProtocolVersion, RequiredVersion, SignedDecimalFloatingPoint};
+use crate::types::{ProtocolVersion, SignedDecimalFloatingPoint};
 use crate::utils::{parse_yes_or_no, tag};
-use crate::Error;
+use crate::{Error, RequiredVersion};
 
 /// [4.3.5.2. EXT-X-START]
 ///

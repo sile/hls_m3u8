@@ -3,9 +3,9 @@ use std::ops::{Deref, DerefMut};
 use std::str::FromStr;
 
 use crate::attribute::AttributePairs;
-use crate::types::{ProtocolVersion, RequiredVersion, StreamInf};
+use crate::types::{ProtocolVersion, StreamInf};
 use crate::utils::{quote, tag, unquote};
-use crate::Error;
+use crate::{Error, RequiredVersion};
 
 /// # [4.4.5.3. EXT-X-I-FRAME-STREAM-INF]
 /// The [`ExtXIFrameStreamInf`] tag identifies a [`Media Playlist`] file,
