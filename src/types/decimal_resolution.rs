@@ -4,14 +4,15 @@ use derive_more::Display;
 
 use crate::Error;
 
-/// Decimal resolution.
+/// This is a simple wrapper type for the display resolution. (1920x1080,
+/// 1280x720, ...).
 ///
 /// See: [4.2. Attribute Lists]
 ///
 /// [4.2. Attribute Lists]: https://tools.ietf.org/html/rfc8216#section-4.2
 #[derive(Ord, PartialOrd, Debug, Clone, Copy, PartialEq, Eq, Hash, Display)]
 #[display(fmt = "{}x{}", width, height)]
-pub(crate) struct DecimalResolution {
+pub struct DecimalResolution {
     width: usize,
     height: usize,
 }

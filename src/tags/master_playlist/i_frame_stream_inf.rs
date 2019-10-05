@@ -3,11 +3,12 @@ use std::ops::{Deref, DerefMut};
 use std::str::FromStr;
 
 use crate::attribute::AttributePairs;
-use crate::types::{ProtocolVersion, StreamInf};
+use crate::types::{HdcpLevel, ProtocolVersion, StreamInf, StreamInfBuilder};
 use crate::utils::{quote, tag, unquote};
 use crate::{Error, RequiredVersion};
 
 /// # [4.3.5.3. EXT-X-I-FRAME-STREAM-INF]
+///
 /// The [`ExtXIFrameStreamInf`] tag identifies a [`Media Playlist`] file,
 /// containing the I-frames of a multimedia presentation.
 ///
@@ -21,6 +22,72 @@ use crate::{Error, RequiredVersion};
 pub struct ExtXIFrameStreamInf {
     uri: String,
     stream_inf: StreamInf,
+}
+
+#[derive(Default, Debug, Clone, PartialEq)]
+/// Builder for [`ExtXIFrameStreamInf`].
+pub struct ExtXIFrameStreamInfBuilder {
+    uri: Option<String>,
+    stream_inf: StreamInfBuilder,
+}
+
+impl ExtXIFrameStreamInfBuilder {
+    /// An `URI` to the [`MediaPlaylist`] file.
+    ///
+    /// [`MediaPlaylist`]: crate::MediaPlaylist
+    pub fn uri<T: Into<String>>(&mut self, value: T) -> &mut Self {
+        self.uri = Some(value.into());
+        self
+    }
+
+    /// The maximum bandwidth of the stream.
+    pub fn bandwidth(&mut self, value: u64) -> &mut Self {
+        self.stream_inf.bandwidth(value);
+        self
+    }
+
+    /// The average bandwidth of the stream.
+    pub fn average_bandwidth(&mut self, value: u64) -> &mut Self {
+        self.stream_inf.average_bandwidth(value);
+        self
+    }
+
+    /// Every media format in any of the renditions specified by the Variant
+    /// Stream.
+    pub fn codecs<T: Into<String>>(&mut self, value: T) -> &mut Self {
+        self.stream_inf.codecs(value);
+        self
+    }
+
+    /// The resolution of the stream.
+    pub fn resolution(&mut self, value: (usize, usize)) -> &mut Self {
+        self.stream_inf.resolution(value);
+        self
+    }
+
+    /// High-bandwidth Digital Content Protection
+    pub fn hdcp_level(&mut self, value: HdcpLevel) -> &mut Self {
+        self.stream_inf.hdcp_level(value);
+        self
+    }
+
+    /// It indicates the set of video renditions, that should be used when
+    /// playing the presentation.
+    pub fn video<T: Into<String>>(&mut self, value: T) -> &mut Self {
+        self.stream_inf.video(value);
+        self
+    }
+
+    /// Build an [`ExtXIFrameStreamInf`].
+    pub fn build(&self) -> crate::Result<ExtXIFrameStreamInf> {
+        Ok(ExtXIFrameStreamInf {
+            uri: self
+                .uri
+                .clone()
+                .ok_or_else(|| Error::missing_value("frame rate"))?,
+            stream_inf: self.stream_inf.build().map_err(Error::builder_error)?,
+        })
+    }
 }
 
 impl ExtXIFrameStreamInf {
@@ -39,6 +106,9 @@ impl ExtXIFrameStreamInf {
             stream_inf: StreamInf::new(bandwidth),
         }
     }
+
+    /// Returns a builder for [`ExtXIFrameStreamInf`].
+    pub fn builder() -> ExtXIFrameStreamInfBuilder { ExtXIFrameStreamInfBuilder::default() }
 
     /// Returns the `URI`, that identifies the associated [`media playlist`].
     ///

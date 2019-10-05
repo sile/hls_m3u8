@@ -6,20 +6,13 @@ use crate::types::ProtocolVersion;
 use crate::utils::tag;
 use crate::{Error, RequiredVersion};
 
-/// # [4.4.2.1. EXTINF]
+/// # [4.3.2.1. EXTINF]
 ///
 /// The [`ExtInf`] tag specifies the duration of a [`Media Segment`]. It applies
 /// only to the next [`Media Segment`].
 ///
-/// Its format is:
-/// ```text
-/// #EXTINF:<duration>,[<title>]
-/// ```
-/// The title is an optional informative title about the [Media Segment].
-///
 /// [`Media Segment`]: crate::media_segment::MediaSegment
-/// [4.4.2.1. EXTINF]:
-/// https://tools.ietf.org/html/draft-pantos-hls-rfc8216bis-04#section-4.4.2.1
+/// [4.3.2.1. EXTINF]: https://tools.ietf.org/html/rfc8216#section-4.3.2.1
 #[derive(Default, Debug, Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]
 pub struct ExtInf {
     duration: Duration,

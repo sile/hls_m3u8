@@ -1,6 +1,5 @@
 use std::collections::HashSet;
 use std::fmt;
-use std::iter;
 use std::str::FromStr;
 
 use derive_builder::Builder;
@@ -13,19 +12,13 @@ use crate::tags::{
 use crate::types::{ClosedCaptions, MediaType, ProtocolVersion};
 use crate::{Error, RequiredVersion};
 
-/// Master playlist.
-#[derive(Debug, Clone, Builder)]
+#[derive(Debug, Clone, Builder, PartialEq)]
 #[builder(build_fn(validate = "Self::validate"))]
 #[builder(setter(into, strip_option))]
+/// Master playlist.
 pub struct MasterPlaylist {
-    #[builder(default, setter(name = "version"))]
-    /// Sets the protocol compatibility version of the resulting playlist.
-    ///
-    /// If the resulting playlist has tags which requires a compatibility
-    /// version greater than `version`,
-    /// `build()` method will fail with an `ErrorKind::InvalidInput` error.
-    ///
-    /// The default is the maximum version among the tags in the playlist.
+    //#[builder(default, setter(name = "version"))]
+    #[builder(default, setter(skip))]
     version_tag: ExtXVersion,
     #[builder(default)]
     /// Sets the [`ExtXIndependentSegments`] tag.
@@ -37,16 +30,16 @@ pub struct MasterPlaylist {
     /// Sets the [`ExtXMedia`] tag.
     media_tags: Vec<ExtXMedia>,
     #[builder(default)]
-    /// Sets all [`ExtXStreamInf`]s.
+    /// Sets all [`ExtXStreamInf`] tags.
     stream_inf_tags: Vec<ExtXStreamInf>,
     #[builder(default)]
-    /// Sets all [`ExtXIFrameStreamInf`]s.
+    /// Sets all [`ExtXIFrameStreamInf`] tags.
     i_frame_stream_inf_tags: Vec<ExtXIFrameStreamInf>,
     #[builder(default)]
-    /// Sets all [`ExtXSessionData`]s.
+    /// Sets all [`ExtXSessionData`] tags.
     session_data_tags: Vec<ExtXSessionData>,
     #[builder(default)]
-    /// Sets all [`ExtXSessionKey`]s.
+    /// Sets all [`ExtXSessionKey`] tags.
     session_key_tags: Vec<ExtXSessionKey>,
 }
 
@@ -54,48 +47,152 @@ impl MasterPlaylist {
     /// Returns a Builder for a [`MasterPlaylist`].
     pub fn builder() -> MasterPlaylistBuilder { MasterPlaylistBuilder::default() }
 
-    /// Returns the [`ExtXVersion`] tag contained in the playlist.
-    pub const fn version(&self) -> ExtXVersion { self.version_tag }
-
     /// Returns the [`ExtXIndependentSegments`] tag contained in the playlist.
-    pub const fn independent_segments_tag(&self) -> Option<ExtXIndependentSegments> {
+    pub const fn independent_segments(&self) -> Option<ExtXIndependentSegments> {
         self.independent_segments_tag
     }
 
+    /// Sets the [`ExtXIndependentSegments`] tag contained in the playlist.
+    pub fn set_independent_segments<T>(&mut self, value: Option<T>) -> &mut Self
+    where
+        T: Into<ExtXIndependentSegments>,
+    {
+        self.independent_segments_tag = value.map(|v| v.into());
+        self
+    }
+
     /// Returns the [`ExtXStart`] tag contained in the playlist.
-    pub const fn start_tag(&self) -> Option<ExtXStart> { self.start_tag }
+    pub const fn start(&self) -> Option<ExtXStart> { self.start_tag }
+
+    /// Sets the [`ExtXStart`] tag contained in the playlist.
+    pub fn set_start<T>(&mut self, value: Option<T>) -> &mut Self
+    where
+        T: Into<ExtXStart>,
+    {
+        self.start_tag = value.map(|v| v.into());
+        self
+    }
 
     /// Returns the [`ExtXMedia`] tags contained in the playlist.
     pub const fn media_tags(&self) -> &Vec<ExtXMedia> { &self.media_tags }
 
+    /// Appends an [`ExtXMedia`].
+    pub fn push_media_tag(&mut self, value: ExtXMedia) -> &mut Self {
+        self.media_tags.push(value);
+        self
+    }
+
+    /// Sets the [`ExtXMedia`] tags contained in the playlist.
+    pub fn set_media_tags<T>(&mut self, value: Vec<T>) -> &mut Self
+    where
+        T: Into<ExtXMedia>,
+    {
+        self.media_tags = value.into_iter().map(|v| v.into()).collect();
+        self
+    }
+
     /// Returns the [`ExtXStreamInf`] tags contained in the playlist.
     pub const fn stream_inf_tags(&self) -> &Vec<ExtXStreamInf> { &self.stream_inf_tags }
+
+    /// Appends an [`ExtXStreamInf`].
+    pub fn push_stream_inf(&mut self, value: ExtXStreamInf) -> &mut Self {
+        self.stream_inf_tags.push(value);
+        self
+    }
+
+    /// Sets the [`ExtXStreamInf`] tags contained in the playlist.
+    pub fn set_stream_inf_tags<T>(&mut self, value: Vec<T>) -> &mut Self
+    where
+        T: Into<ExtXStreamInf>,
+    {
+        self.stream_inf_tags = value.into_iter().map(|v| v.into()).collect();
+        self
+    }
 
     /// Returns the [`ExtXIFrameStreamInf`] tags contained in the playlist.
     pub const fn i_frame_stream_inf_tags(&self) -> &Vec<ExtXIFrameStreamInf> {
         &self.i_frame_stream_inf_tags
     }
 
+    /// Appends an [`ExtXIFrameStreamInf`].
+    pub fn push_i_frame_stream_inf(&mut self, value: ExtXIFrameStreamInf) -> &mut Self {
+        self.i_frame_stream_inf_tags.push(value);
+        self
+    }
+
+    /// Sets the [`ExtXIFrameStreamInf`] tags contained in the playlist.
+    pub fn set_i_frame_stream_inf_tags<T>(&mut self, value: Vec<T>) -> &mut Self
+    where
+        T: Into<ExtXIFrameStreamInf>,
+    {
+        self.i_frame_stream_inf_tags = value.into_iter().map(|v| v.into()).collect();
+        self
+    }
+
     /// Returns the [`ExtXSessionData`] tags contained in the playlist.
     pub const fn session_data_tags(&self) -> &Vec<ExtXSessionData> { &self.session_data_tags }
 
+    /// Appends an [`ExtXSessionData`].
+    pub fn push_session_data(&mut self, value: ExtXSessionData) -> &mut Self {
+        self.session_data_tags.push(value);
+        self
+    }
+
+    /// Sets the [`ExtXSessionData`] tags contained in the playlist.
+    pub fn set_session_data_tags<T>(&mut self, value: Vec<T>) -> &mut Self
+    where
+        T: Into<ExtXSessionData>,
+    {
+        self.session_data_tags = value.into_iter().map(|v| v.into()).collect();
+        self
+    }
+
     /// Returns the [`ExtXSessionKey`] tags contained in the playlist.
     pub const fn session_key_tags(&self) -> &Vec<ExtXSessionKey> { &self.session_key_tags }
+
+    /// Appends an [`ExtXSessionKey`].
+    pub fn push_session_key(&mut self, value: ExtXSessionKey) -> &mut Self {
+        self.session_key_tags.push(value);
+        self
+    }
+
+    /// Sets the [`ExtXSessionKey`] tags contained in the playlist.
+    pub fn set_session_key_tags<T>(&mut self, value: Vec<T>) -> &mut Self
+    where
+        T: Into<ExtXSessionKey>,
+    {
+        self.session_key_tags = value.into_iter().map(|v| v.into()).collect();
+        self
+    }
+}
+
+macro_rules! required_version {
+    ( $( $tag:expr ),* ) => {
+        ::core::iter::empty()
+            $(
+                .chain(::core::iter::once($tag.required_version()))
+            )*
+            .max()
+            .unwrap_or_default()
+    }
 }
 
 impl RequiredVersion for MasterPlaylist {
-    fn required_version(&self) -> ProtocolVersion { self.version_tag.version() }
+    fn required_version(&self) -> ProtocolVersion {
+        required_version![
+            self.independent_segments_tag,
+            self.start_tag,
+            self.media_tags,
+            self.stream_inf_tags,
+            self.i_frame_stream_inf_tags,
+            self.session_data_tags,
+            self.session_key_tags
+        ]
+    }
 }
 
 impl MasterPlaylistBuilder {
     fn validate(&self) -> Result<(), String> {
-        let required_version = self.required_version();
-        let specified_version = self.version_tag.map_or(required_version, |p| p.version());
-
-        if required_version > specified_version {
-            return Err(Error::required_version(required_version, specified_version).to_string());
-        }
-
         self.validate_stream_inf_tags().map_err(|e| e.to_string())?;
         self.validate_i_frame_stream_inf_tags()
             .map_err(|e| e.to_string())?;
@@ -103,54 +200,6 @@ impl MasterPlaylistBuilder {
             .map_err(|e| e.to_string())?;
 
         Ok(())
-    }
-
-    fn required_version(&self) -> ProtocolVersion {
-        iter::empty()
-            .chain(
-                self.independent_segments_tag
-                    .flatten()
-                    .iter()
-                    .map(|p| p.required_version()),
-            )
-            .chain(
-                self.start_tag
-                    .flatten()
-                    .iter()
-                    .map(|p| p.required_version()),
-            )
-            .chain(
-                self.media_tags
-                    .iter()
-                    .map(|t| t.iter().map(|t| t.required_version()))
-                    .flatten(),
-            )
-            .chain(
-                self.stream_inf_tags
-                    .iter()
-                    .map(|t| t.iter().map(|t| t.required_version()))
-                    .flatten(),
-            )
-            .chain(
-                self.i_frame_stream_inf_tags
-                    .iter()
-                    .map(|t| t.iter().map(|t| t.required_version()))
-                    .flatten(),
-            )
-            .chain(
-                self.session_data_tags
-                    .iter()
-                    .map(|t| t.iter().map(|t| t.required_version()))
-                    .flatten(),
-            )
-            .chain(
-                self.session_key_tags
-                    .iter()
-                    .map(|t| t.iter().map(|t| t.required_version()))
-                    .flatten(),
-            )
-            .max()
-            .unwrap_or_else(ProtocolVersion::latest)
     }
 
     fn validate_stream_inf_tags(&self) -> crate::Result<()> {
@@ -232,11 +281,29 @@ impl MasterPlaylistBuilder {
     }
 }
 
+impl RequiredVersion for MasterPlaylistBuilder {
+    fn required_version(&self) -> ProtocolVersion {
+        // TODO: the .flatten() can be removed as soon as `recursive traits` are
+        //       supported. (RequiredVersion is implemented for Option<T>, but
+        //       not for Option<Option<T>>)
+        // https://github.com/rust-lang/chalk/issues/12
+        required_version![
+            self.independent_segments_tag.flatten(),
+            self.start_tag.flatten(),
+            self.media_tags,
+            self.stream_inf_tags,
+            self.i_frame_stream_inf_tags,
+            self.session_data_tags,
+            self.session_key_tags
+        ]
+    }
+}
+
 impl fmt::Display for MasterPlaylist {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         writeln!(f, "{}", ExtM3u)?;
-        if self.version_tag.version() != ProtocolVersion::V1 {
-            writeln!(f, "{}", self.version_tag)?;
+        if self.required_version() != ProtocolVersion::V1 {
+            writeln!(f, "{}", ExtXVersion::new(self.required_version()))?;
         }
         for t in &self.media_tags {
             writeln!(f, "{}", t)?;
@@ -288,8 +355,12 @@ impl FromStr for MasterPlaylist {
                         Tag::ExtM3u(_) => {
                             return Err(Error::invalid_input());
                         }
-                        Tag::ExtXVersion(t) => {
-                            builder.version(t.version());
+                        Tag::ExtXVersion(_) => {
+                            // This tag can be ignored, because the
+                            // MasterPlaylist will automatically set the
+                            // ExtXVersion tag to correct version!
+
+                            // builder.version(t.version());
                         }
                         Tag::ExtInf(_)
                         | Tag::ExtXByteRange(_)
@@ -359,36 +430,35 @@ mod tests {
 
     #[test]
     fn test_parser() {
-        r#"#EXTM3U
-#EXT-X-STREAM-INF:BANDWIDTH=150000,CODECS="avc1.42e00a,mp4a.40.2",RESOLUTION=416x234
-http://example.com/low/index.m3u8
-#EXT-X-STREAM-INF:BANDWIDTH=240000,CODECS="avc1.42e00a,mp4a.40.2",RESOLUTION=416x234
-http://example.com/lo_mid/index.m3u8
-#EXT-X-STREAM-INF:BANDWIDTH=440000,CODECS="avc1.42e00a,mp4a.40.2",RESOLUTION=416x234
-http://example.com/hi_mid/index.m3u8
-#EXT-X-STREAM-INF:BANDWIDTH=640000,CODECS="avc1.42e00a,mp4a.40.2",RESOLUTION=640x360
-http://example.com/high/index.m3u8
-#EXT-X-STREAM-INF:BANDWIDTH=64000,CODECS="mp4a.40.5"
-http://example.com/audio/index.m3u8
-"#
-        .parse::<MasterPlaylist>()
-        .unwrap();
+        "#EXTM3U\n\
+         #EXT-X-STREAM-INF:BANDWIDTH=150000,CODECS=\"avc1.42e00a,mp4a.40.2\",RESOLUTION=416x234\n\
+         http://example.com/low/index.m3u8\n\
+         #EXT-X-STREAM-INF:BANDWIDTH=240000,CODECS=\"avc1.42e00a,mp4a.40.2\",RESOLUTION=416x234\n\
+         http://example.com/lo_mid/index.m3u8\n\
+         #EXT-X-STREAM-INF:BANDWIDTH=440000,CODECS=\"avc1.42e00a,mp4a.40.2\",RESOLUTION=416x234\n\
+         http://example.com/hi_mid/index.m3u8\n\
+         #EXT-X-STREAM-INF:BANDWIDTH=640000,CODECS=\"avc1.42e00a,mp4a.40.2\",RESOLUTION=640x360\n\
+         http://example.com/high/index.m3u8\n\
+         #EXT-X-STREAM-INF:BANDWIDTH=64000,CODECS=\"mp4a.40.5\"\n\
+         http://example.com/audio/index.m3u8\n"
+            .parse::<MasterPlaylist>()
+            .unwrap();
     }
 
     #[test]
     fn test_display() {
-        let input = r#"#EXTM3U
-#EXT-X-STREAM-INF:BANDWIDTH=150000,CODECS="avc1.42e00a,mp4a.40.2",RESOLUTION=416x234
-http://example.com/low/index.m3u8
-#EXT-X-STREAM-INF:BANDWIDTH=240000,CODECS="avc1.42e00a,mp4a.40.2",RESOLUTION=416x234
-http://example.com/lo_mid/index.m3u8
-#EXT-X-STREAM-INF:BANDWIDTH=440000,CODECS="avc1.42e00a,mp4a.40.2",RESOLUTION=416x234
-http://example.com/hi_mid/index.m3u8
-#EXT-X-STREAM-INF:BANDWIDTH=640000,CODECS="avc1.42e00a,mp4a.40.2",RESOLUTION=640x360
-http://example.com/high/index.m3u8
-#EXT-X-STREAM-INF:BANDWIDTH=64000,CODECS="mp4a.40.5"
-http://example.com/audio/index.m3u8
-"#;
+        let input = "#EXTM3U\n\
+        #EXT-X-STREAM-INF:BANDWIDTH=150000,CODECS=\"avc1.42e00a,mp4a.40.2\",RESOLUTION=416x234\n\
+        http://example.com/low/index.m3u8\n\
+        #EXT-X-STREAM-INF:BANDWIDTH=240000,CODECS=\"avc1.42e00a,mp4a.40.2\",RESOLUTION=416x234\n\
+        http://example.com/lo_mid/index.m3u8\n\
+        #EXT-X-STREAM-INF:BANDWIDTH=440000,CODECS=\"avc1.42e00a,mp4a.40.2\",RESOLUTION=416x234\n\
+        http://example.com/hi_mid/index.m3u8\n\
+        #EXT-X-STREAM-INF:BANDWIDTH=640000,CODECS=\"avc1.42e00a,mp4a.40.2\",RESOLUTION=640x360\n\
+        http://example.com/high/index.m3u8\n\
+        #EXT-X-STREAM-INF:BANDWIDTH=64000,CODECS=\"mp4a.40.5\"\n\
+        http://example.com/audio/index.m3u8\n";
+
         let playlist = input.parse::<MasterPlaylist>().unwrap();
         assert_eq!(playlist.to_string(), input);
     }

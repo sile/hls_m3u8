@@ -3,11 +3,22 @@ use std::ops::{Deref, DerefMut};
 use std::str::FromStr;
 
 use crate::attribute::AttributePairs;
-use crate::types::{ClosedCaptions, DecimalFloatingPoint, ProtocolVersion, StreamInf};
+use crate::types::{
+    ClosedCaptions, DecimalFloatingPoint, HdcpLevel, ProtocolVersion, StreamInf, StreamInfBuilder,
+};
 use crate::utils::{quote, tag, unquote};
 use crate::{Error, RequiredVersion};
 
-/// [4.3.4.2. EXT-X-STREAM-INF]
+/// # [4.3.4.2. EXT-X-STREAM-INF]
+///
+/// The [`ExtXStreamInf`] tag specifies a Variant Stream, which is a set
+/// of Renditions that can be combined to play the presentation.  The
+/// attributes of the tag provide information about the Variant Stream.
+///
+/// The URI line that follows the [`ExtXStreamInf`] tag specifies a Media
+/// Playlist that carries a rendition of the Variant Stream.  The URI
+/// line is REQUIRED.  Clients that do not support multiple video
+/// Renditions SHOULD play this Rendition.
 ///
 /// [4.3.4.2. EXT-X-STREAM-INF]: https://tools.ietf.org/html/rfc8216#section-4.3.4.2
 #[derive(PartialOrd, Debug, Clone, PartialEq, Eq)]
@@ -18,6 +29,104 @@ pub struct ExtXStreamInf {
     subtitles: Option<String>,
     closed_captions: Option<ClosedCaptions>,
     stream_inf: StreamInf,
+}
+
+#[derive(Default, Debug, Clone)]
+/// Builder for [`ExtXStreamInf`].
+pub struct ExtXStreamInfBuilder {
+    uri: Option<String>,
+    frame_rate: Option<DecimalFloatingPoint>,
+    audio: Option<String>,
+    subtitles: Option<String>,
+    closed_captions: Option<ClosedCaptions>,
+    stream_inf: StreamInfBuilder,
+}
+
+impl ExtXStreamInfBuilder {
+    /// An `URI` to the [`MediaPlaylist`] file.
+    ///
+    /// [`MediaPlaylist`]: crate::MediaPlaylist
+    pub fn uri<T: Into<String>>(&mut self, value: T) -> &mut Self {
+        self.uri = Some(value.into());
+        self
+    }
+
+    /// Maximum frame rate for all the video in the variant stream.
+    pub fn frame_rate(&mut self, value: f64) -> &mut Self {
+        self.frame_rate = Some(value.into());
+        self
+    }
+
+    /// The group identifier for the audio in the variant stream.
+    pub fn audio<T: Into<String>>(&mut self, value: T) -> &mut Self {
+        self.audio = Some(value.into());
+        self
+    }
+
+    /// The group identifier for the subtitles in the variant stream.
+    pub fn subtitles<T: Into<String>>(&mut self, value: T) -> &mut Self {
+        self.subtitles = Some(value.into());
+        self
+    }
+
+    /// The value of [`ClosedCaptions`] attribute.
+    pub fn closed_captions<T: Into<ClosedCaptions>>(&mut self, value: T) -> &mut Self {
+        self.closed_captions = Some(value.into());
+        self
+    }
+
+    /// The maximum bandwidth of the stream.
+    pub fn bandwidth(&mut self, value: u64) -> &mut Self {
+        self.stream_inf.bandwidth(value);
+        self
+    }
+
+    /// The average bandwidth of the stream.
+    pub fn average_bandwidth(&mut self, value: u64) -> &mut Self {
+        self.stream_inf.average_bandwidth(value);
+        self
+    }
+
+    /// Every media format in any of the renditions specified by the Variant
+    /// Stream.
+    pub fn codecs<T: Into<String>>(&mut self, value: T) -> &mut Self {
+        self.stream_inf.codecs(value);
+        self
+    }
+
+    /// The resolution of the stream.
+    pub fn resolution(&mut self, value: (usize, usize)) -> &mut Self {
+        self.stream_inf.resolution(value);
+        self
+    }
+
+    /// High-bandwidth Digital Content Protection
+    pub fn hdcp_level(&mut self, value: HdcpLevel) -> &mut Self {
+        self.stream_inf.hdcp_level(value);
+        self
+    }
+
+    /// It indicates the set of video renditions, that should be used when
+    /// playing the presentation.
+    pub fn video<T: Into<String>>(&mut self, value: T) -> &mut Self {
+        self.stream_inf.video(value);
+        self
+    }
+
+    /// Build an [`ExtXStreamInf`].
+    pub fn build(&self) -> crate::Result<ExtXStreamInf> {
+        Ok(ExtXStreamInf {
+            uri: self
+                .uri
+                .clone()
+                .ok_or_else(|| Error::missing_value("frame rate"))?,
+            frame_rate: self.frame_rate,
+            audio: self.audio.clone(),
+            subtitles: self.subtitles.clone(),
+            closed_captions: self.closed_captions.clone(),
+            stream_inf: self.stream_inf.build().map_err(Error::builder_error)?,
+        })
+    }
 }
 
 impl ExtXStreamInf {
@@ -40,6 +149,9 @@ impl ExtXStreamInf {
             stream_inf: StreamInf::new(bandwidth),
         }
     }
+
+    /// Returns a builder for [`ExtXStreamInf`].
+    pub fn builder() -> ExtXStreamInfBuilder { ExtXStreamInfBuilder::default() }
 
     /// Returns the `URI` that identifies the associated media playlist.
     ///
@@ -169,7 +281,7 @@ impl ExtXStreamInf {
     /// ```
     pub const fn closed_captions(&self) -> &Option<ClosedCaptions> { &self.closed_captions }
 
-    /// Returns the value of [`ClosedCaptions`] attribute.
+    /// Sets the value of [`ClosedCaptions`] attribute.
     ///
     /// # Example
     /// ```

@@ -122,3 +122,22 @@ pub trait RequiredVersion {
     /// Returns the protocol compatibility version that this tag requires.
     fn required_version(&self) -> ProtocolVersion;
 }
+
+impl<T: RequiredVersion> RequiredVersion for Vec<T> {
+    fn required_version(&self) -> ProtocolVersion {
+        self.iter()
+            .map(|v| v.required_version())
+            .max()
+            // return ProtocolVersion::V1, if the iterator is empty:
+            .unwrap_or_default()
+    }
+}
+
+impl<T: RequiredVersion> RequiredVersion for Option<T> {
+    fn required_version(&self) -> ProtocolVersion {
+        self.iter()
+            .map(|v| v.required_version())
+            .max()
+            .unwrap_or_default()
+    }
+}

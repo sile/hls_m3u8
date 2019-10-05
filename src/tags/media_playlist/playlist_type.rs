@@ -5,26 +5,25 @@ use crate::types::ProtocolVersion;
 use crate::utils::tag;
 use crate::{Error, RequiredVersion};
 
-/// # [4.4.3.5. EXT-X-PLAYLIST-TYPE]
+/// # [4.3.3.5. EXT-X-PLAYLIST-TYPE]
 ///
 /// The [`ExtXPlaylistType`] tag provides mutability information about the
 /// [`Media Playlist`]. It applies to the entire [`Media Playlist`].
 ///
-/// Its format is:
-/// ```text
-/// #EXT-X-PLAYLIST-TYPE:<type-enum>
-/// ```
-///
-/// [Media Playlist]: crate::MediaPlaylist
-/// [4.4.3.5. EXT-X-PLAYLIST-TYPE]:
-/// https://tools.ietf.org/html/draft-pantos-hls-rfc8216bis-04#section-4.4.3.5
+/// [`Media Playlist`]: crate::MediaPlaylist
+/// [4.3.3.5. EXT-X-PLAYLIST-TYPE]: https://tools.ietf.org/html/rfc8216#section-4.3.3.5
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum ExtXPlaylistType {
-    /// If the [`ExtXPlaylistType`] is Event, Media Segments
-    /// can only be added to the end of the Media Playlist.
+    /// If the [`ExtXPlaylistType`] is Event, [`Media Segment`]s
+    /// can only be added to the end of the [`Media Playlist`].
+    ///
+    /// [`Media Segment`]: crate::MediaSegment
+    /// [`Media Playlist`]: crate::MediaPlaylist
     Event,
     /// If the [`ExtXPlaylistType`] is Video On Demand (Vod),
-    /// the Media Playlist cannot change.
+    /// the [`Media Playlist`] cannot change.
+    ///
+    /// [`Media Playlist`]: crate::MediaPlaylist
     Vod,
 }
 
@@ -32,6 +31,7 @@ impl ExtXPlaylistType {
     pub(crate) const PREFIX: &'static str = "#EXT-X-PLAYLIST-TYPE:";
 }
 
+/// This tag requires [`ProtocolVersion::V1`].
 impl RequiredVersion for ExtXPlaylistType {
     fn required_version(&self) -> ProtocolVersion { ProtocolVersion::V1 }
 }
@@ -81,6 +81,8 @@ mod test {
         assert!("#EXT-X-PLAYLIST-TYPE:H"
             .parse::<ExtXPlaylistType>()
             .is_err());
+
+        assert!("garbage".parse::<ExtXPlaylistType>().is_err());
     }
 
     #[test]

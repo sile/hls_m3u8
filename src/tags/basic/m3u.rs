@@ -6,6 +6,7 @@ use crate::utils::tag;
 use crate::{Error, RequiredVersion};
 
 /// # [4.3.1.1. EXTM3U]
+///
 /// The [`ExtM3u`] tag indicates that the file is an **Ext**ended **[`M3U`]**
 /// Playlist file.
 /// It is the at the start of every [`Media Playlist`] and [`Master Playlist`].
