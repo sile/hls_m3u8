@@ -26,7 +26,7 @@ impl ExtXStart {
     /// # Example
     /// ```
     /// # use hls_m3u8::tags::ExtXStart;
-    /// ExtXStart::new(20.123456);
+    /// let start = ExtXStart::new(20.123456);
     /// ```
     pub fn new(time_offset: f64) -> Self {
         Self {

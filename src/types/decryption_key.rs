@@ -45,7 +45,7 @@ impl DecryptionKeyBuilder {
 }
 
 impl DecryptionKey {
-    /// Makes a new [DecryptionKey].
+    /// Makes a new [`DecryptionKey`].
     ///
     /// # Example
     /// ```
@@ -64,7 +64,7 @@ impl DecryptionKey {
         }
     }
 
-    /// Returns the [EncryptionMethod].
+    /// Returns the [`EncryptionMethod`].
     ///
     /// # Example
     /// ```
@@ -80,7 +80,7 @@ impl DecryptionKey {
     /// Returns a Builder to build a [DecryptionKey].
     pub fn builder() -> DecryptionKeyBuilder { DecryptionKeyBuilder::default() }
 
-    /// Sets the [EncryptionMethod].
+    /// Sets the [`EncryptionMethod`].
     ///
     /// # Example
     /// ```
@@ -120,7 +120,7 @@ impl DecryptionKey {
     /// Sets the `URI` attribute.
     ///
     /// # Note
-    /// This attribute is required, if the [EncryptionMethod] is not `None`.
+    /// This attribute is required, if the [`EncryptionMethod`] is not `None`.
     ///
     /// # Example
     /// ```
@@ -207,7 +207,7 @@ impl DecryptionKey {
     /// ```
     pub const fn key_format(&self) -> Option<KeyFormat> { self.key_format }
 
-    /// Sets the [KeyFormat] attribute.
+    /// Sets the [`KeyFormat`] attribute.
     ///
     /// # Example
     /// ```
@@ -225,7 +225,7 @@ impl DecryptionKey {
         self
     }
 
-    /// Returns the [KeyFormatVersions] attribute.
+    /// Returns the [`KeyFormatVersions`] attribute.
     ///
     /// # Example
     /// ```
@@ -245,7 +245,7 @@ impl DecryptionKey {
         &self.key_format_versions
     }
 
-    /// Sets the [KeyFormatVersions] attribute.
+    /// Sets the [`KeyFormatVersions`] attribute.
     ///
     /// # Example
     /// ```

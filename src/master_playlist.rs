@@ -21,29 +21,63 @@ pub struct MasterPlaylist {
     version_tag: ExtXVersion,
     #[builder(default)]
     /// Sets the [`ExtXIndependentSegments`] tag.
+    ///
+    /// # Note
+    /// This tag is optional.
     independent_segments_tag: Option<ExtXIndependentSegments>,
     #[builder(default)]
     /// Sets the [`ExtXStart`] tag.
+    ///
+    /// # Note
+    /// This tag is optional.
     start_tag: Option<ExtXStart>,
     #[builder(default)]
     /// Sets the [`ExtXMedia`] tag.
+    ///
+    /// # Note
+    /// This tag is optional.
     media_tags: Vec<ExtXMedia>,
     #[builder(default)]
     /// Sets all [`ExtXStreamInf`] tags.
+    ///
+    /// # Note
+    /// This tag is optional.
     stream_inf_tags: Vec<ExtXStreamInf>,
     #[builder(default)]
     /// Sets all [`ExtXIFrameStreamInf`] tags.
+    ///
+    /// # Note
+    /// This tag is optional.
     i_frame_stream_inf_tags: Vec<ExtXIFrameStreamInf>,
     #[builder(default)]
     /// Sets all [`ExtXSessionData`] tags.
+    ///
+    /// # Note
+    /// This tag is optional.
     session_data_tags: Vec<ExtXSessionData>,
     #[builder(default)]
     /// Sets all [`ExtXSessionKey`] tags.
+    ///
+    /// # Note
+    /// This tag is optional.
     session_key_tags: Vec<ExtXSessionKey>,
 }
 
 impl MasterPlaylist {
     /// Returns a Builder for a [`MasterPlaylist`].
+    ///
+    /// # Example
+    /// ```
+    /// use hls_m3u8::tags::ExtXStart;
+    /// use hls_m3u8::MasterPlaylist;
+    ///
+    /// # fn main() -> Result<(), hls_m3u8::Error> {
+    /// MasterPlaylist::builder()
+    ///     .start_tag(ExtXStart::new(20.123456))
+    ///     .build()?;
+    /// # Ok(())
+    /// # }
+    /// ```
     pub fn builder() -> MasterPlaylistBuilder { MasterPlaylistBuilder::default() }
 
     /// Returns the [`ExtXIndependentSegments`] tag contained in the playlist.
