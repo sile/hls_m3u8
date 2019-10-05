@@ -17,8 +17,6 @@ use crate::{Error, RequiredVersion};
 #[builder(setter(into, strip_option))]
 /// Master playlist.
 pub struct MasterPlaylist {
-    #[builder(default, setter(skip))]
-    version_tag: ExtXVersion,
     #[builder(default)]
     /// Sets the [`ExtXIndependentSegments`] tag.
     ///
@@ -196,17 +194,6 @@ impl MasterPlaylist {
     {
         self.session_key_tags = value.into_iter().map(Into::into).collect();
         self
-    }
-}
-
-macro_rules! required_version {
-    ( $( $tag:expr ),* ) => {
-        ::core::iter::empty()
-            $(
-                .chain(::core::iter::once($tag.required_version()))
-            )*
-            .max()
-            .unwrap_or_default()
     }
 }
 
@@ -392,8 +379,6 @@ impl FromStr for MasterPlaylist {
                             // This tag can be ignored, because the
                             // MasterPlaylist will automatically set the
                             // ExtXVersion tag to correct version!
-
-                            // builder.version(t.version());
                         }
                         Tag::ExtInf(_)
                         | Tag::ExtXByteRange(_)

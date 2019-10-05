@@ -165,17 +165,6 @@ impl Error {
 
     pub(crate) fn io<T: ToString>(value: T) -> Self { Self::from(ErrorKind::Io(value.to_string())) }
 
-    pub(crate) fn required_version<T, U>(required_version: T, specified_version: U) -> Self
-    where
-        T: ToString,
-        U: ToString,
-    {
-        Self::from(ErrorKind::VersionError(
-            required_version.to_string(),
-            specified_version.to_string(),
-        ))
-    }
-
     pub(crate) fn builder_error<T: ToString>(value: T) -> Self {
         Self::from(ErrorKind::BuilderError(value.to_string()))
     }

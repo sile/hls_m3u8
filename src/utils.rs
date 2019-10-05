@@ -1,5 +1,16 @@
 use crate::Error;
 
+macro_rules! required_version {
+    ( $( $tag:expr ),* ) => {
+        ::core::iter::empty()
+            $(
+                .chain(::core::iter::once($tag.required_version()))
+            )*
+            .max()
+            .unwrap_or_default()
+    }
+}
+
 macro_rules! impl_from {
     ( $($( $type:tt ),* => $target:path ),* ) => {
         use ::core::convert::From;

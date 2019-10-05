@@ -1,5 +1,4 @@
 use std::fmt;
-use std::iter;
 
 use derive_builder::Builder;
 
@@ -35,6 +34,99 @@ pub struct MediaSegment {
     inf_tag: ExtInf,
     /// Sets an `URI`.
     uri: String,
+}
+
+impl MediaSegment {
+    /// Returns a Builder for a [`MasterPlaylist`].
+    pub fn builder() -> MediaSegmentBuilder { MediaSegmentBuilder::default() }
+
+    /// Returns the `URI` of the media segment.
+    pub const fn uri(&self) -> &String { &self.uri }
+
+    /// Sets the `URI` of the media segment.
+    pub fn set_uri<T>(&mut self, value: T) -> &mut Self
+    where
+        T: Into<String>,
+    {
+        self.uri = value.into();
+        self
+    }
+
+    /// Returns the [`ExtInf`] tag associated with the media segment.
+    pub const fn inf_tag(&self) -> &ExtInf { &self.inf_tag }
+
+    /// Sets the [`ExtInf`] tag associated with the media segment.
+    pub fn set_inf_tag<T>(&mut self, value: T) -> &mut Self
+    where
+        T: Into<ExtInf>,
+    {
+        self.inf_tag = value.into();
+        self
+    }
+
+    /// Returns the [`ExtXByteRange`] tag associated with the media segment.
+    pub const fn byte_range_tag(&self) -> Option<ExtXByteRange> { self.byte_range_tag }
+
+    /// Sets the [`ExtXByteRange`] tag associated with the media segment.
+    pub fn set_byte_range_tag<T>(&mut self, value: Option<T>) -> &mut Self
+    where
+        T: Into<ExtXByteRange>,
+    {
+        self.byte_range_tag = value.map(Into::into);
+        self
+    }
+
+    /// Returns the [`ExtXDateRange`] tag associated with the media segment.
+    pub const fn date_range_tag(&self) -> &Option<ExtXDateRange> { &self.date_range_tag }
+
+    /// Sets the [`ExtXDateRange`] tag associated with the media segment.
+    pub fn set_date_range_tag<T>(&mut self, value: Option<T>) -> &mut Self
+    where
+        T: Into<ExtXDateRange>,
+    {
+        self.date_range_tag = value.map(Into::into);
+        self
+    }
+
+    /// Returns the [`ExtXDiscontinuity`] tag associated with the media segment.
+    pub const fn discontinuity_tag(&self) -> Option<ExtXDiscontinuity> { self.discontinuity_tag }
+
+    /// Sets the [`ExtXDiscontinuity`] tag associated with the media segment.
+    pub fn set_discontinuity_tag<T>(&mut self, value: Option<T>) -> &mut Self
+    where
+        T: Into<ExtXDiscontinuity>,
+    {
+        self.discontinuity_tag = value.map(Into::into);
+        self
+    }
+
+    /// Returns the [`ExtXProgramDateTime`] tag associated with the media
+    /// segment.
+    pub const fn program_date_time_tag(&self) -> Option<ExtXProgramDateTime> {
+        self.program_date_time_tag
+    }
+
+    /// Sets the [`ExtXProgramDateTime`] tag associated with the media
+    /// segment.
+    pub fn set_program_date_time_tag<T>(&mut self, value: Option<T>) -> &mut Self
+    where
+        T: Into<ExtXProgramDateTime>,
+    {
+        self.program_date_time_tag = value.map(Into::into);
+        self
+    }
+
+    /// Returns the [`ExtXMap`] tag associated with the media segment.
+    pub const fn map_tag(&self) -> &Option<ExtXMap> { &self.map_tag }
+
+    /// Sets the [`ExtXMap`] tag associated with the media segment.
+    pub fn set_map_tag<T>(&mut self, value: Option<T>) -> &mut Self
+    where
+        T: Into<ExtXMap>,
+    {
+        self.map_tag = value.map(Into::into);
+        self
+    }
 }
 
 impl MediaSegmentBuilder {
@@ -75,51 +167,17 @@ impl fmt::Display for MediaSegment {
     }
 }
 
-impl MediaSegment {
-    /// Creates a [`MediaSegmentBuilder`].
-    pub fn builder() -> MediaSegmentBuilder { MediaSegmentBuilder::default() }
-
-    /// Returns the `URI` of the media segment.
-    pub const fn uri(&self) -> &String { &self.uri }
-
-    /// Returns the [`ExtInf`] tag associated with the media segment.
-    pub const fn inf_tag(&self) -> &ExtInf { &self.inf_tag }
-
-    /// Returns the [`ExtXByteRange`] tag associated with the media segment.
-    pub const fn byte_range_tag(&self) -> Option<ExtXByteRange> { self.byte_range_tag }
-
-    /// Returns the [`ExtXDateRange`] tag associated with the media segment.
-    pub const fn date_range_tag(&self) -> &Option<ExtXDateRange> { &self.date_range_tag }
-
-    /// Returns the [`ExtXDiscontinuity`] tag associated with the media segment.
-    pub const fn discontinuity_tag(&self) -> Option<ExtXDiscontinuity> { self.discontinuity_tag }
-
-    /// Returns the [`ExtXProgramDateTime`] tag associated with the media
-    /// segment.
-    pub const fn program_date_time_tag(&self) -> Option<ExtXProgramDateTime> {
-        self.program_date_time_tag
-    }
-
-    /// Returns the [`ExtXMap`] tag associated with the media segment.
-    pub const fn map_tag(&self) -> &Option<ExtXMap> { &self.map_tag }
-}
-
 impl RequiredVersion for MediaSegment {
     fn required_version(&self) -> ProtocolVersion {
-        iter::empty()
-            .chain(self.keys.iter().map(|t| t.required_version()))
-            .chain(self.map_tag.iter().map(|t| t.required_version()))
-            .chain(self.byte_range_tag.iter().map(|t| t.required_version()))
-            .chain(self.date_range_tag.iter().map(|t| t.required_version()))
-            .chain(self.discontinuity_tag.iter().map(|t| t.required_version()))
-            .chain(
-                self.program_date_time_tag
-                    .iter()
-                    .map(|t| t.required_version()),
-            )
-            .chain(iter::once(self.inf_tag.required_version()))
-            .max()
-            .unwrap_or_else(ProtocolVersion::latest)
+        required_version![
+            self.keys,
+            self.map_tag,
+            self.byte_range_tag,
+            self.date_range_tag,
+            self.discontinuity_tag,
+            self.program_date_time_tag,
+            self.inf_tag
+        ]
     }
 }
 

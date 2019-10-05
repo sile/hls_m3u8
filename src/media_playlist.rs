@@ -1,5 +1,4 @@
 use std::fmt;
-use std::iter;
 use std::str::FromStr;
 use std::time::Duration;
 
@@ -19,15 +18,6 @@ use crate::{Encrypted, Error, RequiredVersion};
 #[builder(build_fn(validate = "Self::validate"))]
 #[builder(setter(into, strip_option))]
 pub struct MediaPlaylist {
-    /// Sets the protocol compatibility version of the resulting playlist.
-    ///
-    /// If the resulting playlist has tags which requires a compatibility
-    /// version greater than `version`,
-    /// `build()` method will fail with an `ErrorKind::InvalidInput` error.
-    ///
-    /// The default is the maximum version among the tags in the playlist.
-    #[builder(setter(name = "version"))]
-    version_tag: ExtXVersion,
     /// Sets the [`ExtXTargetDuration`] tag.
     target_duration_tag: ExtXTargetDuration,
     #[builder(default)]
@@ -68,13 +58,6 @@ pub struct MediaPlaylist {
 
 impl MediaPlaylistBuilder {
     fn validate(&self) -> Result<(), String> {
-        let required_version = self.required_version();
-        let specified_version = self.version_tag.map_or(required_version, |p| p.version());
-
-        if required_version > specified_version {
-            return Err(Error::required_version(required_version, specified_version).to_string());
-        }
-
         if let Some(target_duration) = &self.target_duration_tag {
             self.validate_media_segments(target_duration.duration())
                 .map_err(|e| e.to_string())?;
@@ -89,10 +72,12 @@ impl MediaPlaylistBuilder {
             for s in segments {
                 // CHECK: `#EXT-X-TARGETDURATION`
                 let segment_duration = s.inf_tag().duration();
-                let rounded_segment_duration = if segment_duration.subsec_nanos() < 500_000_000 {
-                    Duration::from_secs(segment_duration.as_secs())
-                } else {
-                    Duration::from_secs(segment_duration.as_secs() + 1)
+                let rounded_segment_duration = {
+                    if segment_duration.subsec_nanos() < 500_000_000 {
+                        Duration::from_secs(segment_duration.as_secs())
+                    } else {
+                        Duration::from_secs(segment_duration.as_secs() + 1)
+                    }
                 };
 
                 let max_segment_duration = {
@@ -149,71 +134,23 @@ impl MediaPlaylistBuilder {
 
 impl RequiredVersion for MediaPlaylistBuilder {
     fn required_version(&self) -> ProtocolVersion {
-        iter::empty()
-            .chain(
-                self.target_duration_tag
-                    .iter()
-                    .map(|p| p.required_version()),
-            )
-            .chain(
-                self.media_sequence_tag
-                    .flatten()
-                    .iter()
-                    .map(|p| p.required_version()),
-            )
-            .chain(
-                self.discontinuity_sequence_tag
-                    .flatten()
-                    .iter()
-                    .map(|p| p.required_version()),
-            )
-            .chain(
-                self.playlist_type_tag
-                    .flatten()
-                    .iter()
-                    .map(|p| p.required_version()),
-            )
-            .chain(
-                self.i_frames_only_tag
-                    .flatten()
-                    .iter()
-                    .map(|p| p.required_version()),
-            )
-            .chain(
-                self.independent_segments_tag
-                    .flatten()
-                    .iter()
-                    .map(|p| p.required_version()),
-            )
-            .chain(
-                self.start_tag
-                    .flatten()
-                    .iter()
-                    .map(|p| p.required_version()),
-            )
-            .chain(
-                self.end_list_tag
-                    .flatten()
-                    .iter()
-                    .map(|p| p.required_version()),
-            )
-            .chain(self.segments.iter().map(|t| {
-                t.iter()
-                    .map(|p| p.required_version())
-                    .max()
-                    .unwrap_or(ProtocolVersion::V1)
-            }))
-            .max()
-            .unwrap_or_else(ProtocolVersion::latest)
+        required_version![
+            self.target_duration_tag,
+            self.media_sequence_tag,
+            self.discontinuity_sequence_tag,
+            self.playlist_type_tag,
+            self.i_frames_only_tag,
+            self.independent_segments_tag,
+            self.start_tag,
+            self.end_list_tag,
+            self.segments
+        ]
     }
 }
 
 impl MediaPlaylist {
     /// Returns a builder for [`MediaPlaylist`].
     pub fn builder() -> MediaPlaylistBuilder { MediaPlaylistBuilder::default() }
-
-    /// Returns the [`ExtXVersion`] tag contained in the playlist.
-    pub const fn version_tag(&self) -> ExtXVersion { self.version_tag }
 
     /// Returns the [`ExtXTargetDuration`] tag contained in the playlist.
     pub const fn target_duration_tag(&self) -> ExtXTargetDuration { self.target_duration_tag }
@@ -248,11 +185,27 @@ impl MediaPlaylist {
     pub const fn segments(&self) -> &Vec<MediaSegment> { &self.segments }
 }
 
+impl RequiredVersion for MediaPlaylist {
+    fn required_version(&self) -> ProtocolVersion {
+        required_version![
+            self.target_duration_tag,
+            self.media_sequence_tag,
+            self.discontinuity_sequence_tag,
+            self.playlist_type_tag,
+            self.i_frames_only_tag,
+            self.independent_segments_tag,
+            self.start_tag,
+            self.end_list_tag,
+            self.segments
+        ]
+    }
+}
+
 impl fmt::Display for MediaPlaylist {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         writeln!(f, "{}", ExtM3u)?;
-        if self.version_tag.version() != ProtocolVersion::V1 {
-            writeln!(f, "{}", self.version_tag)?;
+        if self.required_version() != ProtocolVersion::V1 {
+            writeln!(f, "{}", ExtXVersion::new(self.required_version()))?;
         }
         writeln!(f, "{}", self.target_duration_tag)?;
         if let Some(value) = &self.media_sequence_tag {
@@ -292,9 +245,8 @@ fn parse_media_playlist(
 
     let mut has_partial_segment = false;
     let mut has_discontinuity_tag = false;
-    let mut has_version = false; // m3u8 files without ExtXVersion tags are ProtocolVersion::V1
 
-    let mut available_key_tags = vec![];
+    let mut available_key_tags: Vec<crate::tags::ExtXKey> = vec![];
 
     for (i, line) in input.parse::<Lines>()?.into_iter().enumerate() {
         match line {
@@ -307,10 +259,6 @@ fn parse_media_playlist(
                 }
                 match tag {
                     Tag::ExtM3u(_) => return Err(Error::invalid_input()),
-                    Tag::ExtXVersion(t) => {
-                        builder.version(t.version());
-                        has_version = true;
-                    }
                     Tag::ExtInf(t) => {
                         has_partial_segment = true;
                         segment.inf_tag(t);
@@ -326,9 +274,7 @@ fn parse_media_playlist(
                     }
                     Tag::ExtXKey(t) => {
                         has_partial_segment = true;
-                        if !available_key_tags.is_empty() {
-                            available_key_tags.push(t);
-                        } else {
+                        if available_key_tags.is_empty() {
                             // An ExtXKey applies to every MediaSegment and to every Media
                             // Initialization Section declared by an EXT-X-MAP tag, that appears
                             // between it and the next EXT-X-KEY tag in the Playlist file with the
@@ -343,6 +289,8 @@ fn parse_media_playlist(
                                     }
                                 })
                                 .collect();
+                        } else {
+                            available_key_tags.push(t);
                         }
                     }
                     Tag::ExtXMap(mut t) => {
@@ -396,7 +344,7 @@ fn parse_media_playlist(
                     Tag::ExtXStart(t) => {
                         builder.start_tag(t);
                     }
-                    Tag::Unknown(_) => {
+                    Tag::Unknown(_) | Tag::ExtXVersion(_) => {
                         // [6.3.1. General Client Responsibilities]
                         // > ignore any unrecognized tags.
                     }
@@ -414,10 +362,6 @@ fn parse_media_playlist(
 
     if has_partial_segment {
         return Err(Error::invalid_input());
-    }
-
-    if !has_version {
-        builder.version(ProtocolVersion::V1);
     }
 
     builder.segments(segments);

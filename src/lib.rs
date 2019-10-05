@@ -44,6 +44,8 @@ pub use media_segment::{MediaSegment, MediaSegmentBuilder};
 pub mod tags;
 pub mod types;
 
+#[macro_use]
+mod utils;
 mod attribute;
 mod error;
 mod line;
@@ -51,7 +53,6 @@ mod master_playlist;
 mod media_playlist;
 mod media_segment;
 mod traits;
-mod utils;
 
 pub use error::Result;
 pub use traits::*;
