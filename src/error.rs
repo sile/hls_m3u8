@@ -210,3 +210,13 @@ impl From<::strum::ParseError> for Error {
         Error::custom(value) // TODO!
     }
 }
+
+impl From<String> for Error {
+    fn from(value: String) -> Self { Error::custom(value) }
+}
+
+impl From<::core::convert::Infallible> for Error {
+    fn from(_: ::core::convert::Infallible) -> Self {
+        Error::custom("An Infallible error has been returned! (this should never happen!)")
+    }
+}

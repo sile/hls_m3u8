@@ -17,7 +17,6 @@ use crate::{Error, RequiredVersion};
 #[builder(setter(into, strip_option))]
 /// Master playlist.
 pub struct MasterPlaylist {
-    //#[builder(default, setter(name = "version"))]
     #[builder(default, setter(skip))]
     version_tag: ExtXVersion,
     #[builder(default)]

@@ -1,10 +1,11 @@
+use std::convert::Infallible;
 use std::fmt;
 use std::ops::{Deref, DerefMut};
 use std::str::FromStr;
 
 use crate::types::ProtocolVersion;
 use crate::utils::{quote, unquote};
-use crate::{Error, RequiredVersion};
+use crate::RequiredVersion;
 
 /// A list of [usize], that can be used to indicate which version(s)
 /// this instance complies with, if more than one version of a particular
@@ -51,7 +52,7 @@ impl RequiredVersion for KeyFormatVersions {
 }
 
 impl FromStr for KeyFormatVersions {
-    type Err = Error;
+    type Err = Infallible;
 
     fn from_str(input: &str) -> Result<Self, Self::Err> {
         let mut result = unquote(input)

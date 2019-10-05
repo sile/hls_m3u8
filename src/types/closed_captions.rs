@@ -1,8 +1,8 @@
+use core::convert::Infallible;
 use std::fmt;
 use std::str::FromStr;
 
 use crate::utils::{quote, unquote};
-use crate::Error;
 
 /// The identifier of a closed captions group or its absence.
 ///
@@ -26,7 +26,7 @@ impl fmt::Display for ClosedCaptions {
 }
 
 impl FromStr for ClosedCaptions {
-    type Err = Error;
+    type Err = Infallible;
 
     fn from_str(input: &str) -> Result<Self, Self::Err> {
         if input.trim() == "NONE" {
