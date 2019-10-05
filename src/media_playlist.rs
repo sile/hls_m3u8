@@ -72,11 +72,7 @@ impl MediaPlaylistBuilder {
         let specified_version = self.version_tag.map_or(required_version, |p| p.version());
 
         if required_version > specified_version {
-            return Err(Error::custom(format!(
-                "required_version: {}, specified_version: {}",
-                required_version, specified_version
-            ))
-            .to_string());
+            return Err(Error::required_version(required_version, specified_version).to_string());
         }
 
         if let Some(target_duration) = &self.target_duration_tag {

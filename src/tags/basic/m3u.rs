@@ -5,7 +5,7 @@ use crate::types::ProtocolVersion;
 use crate::utils::tag;
 use crate::{Error, RequiredVersion};
 
-/// # [4.4.1.1. EXTM3U]
+/// # [4.3.1.1. EXTM3U]
 /// The [`ExtM3u`] tag indicates that the file is an **Ext**ended **[`M3U`]**
 /// Playlist file.
 /// It is the at the start of every [`Media Playlist`] and [`Master Playlist`].
@@ -32,8 +32,7 @@ use crate::{Error, RequiredVersion};
 /// [`Media Playlist`]: crate::MediaPlaylist
 /// [`Master Playlist`]: crate::MasterPlaylist
 /// [`M3U`]: https://en.wikipedia.org/wiki/M3U
-/// [4.4.1.1. EXTM3U]:
-/// https://tools.ietf.org/html/draft-pantos-hls-rfc8216bis-05#section-4.4.1.1
+/// [4.3.1.1. EXTM3U]: https://tools.ietf.org/html/rfc8216#section-4.3.1.1
 #[derive(Copy, Clone, Eq, PartialEq, Ord, PartialOrd, Hash, Debug, Default)]
 pub struct ExtM3u;
 
@@ -42,6 +41,15 @@ impl ExtM3u {
 }
 
 /// This tag requires [`ProtocolVersion::V1`].
+///
+/// # Example
+/// ```
+/// # use hls_m3u8::tags::ExtM3u;
+/// use hls_m3u8::types::ProtocolVersion;
+/// use hls_m3u8::RequiredVersion;
+///
+/// assert_eq!(ExtM3u.required_version(), ProtocolVersion::V1);
+/// ```
 impl RequiredVersion for ExtM3u {
     fn required_version(&self) -> ProtocolVersion { ProtocolVersion::V1 }
 }
@@ -70,11 +78,6 @@ mod test {
 
     #[test]
     fn test_parser() {
-        assert_eq!("#EXTM3U".parse::<ExtM3u>().ok(), Some(ExtM3u));
-    }
-
-    #[test]
-    fn test_required_version() {
-        assert_eq!(ExtM3u.required_version(), ProtocolVersion::V1);
+        assert_eq!("#EXTM3U".parse::<ExtM3u>().unwrap(), ExtM3u);
     }
 }

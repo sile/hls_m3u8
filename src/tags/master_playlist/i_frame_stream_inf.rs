@@ -7,7 +7,7 @@ use crate::types::{ProtocolVersion, StreamInf};
 use crate::utils::{quote, tag, unquote};
 use crate::{Error, RequiredVersion};
 
-/// # [4.4.5.3. EXT-X-I-FRAME-STREAM-INF]
+/// # [4.3.5.3. EXT-X-I-FRAME-STREAM-INF]
 /// The [`ExtXIFrameStreamInf`] tag identifies a [`Media Playlist`] file,
 /// containing the I-frames of a multimedia presentation.
 ///
@@ -16,8 +16,7 @@ use crate::{Error, RequiredVersion};
 ///
 /// [`Master Playlist`]: crate::MasterPlaylist
 /// [`Media Playlist`]: crate::MediaPlaylist
-/// [4.4.5.3. EXT-X-I-FRAME-STREAM-INF]:
-/// https://tools.ietf.org/html/draft-pantos-hls-rfc8216bis-05#section-4.4.5.3
+/// [4.3.5.3. EXT-X-I-FRAME-STREAM-INF]: https://tools.ietf.org/html/rfc8216#section-4.3.4.5
 #[derive(PartialOrd, Debug, Clone, PartialEq, Eq, Hash)]
 pub struct ExtXIFrameStreamInf {
     uri: String,

@@ -28,54 +28,59 @@ pub struct MasterPlaylist {
     /// The default is the maximum version among the tags in the playlist.
     version_tag: ExtXVersion,
     #[builder(default)]
-    /// Sets the [ExtXIndependentSegments] tag.
+    /// Sets the [`ExtXIndependentSegments`] tag.
     independent_segments_tag: Option<ExtXIndependentSegments>,
     #[builder(default)]
-    /// Sets the [ExtXStart] tag.
+    /// Sets the [`ExtXStart`] tag.
     start_tag: Option<ExtXStart>,
-    /// Sets the [ExtXMedia] tag.
+    #[builder(default)]
+    /// Sets the [`ExtXMedia`] tag.
     media_tags: Vec<ExtXMedia>,
-    /// Sets all [ExtXStreamInf]s.
+    #[builder(default)]
+    /// Sets all [`ExtXStreamInf`]s.
     stream_inf_tags: Vec<ExtXStreamInf>,
-    /// Sets all [ExtXIFrameStreamInf]s.
+    #[builder(default)]
+    /// Sets all [`ExtXIFrameStreamInf`]s.
     i_frame_stream_inf_tags: Vec<ExtXIFrameStreamInf>,
-    /// Sets all [ExtXSessionData]s.
+    #[builder(default)]
+    /// Sets all [`ExtXSessionData`]s.
     session_data_tags: Vec<ExtXSessionData>,
-    /// Sets all [ExtXSessionKey]s.
+    #[builder(default)]
+    /// Sets all [`ExtXSessionKey`]s.
     session_key_tags: Vec<ExtXSessionKey>,
 }
 
 impl MasterPlaylist {
-    /// Returns a Builder for a MasterPlaylist.
+    /// Returns a Builder for a [`MasterPlaylist`].
     pub fn builder() -> MasterPlaylistBuilder { MasterPlaylistBuilder::default() }
 
-    /// Returns the `EXT-X-VERSION` tag contained in the playlist.
-    pub const fn version_tag(&self) -> ExtXVersion { self.version_tag }
+    /// Returns the [`ExtXVersion`] tag contained in the playlist.
+    pub const fn version(&self) -> ExtXVersion { self.version_tag }
 
-    /// Returns the `EXT-X-INDEPENDENT-SEGMENTS` tag contained in the playlist.
+    /// Returns the [`ExtXIndependentSegments`] tag contained in the playlist.
     pub const fn independent_segments_tag(&self) -> Option<ExtXIndependentSegments> {
         self.independent_segments_tag
     }
 
-    /// Returns the `EXT-X-START` tag contained in the playlist.
+    /// Returns the [`ExtXStart`] tag contained in the playlist.
     pub const fn start_tag(&self) -> Option<ExtXStart> { self.start_tag }
 
-    /// Returns the `EXT-X-MEDIA` tags contained in the playlist.
-    pub fn media_tags(&self) -> &[ExtXMedia] { &self.media_tags }
+    /// Returns the [`ExtXMedia`] tags contained in the playlist.
+    pub const fn media_tags(&self) -> &Vec<ExtXMedia> { &self.media_tags }
 
-    /// Returns the `EXT-X-STREAM-INF` tags contained in the playlist.
-    pub fn stream_inf_tags(&self) -> &[ExtXStreamInf] { &self.stream_inf_tags }
+    /// Returns the [`ExtXStreamInf`] tags contained in the playlist.
+    pub const fn stream_inf_tags(&self) -> &Vec<ExtXStreamInf> { &self.stream_inf_tags }
 
-    /// Returns the `EXT-X-I-FRAME-STREAM-INF` tags contained in the playlist.
-    pub fn i_frame_stream_inf_tags(&self) -> &[ExtXIFrameStreamInf] {
+    /// Returns the [`ExtXIFrameStreamInf`] tags contained in the playlist.
+    pub const fn i_frame_stream_inf_tags(&self) -> &Vec<ExtXIFrameStreamInf> {
         &self.i_frame_stream_inf_tags
     }
 
-    /// Returns the `EXT-X-SESSION-DATA` tags contained in the playlist.
-    pub fn session_data_tags(&self) -> &[ExtXSessionData] { &self.session_data_tags }
+    /// Returns the [`ExtXSessionData`] tags contained in the playlist.
+    pub const fn session_data_tags(&self) -> &Vec<ExtXSessionData> { &self.session_data_tags }
 
-    /// Returns the `EXT-X-SESSION-KEY` tags contained in the playlist.
-    pub fn session_key_tags(&self) -> &[ExtXSessionKey] { &self.session_key_tags }
+    /// Returns the [`ExtXSessionKey`] tags contained in the playlist.
+    pub const fn session_key_tags(&self) -> &Vec<ExtXSessionKey> { &self.session_key_tags }
 }
 
 impl RequiredVersion for MasterPlaylist {
@@ -85,10 +90,7 @@ impl RequiredVersion for MasterPlaylist {
 impl MasterPlaylistBuilder {
     fn validate(&self) -> Result<(), String> {
         let required_version = self.required_version();
-        let specified_version = self
-            .version_tag
-            .unwrap_or_else(|| required_version.into())
-            .version();
+        let specified_version = self.version_tag.map_or(required_version, |p| p.version());
 
         if required_version > specified_version {
             return Err(Error::required_version(required_version, specified_version).to_string());
@@ -107,15 +109,15 @@ impl MasterPlaylistBuilder {
         iter::empty()
             .chain(
                 self.independent_segments_tag
+                    .flatten()
                     .iter()
-                    .map(|t| t.iter().map(|t| t.required_version()))
-                    .flatten(),
+                    .map(|p| p.required_version()),
             )
             .chain(
                 self.start_tag
+                    .flatten()
                     .iter()
-                    .map(|t| t.iter().map(|t| t.required_version()))
-                    .flatten(),
+                    .map(|p| p.required_version()),
             )
             .chain(
                 self.media_tags

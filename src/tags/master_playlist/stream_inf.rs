@@ -188,6 +188,7 @@ impl ExtXStreamInf {
     }
 }
 
+/// This tag requires [`ProtocolVersion::V1`].
 impl RequiredVersion for ExtXStreamInf {
     fn required_version(&self) -> ProtocolVersion { ProtocolVersion::V1 }
 }
