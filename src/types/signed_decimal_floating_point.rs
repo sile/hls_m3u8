@@ -54,21 +54,21 @@ mod tests {
     }
 
     test_from![
-        SignedDecimalFloatingPoint::from(1u8) => SignedDecimalFloatingPoint::new(1.0),
-        SignedDecimalFloatingPoint::from(1i8) => SignedDecimalFloatingPoint::new(1.0),
-        SignedDecimalFloatingPoint::from(1u16) => SignedDecimalFloatingPoint::new(1.0),
-        SignedDecimalFloatingPoint::from(1i16) => SignedDecimalFloatingPoint::new(1.0),
-        SignedDecimalFloatingPoint::from(1u32) => SignedDecimalFloatingPoint::new(1.0),
-        SignedDecimalFloatingPoint::from(1i32) => SignedDecimalFloatingPoint::new(1.0),
-        SignedDecimalFloatingPoint::from(1.0f32) => SignedDecimalFloatingPoint::new(1.0),
-        SignedDecimalFloatingPoint::from(1.0f64) => SignedDecimalFloatingPoint::new(1.0)
+        SignedDecimalFloatingPoint::from(1_u8) => SignedDecimalFloatingPoint::new(1.0),
+        SignedDecimalFloatingPoint::from(1_i8) => SignedDecimalFloatingPoint::new(1.0),
+        SignedDecimalFloatingPoint::from(1_u16) => SignedDecimalFloatingPoint::new(1.0),
+        SignedDecimalFloatingPoint::from(1_i16) => SignedDecimalFloatingPoint::new(1.0),
+        SignedDecimalFloatingPoint::from(1_u32) => SignedDecimalFloatingPoint::new(1.0),
+        SignedDecimalFloatingPoint::from(1_i32) => SignedDecimalFloatingPoint::new(1.0),
+        SignedDecimalFloatingPoint::from(1.0_f32) => SignedDecimalFloatingPoint::new(1.0),
+        SignedDecimalFloatingPoint::from(1.0_f64) => SignedDecimalFloatingPoint::new(1.0)
     ];
 
     #[test]
     fn test_display() {
         assert_eq!(
             SignedDecimalFloatingPoint::new(1.0).to_string(),
-            1.0f64.to_string()
+            1.0_f64.to_string()
         );
     }
 

@@ -191,7 +191,7 @@ impl ExtXStreamInf {
     /// assert_eq!(stream.frame_rate(), Some(59.9));
     /// ```
     pub fn set_frame_rate(&mut self, value: Option<f64>) -> &mut Self {
-        self.frame_rate = value.map(|v| v.into());
+        self.frame_rate = value.map(Into::into);
         self
     }
 
@@ -233,7 +233,7 @@ impl ExtXStreamInf {
     /// assert_eq!(stream.audio(), &Some("audio".to_string()));
     /// ```
     pub fn set_audio<T: Into<String>>(&mut self, value: Option<T>) -> &mut Self {
-        self.audio = value.map(|v| v.into());
+        self.audio = value.map(Into::into);
         self
     }
 
@@ -262,7 +262,7 @@ impl ExtXStreamInf {
     /// assert_eq!(stream.subtitles(), &Some("subs".to_string()));
     /// ```
     pub fn set_subtitles<T: Into<String>>(&mut self, value: Option<T>) -> &mut Self {
-        self.subtitles = value.map(|v| v.into());
+        self.subtitles = value.map(Into::into);
         self
     }
 

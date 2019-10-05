@@ -107,11 +107,11 @@ impl fmt::Display for Error {
 }
 
 impl From<ErrorKind> for Error {
-    fn from(kind: ErrorKind) -> Error { Error::from(Context::new(kind)) }
+    fn from(kind: ErrorKind) -> Self { Self::from(Context::new(kind)) }
 }
 
 impl From<Context<ErrorKind>> for Error {
-    fn from(inner: Context<ErrorKind>) -> Error { Error { inner } }
+    fn from(inner: Context<ErrorKind>) -> Self { Self { inner } }
 }
 
 impl Error {
@@ -190,33 +190,33 @@ impl Error {
 }
 
 impl From<::std::num::ParseIntError> for Error {
-    fn from(value: ::std::num::ParseIntError) -> Self { Error::parse_int_error(value) }
+    fn from(value: ::std::num::ParseIntError) -> Self { Self::parse_int_error(value) }
 }
 
 impl From<::std::num::ParseFloatError> for Error {
-    fn from(value: ::std::num::ParseFloatError) -> Self { Error::parse_float_error(value) }
+    fn from(value: ::std::num::ParseFloatError) -> Self { Self::parse_float_error(value) }
 }
 
 impl From<::std::io::Error> for Error {
-    fn from(value: ::std::io::Error) -> Self { Error::io(value) }
+    fn from(value: ::std::io::Error) -> Self { Self::io(value) }
 }
 
 impl From<::chrono::ParseError> for Error {
-    fn from(value: ::chrono::ParseError) -> Self { Error::chrono(value) }
+    fn from(value: ::chrono::ParseError) -> Self { Self::chrono(value) }
 }
 
 impl From<::strum::ParseError> for Error {
     fn from(value: ::strum::ParseError) -> Self {
-        Error::custom(value) // TODO!
+        Self::custom(value) // TODO!
     }
 }
 
 impl From<String> for Error {
-    fn from(value: String) -> Self { Error::custom(value) }
+    fn from(value: String) -> Self { Self::custom(value) }
 }
 
 impl From<::core::convert::Infallible> for Error {
     fn from(_: ::core::convert::Infallible) -> Self {
-        Error::custom("An Infallible error has been returned! (this should never happen!)")
+        Self::custom("An Infallible error has been returned! (this should never happen!)")
     }
 }

@@ -229,7 +229,7 @@ impl StreamInf {
     /// assert_eq!(stream.hdcp_level(), Some(HdcpLevel::None));
     /// ```
     pub fn set_hdcp_level<T: Into<HdcpLevel>>(&mut self, value: Option<T>) -> &mut Self {
-        self.hdcp_level = value.map(|v| v.into());
+        self.hdcp_level = value.map(Into::into);
         self
     }
 }

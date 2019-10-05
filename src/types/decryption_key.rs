@@ -221,7 +221,7 @@ impl DecryptionKey {
     /// assert_eq!(key.key_format(), Some(KeyFormat::Identity));
     /// ```
     pub fn set_key_format<T: Into<KeyFormat>>(&mut self, value: Option<T>) -> &mut Self {
-        self.key_format = value.map(|v| v.into());
+        self.key_format = value.map(Into::into);
         self
     }
 
@@ -266,7 +266,7 @@ impl DecryptionKey {
         &mut self,
         value: Option<T>,
     ) -> &mut Self {
-        self.key_format_versions = value.map(|v| v.into());
+        self.key_format_versions = value.map(Into::into);
         self
     }
 }

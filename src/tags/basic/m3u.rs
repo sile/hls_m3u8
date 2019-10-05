@@ -42,15 +42,6 @@ impl ExtM3u {
 }
 
 /// This tag requires [`ProtocolVersion::V1`].
-///
-/// # Example
-/// ```
-/// # use hls_m3u8::tags::ExtM3u;
-/// use hls_m3u8::types::ProtocolVersion;
-/// use hls_m3u8::RequiredVersion;
-///
-/// assert_eq!(ExtM3u.required_version(), ProtocolVersion::V1);
-/// ```
 impl RequiredVersion for ExtM3u {
     fn required_version(&self) -> ProtocolVersion { ProtocolVersion::V1 }
 }
@@ -80,5 +71,10 @@ mod test {
     #[test]
     fn test_parser() {
         assert_eq!("#EXTM3U".parse::<ExtM3u>().unwrap(), ExtM3u);
+    }
+
+    #[test]
+    fn test_required_version() {
+        assert_eq!(ExtM3u.required_version(), ProtocolVersion::V1);
     }
 }

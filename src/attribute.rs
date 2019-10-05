@@ -39,7 +39,7 @@ impl FromStr for AttributePairs {
     type Err = Error;
 
     fn from_str(input: &str) -> Result<Self, Self::Err> {
-        let mut result = AttributePairs::new();
+        let mut result = Self::new();
 
         for line in split(input, ',') {
             let pair = split(line.trim(), '=');
@@ -67,16 +67,12 @@ fn split(value: &str, terminator: char) -> Vec<String> {
     let mut result = vec![];
 
     let mut inside_quotes = false;
-    let mut temp_string = String::new();
+    let mut temp_string = String::with_capacity(1024);
 
     for c in value.chars() {
         match c {
             '"' => {
-                if inside_quotes {
-                    inside_quotes = false;
-                } else {
-                    inside_quotes = true;
-                }
+                inside_quotes = !inside_quotes;
                 temp_string.push(c);
             }
             k if (k == terminator) => {
@@ -84,7 +80,7 @@ fn split(value: &str, terminator: char) -> Vec<String> {
                     temp_string.push(c);
                 } else {
                     result.push(temp_string);
-                    temp_string = String::new();
+                    temp_string = String::with_capacity(1024);
                 }
             }
             _ => {

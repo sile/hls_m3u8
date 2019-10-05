@@ -42,7 +42,7 @@ impl DecimalResolution {
 
 /// [`DecimalResolution`] can be constructed from a tuple; `(width, height)`.
 impl From<(usize, usize)> for DecimalResolution {
-    fn from(value: (usize, usize)) -> Self { DecimalResolution::new(value.0, value.1) }
+    fn from(value: (usize, usize)) -> Self { Self::new(value.0, value.1) }
 }
 
 impl FromStr for DecimalResolution {

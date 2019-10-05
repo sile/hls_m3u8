@@ -97,7 +97,7 @@ impl FromStr for ExtXByteRange {
             }
         };
 
-        Ok(ExtXByteRange::new(length, start))
+        Ok(Self::new(length, start))
     }
 }
 

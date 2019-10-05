@@ -28,7 +28,7 @@ impl FromStr for ExtXIndependentSegments {
 
     fn from_str(input: &str) -> Result<Self, Self::Err> {
         tag(input, Self::PREFIX)?;
-        Ok(ExtXIndependentSegments)
+        Ok(Self)
     }
 }
 

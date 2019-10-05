@@ -40,7 +40,7 @@ impl FromStr for ExtXIFramesOnly {
 
     fn from_str(input: &str) -> Result<Self, Self::Err> {
         tag(input, Self::PREFIX)?;
-        Ok(ExtXIFramesOnly)
+        Ok(Self)
     }
 }
 

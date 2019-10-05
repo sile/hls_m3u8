@@ -37,7 +37,7 @@ impl FromStr for ExtXDiscontinuity {
 
     fn from_str(input: &str) -> Result<Self, Self::Err> {
         tag(input, Self::PREFIX)?;
-        Ok(ExtXDiscontinuity)
+        Ok(Self)
     }
 }
 

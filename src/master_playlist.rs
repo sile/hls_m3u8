@@ -90,7 +90,7 @@ impl MasterPlaylist {
     where
         T: Into<ExtXIndependentSegments>,
     {
-        self.independent_segments_tag = value.map(|v| v.into());
+        self.independent_segments_tag = value.map(Into::into);
         self
     }
 
@@ -102,7 +102,7 @@ impl MasterPlaylist {
     where
         T: Into<ExtXStart>,
     {
-        self.start_tag = value.map(|v| v.into());
+        self.start_tag = value.map(Into::into);
         self
     }
 
@@ -120,7 +120,7 @@ impl MasterPlaylist {
     where
         T: Into<ExtXMedia>,
     {
-        self.media_tags = value.into_iter().map(|v| v.into()).collect();
+        self.media_tags = value.into_iter().map(Into::into).collect();
         self
     }
 
@@ -138,7 +138,7 @@ impl MasterPlaylist {
     where
         T: Into<ExtXStreamInf>,
     {
-        self.stream_inf_tags = value.into_iter().map(|v| v.into()).collect();
+        self.stream_inf_tags = value.into_iter().map(Into::into).collect();
         self
     }
 
@@ -158,7 +158,7 @@ impl MasterPlaylist {
     where
         T: Into<ExtXIFrameStreamInf>,
     {
-        self.i_frame_stream_inf_tags = value.into_iter().map(|v| v.into()).collect();
+        self.i_frame_stream_inf_tags = value.into_iter().map(Into::into).collect();
         self
     }
 
@@ -176,7 +176,7 @@ impl MasterPlaylist {
     where
         T: Into<ExtXSessionData>,
     {
-        self.session_data_tags = value.into_iter().map(|v| v.into()).collect();
+        self.session_data_tags = value.into_iter().map(Into::into).collect();
         self
     }
 
@@ -194,7 +194,7 @@ impl MasterPlaylist {
     where
         T: Into<ExtXSessionKey>,
     {
-        self.session_key_tags = value.into_iter().map(|v| v.into()).collect();
+        self.session_key_tags = value.into_iter().map(Into::into).collect();
         self
     }
 }
@@ -367,7 +367,7 @@ impl FromStr for MasterPlaylist {
     type Err = Error;
 
     fn from_str(input: &str) -> Result<Self, Self::Err> {
-        let mut builder = MasterPlaylist::builder();
+        let mut builder = Self::builder();
 
         let mut media_tags = vec![];
         let mut stream_inf_tags = vec![];

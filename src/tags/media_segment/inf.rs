@@ -130,10 +130,7 @@ impl RequiredVersion for ExtInf {
 impl fmt::Display for ExtInf {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         write!(f, "{}", Self::PREFIX)?;
-
-        let duration = (self.duration.as_secs() as f64)
-            + (f64::from(self.duration.subsec_nanos()) / 1_000_000_000.0);
-        write!(f, "{},", duration)?;
+        write!(f, "{},", self.duration.as_secs_f64())?;
 
         if let Some(value) = &self.title {
             write!(f, "{}", value)?;

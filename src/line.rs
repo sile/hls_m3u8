@@ -16,7 +16,7 @@ impl FromStr for Lines {
     type Err = Error;
 
     fn from_str(input: &str) -> Result<Self, Self::Err> {
-        let mut result = Lines::new();
+        let mut result = Self::new();
 
         let mut stream_inf = false;
         let mut stream_inf_line = None;
@@ -116,29 +116,29 @@ pub enum Tag {
 impl fmt::Display for Tag {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         match &self {
-            Tag::ExtM3u(value) => value.fmt(f),
-            Tag::ExtXVersion(value) => value.fmt(f),
-            Tag::ExtInf(value) => value.fmt(f),
-            Tag::ExtXByteRange(value) => value.fmt(f),
-            Tag::ExtXDiscontinuity(value) => value.fmt(f),
-            Tag::ExtXKey(value) => value.fmt(f),
-            Tag::ExtXMap(value) => value.fmt(f),
-            Tag::ExtXProgramDateTime(value) => value.fmt(f),
-            Tag::ExtXDateRange(value) => value.fmt(f),
-            Tag::ExtXTargetDuration(value) => value.fmt(f),
-            Tag::ExtXMediaSequence(value) => value.fmt(f),
-            Tag::ExtXDiscontinuitySequence(value) => value.fmt(f),
-            Tag::ExtXEndList(value) => value.fmt(f),
-            Tag::ExtXPlaylistType(value) => value.fmt(f),
-            Tag::ExtXIFramesOnly(value) => value.fmt(f),
-            Tag::ExtXMedia(value) => value.fmt(f),
-            Tag::ExtXStreamInf(value) => value.fmt(f),
-            Tag::ExtXIFrameStreamInf(value) => value.fmt(f),
-            Tag::ExtXSessionData(value) => value.fmt(f),
-            Tag::ExtXSessionKey(value) => value.fmt(f),
-            Tag::ExtXIndependentSegments(value) => value.fmt(f),
-            Tag::ExtXStart(value) => value.fmt(f),
-            Tag::Unknown(value) => value.fmt(f),
+            Self::ExtM3u(value) => value.fmt(f),
+            Self::ExtXVersion(value) => value.fmt(f),
+            Self::ExtInf(value) => value.fmt(f),
+            Self::ExtXByteRange(value) => value.fmt(f),
+            Self::ExtXDiscontinuity(value) => value.fmt(f),
+            Self::ExtXKey(value) => value.fmt(f),
+            Self::ExtXMap(value) => value.fmt(f),
+            Self::ExtXProgramDateTime(value) => value.fmt(f),
+            Self::ExtXDateRange(value) => value.fmt(f),
+            Self::ExtXTargetDuration(value) => value.fmt(f),
+            Self::ExtXMediaSequence(value) => value.fmt(f),
+            Self::ExtXDiscontinuitySequence(value) => value.fmt(f),
+            Self::ExtXEndList(value) => value.fmt(f),
+            Self::ExtXPlaylistType(value) => value.fmt(f),
+            Self::ExtXIFramesOnly(value) => value.fmt(f),
+            Self::ExtXMedia(value) => value.fmt(f),
+            Self::ExtXStreamInf(value) => value.fmt(f),
+            Self::ExtXIFrameStreamInf(value) => value.fmt(f),
+            Self::ExtXSessionData(value) => value.fmt(f),
+            Self::ExtXSessionKey(value) => value.fmt(f),
+            Self::ExtXIndependentSegments(value) => value.fmt(f),
+            Self::ExtXStart(value) => value.fmt(f),
+            Self::Unknown(value) => value.fmt(f),
         }
     }
 }
@@ -148,51 +148,51 @@ impl FromStr for Tag {
 
     fn from_str(input: &str) -> Result<Self, Self::Err> {
         if input.starts_with(tags::ExtM3u::PREFIX) {
-            input.parse().map(Tag::ExtM3u)
+            input.parse().map(Self::ExtM3u)
         } else if input.starts_with(tags::ExtXVersion::PREFIX) {
-            input.parse().map(Tag::ExtXVersion)
+            input.parse().map(Self::ExtXVersion)
         } else if input.starts_with(tags::ExtInf::PREFIX) {
-            input.parse().map(Tag::ExtInf)
+            input.parse().map(Self::ExtInf)
         } else if input.starts_with(tags::ExtXByteRange::PREFIX) {
-            input.parse().map(Tag::ExtXByteRange)
+            input.parse().map(Self::ExtXByteRange)
         } else if input.starts_with(tags::ExtXDiscontinuity::PREFIX) {
-            input.parse().map(Tag::ExtXDiscontinuity)
+            input.parse().map(Self::ExtXDiscontinuity)
         } else if input.starts_with(tags::ExtXKey::PREFIX) {
-            input.parse().map(Tag::ExtXKey)
+            input.parse().map(Self::ExtXKey)
         } else if input.starts_with(tags::ExtXMap::PREFIX) {
-            input.parse().map(Tag::ExtXMap)
+            input.parse().map(Self::ExtXMap)
         } else if input.starts_with(tags::ExtXProgramDateTime::PREFIX) {
-            input.parse().map(Tag::ExtXProgramDateTime)
+            input.parse().map(Self::ExtXProgramDateTime)
         } else if input.starts_with(tags::ExtXTargetDuration::PREFIX) {
-            input.parse().map(Tag::ExtXTargetDuration)
+            input.parse().map(Self::ExtXTargetDuration)
         } else if input.starts_with(tags::ExtXDateRange::PREFIX) {
-            input.parse().map(Tag::ExtXDateRange)
+            input.parse().map(Self::ExtXDateRange)
         } else if input.starts_with(tags::ExtXMediaSequence::PREFIX) {
-            input.parse().map(Tag::ExtXMediaSequence)
+            input.parse().map(Self::ExtXMediaSequence)
         } else if input.starts_with(tags::ExtXDiscontinuitySequence::PREFIX) {
-            input.parse().map(Tag::ExtXDiscontinuitySequence)
+            input.parse().map(Self::ExtXDiscontinuitySequence)
         } else if input.starts_with(tags::ExtXEndList::PREFIX) {
-            input.parse().map(Tag::ExtXEndList)
+            input.parse().map(Self::ExtXEndList)
         } else if input.starts_with(tags::ExtXPlaylistType::PREFIX) {
-            input.parse().map(Tag::ExtXPlaylistType)
+            input.parse().map(Self::ExtXPlaylistType)
         } else if input.starts_with(tags::ExtXIFramesOnly::PREFIX) {
-            input.parse().map(Tag::ExtXIFramesOnly)
+            input.parse().map(Self::ExtXIFramesOnly)
         } else if input.starts_with(tags::ExtXMedia::PREFIX) {
-            input.parse().map(Tag::ExtXMedia).map_err(Error::custom)
+            input.parse().map(Self::ExtXMedia).map_err(Error::custom)
         } else if input.starts_with(tags::ExtXStreamInf::PREFIX) {
-            input.parse().map(Tag::ExtXStreamInf)
+            input.parse().map(Self::ExtXStreamInf)
         } else if input.starts_with(tags::ExtXIFrameStreamInf::PREFIX) {
-            input.parse().map(Tag::ExtXIFrameStreamInf)
+            input.parse().map(Self::ExtXIFrameStreamInf)
         } else if input.starts_with(tags::ExtXSessionData::PREFIX) {
-            input.parse().map(Tag::ExtXSessionData)
+            input.parse().map(Self::ExtXSessionData)
         } else if input.starts_with(tags::ExtXSessionKey::PREFIX) {
-            input.parse().map(Tag::ExtXSessionKey)
+            input.parse().map(Self::ExtXSessionKey)
         } else if input.starts_with(tags::ExtXIndependentSegments::PREFIX) {
-            input.parse().map(Tag::ExtXIndependentSegments)
+            input.parse().map(Self::ExtXIndependentSegments)
         } else if input.starts_with(tags::ExtXStart::PREFIX) {
-            input.parse().map(Tag::ExtXStart)
+            input.parse().map(Self::ExtXStart)
         } else {
-            Ok(Tag::Unknown(input.to_string()))
+            Ok(Self::Unknown(input.to_string()))
         }
     }
 }

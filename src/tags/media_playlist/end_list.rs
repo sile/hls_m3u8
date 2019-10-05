@@ -38,7 +38,7 @@ impl FromStr for ExtXEndList {
 
     fn from_str(input: &str) -> Result<Self, Self::Err> {
         tag(input, Self::PREFIX)?;
-        Ok(ExtXEndList)
+        Ok(Self)
     }
 }
 

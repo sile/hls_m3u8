@@ -63,7 +63,7 @@ impl From<f64> for DecimalFloatingPoint {
 }
 
 impl From<f32> for DecimalFloatingPoint {
-    fn from(value: f32) -> Self { (value as f64).into() }
+    fn from(value: f32) -> Self { f64::from(value).into() }
 }
 
 #[cfg(test)]
@@ -86,7 +86,7 @@ mod tests {
         }
     }
 
-    test_from![1u8, 1u16, 1u32, 1.0f32, -1.0f32, 1.0f64, -1.0f64];
+    test_from![1_u8, 1_u16, 1_u32, 1.0_f32, -1.0_f32, 1.0_f64, -1.0_f64];
 
     #[test]
     pub fn test_display() {

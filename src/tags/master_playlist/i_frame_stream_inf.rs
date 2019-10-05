@@ -101,7 +101,7 @@ impl ExtXIFrameStreamInf {
     /// let stream = ExtXIFrameStreamInf::new("https://www.example.com", 20);
     /// ```
     pub fn new<T: ToString>(uri: T, bandwidth: u64) -> Self {
-        ExtXIFrameStreamInf {
+        Self {
             uri: uri.to_string(),
             stream_inf: StreamInf::new(bandwidth),
         }
