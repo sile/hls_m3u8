@@ -31,6 +31,7 @@ impl fmt::Display for KeyFormat {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result { write!(f, "{}", quote("identity")) }
 }
 
+/// This tag requires [`ProtocolVersion::V5`].
 impl RequiredVersion for KeyFormat {
     fn required_version(&self) -> ProtocolVersion { ProtocolVersion::V5 }
 }

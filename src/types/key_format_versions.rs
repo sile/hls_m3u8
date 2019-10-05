@@ -15,10 +15,6 @@ use crate::RequiredVersion;
 #[derive(Clone, Eq, PartialEq, Ord, PartialOrd, Hash, Debug)]
 pub struct KeyFormatVersions(Vec<usize>);
 
-impl Default for KeyFormatVersions {
-    fn default() -> Self { Self(vec![1]) }
-}
-
 impl KeyFormatVersions {
     /// Makes a new [`KeyFormatVersions`].
     pub fn new() -> Self { Self::default() }
@@ -37,6 +33,10 @@ impl KeyFormatVersions {
     pub fn is_default(&self) -> bool { self.0 == vec![1] && self.0.len() == 1 || self.0.is_empty() }
 }
 
+impl Default for KeyFormatVersions {
+    fn default() -> Self { Self(vec![1]) }
+}
+
 impl Deref for KeyFormatVersions {
     type Target = Vec<usize>;
 
@@ -47,6 +47,7 @@ impl DerefMut for KeyFormatVersions {
     fn deref_mut(&mut self) -> &mut Self::Target { &mut self.0 }
 }
 
+/// This tag requires [`ProtocolVersion::V5`].
 impl RequiredVersion for KeyFormatVersions {
     fn required_version(&self) -> ProtocolVersion { ProtocolVersion::V5 }
 }

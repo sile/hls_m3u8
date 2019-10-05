@@ -21,7 +21,7 @@ use crate::{Error, RequiredVersion};
 /// Renditions SHOULD play this Rendition.
 ///
 /// [4.3.4.2. EXT-X-STREAM-INF]: https://tools.ietf.org/html/rfc8216#section-4.3.4.2
-#[derive(PartialOrd, Debug, Clone, PartialEq, Eq)]
+#[derive(PartialOrd, Debug, Clone, PartialEq)]
 pub struct ExtXStreamInf {
     uri: String,
     frame_rate: Option<DecimalFloatingPoint>,

@@ -35,8 +35,6 @@ impl DecimalFloatingPoint {
     pub const fn as_f64(self) -> f64 { self.0 }
 }
 
-impl Eq for DecimalFloatingPoint {}
-
 // this trait is implemented manually, so it doesn't construct a
 // [`DecimalFloatingPoint`], with a negative value.
 impl FromStr for DecimalFloatingPoint {

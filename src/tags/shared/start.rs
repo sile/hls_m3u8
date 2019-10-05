@@ -9,7 +9,7 @@ use crate::{Error, RequiredVersion};
 /// [4.3.5.2. EXT-X-START]
 ///
 /// [4.3.5.2. EXT-X-START]: https://tools.ietf.org/html/rfc8216#section-4.3.5.2
-#[derive(PartialOrd, Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(PartialOrd, Debug, Clone, Copy, PartialEq)]
 pub struct ExtXStart {
     time_offset: SignedDecimalFloatingPoint,
     precise: bool,

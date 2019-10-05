@@ -79,14 +79,14 @@ impl DerefMut for Lines {
     fn deref_mut(&mut self) -> &mut Self::Target { &mut self.0 }
 }
 
-#[derive(Debug, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq)]
 pub enum Line {
     Tag(Tag),
     Uri(String),
 }
 
 #[allow(clippy::large_enum_variant)]
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq)]
 pub enum Tag {
     ExtM3u(tags::ExtM3u),
     ExtXVersion(tags::ExtXVersion),

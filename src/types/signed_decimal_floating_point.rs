@@ -33,8 +33,6 @@ impl Deref for SignedDecimalFloatingPoint {
     fn deref(&self) -> &Self::Target { &self.0 }
 }
 
-impl Eq for SignedDecimalFloatingPoint {}
-
 #[cfg(test)]
 mod tests {
     use super::*;
