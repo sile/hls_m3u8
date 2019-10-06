@@ -138,7 +138,12 @@ impl Encrypted for ExtXMap {
 
 /// This tag requires [`ProtocolVersion::V6`].
 impl RequiredVersion for ExtXMap {
+    // this should return ProtocolVersion::V5, if it does not contain an
+    // EXT-X-I-FRAMES-ONLY!
+    // http://alexzambelli.com/blog/2016/05/04/understanding-hls-versions-and-client-compatibility/
     fn required_version(&self) -> ProtocolVersion { ProtocolVersion::V6 }
+
+    fn introduced_version(&self) -> ProtocolVersion { ProtocolVersion::V5 }
 }
 
 impl fmt::Display for ExtXMap {

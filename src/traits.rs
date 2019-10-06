@@ -120,7 +120,14 @@ pub trait Encrypted {
 /// ```
 pub trait RequiredVersion {
     /// Returns the protocol compatibility version that this tag requires.
+    ///
+    /// # Note
+    /// This is for the latest working [`ProtocolVersion`] and a client, that
+    /// only supports an older version would break.
     fn required_version(&self) -> ProtocolVersion;
+
+    /// The protocol version, in which the tag has been introduced.
+    fn introduced_version(&self) -> ProtocolVersion { self.required_version() }
 }
 
 impl<T: RequiredVersion> RequiredVersion for Vec<T> {
