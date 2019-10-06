@@ -209,3 +209,9 @@ impl From<::core::convert::Infallible> for Error {
         Self::custom("An Infallible error has been returned! (this should never happen!)")
     }
 }
+
+impl From<::hex::FromHexError> for Error {
+    fn from(value: ::hex::FromHexError) -> Self {
+        Self::custom(value) // TODO!
+    }
+}
