@@ -7,7 +7,7 @@ use crate::types::ProtocolVersion;
 use crate::utils::{quote, unquote};
 use crate::RequiredVersion;
 
-/// A list of [usize], that can be used to indicate which version(s)
+/// A list of [`usize`], that can be used to indicate which version(s)
 /// this instance complies with, if more than one version of a particular
 /// [`KeyFormat`] is defined.
 ///

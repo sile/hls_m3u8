@@ -32,7 +32,7 @@ pub struct ExtXMedia {
     /// # Note
     /// This attribute is **required**.
     media_type: MediaType,
-    #[builder(setter(strip_option, into), default)]
+    #[builder(setter(strip_option), default)]
     /// Sets the `URI` that identifies the [`Media Playlist`].
     ///
     /// # Note
@@ -49,7 +49,7 @@ pub struct ExtXMedia {
     /// # Note
     /// This attribute is **required**.
     group_id: String,
-    #[builder(setter(strip_option, into), default)]
+    #[builder(setter(strip_option), default)]
     /// Sets the name of the primary language used in the rendition.
     /// The value has to conform to [`RFC5646`].
     ///
@@ -58,7 +58,7 @@ pub struct ExtXMedia {
     ///
     /// [`RFC5646`]: https://tools.ietf.org/html/rfc5646
     language: Option<String>,
-    #[builder(setter(strip_option, into), default)]
+    #[builder(setter(strip_option), default)]
     /// Sets the name of a language associated with the rendition.
     ///
     /// # Note
@@ -93,14 +93,14 @@ pub struct ExtXMedia {
     #[builder(default)]
     /// Sets the value of the `forced` flag.
     is_forced: bool,
-    #[builder(setter(strip_option, into), default)]
+    #[builder(setter(strip_option), default)]
     /// Sets the identifier that specifies a rendition within the segments in
     /// the media playlist.
     instream_id: Option<InStreamId>,
-    #[builder(setter(strip_option, into), default)]
+    #[builder(setter(strip_option), default)]
     /// Sets the string that represents uniform type identifiers (UTI).
     characteristics: Option<String>,
-    #[builder(setter(strip_option, into), default)]
+    #[builder(setter(strip_option), default)]
     /// Sets the parameters of the rendition.
     channels: Option<Channels>,
 }

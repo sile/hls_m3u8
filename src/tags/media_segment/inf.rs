@@ -226,6 +226,9 @@ mod test {
             "#EXTINF:5,title".parse::<ExtInf>().unwrap(),
             ExtInf::with_title(Duration::from_secs(5), "title")
         );
+
+        assert!("#EXTINF:".parse::<ExtInf>().is_err());
+        assert!("#EXTINF:garbage".parse::<ExtInf>().is_err());
     }
 
     #[test]
@@ -246,6 +249,14 @@ mod test {
         assert_eq!(
             ExtInf::new(Duration::from_millis(4400)).required_version(),
             ProtocolVersion::V3
+        );
+    }
+
+    #[test]
+    fn test_from() {
+        assert_eq!(
+            ExtInf::from(Duration::from_secs(1)),
+            ExtInf::new(Duration::from_secs(1))
         );
     }
 }

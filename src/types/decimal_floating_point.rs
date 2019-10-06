@@ -23,7 +23,7 @@ impl DecimalFloatingPoint {
     /// otherwise this function will return an error that has the kind
     /// `ErrorKind::InvalidInput`.
     pub fn new(value: f64) -> crate::Result<Self> {
-        if value.is_sign_negative() || value.is_infinite() {
+        if value.is_sign_negative() || value.is_infinite() || value.is_nan() {
             return Err(Error::invalid_input());
         }
         Ok(Self(value))
@@ -54,7 +54,7 @@ impl From<f64> for DecimalFloatingPoint {
         let mut result = value;
 
         // guard against the unlikely case of an infinite value...
-        if result.is_infinite() {
+        if result.is_infinite() || result.is_nan() {
             result = 0.0;
         }
 

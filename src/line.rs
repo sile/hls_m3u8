@@ -22,40 +22,40 @@ impl FromStr for Lines {
         let mut stream_inf_line = None;
 
         for l in input.lines() {
-            let line = l.trim();
+            let raw_line = l.trim();
 
-            if line.is_empty() {
+            if raw_line.is_empty() {
                 continue;
             }
 
-            let pline = {
-                if line.starts_with(tags::ExtXStreamInf::PREFIX) {
+            let line = {
+                if raw_line.starts_with(tags::ExtXStreamInf::PREFIX) {
                     stream_inf = true;
-                    stream_inf_line = Some(line);
+                    stream_inf_line = Some(raw_line);
 
                     continue;
-                } else if line.starts_with("#EXT") {
-                    Line::Tag(line.parse()?)
-                } else if line.starts_with('#') {
+                } else if raw_line.starts_with("#EXT") {
+                    Line::Tag(raw_line.parse()?)
+                } else if raw_line.starts_with('#') {
                     continue; // ignore comments
                 } else {
                     // stream inf line needs special treatment
                     if stream_inf {
                         stream_inf = false;
                         if let Some(first_line) = stream_inf_line {
-                            let res = Line::Tag(format!("{}\n{}", first_line, line).parse()?);
+                            let res = Line::Tag(format!("{}\n{}", first_line, raw_line).parse()?);
                             stream_inf_line = None;
                             res
                         } else {
                             continue;
                         }
                     } else {
-                        Line::Uri(line.trim().to_string())
+                        Line::Uri(raw_line.to_string())
                     }
                 }
             };
 
-            result.push(pline);
+            result.push(line);
         }
 
         Ok(result)

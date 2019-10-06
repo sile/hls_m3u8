@@ -36,10 +36,10 @@
 //! assert!(m3u8.parse::<MediaPlaylist>().is_ok());
 //! ```
 
-pub use error::{Error, ErrorKind};
-pub use master_playlist::{MasterPlaylist, MasterPlaylistBuilder};
-pub use media_playlist::{MediaPlaylist, MediaPlaylistBuilder};
-pub use media_segment::{MediaSegment, MediaSegmentBuilder};
+pub use error::Error;
+pub use master_playlist::MasterPlaylist;
+pub use media_playlist::MediaPlaylist;
+pub use media_segment::MediaSegment;
 
 pub mod tags;
 pub mod types;

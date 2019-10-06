@@ -38,6 +38,8 @@ pub struct MediaSegment {
 
 impl MediaSegment {
     /// Returns a Builder for a [`MasterPlaylist`].
+    ///
+    /// [`MasterPlaylist`]: crate::MasterPlaylist
     pub fn builder() -> MediaSegmentBuilder { MediaSegmentBuilder::default() }
 
     /// Returns the `URI` of the media segment.
@@ -161,7 +163,7 @@ impl fmt::Display for MediaSegment {
         if let Some(value) = &self.program_date_time_tag {
             writeln!(f, "{}", value)?;
         }
-        writeln!(f, "{},", self.inf_tag)?;
+        writeln!(f, "{}", self.inf_tag)?; // TODO: there might be a `,` missing
         writeln!(f, "{}", self.uri)?;
         Ok(())
     }
@@ -185,4 +187,34 @@ impl Encrypted for MediaSegment {
     fn keys(&self) -> &Vec<ExtXKey> { &self.keys }
 
     fn keys_mut(&mut self) -> &mut Vec<ExtXKey> { &mut self.keys }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use std::time::Duration;
+
+    #[test]
+    fn test_display() {
+        assert_eq!(
+            MediaSegment::builder()
+                .keys(vec![ExtXKey::empty()])
+                .map_tag(ExtXMap::new("https://www.example.com/"))
+                .byte_range_tag(ExtXByteRange::new(20, Some(5)))
+                //.date_range_tag() // TODO!
+                .discontinuity_tag(ExtXDiscontinuity)
+                .inf_tag(ExtInf::new(Duration::from_secs(4)))
+                .uri("http://www.uri.com/")
+                .build()
+                .unwrap()
+                .to_string(),
+            "#EXT-X-KEY:METHOD=NONE\n\
+             #EXT-X-MAP:URI=\"https://www.example.com/\"\n\
+             #EXT-X-BYTERANGE:20@5\n\
+             #EXT-X-DISCONTINUITY\n\
+             #EXTINF:4,\n\
+             http://www.uri.com/\n"
+                .to_string()
+        );
+    }
 }

@@ -2,7 +2,7 @@ use std::fmt;
 use std::ops::{Deref, DerefMut};
 use std::str::FromStr;
 
-use chrono::{DateTime, FixedOffset};
+use chrono::{DateTime, FixedOffset, SecondsFormat};
 
 use crate::types::ProtocolVersion;
 use crate::utils::tag;
@@ -24,8 +24,8 @@ impl ExtXProgramDateTime {
     ///
     /// # Example
     /// ```
+    /// # use hls_m3u8::tags::ExtXProgramDateTime;
     /// use chrono::{FixedOffset, TimeZone};
-    /// use hls_m3u8::tags::ExtXProgramDateTime;
     ///
     /// const HOURS_IN_SECS: i32 = 3600; // 1 hour = 3600 seconds
     ///
@@ -39,22 +39,71 @@ impl ExtXProgramDateTime {
 
     /// Returns the date-time of the first sample of the associated media
     /// segment.
+    ///
+    /// # Example
+    /// ```
+    /// # use hls_m3u8::tags::ExtXProgramDateTime;
+    /// use chrono::{FixedOffset, TimeZone};
+    ///
+    /// const HOURS_IN_SECS: i32 = 3600; // 1 hour = 3600 seconds
+    ///
+    /// let program_date_time = ExtXProgramDateTime::new(
+    ///     FixedOffset::east(8 * HOURS_IN_SECS)
+    ///         .ymd(2010, 2, 19)
+    ///         .and_hms_milli(14, 54, 23, 31),
+    /// );
+    ///
+    /// assert_eq!(
+    ///     program_date_time.date_time(),
+    ///     FixedOffset::east(8 * HOURS_IN_SECS)
+    ///         .ymd(2010, 2, 19)
+    ///         .and_hms_milli(14, 54, 23, 31)
+    /// );
+    /// ```
     pub const fn date_time(&self) -> DateTime<FixedOffset> { self.0 }
 
     /// Sets the date-time of the first sample of the associated media segment.
+    ///
+    /// # Example
+    /// ```
+    /// # use hls_m3u8::tags::ExtXProgramDateTime;
+    /// use chrono::{FixedOffset, TimeZone};
+    ///
+    /// const HOURS_IN_SECS: i32 = 3600; // 1 hour = 3600 seconds
+    ///
+    /// let mut program_date_time = ExtXProgramDateTime::new(
+    ///     FixedOffset::east(8 * HOURS_IN_SECS)
+    ///         .ymd(2010, 2, 19)
+    ///         .and_hms_milli(14, 54, 23, 31),
+    /// );
+    ///
+    /// program_date_time.set_date_time(
+    ///     FixedOffset::east(8 * HOURS_IN_SECS)
+    ///         .ymd(2010, 10, 10)
+    ///         .and_hms_milli(10, 10, 10, 10),
+    /// );
+    ///
+    /// assert_eq!(
+    ///     program_date_time.date_time(),
+    ///     FixedOffset::east(8 * HOURS_IN_SECS)
+    ///         .ymd(2010, 10, 10)
+    ///         .and_hms_milli(10, 10, 10, 10)
+    /// );
+    /// ```
     pub fn set_date_time(&mut self, value: DateTime<FixedOffset>) -> &mut Self {
         self.0 = value;
         self
     }
 }
 
+/// This tag requires [`ProtocolVersion::V1`].
 impl RequiredVersion for ExtXProgramDateTime {
     fn required_version(&self) -> ProtocolVersion { ProtocolVersion::V1 }
 }
 
 impl fmt::Display for ExtXProgramDateTime {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        let date_time = self.0.to_rfc3339();
+        let date_time = self.0.to_rfc3339_opts(SecondsFormat::Millis, true);
         write!(f, "{}{}", Self::PREFIX, date_time)
     }
 }
@@ -83,7 +132,7 @@ impl DerefMut for ExtXProgramDateTime {
 #[cfg(test)]
 mod test {
     use super::*;
-    use chrono::TimeZone;
+    use chrono::{Datelike, TimeZone};
 
     const HOURS_IN_SECS: i32 = 3600; // 1 hour = 3600 seconds
 
@@ -124,6 +173,34 @@ mod test {
             )
             .required_version(),
             ProtocolVersion::V1
+        );
+    }
+
+    #[test]
+    fn test_deref() {
+        assert_eq!(
+            ExtXProgramDateTime::new(
+                FixedOffset::east(8 * HOURS_IN_SECS)
+                    .ymd(2010, 2, 19)
+                    .and_hms_milli(14, 54, 23, 31),
+            )
+            .year(),
+            2010
+        );
+    }
+
+    #[test]
+    fn test_deref_mut() {
+        assert_eq!(
+            ExtXProgramDateTime::new(
+                FixedOffset::east(8 * HOURS_IN_SECS)
+                    .ymd(2010, 2, 19)
+                    .and_hms_milli(14, 54, 23, 31),
+            )
+            .deref_mut(),
+            &mut FixedOffset::east(8 * HOURS_IN_SECS)
+                .ymd(2010, 2, 19)
+                .and_hms_milli(14, 54, 23, 31),
         );
     }
 }

@@ -10,20 +10,20 @@ use derive_more::{Display, FromStr};
 pub(crate) struct SignedDecimalFloatingPoint(f64);
 
 impl SignedDecimalFloatingPoint {
-    /// Makes a new [SignedDecimalFloatingPoint] instance.
+    /// Makes a new [`SignedDecimalFloatingPoint`] instance.
     ///
     /// # Panics
     /// The given value must be finite, otherwise this function will panic!
     pub fn new(value: f64) -> Self {
-        if value.is_infinite() {
-            panic!("Floating point value must be finite!");
+        if value.is_infinite() || value.is_nan() {
+            panic!("Floating point value must be finite and not NaN!");
         }
         Self(value)
     }
 
     pub(crate) const fn from_f64_unchecked(value: f64) -> Self { Self(value) }
 
-    /// Converts [DecimalFloatingPoint] to [f64].
+    /// Converts [`DecimalFloatingPoint`] to [`f64`].
     pub const fn as_f64(self) -> f64 { self.0 }
 }
 

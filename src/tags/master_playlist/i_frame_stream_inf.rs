@@ -192,6 +192,33 @@ mod test {
     use super::*;
 
     #[test]
+    fn test_builder() {
+        let mut i_frame_stream_inf =
+            ExtXIFrameStreamInf::new("http://example.com/audio-only.m3u8", 200_000);
+
+        i_frame_stream_inf
+            .set_average_bandwidth(Some(100_000))
+            .set_codecs(Some("mp4a.40.5"))
+            .set_resolution(1920, 1080)
+            .set_hdcp_level(Some(HdcpLevel::None))
+            .set_video(Some("video"));
+
+        assert_eq!(
+            ExtXIFrameStreamInf::builder()
+                .uri("http://example.com/audio-only.m3u8")
+                .bandwidth(200_000)
+                .average_bandwidth(100_000)
+                .codecs("mp4a.40.5")
+                .resolution((1920, 1080))
+                .hdcp_level(HdcpLevel::None)
+                .video("video")
+                .build()
+                .unwrap(),
+            i_frame_stream_inf
+        );
+    }
+
+    #[test]
     fn test_display() {
         assert_eq!(
             ExtXIFrameStreamInf::new("foo", 1000).to_string(),
