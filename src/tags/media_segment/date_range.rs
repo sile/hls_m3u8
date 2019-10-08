@@ -823,6 +823,7 @@ impl fmt::Display for ExtXDateRange {
 mod test {
     use super::*;
     use chrono::offset::TimeZone;
+    use pretty_assertions::assert_eq;
 
     const HOURS_IN_SECS: i32 = 3600; // 1 hour = 3600 seconds
 

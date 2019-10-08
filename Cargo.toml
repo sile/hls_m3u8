@@ -25,3 +25,4 @@ hex = "0.4.0"
 
 [dev-dependencies]
 clap = "2.33.0"
+pretty_assertions = "0.6.1"

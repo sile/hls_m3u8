@@ -133,6 +133,7 @@ impl DerefMut for ExtXProgramDateTime {
 mod test {
     use super::*;
     use chrono::{Datelike, TimeZone};
+    use pretty_assertions::assert_eq;
 
     const HOURS_IN_SECS: i32 = 3600; // 1 hour = 3600 seconds
 

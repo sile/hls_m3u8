@@ -113,6 +113,7 @@ impl DerefMut for ExtXKey {
 mod test {
     use super::*;
     use crate::types::{EncryptionMethod, KeyFormat};
+    use pretty_assertions::assert_eq;
 
     #[test]
     fn test_display() {

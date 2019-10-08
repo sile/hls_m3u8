@@ -379,6 +379,7 @@ impl FromStr for MediaPlaylist {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use pretty_assertions::assert_eq;
 
     #[test]
     fn too_large_segment_duration_test() {

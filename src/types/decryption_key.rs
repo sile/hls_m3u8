@@ -353,6 +353,7 @@ impl fmt::Display for DecryptionKey {
 mod test {
     use super::*;
     use crate::types::EncryptionMethod;
+    use pretty_assertions::assert_eq;
 
     #[test]
     fn test_builder() {

@@ -1,6 +1,8 @@
 use hls_m3u8::tags::{ExtXIFrameStreamInf, ExtXStreamInf};
 use hls_m3u8::MasterPlaylist;
 
+use pretty_assertions::assert_eq;
+
 #[test]
 fn test_master_playlist() {
     let master_playlist = "#EXTM3U\n\
