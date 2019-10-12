@@ -14,7 +14,7 @@ use crate::{Encrypted, Error, RequiredVersion};
 ///
 /// [`MediaSegment`]: crate::MediaSegment
 /// [4.3.2.5. EXT-X-MAP]: https://tools.ietf.org/html/rfc8216#section-4.3.2.5
-#[derive(Debug, Clone, PartialEq, Eq, Hash)]
+#[derive(Debug, Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]
 pub struct ExtXMap {
     uri: String,
     range: Option<ByteRange>,

@@ -10,7 +10,7 @@ use crate::types::{
 use crate::utils::{quote, unquote};
 use crate::{Error, RequiredVersion};
 
-#[derive(Builder, Debug, Clone, PartialEq, Eq, Hash)]
+#[derive(Builder, Debug, Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]
 #[builder(setter(into), build_fn(validate = "Self::validate"))]
 /// [`DecryptionKey`] contains data, that is shared between [`ExtXSessionKey`]
 /// and [`ExtXKey`].
@@ -477,38 +477,6 @@ mod test {
 
     #[test]
     fn test_required_version() {
-        assert_eq!(
-            DecryptionKey::new(EncryptionMethod::Aes128, "https://www.example.com/")
-                .required_version(),
-            ProtocolVersion::V1
-        );
-
-        assert_eq!(
-            DecryptionKey::builder()
-                .method(EncryptionMethod::Aes128)
-                .uri("https://www.example.com/")
-                .key_format(KeyFormat::Identity)
-                .key_format_versions(vec![1, 2, 3])
-                .build()
-                .unwrap()
-                .required_version(),
-            ProtocolVersion::V1
-        );
-
-        assert_eq!(
-            DecryptionKey::builder()
-                .method(EncryptionMethod::Aes128)
-                .uri("https://www.example.com/")
-                .iv([1, 2, 3, 4, 5, 6, 7, 8, 9, 1, 2, 3, 4, 5, 6, 7])
-                .build()
-                .unwrap()
-                .required_version(),
-            ProtocolVersion::V2
-        );
-    }
-
-    #[test]
-    fn test_introduced_version() {
         assert_eq!(
             DecryptionKey::new(EncryptionMethod::Aes128, "https://www.example.com/")
                 .required_version(),

@@ -11,7 +11,7 @@ use crate::Error;
 /// # [4.3.4.2. EXT-X-STREAM-INF]
 ///
 /// [4.3.4.2. EXT-X-STREAM-INF]: https://tools.ietf.org/html/rfc8216#section-4.3.4.2
-#[derive(Builder, PartialOrd, Debug, Clone, PartialEq, Eq, Hash)]
+#[derive(Builder, PartialOrd, Debug, Clone, PartialEq, Eq, Hash, Ord)]
 #[builder(setter(into, strip_option))]
 #[builder(derive(Debug, PartialEq))]
 pub struct StreamInf {

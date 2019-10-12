@@ -12,7 +12,7 @@ use crate::{Error, RequiredVersion};
 ///
 /// [`Media Playlist`]: crate::MediaPlaylist
 /// [4.3.3.5. EXT-X-PLAYLIST-TYPE]: https://tools.ietf.org/html/rfc8216#section-4.3.3.5
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, PartialOrd, Ord)]
 pub enum ExtXPlaylistType {
     /// If the [`ExtXPlaylistType`] is Event, [`Media Segment`]s
     /// can only be added to the end of the [`Media Playlist`].

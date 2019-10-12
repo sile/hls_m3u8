@@ -14,7 +14,7 @@ use crate::types::ProtocolVersion;
 use crate::{Encrypted, Error, RequiredVersion};
 
 /// Media playlist.
-#[derive(Debug, Clone, Builder)]
+#[derive(Debug, Clone, Builder, PartialEq, PartialOrd)]
 #[builder(build_fn(validate = "Self::validate"))]
 #[builder(setter(into, strip_option))]
 pub struct MediaPlaylist {

@@ -18,7 +18,7 @@ use crate::{Error, RequiredVersion};
 /// [`Media Playlist`]: crate::MediaPlaylist
 /// [4.4.3.4. EXT-X-ENDLIST]:
 /// https://tools.ietf.org/html/draft-pantos-hls-rfc8216bis-04#section-4.4.3.4
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, PartialOrd, Ord)]
 pub struct ExtXEndList;
 
 impl ExtXEndList {

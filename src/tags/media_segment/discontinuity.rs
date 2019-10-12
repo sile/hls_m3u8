@@ -17,7 +17,7 @@ use crate::{Error, RequiredVersion};
 /// [`Media Segment`]: crate::MediaSegment
 /// [4.4.2.3. EXT-X-DISCONTINUITY]:
 /// https://tools.ietf.org/html/draft-pantos-hls-rfc8216bis-04#section-4.4.2.3
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, PartialOrd, Ord)]
 pub struct ExtXDiscontinuity;
 
 impl ExtXDiscontinuity {

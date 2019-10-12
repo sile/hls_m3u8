@@ -9,12 +9,6 @@ use crate::{Error, RequiredVersion};
 /// The [`ExtXMediaSequence`] tag indicates the Media Sequence Number of
 /// the first [`Media Segment`] that appears in a Playlist file.
 ///
-/// Its format is:
-/// ```text
-/// #EXT-X-MEDIA-SEQUENCE:<number>
-/// ```
-/// where `number` is a [`u64`].
-///
 /// [Media Segment]: crate::MediaSegment
 /// [4.4.3.2. EXT-X-MEDIA-SEQUENCE]:
 /// https://tools.ietf.org/html/draft-pantos-hls-rfc8216bis-04#section-4.4.3.2
@@ -61,6 +55,7 @@ impl ExtXMediaSequence {
     }
 }
 
+/// This tag requires [`ProtocolVersion::V1`].
 impl RequiredVersion for ExtXMediaSequence {
     fn required_version(&self) -> ProtocolVersion { ProtocolVersion::V1 }
 }

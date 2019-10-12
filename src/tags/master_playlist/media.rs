@@ -128,9 +128,11 @@ impl ExtXMediaBuilder {
         }
 
         if self.is_default.unwrap_or(false) && !self.is_autoselect.unwrap_or(false) {
-            return Err(
-                Error::custom("If `DEFAULT` is true, `AUTOSELECT` has to be true too!").to_string(),
-            );
+            return Err(Error::custom(format!(
+                "If `DEFAULT` is true, `AUTOSELECT` has to be true too, Default: {:?}, Autoselect: {:?}!",
+                self.is_default, self.is_autoselect
+            ))
+            .to_string());
         }
 
         if media_type != MediaType::Subtitles && self.is_forced.is_some() {

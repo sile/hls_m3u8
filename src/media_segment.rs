@@ -8,7 +8,7 @@ use crate::tags::{
 use crate::types::ProtocolVersion;
 use crate::{Encrypted, RequiredVersion};
 
-#[derive(Debug, Clone, Builder)]
+#[derive(Debug, Clone, Builder, PartialEq, PartialOrd)]
 #[builder(setter(into, strip_option))]
 /// Media segment.
 pub struct MediaSegment {

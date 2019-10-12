@@ -22,7 +22,7 @@ use crate::{Error, RequiredVersion};
 /// [`ExtXMap`]: crate::tags::ExtXMap
 /// [`Media Segment`]: crate::MediaSegment
 /// [4.3.2.4. EXT-X-KEY]: https://tools.ietf.org/html/rfc8216#section-4.3.2.4
-#[derive(Debug, Clone, PartialEq, Eq, Hash)]
+#[derive(Debug, Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]
 pub struct ExtXKey(DecryptionKey);
 
 impl ExtXKey {

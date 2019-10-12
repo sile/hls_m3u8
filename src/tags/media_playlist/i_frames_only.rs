@@ -20,7 +20,7 @@ use crate::{Error, RequiredVersion};
 /// [`Media Segment`]: crate::MediaSegment
 /// [4.4.3.6. EXT-X-I-FRAMES-ONLY]:
 /// https://tools.ietf.org/html/draft-pantos-hls-rfc8216bis-04#section-4.4.3.6
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, PartialOrd, Ord)]
 pub struct ExtXIFramesOnly;
 
 impl ExtXIFramesOnly {

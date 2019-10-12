@@ -1,4 +1,5 @@
 use std::fmt;
+use std::ops::Deref;
 use std::str::FromStr;
 use std::time::Duration;
 
@@ -6,14 +7,13 @@ use crate::types::ProtocolVersion;
 use crate::utils::tag;
 use crate::{Error, RequiredVersion};
 
-/// # [4.4.3.1. EXT-X-TARGETDURATION]
-/// The [`ExtXTargetDuration`] tag specifies the maximum [`Media Segment`]
+/// # [4.3.3.1. EXT-X-TARGETDURATION]
+/// The [`ExtXTargetDuration`] tag specifies the maximum [`MediaSegment`]
 /// duration.
 ///
-/// [`Media Segment`]: crate::MediaSegment
-/// [4.4.3.1. EXT-X-TARGETDURATION]:
-/// https://tools.ietf.org/html/draft-pantos-hls-rfc8216bis-05#section-4.4.3.1
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Default)]
+/// [`MediaSegment`]: crate::MediaSegment
+/// [4.3.3.1. EXT-X-TARGETDURATION]: https://tools.ietf.org/html/rfc8216#section-4.3.3.1
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Default, PartialOrd, Ord)]
 pub struct ExtXTargetDuration(Duration);
 
 impl ExtXTargetDuration {
@@ -31,10 +31,7 @@ impl ExtXTargetDuration {
     ///
     /// # Note
     /// The nanoseconds part of the [`Duration`] will be discarded.
-    pub const fn new(duration: Duration) -> Self {
-        // TOOD: round instead of discarding?
-        Self(Duration::from_secs(duration.as_secs()))
-    }
+    pub const fn new(duration: Duration) -> Self { Self(Duration::from_secs(duration.as_secs())) }
 
     /// Returns the maximum media segment duration.
     ///
@@ -53,6 +50,12 @@ impl ExtXTargetDuration {
 /// This tag requires [`ProtocolVersion::V1`].
 impl RequiredVersion for ExtXTargetDuration {
     fn required_version(&self) -> ProtocolVersion { ProtocolVersion::V1 }
+}
+
+impl Deref for ExtXTargetDuration {
+    type Target = Duration;
+
+    fn deref(&self) -> &Self::Target { &self.0 }
 }
 
 impl fmt::Display for ExtXTargetDuration {
@@ -97,5 +100,10 @@ mod test {
             ExtXTargetDuration::new(Duration::from_secs(5)),
             "#EXT-X-TARGETDURATION:5".parse().unwrap()
         );
+    }
+
+    #[test]
+    fn test_deref() {
+        assert_eq!(ExtXTargetDuration::new(Duration::from_secs(5)).as_secs(), 5);
     }
 }

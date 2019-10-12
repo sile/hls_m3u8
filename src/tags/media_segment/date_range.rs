@@ -12,9 +12,12 @@ use crate::utils::{quote, tag, unquote};
 use crate::{Error, RequiredVersion};
 
 /// # [4.3.2.7. EXT-X-DATERANGE]
+/// The [`ExtXDateRange`] tag associates a date range (i.e., a range of
+/// time defined by a starting and ending date) with a set of attribute/
+/// value pairs.
 ///
 /// [4.3.2.7. EXT-X-DATERANGE]: https://tools.ietf.org/html/rfc8216#section-4.3.2.7
-#[derive(Builder, Debug, Clone, PartialEq)]
+#[derive(Builder, Debug, Clone, PartialEq, PartialOrd)]
 #[builder(setter(into))]
 pub struct ExtXDateRange {
     /// A string that uniquely identifies an [`ExtXDateRange`] in the Playlist.
@@ -87,7 +90,7 @@ pub struct ExtXDateRange {
     /// This attribute is optional.
     end_on_next: bool,
     #[builder(default)]
-    /// The "X-" prefix defines a namespace reserved for client-defined
+    /// The `"X-"` prefix defines a namespace reserved for client-defined
     /// attributes. The client-attribute must be a uppercase characters.
     /// Clients should use a reverse-DNS syntax when defining their own
     /// attribute names to avoid collisions. An example of a client-defined
@@ -513,10 +516,13 @@ impl ExtXDateRange {
         self
     }
 
+    /// See here for reference: https://www.scte.org/SCTEDocs/Standards/ANSI_SCTE%2035%202019r1.pdf
     pub const fn scte35_cmd(&self) -> &Option<String> { &self.scte35_cmd }
 
+    /// See here for reference: https://www.scte.org/SCTEDocs/Standards/ANSI_SCTE%2035%202019r1.pdf
     pub const fn scte35_in(&self) -> &Option<String> { &self.scte35_in }
 
+    /// See here for reference: https://www.scte.org/SCTEDocs/Standards/ANSI_SCTE%2035%202019r1.pdf
     pub const fn scte35_out(&self) -> &Option<String> { &self.scte35_out }
 
     /// This attribute indicates that the end of the range containing it is
