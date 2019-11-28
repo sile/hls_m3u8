@@ -126,9 +126,10 @@ impl ExtXMediaBuilder {
             return Err(Error::unexpected_attribute("INSTREAM-ID").to_string());
         }
 
-        if self.is_default.unwrap_or(false) && !self.is_autoselect.unwrap_or(false) {
+        if self.is_default.unwrap_or(false) && !self.is_autoselect.unwrap_or(true) {
             return Err(
-                Error::custom("If `DEFAULT` is true, `AUTOSELECT` has to be true too!").to_string(),
+                Error::custom("If `DEFAULT` is true and `AUTOSELECT` is present, \
+                               `AUTOSELECT` has to be true too!").to_string(),
             );
         }
 
