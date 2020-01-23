@@ -1,9 +1,9 @@
 use std::fmt;
 use std::str::FromStr;
 
-use crate::types::{ProtocolVersion, RequiredVersion};
+use crate::types::ProtocolVersion;
 use crate::utils::tag;
-use crate::Error;
+use crate::{Error, RequiredVersion};
 
 /// [4.3.5.1. EXT-X-INDEPENDENT-SEGMENTS]
 ///
@@ -28,13 +28,14 @@ impl FromStr for ExtXIndependentSegments {
 
     fn from_str(input: &str) -> Result<Self, Self::Err> {
         tag(input, Self::PREFIX)?;
-        Ok(ExtXIndependentSegments)
+        Ok(Self)
     }
 }
 
 #[cfg(test)]
 mod test {
     use super::*;
+    use pretty_assertions::assert_eq;
 
     #[test]
     fn test_display() {

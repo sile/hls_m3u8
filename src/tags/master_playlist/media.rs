@@ -4,11 +4,12 @@ use std::str::FromStr;
 use derive_builder::Builder;
 
 use crate::attribute::AttributePairs;
-use crate::types::{Channels, InStreamId, MediaType, ProtocolVersion, RequiredVersion};
+use crate::types::{Channels, InStreamId, MediaType, ProtocolVersion};
 use crate::utils::{parse_yes_or_no, quote, tag, unquote};
-use crate::Error;
+use crate::{Error, RequiredVersion};
 
 /// # [4.4.5.1. EXT-X-MEDIA]
+///
 /// The [`ExtXMedia`] tag is used to relate [`Media Playlist`]s,
 /// that contain alternative Renditions of the same content.
 ///
@@ -31,7 +32,7 @@ pub struct ExtXMedia {
     /// # Note
     /// This attribute is **required**.
     media_type: MediaType,
-    #[builder(setter(strip_option, into), default)]
+    #[builder(setter(strip_option), default)]
     /// Sets the `URI` that identifies the [`Media Playlist`].
     ///
     /// # Note
@@ -48,7 +49,7 @@ pub struct ExtXMedia {
     /// # Note
     /// This attribute is **required**.
     group_id: String,
-    #[builder(setter(strip_option, into), default)]
+    #[builder(setter(strip_option), default)]
     /// Sets the name of the primary language used in the rendition.
     /// The value has to conform to [`RFC5646`].
     ///
@@ -57,7 +58,7 @@ pub struct ExtXMedia {
     ///
     /// [`RFC5646`]: https://tools.ietf.org/html/rfc5646
     language: Option<String>,
-    #[builder(setter(strip_option, into), default)]
+    #[builder(setter(strip_option), default)]
     /// Sets the name of a language associated with the rendition.
     ///
     /// # Note
@@ -92,14 +93,14 @@ pub struct ExtXMedia {
     #[builder(default)]
     /// Sets the value of the `forced` flag.
     is_forced: bool,
-    #[builder(setter(strip_option, into), default)]
+    #[builder(setter(strip_option), default)]
     /// Sets the identifier that specifies a rendition within the segments in
     /// the media playlist.
     instream_id: Option<InStreamId>,
-    #[builder(setter(strip_option, into), default)]
+    #[builder(setter(strip_option), default)]
     /// Sets the string that represents uniform type identifiers (UTI).
     characteristics: Option<String>,
-    #[builder(setter(strip_option, into), default)]
+    #[builder(setter(strip_option), default)]
     /// Sets the parameters of the rendition.
     channels: Option<Channels>,
 }
@@ -309,7 +310,7 @@ impl ExtXMedia {
     ///
     /// [`Media Playlist`]: crate::MediaPlaylist
     pub fn set_uri<T: Into<String>>(&mut self, value: Option<T>) -> &mut Self {
-        self.uri = value.map(|v| v.into());
+        self.uri = value.map(Into::into);
         self
     }
 
@@ -347,7 +348,7 @@ impl ExtXMedia {
     ///
     /// [`RFC5646`]: https://tools.ietf.org/html/rfc5646
     pub fn set_language<T: Into<String>>(&mut self, value: Option<T>) -> &mut Self {
-        self.language = value.map(|v| v.into());
+        self.language = value.map(Into::into);
         self
     }
 
@@ -387,7 +388,7 @@ impl ExtXMedia {
     ///
     /// [`language`]: #method.language
     pub fn set_assoc_language<T: Into<String>>(&mut self, value: Option<T>) -> &mut Self {
-        self.assoc_language = value.map(|v| v.into());
+        self.assoc_language = value.map(Into::into);
         self
     }
 
@@ -589,7 +590,7 @@ impl ExtXMedia {
     /// [`UTI`]: https://tools.ietf.org/html/draft-pantos-hls-rfc8216bis-05#ref-UTI
     /// [`subtitles`]: crate::types::MediaType::Subtitles
     pub fn set_characteristics<T: Into<String>>(&mut self, value: Option<T>) -> &mut Self {
-        self.characteristics = value.map(|v| v.into());
+        self.characteristics = value.map(Into::into);
         self
     }
 
@@ -624,7 +625,7 @@ impl ExtXMedia {
     /// assert_eq!(media.channels(), &Some(Channels::new(6)));
     /// ```
     pub fn set_channels<T: Into<Channels>>(&mut self, value: Option<T>) -> &mut Self {
-        self.channels = value.map(|v| v.into());
+        self.channels = value.map(Into::into);
         self
     }
 }
@@ -740,6 +741,7 @@ impl FromStr for ExtXMedia {
 #[cfg(test)]
 mod test {
     use super::*;
+    use pretty_assertions::assert_eq;
 
     #[test]
     fn test_display() {

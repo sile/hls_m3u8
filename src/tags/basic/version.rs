@@ -1,11 +1,12 @@
 use std::fmt;
 use std::str::FromStr;
 
-use crate::types::{ProtocolVersion, RequiredVersion};
+use crate::types::ProtocolVersion;
 use crate::utils::tag;
-use crate::Error;
+use crate::{Error, RequiredVersion};
 
-/// # [4.4.1.2. EXT-X-VERSION]
+/// # [4.3.1.2. EXT-X-VERSION]
+///
 /// The [`ExtXVersion`] tag indicates the compatibility version of the
 /// [`Master Playlist`] or [`Media Playlist`] file.
 /// It applies to the entire Playlist.
@@ -41,8 +42,7 @@ use crate::Error;
 ///
 /// [`Media Playlist`]: crate::MediaPlaylist
 /// [`Master Playlist`]: crate::MasterPlaylist
-/// [4.4.1.2. EXT-X-VERSION]:
-/// https://tools.ietf.org/html/draft-pantos-hls-rfc8216bis-05#section-4.4.1.2
+/// [4.3.1.2. EXT-X-VERSION]: https://tools.ietf.org/html/rfc8216#section-4.3.1.2
 #[derive(Copy, Clone, Eq, PartialEq, Ord, PartialOrd, Hash, Debug)]
 pub struct ExtXVersion(ProtocolVersion);
 
@@ -104,6 +104,7 @@ impl FromStr for ExtXVersion {
 #[cfg(test)]
 mod test {
     use super::*;
+    use pretty_assertions::assert_eq;
 
     #[test]
     fn test_display() {

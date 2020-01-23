@@ -1,9 +1,9 @@
 use std::fmt;
 use std::str::FromStr;
 
-use crate::types::{ProtocolVersion, RequiredVersion};
+use crate::types::ProtocolVersion;
 use crate::utils::{quote, tag, unquote};
-use crate::Error;
+use crate::{Error, RequiredVersion};
 
 #[derive(Copy, Clone, Eq, PartialEq, Ord, PartialOrd, Hash, Debug)]
 /// [`KeyFormat`] specifies, how the key is represented in the
@@ -31,6 +31,7 @@ impl fmt::Display for KeyFormat {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result { write!(f, "{}", quote("identity")) }
 }
 
+/// This tag requires [`ProtocolVersion::V5`].
 impl RequiredVersion for KeyFormat {
     fn required_version(&self) -> ProtocolVersion { ProtocolVersion::V5 }
 }
@@ -38,6 +39,7 @@ impl RequiredVersion for KeyFormat {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use pretty_assertions::assert_eq;
 
     #[test]
     fn test_display() {

@@ -1,22 +1,19 @@
+use std::convert::Infallible;
 use std::fmt;
 use std::ops::{Deref, DerefMut};
 use std::str::FromStr;
 
-use crate::types::{ProtocolVersion, RequiredVersion};
+use crate::types::ProtocolVersion;
 use crate::utils::{quote, unquote};
-use crate::Error;
+use crate::RequiredVersion;
 
-/// A list of [usize], that can be used to indicate which version(s)
+/// A list of [`usize`], that can be used to indicate which version(s)
 /// this instance complies with, if more than one version of a particular
 /// [`KeyFormat`] is defined.
 ///
 /// [`KeyFormat`]: crate::types::KeyFormat
 #[derive(Clone, Eq, PartialEq, Ord, PartialOrd, Hash, Debug)]
 pub struct KeyFormatVersions(Vec<usize>);
-
-impl Default for KeyFormatVersions {
-    fn default() -> Self { Self(vec![1]) }
-}
 
 impl KeyFormatVersions {
     /// Makes a new [`KeyFormatVersions`].
@@ -36,6 +33,10 @@ impl KeyFormatVersions {
     pub fn is_default(&self) -> bool { self.0 == vec![1] && self.0.len() == 1 || self.0.is_empty() }
 }
 
+impl Default for KeyFormatVersions {
+    fn default() -> Self { Self(vec![1]) }
+}
+
 impl Deref for KeyFormatVersions {
     type Target = Vec<usize>;
 
@@ -46,12 +47,13 @@ impl DerefMut for KeyFormatVersions {
     fn deref_mut(&mut self) -> &mut Self::Target { &mut self.0 }
 }
 
+/// This tag requires [`ProtocolVersion::V5`].
 impl RequiredVersion for KeyFormatVersions {
     fn required_version(&self) -> ProtocolVersion { ProtocolVersion::V5 }
 }
 
 impl FromStr for KeyFormatVersions {
-    type Err = Error;
+    type Err = Infallible;
 
     fn from_str(input: &str) -> Result<Self, Self::Err> {
         let mut result = unquote(input)
@@ -95,6 +97,7 @@ impl<T: Into<Vec<usize>>> From<T> for KeyFormatVersions {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use pretty_assertions::assert_eq;
 
     #[test]
     fn test_display() {

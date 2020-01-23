@@ -2,9 +2,9 @@ use std::fmt;
 use std::ops::{Deref, DerefMut};
 use std::str::FromStr;
 
-use crate::types::{DecryptionKey, EncryptionMethod, ProtocolVersion, RequiredVersion};
+use crate::types::{DecryptionKey, EncryptionMethod, ProtocolVersion};
 use crate::utils::tag;
-use crate::Error;
+use crate::{Error, RequiredVersion};
 
 /// # [4.3.4.5. EXT-X-SESSION-KEY]
 /// The [`ExtXSessionKey`] tag allows encryption keys from [`Media Playlist`]s
@@ -86,6 +86,7 @@ impl DerefMut for ExtXSessionKey {
 mod test {
     use super::*;
     use crate::types::{EncryptionMethod, KeyFormat};
+    use pretty_assertions::assert_eq;
 
     #[test]
     fn test_display() {

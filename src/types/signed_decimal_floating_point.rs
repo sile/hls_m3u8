@@ -10,20 +10,20 @@ use derive_more::{Display, FromStr};
 pub(crate) struct SignedDecimalFloatingPoint(f64);
 
 impl SignedDecimalFloatingPoint {
-    /// Makes a new [SignedDecimalFloatingPoint] instance.
+    /// Makes a new [`SignedDecimalFloatingPoint`] instance.
     ///
     /// # Panics
     /// The given value must be finite, otherwise this function will panic!
     pub fn new(value: f64) -> Self {
-        if value.is_infinite() {
-            panic!("Floating point value must be finite!");
+        if value.is_infinite() || value.is_nan() {
+            panic!("Floating point value must be finite and not NaN!");
         }
         Self(value)
     }
 
     pub(crate) const fn from_f64_unchecked(value: f64) -> Self { Self(value) }
 
-    /// Converts [DecimalFloatingPoint] to [f64].
+    /// Converts [`DecimalFloatingPoint`] to [`f64`].
     pub const fn as_f64(self) -> f64 { self.0 }
 }
 
@@ -33,11 +33,10 @@ impl Deref for SignedDecimalFloatingPoint {
     fn deref(&self) -> &Self::Target { &self.0 }
 }
 
-impl Eq for SignedDecimalFloatingPoint {}
-
 #[cfg(test)]
 mod tests {
     use super::*;
+    use pretty_assertions::assert_eq;
 
     macro_rules! test_from {
         ( $( $input:expr => $output:expr ),* ) => {
@@ -56,21 +55,21 @@ mod tests {
     }
 
     test_from![
-        SignedDecimalFloatingPoint::from(1u8) => SignedDecimalFloatingPoint::new(1.0),
-        SignedDecimalFloatingPoint::from(1i8) => SignedDecimalFloatingPoint::new(1.0),
-        SignedDecimalFloatingPoint::from(1u16) => SignedDecimalFloatingPoint::new(1.0),
-        SignedDecimalFloatingPoint::from(1i16) => SignedDecimalFloatingPoint::new(1.0),
-        SignedDecimalFloatingPoint::from(1u32) => SignedDecimalFloatingPoint::new(1.0),
-        SignedDecimalFloatingPoint::from(1i32) => SignedDecimalFloatingPoint::new(1.0),
-        SignedDecimalFloatingPoint::from(1.0f32) => SignedDecimalFloatingPoint::new(1.0),
-        SignedDecimalFloatingPoint::from(1.0f64) => SignedDecimalFloatingPoint::new(1.0)
+        SignedDecimalFloatingPoint::from(1_u8) => SignedDecimalFloatingPoint::new(1.0),
+        SignedDecimalFloatingPoint::from(1_i8) => SignedDecimalFloatingPoint::new(1.0),
+        SignedDecimalFloatingPoint::from(1_u16) => SignedDecimalFloatingPoint::new(1.0),
+        SignedDecimalFloatingPoint::from(1_i16) => SignedDecimalFloatingPoint::new(1.0),
+        SignedDecimalFloatingPoint::from(1_u32) => SignedDecimalFloatingPoint::new(1.0),
+        SignedDecimalFloatingPoint::from(1_i32) => SignedDecimalFloatingPoint::new(1.0),
+        SignedDecimalFloatingPoint::from(1.0_f32) => SignedDecimalFloatingPoint::new(1.0),
+        SignedDecimalFloatingPoint::from(1.0_f64) => SignedDecimalFloatingPoint::new(1.0)
     ];
 
     #[test]
     fn test_display() {
         assert_eq!(
             SignedDecimalFloatingPoint::new(1.0).to_string(),
-            1.0f64.to_string()
+            1.0_f64.to_string()
         );
     }
 

@@ -1,8 +1,9 @@
 use std::fmt;
 use std::str::FromStr;
 
-use crate::types::{ProtocolVersion, RequiredVersion};
+use crate::types::ProtocolVersion;
 use crate::utils::tag;
+use crate::RequiredVersion;
 
 /// # [4.4.3.3. EXT-X-DISCONTINUITY-SEQUENCE]
 ///
@@ -83,6 +84,7 @@ impl FromStr for ExtXDiscontinuitySequence {
 #[cfg(test)]
 mod test {
     use super::*;
+    use pretty_assertions::assert_eq;
 
     #[test]
     fn test_display() {

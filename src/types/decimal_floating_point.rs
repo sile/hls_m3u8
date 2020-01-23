@@ -23,7 +23,7 @@ impl DecimalFloatingPoint {
     /// otherwise this function will return an error that has the kind
     /// `ErrorKind::InvalidInput`.
     pub fn new(value: f64) -> crate::Result<Self> {
-        if value.is_sign_negative() || value.is_infinite() {
+        if value.is_sign_negative() || value.is_infinite() || value.is_nan() {
             return Err(Error::invalid_input());
         }
         Ok(Self(value))
@@ -34,8 +34,6 @@ impl DecimalFloatingPoint {
     /// Converts [`DecimalFloatingPoint`] to [`f64`].
     pub const fn as_f64(self) -> f64 { self.0 }
 }
-
-impl Eq for DecimalFloatingPoint {}
 
 // this trait is implemented manually, so it doesn't construct a
 // [`DecimalFloatingPoint`], with a negative value.
@@ -56,7 +54,7 @@ impl From<f64> for DecimalFloatingPoint {
         let mut result = value;
 
         // guard against the unlikely case of an infinite value...
-        if result.is_infinite() {
+        if result.is_infinite() || result.is_nan() {
             result = 0.0;
         }
 
@@ -65,12 +63,13 @@ impl From<f64> for DecimalFloatingPoint {
 }
 
 impl From<f32> for DecimalFloatingPoint {
-    fn from(value: f32) -> Self { (value as f64).into() }
+    fn from(value: f32) -> Self { f64::from(value).into() }
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
+    use pretty_assertions::assert_eq;
 
     macro_rules! test_from {
         ( $($input:expr),* ) => {
@@ -88,7 +87,7 @@ mod tests {
         }
     }
 
-    test_from![1u8, 1u16, 1u32, 1.0f32, -1.0f32, 1.0f64, -1.0f64];
+    test_from![1_u8, 1_u16, 1_u32, 1.0_f32, -1.0_f32, 1.0_f64, -1.0_f64];
 
     #[test]
     pub fn test_display() {

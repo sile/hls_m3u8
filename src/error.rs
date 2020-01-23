@@ -76,6 +76,10 @@ pub enum ErrorKind {
     /// An unexpected value.
     UnexpectedAttribute(String),
 
+    #[fail(display = "Unexpected Tag: {:?}", _0)]
+    /// An unexpected tag.
+    UnexpectedTag(String),
+
     /// Hints that destructuring should not be exhaustive.
     ///
     /// This enum may grow additional variants, so this makes sure clients
@@ -103,11 +107,11 @@ impl fmt::Display for Error {
 }
 
 impl From<ErrorKind> for Error {
-    fn from(kind: ErrorKind) -> Error { Error::from(Context::new(kind)) }
+    fn from(kind: ErrorKind) -> Self { Self::from(Context::new(kind)) }
 }
 
 impl From<Context<ErrorKind>> for Error {
-    fn from(inner: Context<ErrorKind>) -> Error { Error { inner } }
+    fn from(inner: Context<ErrorKind>) -> Self { Self { inner } }
 }
 
 impl Error {
@@ -117,6 +121,10 @@ impl Error {
 
     pub(crate) fn unexpected_attribute<T: ToString>(value: T) -> Self {
         Self::from(ErrorKind::UnexpectedAttribute(value.to_string()))
+    }
+
+    pub(crate) fn unexpected_tag<T: ToString>(value: T) -> Self {
+        Self::from(ErrorKind::UnexpectedTag(value.to_string()))
     }
 
     pub(crate) fn invalid_input() -> Self { Self::from(ErrorKind::InvalidInput) }
@@ -157,17 +165,6 @@ impl Error {
 
     pub(crate) fn io<T: ToString>(value: T) -> Self { Self::from(ErrorKind::Io(value.to_string())) }
 
-    pub(crate) fn required_version<T, U>(required_version: T, specified_version: U) -> Self
-    where
-        T: ToString,
-        U: ToString,
-    {
-        Self::from(ErrorKind::VersionError(
-            required_version.to_string(),
-            specified_version.to_string(),
-        ))
-    }
-
     pub(crate) fn builder_error<T: ToString>(value: T) -> Self {
         Self::from(ErrorKind::BuilderError(value.to_string()))
     }
@@ -182,23 +179,39 @@ impl Error {
 }
 
 impl From<::std::num::ParseIntError> for Error {
-    fn from(value: ::std::num::ParseIntError) -> Self { Error::parse_int_error(value) }
+    fn from(value: ::std::num::ParseIntError) -> Self { Self::parse_int_error(value) }
 }
 
 impl From<::std::num::ParseFloatError> for Error {
-    fn from(value: ::std::num::ParseFloatError) -> Self { Error::parse_float_error(value) }
+    fn from(value: ::std::num::ParseFloatError) -> Self { Self::parse_float_error(value) }
 }
 
 impl From<::std::io::Error> for Error {
-    fn from(value: ::std::io::Error) -> Self { Error::io(value) }
+    fn from(value: ::std::io::Error) -> Self { Self::io(value) }
 }
 
 impl From<::chrono::ParseError> for Error {
-    fn from(value: ::chrono::ParseError) -> Self { Error::chrono(value) }
+    fn from(value: ::chrono::ParseError) -> Self { Self::chrono(value) }
 }
 
 impl From<::strum::ParseError> for Error {
     fn from(value: ::strum::ParseError) -> Self {
-        Error::custom(value) // TODO!
+        Self::custom(value) // TODO!
+    }
+}
+
+impl From<String> for Error {
+    fn from(value: String) -> Self { Self::custom(value) }
+}
+
+impl From<::core::convert::Infallible> for Error {
+    fn from(_: ::core::convert::Infallible) -> Self {
+        Self::custom("An Infallible error has been returned! (this should never happen!)")
+    }
+}
+
+impl From<::hex::FromHexError> for Error {
+    fn from(value: ::hex::FromHexError) -> Self {
+        Self::custom(value) // TODO!
     }
 }

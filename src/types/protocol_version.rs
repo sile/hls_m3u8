@@ -3,30 +3,6 @@ use std::str::FromStr;
 
 use crate::Error;
 
-/// # Example
-/// Implementing it:
-/// ```
-/// # use hls_m3u8::types::{ProtocolVersion, RequiredVersion};
-/// #
-/// struct NewTag(u64);
-///
-/// impl RequiredVersion for NewTag {
-///     fn required_version(&self) -> ProtocolVersion {
-///         if self.0 == 5 {
-///             ProtocolVersion::V4
-///         } else {
-///             ProtocolVersion::V1
-///         }
-///     }
-/// }
-/// assert_eq!(NewTag(5).required_version(), ProtocolVersion::V4);
-/// assert_eq!(NewTag(2).required_version(), ProtocolVersion::V1);
-/// ```
-pub trait RequiredVersion {
-    /// Returns the protocol compatibility version that this tag requires.
-    fn required_version(&self) -> ProtocolVersion;
-}
-
 /// # [7. Protocol Version Compatibility]
 /// The [`ProtocolVersion`] specifies, which m3u8 revision is required, to parse
 /// a certain tag correctly.
@@ -97,6 +73,7 @@ impl Default for ProtocolVersion {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use pretty_assertions::assert_eq;
 
     #[test]
     fn test_display() {
