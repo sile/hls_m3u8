@@ -1,7 +1,6 @@
 #![forbid(unsafe_code)]
-#![feature(option_flattening)]
 #![warn(
-    //clippy::pedantic,
+    clippy::pedantic, //
     clippy::nursery,
     clippy::cargo
 )]

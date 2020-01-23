@@ -132,13 +132,10 @@ impl ExtXSessionData {
     /// #
     /// let data = ExtXSessionData::new(
     ///     "com.example.movie.title",
-    ///     SessionData::Value("some data".to_string())
+    ///     SessionData::Value("some data".to_string()),
     /// );
     ///
-    /// assert_eq!(
-    ///     data.data_id(),
-    ///     &"com.example.movie.title".to_string()
-    /// )
+    /// assert_eq!(data.data_id(), &"com.example.movie.title".to_string())
     /// ```
     pub const fn data_id(&self) -> &String { &self.data_id }
 
@@ -150,13 +147,10 @@ impl ExtXSessionData {
     /// #
     /// let data = ExtXSessionData::new(
     ///     "com.example.movie.title",
-    ///     SessionData::Value("some data".to_string())
+    ///     SessionData::Value("some data".to_string()),
     /// );
     ///
-    /// assert_eq!(
-    ///     data.data(),
-    ///     &SessionData::Value("some data".to_string())
-    /// )
+    /// assert_eq!(data.data(), &SessionData::Value("some data".to_string()))
     /// ```
     pub const fn data(&self) -> &SessionData { &self.data }
 
@@ -170,13 +164,10 @@ impl ExtXSessionData {
     /// let data = ExtXSessionData::with_language(
     ///     "com.example.movie.title",
     ///     SessionData::Value("some data".to_string()),
-    ///     "english"
+    ///     "english",
     /// );
     ///
-    /// assert_eq!(
-    ///     data.language(),
-    ///     &Some("english".to_string())
-    /// )
+    /// assert_eq!(data.language(), &Some("english".to_string()))
     /// ```
     pub const fn language(&self) -> &Option<String> { &self.language }
 
