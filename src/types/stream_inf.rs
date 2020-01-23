@@ -270,11 +270,15 @@ impl FromStr for StreamInf {
 
         for (key, value) in input.parse::<AttributePairs>()? {
             match key.as_str() {
-                "BANDWIDTH" => bandwidth = Some(value.parse::<u64>()?),
-                "AVERAGE-BANDWIDTH" => average_bandwidth = Some(value.parse::<u64>()?),
+                "BANDWIDTH" => bandwidth = Some(value.parse::<u64>().map_err(Error::parse_int)?),
+                "AVERAGE-BANDWIDTH" => {
+                    average_bandwidth = Some(value.parse::<u64>().map_err(Error::parse_int)?)
+                }
                 "CODECS" => codecs = Some(unquote(value)),
                 "RESOLUTION" => resolution = Some(value.parse()?),
-                "HDCP-LEVEL" => hdcp_level = Some(value.parse()?),
+                "HDCP-LEVEL" => {
+                    hdcp_level = Some(value.parse::<HdcpLevel>().map_err(Error::strum)?)
+                }
                 "VIDEO" => video = Some(unquote(value)),
                 _ => {
                     // [6.3.1. General Client Responsibilities]

@@ -12,18 +12,18 @@ use crate::{Error, RequiredVersion};
 /// It is the at the start of every [`Media Playlist`] and [`Master Playlist`].
 ///
 /// # Examples
+///
 /// Parsing from a [`str`]:
+///
 /// ```
-/// # use failure::Error;
 /// # use hls_m3u8::tags::ExtM3u;
 /// #
-/// # fn main() -> Result<(), Error> {
 /// assert_eq!("#EXTM3U".parse::<ExtM3u>()?, ExtM3u);
-/// #
-/// # Ok(())
-/// # }
+/// # Ok::<(), Box<dyn ::std::error::Error>>(())
 /// ```
+///
 /// Converting to a [`str`]:
+///
 /// ```
 /// # use hls_m3u8::tags::ExtM3u;
 /// #

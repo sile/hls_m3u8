@@ -295,11 +295,11 @@ impl FromStr for DecryptionKey {
 
         for (key, value) in input.parse::<AttributePairs>()? {
             match key.as_str() {
-                "METHOD" => method = Some(value.parse()?),
+                "METHOD" => method = Some(value.parse().map_err(Error::strum)?),
                 "URI" => uri = Some(unquote(value)),
                 "IV" => iv = Some(value.parse()?),
                 "KEYFORMAT" => key_format = Some(value.parse()?),
-                "KEYFORMATVERSIONS" => key_format_versions = Some(value.parse()?),
+                "KEYFORMATVERSIONS" => key_format_versions = Some(value.parse().unwrap()),
                 _ => {
                     // [6.3.1. General Client Responsibilities]
                     // > ignore any attribute/value pair with an unrecognized

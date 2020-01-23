@@ -32,9 +32,10 @@ impl FromStr for Value {
 
     fn from_str(input: &str) -> Result<Self, Self::Err> {
         if input.starts_with("0x") || input.starts_with("0X") {
-            Ok(Self::Hex(hex::decode(
-                input.trim_start_matches("0x").trim_start_matches("0X"),
-            )?))
+            Ok(Self::Hex(
+                hex::decode(input.trim_start_matches("0x").trim_start_matches("0X"))
+                    .map_err(Error::hex)?,
+            ))
         } else {
             match input.parse() {
                 Ok(value) => Ok(Self::Float(value)),

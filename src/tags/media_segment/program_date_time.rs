@@ -114,7 +114,7 @@ impl FromStr for ExtXProgramDateTime {
     fn from_str(input: &str) -> Result<Self, Self::Err> {
         let input = tag(input, Self::PREFIX)?;
 
-        let date_time = DateTime::parse_from_rfc3339(input)?;
+        let date_time = DateTime::parse_from_rfc3339(input).map_err(Error::chrono)?;
         Ok(Self::new(date_time))
     }
 }

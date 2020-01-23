@@ -719,7 +719,7 @@ impl FromStr for ExtXDateRange {
                 "ID" => id = Some(unquote(value)),
                 "CLASS" => class = Some(unquote(value)),
                 "START-DATE" => start_date = Some(unquote(value)),
-                "END-DATE" => end_date = Some(unquote(value).parse()?),
+                "END-DATE" => end_date = Some(unquote(value).parse().map_err(Error::chrono)?),
                 "DURATION" => {
                     duration = Some(Duration::from_secs_f64(value.parse()?));
                 }
@@ -750,7 +750,8 @@ impl FromStr for ExtXDateRange {
         let id = id.ok_or_else(|| Error::missing_value("ID"))?;
         let start_date = start_date
             .ok_or_else(|| Error::missing_value("START-DATE"))?
-            .parse()?;
+            .parse()
+            .map_err(Error::chrono)?;
 
         if end_on_next && class.is_none() {
             return Err(Error::invalid_input());

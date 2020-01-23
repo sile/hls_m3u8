@@ -353,7 +353,7 @@ fn parse_media_playlist(
             Line::Uri(uri) => {
                 segment.uri(uri);
                 segment.keys(available_key_tags.clone());
-                segments.push(segment.build().map_err(Error::builder_error)?);
+                segments.push(segment.build().map_err(Error::builder)?);
                 segment = MediaSegment::builder();
                 has_partial_segment = false;
             }
@@ -365,7 +365,7 @@ fn parse_media_playlist(
     }
 
     builder.segments(segments);
-    builder.build().map_err(Error::builder_error)
+    builder.build().map_err(Error::builder)
 }
 
 impl FromStr for MediaPlaylist {

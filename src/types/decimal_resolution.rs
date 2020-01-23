@@ -59,8 +59,8 @@ impl FromStr for DecimalResolution {
         }
 
         Ok(Self {
-            width: tokens[0].parse()?,
-            height: tokens[1].parse()?,
+            width: tokens[0].parse().map_err(Error::parse_int)?,
+            height: tokens[1].parse().map_err(Error::parse_int)?,
         })
     }
 }

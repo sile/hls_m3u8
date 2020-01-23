@@ -80,7 +80,8 @@ impl FromStr for Channels {
         let channel_number = parameters
             .first()
             .ok_or_else(|| Error::missing_attribute("First parameter of channels!"))?
-            .parse()?;
+            .parse()
+            .map_err(Error::parse_int)?;
 
         Ok(Self {
             channel_number,

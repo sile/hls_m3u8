@@ -1,39 +1,33 @@
 use std::fmt;
 
-use failure::{Backtrace, Context, Fail};
+use thiserror::Error;
+
+use crate::types::ProtocolVersion;
 
 /// This crate specific `Result` type.
 pub type Result<T> = std::result::Result<T, Error>;
 
 /// The [`ErrorKind`].
-#[derive(Debug, Fail, Clone, PartialEq, Eq)]
-pub enum ErrorKind {
-    #[fail(display = "ChronoParseError: {}", _0)]
-    /// An error from the [Chrono](chrono) crate.
-    ChronoParseError(String),
-
-    #[fail(display = "UnknownError: {}", _0)]
-    /// An unknown error occured.
-    UnknownError(String),
-
-    #[fail(display = "A value is missing for the attribute {}", _0)]
+#[derive(Debug, Error, Clone, PartialEq)]
+enum ErrorKind {
     /// A required value is missing.
+    #[error("A value is missing for the attribute {}", _0)]
     MissingValue(String),
 
-    #[fail(display = "Invalid Input")]
     /// Error for anything.
+    #[error("Invalid Input")]
     InvalidInput,
 
-    #[fail(display = "ParseIntError: {}", _0)]
+    #[error("{}", _0)]
     /// Failed to parse a String to int.
-    ParseIntError(String),
+    ParseIntError(::std::num::ParseIntError),
 
-    #[fail(display = "ParseFloatError: {}", _0)]
+    #[error("{}", _0)]
     /// Failed to parse a String to float.
-    ParseFloatError(String),
+    ParseFloatError(::std::num::ParseFloatError),
 
-    #[fail(display = "MissingTag: Expected {} at the start of {:?}", tag, input)]
     /// A tag is missing, that is required at the start of the input.
+    #[error("Expected `{}` at the start of {:?}", tag, input)]
     MissingTag {
         /// The required tag.
         tag: String,
@@ -41,44 +35,48 @@ pub enum ErrorKind {
         input: String,
     },
 
-    #[fail(display = "CustomError: {}", _0)]
+    #[error("{}", _0)]
     /// A custom error.
     Custom(String),
 
-    #[fail(display = "Unmatched Group: {:?}", _0)]
     /// Unmatched Group
+    #[error("Unmatched Group: {:?}", _0)]
     UnmatchedGroup(String),
 
-    #[fail(display = "Unknown Protocol version: {:?}", _0)]
     /// Unknown m3u8 version. This library supports up to ProtocolVersion 7.
+    #[error("Unknown protocol version {:?}", _0)]
     UnknownProtocolVersion(String),
 
-    #[fail(display = "IoError: {}", _0)]
     /// Some io error
+    #[error("{}", _0)]
     Io(String),
 
-    #[fail(
-        display = "VersionError: required_version: {:?}, specified_version: {:?}",
-        _0, _1
-    )]
     /// This error occurs, if there is a ProtocolVersion mismatch.
-    VersionError(String, String),
+    #[error("required_version: {:?}, specified_version: {:?}", _0, _1)]
+    VersionError(ProtocolVersion, ProtocolVersion),
 
-    #[fail(display = "BuilderError: {}", _0)]
-    /// An Error from a Builder.
-    BuilderError(String),
-
-    #[fail(display = "Missing Attribute: {}", _0)]
     /// An attribute is missing.
+    #[error("Missing Attribute: {}", _0)]
     MissingAttribute(String),
 
-    #[fail(display = "Unexpected Attribute: {:?}", _0)]
     /// An unexpected value.
+    #[error("Unexpected Attribute: {:?}", _0)]
     UnexpectedAttribute(String),
 
-    #[fail(display = "Unexpected Tag: {:?}", _0)]
     /// An unexpected tag.
+    #[error("Unexpected Tag: {:?}", _0)]
     UnexpectedTag(String),
+
+    /// An error from the [`chrono`] crate.
+    #[error("{}", _0)]
+    ChronoParseError(chrono::ParseError),
+
+    /// An error from a Builder.
+    #[error("BuilderError: {}", _0)]
+    Builder(String),
+
+    #[error("{}", _0)]
+    Hex(hex::FromHexError),
 
     /// Hints that destructuring should not be exhaustive.
     ///
@@ -86,55 +84,49 @@ pub enum ErrorKind {
     /// don't count on exhaustive matching. (Otherwise, adding a new variant
     /// could break existing code.)
     #[doc(hidden)]
-    #[fail(display = "Invalid error")]
+    #[error("Invalid error")]
     __Nonexhaustive,
 }
 
-#[derive(Debug)]
 /// The Error type of this library.
+#[derive(Debug)]
 pub struct Error {
-    inner: Context<ErrorKind>,
+    inner: ErrorKind,
 }
 
-impl Fail for Error {
-    fn cause(&self) -> Option<&dyn Fail> { self.inner.cause() }
-
-    fn backtrace(&self) -> Option<&Backtrace> { self.inner.backtrace() }
-}
+impl std::error::Error for Error {}
 
 impl fmt::Display for Error {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result { self.inner.fmt(f) }
 }
 
-impl From<ErrorKind> for Error {
-    fn from(kind: ErrorKind) -> Self { Self::from(Context::new(kind)) }
-}
-
-impl From<Context<ErrorKind>> for Error {
-    fn from(inner: Context<ErrorKind>) -> Self { Self { inner } }
-}
-
 impl Error {
+    fn new(inner: ErrorKind) -> Self { Self { inner } }
+
+    pub(crate) fn custom<T: fmt::Display>(value: T) -> Self {
+        Self::new(ErrorKind::Custom(value.to_string()))
+    }
+
     pub(crate) fn missing_value<T: ToString>(value: T) -> Self {
-        Self::from(ErrorKind::MissingValue(value.to_string()))
+        Self::new(ErrorKind::MissingValue(value.to_string()))
     }
 
     pub(crate) fn unexpected_attribute<T: ToString>(value: T) -> Self {
-        Self::from(ErrorKind::UnexpectedAttribute(value.to_string()))
+        Self::new(ErrorKind::UnexpectedAttribute(value.to_string()))
     }
 
     pub(crate) fn unexpected_tag<T: ToString>(value: T) -> Self {
-        Self::from(ErrorKind::UnexpectedTag(value.to_string()))
+        Self::new(ErrorKind::UnexpectedTag(value.to_string()))
     }
 
-    pub(crate) fn invalid_input() -> Self { Self::from(ErrorKind::InvalidInput) }
+    pub(crate) fn invalid_input() -> Self { Self::new(ErrorKind::InvalidInput) }
 
-    pub(crate) fn parse_int_error<T: ToString>(value: T) -> Self {
-        Self::from(ErrorKind::ParseIntError(value.to_string()))
+    pub(crate) fn parse_int(value: ::std::num::ParseIntError) -> Self {
+        Self::new(ErrorKind::ParseIntError(value))
     }
 
-    pub(crate) fn parse_float_error<T: ToString>(value: T) -> Self {
-        Self::from(ErrorKind::ParseFloatError(value.to_string()))
+    pub(crate) fn parse_float(value: ::std::num::ParseFloatError) -> Self {
+        Self::new(ErrorKind::ParseFloatError(value))
     }
 
     pub(crate) fn missing_tag<T, U>(tag: T, input: U) -> Self
@@ -142,76 +134,53 @@ impl Error {
         T: ToString,
         U: ToString,
     {
-        Self::from(ErrorKind::MissingTag {
+        Self::new(ErrorKind::MissingTag {
             tag: tag.to_string(),
             input: input.to_string(),
         })
     }
 
     pub(crate) fn unmatched_group<T: ToString>(value: T) -> Self {
-        Self::from(ErrorKind::UnmatchedGroup(value.to_string()))
-    }
-
-    pub(crate) fn custom<T>(value: T) -> Self
-    where
-        T: fmt::Display,
-    {
-        Self::from(ErrorKind::Custom(value.to_string()))
+        Self::new(ErrorKind::UnmatchedGroup(value.to_string()))
     }
 
     pub(crate) fn unknown_protocol_version<T: ToString>(value: T) -> Self {
-        Self::from(ErrorKind::UnknownProtocolVersion(value.to_string()))
+        Self::new(ErrorKind::UnknownProtocolVersion(value.to_string()))
     }
 
-    pub(crate) fn io<T: ToString>(value: T) -> Self { Self::from(ErrorKind::Io(value.to_string())) }
+    pub(crate) fn io<T: ToString>(value: T) -> Self { Self::new(ErrorKind::Io(value.to_string())) }
 
-    pub(crate) fn builder_error<T: ToString>(value: T) -> Self {
-        Self::from(ErrorKind::BuilderError(value.to_string()))
-    }
-
-    pub(crate) fn chrono<T: ToString>(value: T) -> Self {
-        Self::from(ErrorKind::ChronoParseError(value.to_string()))
+    pub(crate) fn builder<T: ToString>(value: T) -> Self {
+        Self::new(ErrorKind::Builder(value.to_string()))
     }
 
     pub(crate) fn missing_attribute<T: ToString>(value: T) -> Self {
-        Self::from(ErrorKind::MissingAttribute(value.to_string()))
+        Self::new(ErrorKind::MissingAttribute(value.to_string()))
+    }
+
+    // third party crates:
+    pub(crate) fn chrono(value: chrono::format::ParseError) -> Self {
+        Self::new(ErrorKind::ChronoParseError(value))
+    }
+
+    pub(crate) fn hex(value: hex::FromHexError) -> Self { Self::new(ErrorKind::Hex(value)) }
+
+    pub(crate) fn strum(value: strum::ParseError) -> Self {
+        Self::new(ErrorKind::Custom(value.to_string()))
     }
 }
 
+#[doc(hidden)]
 impl From<::std::num::ParseIntError> for Error {
-    fn from(value: ::std::num::ParseIntError) -> Self { Self::parse_int_error(value) }
+    fn from(value: ::std::num::ParseIntError) -> Self { Self::parse_int(value) }
 }
 
+#[doc(hidden)]
 impl From<::std::num::ParseFloatError> for Error {
-    fn from(value: ::std::num::ParseFloatError) -> Self { Self::parse_float_error(value) }
+    fn from(value: ::std::num::ParseFloatError) -> Self { Self::parse_float(value) }
 }
 
-impl From<::std::io::Error> for Error {
-    fn from(value: ::std::io::Error) -> Self { Self::io(value) }
-}
-
-impl From<::chrono::ParseError> for Error {
-    fn from(value: ::chrono::ParseError) -> Self { Self::chrono(value) }
-}
-
+#[doc(hidden)]
 impl From<::strum::ParseError> for Error {
-    fn from(value: ::strum::ParseError) -> Self {
-        Self::custom(value) // TODO!
-    }
-}
-
-impl From<String> for Error {
-    fn from(value: String) -> Self { Self::custom(value) }
-}
-
-impl From<::core::convert::Infallible> for Error {
-    fn from(_: ::core::convert::Infallible) -> Self {
-        Self::custom("An Infallible error has been returned! (this should never happen!)")
-    }
-}
-
-impl From<::hex::FromHexError> for Error {
-    fn from(value: ::hex::FromHexError) -> Self {
-        Self::custom(value) // TODO!
-    }
+    fn from(value: ::strum::ParseError) -> Self { Self::strum(value) }
 }

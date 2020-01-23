@@ -65,16 +65,15 @@ impl MasterPlaylist {
     /// Returns a Builder for a [`MasterPlaylist`].
     ///
     /// # Example
+    ///
     /// ```
     /// use hls_m3u8::tags::ExtXStart;
     /// use hls_m3u8::MasterPlaylist;
     ///
-    /// # fn main() -> Result<(), hls_m3u8::Error> {
     /// MasterPlaylist::builder()
     ///     .start_tag(ExtXStart::new(20.123456))
     ///     .build()?;
-    /// # Ok(())
-    /// # }
+    /// # Ok::<(), Box<dyn ::std::error::Error>>(())
     /// ```
     pub fn builder() -> MasterPlaylistBuilder { MasterPlaylistBuilder::default() }
 
@@ -438,7 +437,7 @@ impl FromStr for MasterPlaylist {
         builder.session_data_tags(session_data_tags);
         builder.session_key_tags(session_key_tags);
 
-        builder.build().map_err(Error::builder_error)
+        builder.build().map_err(Error::builder)
     }
 }
 

@@ -85,7 +85,7 @@ impl ExtXIFrameStreamInfBuilder {
                 .uri
                 .clone()
                 .ok_or_else(|| Error::missing_value("frame rate"))?,
-            stream_inf: self.stream_inf.build().map_err(Error::builder_error)?,
+            stream_inf: self.stream_inf.build().map_err(Error::builder)?,
         })
     }
 }

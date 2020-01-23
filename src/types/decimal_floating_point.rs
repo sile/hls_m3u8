@@ -40,7 +40,9 @@ impl DecimalFloatingPoint {
 impl FromStr for DecimalFloatingPoint {
     type Err = Error;
 
-    fn from_str(input: &str) -> Result<Self, Self::Err> { Self::new(input.parse()?) }
+    fn from_str(input: &str) -> Result<Self, Self::Err> {
+        Self::new(input.parse().map_err(Error::parse_float)?)
+    }
 }
 
 impl Deref for DecimalFloatingPoint {

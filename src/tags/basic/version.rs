@@ -12,21 +12,18 @@ use crate::{Error, RequiredVersion};
 /// It applies to the entire Playlist.
 ///
 /// # Examples
+///
 /// Parsing from a [`str`]:
 /// ```
-/// # use failure::Error;
 /// # use hls_m3u8::tags::ExtXVersion;
 /// #
-/// # fn main() -> Result<(), Error> {
 /// use hls_m3u8::types::ProtocolVersion;
 ///
 /// assert_eq!(
 ///     "#EXT-X-VERSION:5".parse::<ExtXVersion>()?,
 ///     ExtXVersion::new(ProtocolVersion::V5)
 /// );
-/// #
-/// # Ok(())
-/// # }
+/// # Ok::<(), Box<dyn ::std::error::Error>>(())
 /// ```
 /// Converting to a [`str`]:
 /// ```

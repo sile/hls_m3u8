@@ -735,7 +735,7 @@ impl FromStr for ExtXMedia {
             }
         }
 
-        builder.build().map_err(Error::builder_error)
+        builder.build().map_err(Error::builder)
     }
 }
 

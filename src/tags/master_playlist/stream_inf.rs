@@ -124,7 +124,7 @@ impl ExtXStreamInfBuilder {
             audio: self.audio.clone(),
             subtitles: self.subtitles.clone(),
             closed_captions: self.closed_captions.clone(),
-            stream_inf: self.stream_inf.build().map_err(Error::builder_error)?,
+            stream_inf: self.stream_inf.build().map_err(Error::builder)?,
         })
     }
 }
@@ -347,7 +347,7 @@ impl FromStr for ExtXStreamInf {
                 "FRAME-RATE" => frame_rate = Some((value.parse())?),
                 "AUDIO" => audio = Some(unquote(value)),
                 "SUBTITLES" => subtitles = Some(unquote(value)),
-                "CLOSED-CAPTIONS" => closed_captions = Some(value.parse()?),
+                "CLOSED-CAPTIONS" => closed_captions = Some(value.parse().unwrap()),
                 _ => {}
             }
         }
