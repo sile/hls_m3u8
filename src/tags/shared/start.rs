@@ -2,14 +2,14 @@ use std::fmt;
 use std::str::FromStr;
 
 use crate::attribute::AttributePairs;
-use crate::types::{ProtocolVersion, RequiredVersion, SignedDecimalFloatingPoint};
+use crate::types::{ProtocolVersion, SignedDecimalFloatingPoint};
 use crate::utils::{parse_yes_or_no, tag};
-use crate::Error;
+use crate::{Error, RequiredVersion};
 
 /// [4.3.5.2. EXT-X-START]
 ///
 /// [4.3.5.2. EXT-X-START]: https://tools.ietf.org/html/rfc8216#section-4.3.5.2
-#[derive(PartialOrd, Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(PartialOrd, Debug, Clone, Copy, PartialEq)]
 pub struct ExtXStart {
     time_offset: SignedDecimalFloatingPoint,
     precise: bool,
@@ -26,7 +26,7 @@ impl ExtXStart {
     /// # Example
     /// ```
     /// # use hls_m3u8::tags::ExtXStart;
-    /// ExtXStart::new(20.123456);
+    /// let start = ExtXStart::new(20.123456);
     /// ```
     pub fn new(time_offset: f64) -> Self {
         Self {
@@ -157,6 +157,7 @@ impl FromStr for ExtXStart {
 #[cfg(test)]
 mod test {
     use super::*;
+    use pretty_assertions::assert_eq;
 
     #[test]
     fn test_display() {

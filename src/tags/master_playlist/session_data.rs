@@ -4,18 +4,21 @@ use std::str::FromStr;
 use derive_builder::Builder;
 
 use crate::attribute::AttributePairs;
-use crate::types::{ProtocolVersion, RequiredVersion};
+use crate::types::ProtocolVersion;
 use crate::utils::{quote, tag, unquote};
-use crate::Error;
+use crate::{Error, RequiredVersion};
 
-/// The data of an [ExtXSessionData] tag.
+/// The data of an [`ExtXSessionData`] tag.
 #[derive(Hash, Eq, Ord, Debug, PartialEq, Clone, PartialOrd)]
 pub enum SessionData {
     /// A String, that contains the data identified by
-    /// [`data_id`](ExtXSessionData::data_id).
-    /// If a [`language`](ExtXSessionData::language) is specified, the value
+    /// [`data_id`].
+    /// If a [`language`] is specified, the value
     /// should contain a human-readable string written in the specified
     /// language.
+    ///
+    /// [`data_id`]: ExtXSessionData::data_id
+    /// [`language`]: ExtXSessionData::language
     Value(String),
     /// An [`uri`], which points to a [`json`].
     ///
@@ -35,17 +38,20 @@ pub enum SessionData {
 #[builder(setter(into))]
 pub struct ExtXSessionData {
     /// The identifier of the data.
-    /// For more information look [`here`](ExtXSessionData::set_data_id).
+    /// For more information look [`here`].
     ///
     /// # Note
     /// This field is required.
+    ///
+    /// [`here`]: ExtXSessionData::set_data_id
     data_id: String,
-    /// The data associated with the
-    /// [`data_id`](ExtXSessionDataBuilder::data_id).
+    /// The data associated with the [`data_id`].
     /// For more information look [`here`](SessionData).
     ///
     /// # Note
     /// This field is required.
+    ///
+    /// [`data_id`]: ExtXSessionDataBuilder::data_id
     data: SessionData,
     /// The language of the [`data`](ExtXSessionDataBuilder::data).
     #[builder(setter(into, strip_option), default)]
@@ -318,6 +324,7 @@ impl FromStr for ExtXSessionData {
 #[cfg(test)]
 mod test {
     use super::*;
+    use pretty_assertions::assert_eq;
 
     #[test]
     fn test_display() {

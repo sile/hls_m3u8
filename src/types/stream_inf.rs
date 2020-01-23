@@ -1,26 +1,44 @@
 use std::fmt;
 use std::str::FromStr;
 
+use derive_builder::Builder;
+
 use crate::attribute::AttributePairs;
 use crate::types::{DecimalResolution, HdcpLevel};
 use crate::utils::{quote, unquote};
 use crate::Error;
 
-/// [4.3.4.2. EXT-X-STREAM-INF]
+/// # [4.3.4.2. EXT-X-STREAM-INF]
 ///
 /// [4.3.4.2. EXT-X-STREAM-INF]: https://tools.ietf.org/html/rfc8216#section-4.3.4.2
-#[derive(PartialOrd, Debug, Clone, PartialEq, Eq, Hash)]
+#[derive(Builder, PartialOrd, Debug, Clone, PartialEq, Eq, Hash, Ord)]
+#[builder(setter(into, strip_option))]
+#[builder(derive(Debug, PartialEq))]
 pub struct StreamInf {
+    /// The maximum bandwidth of the stream.
     bandwidth: u64,
+    #[builder(default)]
+    /// The average bandwidth of the stream.
     average_bandwidth: Option<u64>,
+    #[builder(default)]
+    /// Every media format in any of the renditions specified by the Variant
+    /// Stream.
     codecs: Option<String>,
+    #[builder(default)]
+    /// The resolution of the stream.
     resolution: Option<DecimalResolution>,
+    #[builder(default)]
+    /// High-bandwidth Digital Content Protection
     hdcp_level: Option<HdcpLevel>,
+    #[builder(default)]
+    /// It indicates the set of video renditions, that should be used when
+    /// playing the presentation.
     video: Option<String>,
 }
 
 impl StreamInf {
-    /// Creates a new [StreamInf].
+    /// Creates a new [`StreamInf`].
+    ///
     /// # Examples
     /// ```
     /// # use hls_m3u8::types::StreamInf;
@@ -211,7 +229,7 @@ impl StreamInf {
     /// assert_eq!(stream.hdcp_level(), Some(HdcpLevel::None));
     /// ```
     pub fn set_hdcp_level<T: Into<HdcpLevel>>(&mut self, value: Option<T>) -> &mut Self {
-        self.hdcp_level = value.map(|v| v.into());
+        self.hdcp_level = value.map(Into::into);
         self
     }
 }
@@ -282,6 +300,7 @@ impl FromStr for StreamInf {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use pretty_assertions::assert_eq;
 
     #[test]
     fn test_display() {

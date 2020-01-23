@@ -15,6 +15,7 @@ mod media_type;
 mod protocol_version;
 mod signed_decimal_floating_point;
 mod stream_inf;
+mod value;
 
 pub use byte_range::*;
 pub use channels::*;
@@ -32,3 +33,4 @@ pub use media_type::*;
 pub use protocol_version::*;
 pub(crate) use signed_decimal_floating_point::*;
 pub use stream_inf::*;
+pub use value::*;

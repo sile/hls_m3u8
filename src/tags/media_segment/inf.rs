@@ -2,24 +2,17 @@ use std::fmt;
 use std::str::FromStr;
 use std::time::Duration;
 
-use crate::types::{ProtocolVersion, RequiredVersion};
+use crate::types::ProtocolVersion;
 use crate::utils::tag;
-use crate::Error;
+use crate::{Error, RequiredVersion};
 
-/// # [4.4.2.1. EXTINF]
+/// # [4.3.2.1. EXTINF]
 ///
 /// The [`ExtInf`] tag specifies the duration of a [`Media Segment`]. It applies
 /// only to the next [`Media Segment`].
 ///
-/// Its format is:
-/// ```text
-/// #EXTINF:<duration>,[<title>]
-/// ```
-/// The title is an optional informative title about the [Media Segment].
-///
 /// [`Media Segment`]: crate::media_segment::MediaSegment
-/// [4.4.2.1. EXTINF]:
-/// https://tools.ietf.org/html/draft-pantos-hls-rfc8216bis-04#section-4.4.2.1
+/// [4.3.2.1. EXTINF]: https://tools.ietf.org/html/rfc8216#section-4.3.2.1
 #[derive(Default, Debug, Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]
 pub struct ExtInf {
     duration: Duration,
@@ -137,10 +130,7 @@ impl RequiredVersion for ExtInf {
 impl fmt::Display for ExtInf {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         write!(f, "{}", Self::PREFIX)?;
-
-        let duration = (self.duration.as_secs() as f64)
-            + (f64::from(self.duration.subsec_nanos()) / 1_000_000_000.0);
-        write!(f, "{},", duration)?;
+        write!(f, "{},", self.duration.as_secs_f64())?;
 
         if let Some(value) = &self.title {
             write!(f, "{}", value)?;
@@ -188,6 +178,7 @@ impl From<Duration> for ExtInf {
 #[cfg(test)]
 mod test {
     use super::*;
+    use pretty_assertions::assert_eq;
 
     #[test]
     fn test_display() {
@@ -236,6 +227,9 @@ mod test {
             "#EXTINF:5,title".parse::<ExtInf>().unwrap(),
             ExtInf::with_title(Duration::from_secs(5), "title")
         );
+
+        assert!("#EXTINF:".parse::<ExtInf>().is_err());
+        assert!("#EXTINF:garbage".parse::<ExtInf>().is_err());
     }
 
     #[test]
@@ -256,6 +250,14 @@ mod test {
         assert_eq!(
             ExtInf::new(Duration::from_millis(4400)).required_version(),
             ProtocolVersion::V3
+        );
+    }
+
+    #[test]
+    fn test_from() {
+        assert_eq!(
+            ExtInf::from(Duration::from_secs(1)),
+            ExtInf::new(Duration::from_secs(1))
         );
     }
 }

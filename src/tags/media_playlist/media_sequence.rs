@@ -1,19 +1,13 @@
 use std::fmt;
 use std::str::FromStr;
 
-use crate::types::{ProtocolVersion, RequiredVersion};
+use crate::types::ProtocolVersion;
 use crate::utils::tag;
-use crate::Error;
+use crate::{Error, RequiredVersion};
 
 /// # [4.4.3.2. EXT-X-MEDIA-SEQUENCE]
 /// The [`ExtXMediaSequence`] tag indicates the Media Sequence Number of
 /// the first [`Media Segment`] that appears in a Playlist file.
-///
-/// Its format is:
-/// ```text
-/// #EXT-X-MEDIA-SEQUENCE:<number>
-/// ```
-/// where `number` is a [`u64`].
 ///
 /// [Media Segment]: crate::MediaSegment
 /// [4.4.3.2. EXT-X-MEDIA-SEQUENCE]:
@@ -61,6 +55,7 @@ impl ExtXMediaSequence {
     }
 }
 
+/// This tag requires [`ProtocolVersion::V1`].
 impl RequiredVersion for ExtXMediaSequence {
     fn required_version(&self) -> ProtocolVersion { ProtocolVersion::V1 }
 }
@@ -74,13 +69,14 @@ impl FromStr for ExtXMediaSequence {
 
     fn from_str(input: &str) -> Result<Self, Self::Err> {
         let seq_num = tag(input, Self::PREFIX)?.parse()?;
-        Ok(ExtXMediaSequence::new(seq_num))
+        Ok(Self::new(seq_num))
     }
 }
 
 #[cfg(test)]
 mod test {
     use super::*;
+    use pretty_assertions::assert_eq;
 
     #[test]
     fn test_display() {

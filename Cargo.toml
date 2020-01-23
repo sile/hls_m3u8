@@ -17,10 +17,12 @@ codecov = { repository = "sile/hls_m3u8" }
 
 [dependencies]
 failure = "0.1.5"
-derive_builder = "0.7.2"
+derive_builder = "0.8.0"
 chrono = "0.4.9"
 strum = { version = "0.16.0", features = ["derive"] }
 derive_more = "0.15.0"
+hex = "0.4.0"
 
 [dev-dependencies]
-clap = "2"
+clap = "2.33.0"
+pretty_assertions = "0.6.1"

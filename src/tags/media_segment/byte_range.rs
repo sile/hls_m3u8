@@ -2,9 +2,9 @@ use std::fmt;
 use std::ops::{Deref, DerefMut};
 use std::str::FromStr;
 
-use crate::types::{ByteRange, ProtocolVersion, RequiredVersion};
+use crate::types::{ByteRange, ProtocolVersion};
 use crate::utils::tag;
-use crate::Error;
+use crate::{Error, RequiredVersion};
 
 /// # [4.4.2.2. EXT-X-BYTERANGE]
 ///
@@ -23,7 +23,7 @@ use crate::Error;
 /// [`Media Segment`]: crate::MediaSegment
 /// [4.4.2.2. EXT-X-BYTERANGE]:
 /// https://tools.ietf.org/html/draft-pantos-hls-rfc8216bis-04#section-4.4.2.2
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, PartialOrd, Ord)]
 pub struct ExtXByteRange(ByteRange);
 
 impl ExtXByteRange {
@@ -97,13 +97,14 @@ impl FromStr for ExtXByteRange {
             }
         };
 
-        Ok(ExtXByteRange::new(length, start))
+        Ok(Self::new(length, start))
     }
 }
 
 #[cfg(test)]
 mod test {
     use super::*;
+    use pretty_assertions::assert_eq;
 
     #[test]
     fn test_display() {

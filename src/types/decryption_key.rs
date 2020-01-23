@@ -6,12 +6,11 @@ use derive_builder::Builder;
 use crate::attribute::AttributePairs;
 use crate::types::{
     EncryptionMethod, InitializationVector, KeyFormat, KeyFormatVersions, ProtocolVersion,
-    RequiredVersion,
 };
 use crate::utils::{quote, unquote};
-use crate::Error;
+use crate::{Error, RequiredVersion};
 
-#[derive(Builder, Debug, Clone, PartialEq, Eq, Hash)]
+#[derive(Builder, Debug, Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]
 #[builder(setter(into), build_fn(validate = "Self::validate"))]
 /// [`DecryptionKey`] contains data, that is shared between [`ExtXSessionKey`]
 /// and [`ExtXKey`].
@@ -46,7 +45,7 @@ impl DecryptionKeyBuilder {
 }
 
 impl DecryptionKey {
-    /// Makes a new [DecryptionKey].
+    /// Makes a new [`DecryptionKey`].
     ///
     /// # Example
     /// ```
@@ -65,7 +64,7 @@ impl DecryptionKey {
         }
     }
 
-    /// Returns the [EncryptionMethod].
+    /// Returns the [`EncryptionMethod`].
     ///
     /// # Example
     /// ```
@@ -81,7 +80,7 @@ impl DecryptionKey {
     /// Returns a Builder to build a [DecryptionKey].
     pub fn builder() -> DecryptionKeyBuilder { DecryptionKeyBuilder::default() }
 
-    /// Sets the [EncryptionMethod].
+    /// Sets the [`EncryptionMethod`].
     ///
     /// # Example
     /// ```
@@ -121,7 +120,7 @@ impl DecryptionKey {
     /// Sets the `URI` attribute.
     ///
     /// # Note
-    /// This attribute is required, if the [EncryptionMethod] is not `None`.
+    /// This attribute is required, if the [`EncryptionMethod`] is not `None`.
     ///
     /// # Example
     /// ```
@@ -208,7 +207,7 @@ impl DecryptionKey {
     /// ```
     pub const fn key_format(&self) -> Option<KeyFormat> { self.key_format }
 
-    /// Sets the [KeyFormat] attribute.
+    /// Sets the [`KeyFormat`] attribute.
     ///
     /// # Example
     /// ```
@@ -222,11 +221,11 @@ impl DecryptionKey {
     /// assert_eq!(key.key_format(), Some(KeyFormat::Identity));
     /// ```
     pub fn set_key_format<T: Into<KeyFormat>>(&mut self, value: Option<T>) -> &mut Self {
-        self.key_format = value.map(|v| v.into());
+        self.key_format = value.map(Into::into);
         self
     }
 
-    /// Returns the [KeyFormatVersions] attribute.
+    /// Returns the [`KeyFormatVersions`] attribute.
     ///
     /// # Example
     /// ```
@@ -246,7 +245,7 @@ impl DecryptionKey {
         &self.key_format_versions
     }
 
-    /// Sets the [KeyFormatVersions] attribute.
+    /// Sets the [`KeyFormatVersions`] attribute.
     ///
     /// # Example
     /// ```
@@ -267,7 +266,7 @@ impl DecryptionKey {
         &mut self,
         value: Option<T>,
     ) -> &mut Self {
-        self.key_format_versions = value.map(|v| v.into());
+        self.key_format_versions = value.map(Into::into);
         self
     }
 }
@@ -354,6 +353,7 @@ impl fmt::Display for DecryptionKey {
 mod test {
     use super::*;
     use crate::types::EncryptionMethod;
+    use pretty_assertions::assert_eq;
 
     #[test]
     fn test_builder() {
