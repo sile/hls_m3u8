@@ -714,8 +714,8 @@ impl FromStr for ExtXDateRange {
 
         let mut client_attributes = BTreeMap::new();
 
-        for (key, value) in input.parse::<AttributePairs>()? {
-            match key.as_str() {
+        for (key, value) in AttributePairs::new(input) {
+            match key {
                 "ID" => id = Some(unquote(value)),
                 "CLASS" => class = Some(unquote(value)),
                 "START-DATE" => start_date = Some(unquote(value)),

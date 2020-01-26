@@ -1,97 +1,88 @@
-use std::collections::HashMap;
-use std::ops::{Deref, DerefMut};
-use std::str::FromStr;
-
-use crate::Error;
+use core::iter::FusedIterator;
 
 #[derive(Clone, Debug, Default, Eq, PartialEq)]
-pub struct AttributePairs(HashMap<String, String>);
-
-impl AttributePairs {
-    pub fn new() -> Self { Self::default() }
+pub(crate) struct AttributePairs<'a> {
+    string: &'a str,
+    index: usize,
 }
 
-impl Deref for AttributePairs {
-    type Target = HashMap<String, String>;
-
-    fn deref(&self) -> &Self::Target { &self.0 }
+impl<'a> AttributePairs<'a> {
+    pub const fn new(string: &'a str) -> Self { Self { string, index: 0 } }
 }
 
-impl DerefMut for AttributePairs {
-    fn deref_mut(&mut self) -> &mut Self::Target { &mut self.0 }
-}
+impl<'a> Iterator for AttributePairs<'a> {
+    type Item = (&'a str, &'a str);
 
-impl IntoIterator for AttributePairs {
-    type IntoIter = ::std::collections::hash_map::IntoIter<String, String>;
-    type Item = (String, String);
+    fn next(&mut self) -> Option<Self::Item> {
+        // return `None`, if there are no more chars
+        self.string.as_bytes().get(self.index + 1)?;
 
-    fn into_iter(self) -> Self::IntoIter { self.0.into_iter() }
-}
+        let key = {
+            // the position in the string:
+            let start = self.index;
+            // the key ends at an `=`:
+            let end = self
+                .string
+                .bytes()
+                .skip(self.index)
+                .position(|i| i == b'=')?
+                + start;
 
-impl<'a> IntoIterator for &'a AttributePairs {
-    type IntoIter = ::std::collections::hash_map::Iter<'a, String, String>;
-    type Item = (&'a String, &'a String);
+            // advance the index to the 2nd char after the end of the key
+            // (this will skip the `=`)
+            self.index = end + 1;
 
-    fn into_iter(self) -> Self::IntoIter { self.0.iter() }
-}
+            core::str::from_utf8(&self.string.as_bytes()[start..end]).unwrap()
+        };
 
-impl FromStr for AttributePairs {
-    type Err = Error;
+        let value = {
+            let start = self.index;
+            let mut end = 0;
 
-    fn from_str(input: &str) -> Result<Self, Self::Err> {
-        let mut result = Self::new();
+            // find the end of the value by searching for `,`.
+            // it should ignore `,` that are inside double quotes.
+            let mut inside_quotes = false;
+            while let Some(item) = self.string.as_bytes().get(start + end) {
+                end += 1;
 
-        for line in split(input, ',') {
-            let pair = split(line.trim(), '=');
-
-            if pair.len() < 2 {
-                continue;
-            }
-
-            let key = pair[0].trim().to_uppercase();
-            let value = pair[1].trim().to_string();
-            if value.is_empty() {
-                continue;
-            }
-
-            result.insert(key.trim().to_string(), value.trim().to_string());
-        }
-
-        #[cfg(test)] // this is very useful, when a test fails!
-        dbg!(&result);
-        Ok(result)
-    }
-}
-
-fn split(value: &str, terminator: char) -> Vec<String> {
-    let mut result = vec![];
-
-    let mut inside_quotes = false;
-    let mut temp_string = String::with_capacity(1024);
-
-    for c in value.chars() {
-        match c {
-            '"' => {
-                inside_quotes = !inside_quotes;
-                temp_string.push(c);
-            }
-            k if (k == terminator) => {
-                if inside_quotes {
-                    temp_string.push(c);
-                } else {
-                    result.push(temp_string);
-                    temp_string = String::with_capacity(1024);
+                if *item == b'"' {
+                    inside_quotes = !inside_quotes;
+                } else if *item == b',' && !inside_quotes {
+                    self.index += 1;
+                    end -= 1;
+                    break;
                 }
             }
-            _ => {
-                temp_string.push(c);
+
+            self.index += end;
+            end += start;
+
+            core::str::from_utf8(&self.string.as_bytes()[start..end]).unwrap()
+        };
+
+        Some((key.trim(), value.trim()))
+    }
+
+    fn size_hint(&self) -> (usize, Option<usize>) {
+        let mut remaining = 0;
+
+        // each `=` in the remaining str is an iteration
+        // this also ignores `=` inside quotes!
+        let mut inside_quotes = false;
+        for c in self.string.as_bytes().iter().skip(self.index) {
+            if *c == b'=' && !inside_quotes {
+                remaining += 1;
+            } else if *c == b'"' {
+                inside_quotes = !inside_quotes;
             }
         }
-    }
-    result.push(temp_string);
 
-    result
+        (remaining, Some(remaining))
+    }
 }
+
+impl<'a> ExactSizeIterator for AttributePairs<'a> {}
+impl<'a> FusedIterator for AttributePairs<'a> {}
 
 #[cfg(test)]
 mod test {
@@ -99,50 +90,55 @@ mod test {
     use pretty_assertions::assert_eq;
 
     #[test]
-    fn test_parser() {
-        let pairs = "FOO=BAR,BAR=\"baz,qux\",ABC=12.3"
-            .parse::<AttributePairs>()
-            .unwrap();
+    fn test_attributes() {
+        let mut attributes = AttributePairs::new("KEY=VALUE,PAIR=YES");
+        assert_eq!((2, Some(2)), attributes.size_hint());
+        assert_eq!(Some(("KEY", "VALUE")), attributes.next());
+        assert_eq!((1, Some(1)), attributes.size_hint());
+        assert_eq!(Some(("PAIR", "YES")), attributes.next());
+        assert_eq!((0, Some(0)), attributes.size_hint());
+        assert_eq!(None, attributes.next());
 
-        let mut iterator = pairs.iter();
-        assert!(iterator.any(|(k, v)| k == "FOO" && "BAR" == v));
+        let mut attributes = AttributePairs::new("garbage");
+        assert_eq!((0, Some(0)), attributes.size_hint());
+        assert_eq!(None, attributes.next());
 
-        let mut iterator = pairs.iter();
-        assert!(iterator.any(|(k, v)| k == "BAR" && v == "\"baz,qux\""));
+        let mut attributes = AttributePairs::new("KEY=,=VALUE,=,");
+        assert_eq!((3, Some(3)), attributes.size_hint());
+        assert_eq!(Some(("KEY", "")), attributes.next());
+        assert_eq!((2, Some(2)), attributes.size_hint());
+        assert_eq!(Some(("", "VALUE")), attributes.next());
+        assert_eq!((1, Some(1)), attributes.size_hint());
+        assert_eq!(Some(("", "")), attributes.next());
+        assert_eq!((0, Some(0)), attributes.size_hint());
+        assert_eq!(None, attributes.next());
 
-        let mut iterator = pairs.iter();
-        assert!(iterator.any(|(k, v)| k == "ABC" && v == "12.3"));
+        // test quotes:
+        let mut attributes = AttributePairs::new("KEY=\"VALUE,\",");
+        assert_eq!((1, Some(1)), attributes.size_hint());
+        assert_eq!(Some(("KEY", "\"VALUE,\"")), attributes.next());
+        assert_eq!((0, Some(0)), attributes.size_hint());
+        assert_eq!(None, attributes.next());
 
-        let mut pairs = AttributePairs::new();
-        pairs.insert("FOO".to_string(), "BAR".to_string());
-
-        assert_eq!("FOO=BAR,VAL".parse::<AttributePairs>().unwrap(), pairs);
-    }
-
-    #[test]
-    fn test_iterator() {
-        let mut attrs = AttributePairs::new();
-        attrs.insert("key_01".to_string(), "value_01".to_string());
-        attrs.insert("key_02".to_string(), "value_02".to_string());
-
-        let mut iterator = attrs.iter();
-        assert!(iterator.any(|(k, v)| k == "key_01" && v == "value_01"));
-
-        let mut iterator = attrs.iter();
-        assert!(iterator.any(|(k, v)| k == "key_02" && v == "value_02"));
-    }
-
-    #[test]
-    fn test_into_iter() {
-        let mut map = HashMap::new();
-        map.insert("k".to_string(), "v".to_string());
-
-        let mut attrs = AttributePairs::new();
-        attrs.insert("k".to_string(), "v".to_string());
-
-        assert_eq!(
-            attrs.into_iter().collect::<Vec<_>>(),
-            map.into_iter().collect::<Vec<_>>()
+        // test with chars, that are larger, than 1 byte
+        let mut attributes = AttributePairs::new(
+            "LANGUAGE=\"fre\",\
+             NAME=\"Français\",\
+             AUTOSELECT=YES",
         );
+
+        assert_eq!(Some(("LANGUAGE", "\"fre\"")), attributes.next());
+        assert_eq!(Some(("NAME", "\"Français\"")), attributes.next());
+        assert_eq!(Some(("AUTOSELECT", "YES")), attributes.next());
+    }
+
+    #[test]
+    fn test_parser() {
+        let mut pairs = AttributePairs::new("FOO=BAR,BAR=\"baz,qux\",ABC=12.3");
+
+        assert_eq!(pairs.next(), Some(("FOO", "BAR")));
+        assert_eq!(pairs.next(), Some(("BAR", "\"baz,qux\"")));
+        assert_eq!(pairs.next(), Some(("ABC", "12.3")));
+        assert_eq!(pairs.next(), None);
     }
 }

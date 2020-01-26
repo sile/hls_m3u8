@@ -293,10 +293,18 @@ impl FromStr for DecryptionKey {
         let mut key_format = None;
         let mut key_format_versions = None;
 
-        for (key, value) in input.parse::<AttributePairs>()? {
-            match key.as_str() {
+        for (key, value) in AttributePairs::new(input) {
+            match key {
                 "METHOD" => method = Some(value.parse().map_err(Error::strum)?),
-                "URI" => uri = Some(unquote(value)),
+                "URI" => {
+                    let unquoted_uri = unquote(value);
+
+                    if unquoted_uri.trim().is_empty() {
+                        uri = None;
+                    } else {
+                        uri = Some(unquoted_uri);
+                    }
+                }
                 "IV" => iv = Some(value.parse()?),
                 "KEYFORMAT" => key_format = Some(value.parse()?),
                 "KEYFORMATVERSIONS" => key_format_versions = Some(value.parse().unwrap()),

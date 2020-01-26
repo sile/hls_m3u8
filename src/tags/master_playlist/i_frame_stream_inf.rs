@@ -162,8 +162,8 @@ impl FromStr for ExtXIFrameStreamInf {
 
         let mut uri = None;
 
-        for (key, value) in input.parse::<AttributePairs>()? {
-            if let "URI" = key.as_str() {
+        for (key, value) in AttributePairs::new(input) {
+            if key == "URI" {
                 uri = Some(unquote(value));
             }
         }

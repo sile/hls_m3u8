@@ -342,8 +342,8 @@ impl FromStr for ExtXStreamInf {
         let mut subtitles = None;
         let mut closed_captions = None;
 
-        for (key, value) in input.parse::<AttributePairs>()? {
-            match key.as_str() {
+        for (key, value) in AttributePairs::new(input) {
+            match key {
                 "FRAME-RATE" => frame_rate = Some((value.parse())?),
                 "AUDIO" => audio = Some(unquote(value)),
                 "SUBTITLES" => subtitles = Some(unquote(value)),

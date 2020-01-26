@@ -275,8 +275,8 @@ impl FromStr for ExtXSessionData {
         let mut uri = None;
         let mut language = None;
 
-        for (key, value) in input.parse::<AttributePairs>()? {
-            match key.as_str() {
+        for (key, value) in AttributePairs::new(input) {
+            match key {
                 "DATA-ID" => data_id = Some(unquote(value)),
                 "VALUE" => session_value = Some(unquote(value)),
                 "URI" => uri = Some(unquote(value)),

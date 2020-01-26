@@ -168,8 +168,8 @@ impl FromStr for ExtXMap {
         let mut uri = None;
         let mut range = None;
 
-        for (key, value) in input.parse::<AttributePairs>()? {
-            match key.as_str() {
+        for (key, value) in AttributePairs::new(input) {
+            match key {
                 "URI" => uri = Some(unquote(value)),
                 "BYTERANGE" => {
                     range = Some(unquote(value).parse()?);

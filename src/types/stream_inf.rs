@@ -268,8 +268,8 @@ impl FromStr for StreamInf {
         let mut hdcp_level = None;
         let mut video = None;
 
-        for (key, value) in input.parse::<AttributePairs>()? {
-            match key.as_str() {
+        for (key, value) in AttributePairs::new(input) {
+            match key {
                 "BANDWIDTH" => bandwidth = Some(value.parse::<u64>().map_err(Error::parse_int)?),
                 "AVERAGE-BANDWIDTH" => {
                     average_bandwidth = Some(value.parse::<u64>().map_err(Error::parse_int)?)

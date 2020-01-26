@@ -733,8 +733,8 @@ impl FromStr for ExtXMedia {
 
         let mut builder = Self::builder();
 
-        for (key, value) in input.parse::<AttributePairs>()? {
-            match key.as_str() {
+        for (key, value) in AttributePairs::new(input) {
+            match key {
                 "TYPE" => {
                     builder.media_type(value.parse::<MediaType>()?);
                 }
@@ -832,12 +832,12 @@ mod test {
             {
                 ExtXMedia::builder()
                     .media_type(MediaType::Audio)
+                    .uri("fre/prog_index.m3u8")
                     .group_id("audio")
                     .language("fre")
                     .name("Français")
-                    .is_autoselect(true)
                     .is_default(false)
-                    .uri("fre/prog_index.m3u8")
+                    .is_autoselect(true)
                     .build()
                     .unwrap(),
                 "#EXT-X-MEDIA:\
