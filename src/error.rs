@@ -101,7 +101,7 @@ impl fmt::Display for Error {
 }
 
 impl Error {
-    fn new(inner: ErrorKind) -> Self { Self { inner } }
+    const fn new(inner: ErrorKind) -> Self { Self { inner } }
 
     pub(crate) fn custom<T: fmt::Display>(value: T) -> Self {
         Self::new(ErrorKind::Custom(value.to_string()))

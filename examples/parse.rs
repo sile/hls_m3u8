@@ -1,6 +1,3 @@
-extern crate clap;
-extern crate hls_m3u8;
-
 use clap::{App, Arg};
 use hls_m3u8::{MasterPlaylist, MediaPlaylist};
 use std::io::{self, Read};

@@ -4,7 +4,7 @@
     clippy::nursery,
     clippy::cargo
 )]
-#![allow(clippy::multiple_crate_versions)]
+#![allow(clippy::multiple_crate_versions, clippy::must_use_candidate)]
 #![warn(
     missing_docs,
     missing_copy_implementations,
