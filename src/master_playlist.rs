@@ -68,6 +68,13 @@ pub struct MasterPlaylist {
     /// This tag is optional.
     #[builder(default)]
     session_key_tags: Vec<ExtXSessionKey>,
+    /// A list of tags that are unknown.
+    ///
+    /// # Note
+    ///
+    /// This tag is optional.
+    #[builder(default)]
+    unknown_tags: Vec<String>,
 }
 
 impl MasterPlaylist {
@@ -244,6 +251,10 @@ impl fmt::Display for MasterPlaylist {
             writeln!(f, "{}", value)?;
         }
 
+        for t in &self.unknown_tags {
+            writeln!(f, "{}", t)?;
+        }
+
         Ok(())
     }
 }
@@ -259,6 +270,7 @@ impl FromStr for MasterPlaylist {
         let mut i_frame_stream_inf_tags = vec![];
         let mut session_data_tags = vec![];
         let mut session_key_tags = vec![];
+        let mut unknown_tags = vec![];
 
         for (i, line) in input.parse::<Lines>()?.into_iter().enumerate() {
             match line {
@@ -320,7 +332,7 @@ impl FromStr for MasterPlaylist {
                         _ => {
                             // [6.3.1. General Client Responsibilities]
                             // > ignore any unrecognized tags.
-                            // TODO: collect custom tags
+                            unknown_tags.push(tag.to_string());
                         }
                     }
                 }
@@ -335,6 +347,7 @@ impl FromStr for MasterPlaylist {
         builder.i_frame_stream_inf_tags(i_frame_stream_inf_tags);
         builder.session_data_tags(session_data_tags);
         builder.session_key_tags(session_key_tags);
+        builder.unknown_tags(unknown_tags);
 
         builder.build().map_err(Error::builder)
     }

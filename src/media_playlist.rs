@@ -98,6 +98,13 @@ pub struct MediaPlaylist {
     /// `Duration::from_secs(0)`.
     #[builder(default = "Duration::from_secs(0)")]
     allowable_excess_duration: Duration,
+    /// A list of unknown tags.
+    ///
+    /// # Note
+    ///
+    /// This field is optional.
+    #[builder(default)]
+    unknown_tags: Vec<String>,
 }
 
 impl MediaPlaylistBuilder {
@@ -257,6 +264,10 @@ impl fmt::Display for MediaPlaylist {
             writeln!(f, "{}", value)?;
         }
 
+        for value in &self.unknown_tags {
+            writeln!(f, "{}", value)?;
+        }
+
         Ok(())
     }
 }
@@ -270,6 +281,7 @@ fn parse_media_playlist(
 
     let mut has_partial_segment = false;
     let mut has_discontinuity_tag = false;
+    let mut unknown_tags = vec![];
 
     let mut available_key_tags: Vec<crate::tags::ExtXKey> = vec![];
 
@@ -369,9 +381,11 @@ fn parse_media_playlist(
                     Tag::ExtXStart(t) => {
                         builder.start_tag(t);
                     }
-                    Tag::Unknown(_) | Tag::ExtXVersion(_) => {
+                    Tag::ExtXVersion(_) => {}
+                    Tag::Unknown(_) => {
                         // [6.3.1. General Client Responsibilities]
                         // > ignore any unrecognized tags.
+                        unknown_tags.push(tag.to_string());
                     }
                 }
             }
@@ -389,6 +403,7 @@ fn parse_media_playlist(
         return Err(Error::invalid_input());
     }
 
+    builder.unknown_tags(unknown_tags);
     builder.segments(segments);
     builder.build().map_err(Error::builder)
 }
