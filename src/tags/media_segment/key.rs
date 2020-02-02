@@ -1,6 +1,7 @@
 use std::fmt;
-use std::ops::{Deref, DerefMut};
 use std::str::FromStr;
+
+use derive_more::{Deref, DerefMut};
 
 use crate::types::{DecryptionKey, EncryptionMethod, ProtocolVersion};
 use crate::utils::tag;
@@ -23,7 +24,7 @@ use crate::{Error, RequiredVersion};
 /// [`ExtXMap`]: crate::tags::ExtXMap
 /// [`Media Segment`]: crate::MediaSegment
 /// [4.3.2.4. EXT-X-KEY]: https://tools.ietf.org/html/rfc8216#section-4.3.2.4
-#[derive(Debug, Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]
+#[derive(Deref, DerefMut, Debug, Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]
 pub struct ExtXKey(DecryptionKey);
 
 impl ExtXKey {
@@ -103,16 +104,6 @@ impl FromStr for ExtXKey {
 
 impl fmt::Display for ExtXKey {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result { write!(f, "{}{}", Self::PREFIX, self.0) }
-}
-
-impl Deref for ExtXKey {
-    type Target = DecryptionKey;
-
-    fn deref(&self) -> &Self::Target { &self.0 }
-}
-
-impl DerefMut for ExtXKey {
-    fn deref_mut(&mut self) -> &mut Self::Target { &mut self.0 }
 }
 
 #[cfg(test)]

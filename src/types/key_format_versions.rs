@@ -1,7 +1,8 @@
 use std::convert::Infallible;
 use std::fmt;
-use std::ops::{Deref, DerefMut};
 use std::str::FromStr;
+
+use derive_more::{Deref, DerefMut};
 
 use crate::types::ProtocolVersion;
 use crate::utils::{quote, unquote};
@@ -12,7 +13,7 @@ use crate::RequiredVersion;
 /// [`KeyFormat`] is defined.
 ///
 /// [`KeyFormat`]: crate::types::KeyFormat
-#[derive(Clone, Eq, PartialEq, Ord, PartialOrd, Hash, Debug)]
+#[derive(Deref, DerefMut, Clone, Eq, PartialEq, Ord, PartialOrd, Hash, Debug)]
 pub struct KeyFormatVersions(Vec<usize>);
 
 impl KeyFormatVersions {
@@ -35,16 +36,6 @@ impl KeyFormatVersions {
 
 impl Default for KeyFormatVersions {
     fn default() -> Self { Self(vec![1]) }
-}
-
-impl Deref for KeyFormatVersions {
-    type Target = Vec<usize>;
-
-    fn deref(&self) -> &Self::Target { &self.0 }
-}
-
-impl DerefMut for KeyFormatVersions {
-    fn deref_mut(&mut self) -> &mut Self::Target { &mut self.0 }
 }
 
 /// This tag requires [`ProtocolVersion::V5`].

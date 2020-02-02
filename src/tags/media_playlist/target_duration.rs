@@ -1,7 +1,8 @@
 use std::fmt;
-use std::ops::Deref;
 use std::str::FromStr;
 use std::time::Duration;
+
+use derive_more::Deref;
 
 use crate::types::ProtocolVersion;
 use crate::utils::tag;
@@ -15,7 +16,7 @@ use crate::{Error, RequiredVersion};
 /// [`MediaSegment`]: crate::MediaSegment
 /// [4.3.3.1. EXT-X-TARGETDURATION]:
 /// https://tools.ietf.org/html/rfc8216#section-4.3.3.1
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Default, PartialOrd, Ord)]
+#[derive(Deref, Debug, Clone, Copy, PartialEq, Eq, Hash, Default, PartialOrd, Ord)]
 pub struct ExtXTargetDuration(Duration);
 
 impl ExtXTargetDuration {
@@ -55,12 +56,6 @@ impl ExtXTargetDuration {
 /// This tag requires [`ProtocolVersion::V1`].
 impl RequiredVersion for ExtXTargetDuration {
     fn required_version(&self) -> ProtocolVersion { ProtocolVersion::V1 }
-}
-
-impl Deref for ExtXTargetDuration {
-    type Target = Duration;
-
-    fn deref(&self) -> &Self::Target { &self.0 }
 }
 
 impl fmt::Display for ExtXTargetDuration {

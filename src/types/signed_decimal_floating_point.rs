@@ -1,4 +1,4 @@
-use core::ops::Deref;
+use derive_more::Deref;
 use derive_more::{Display, FromStr};
 
 /// Signed decimal floating-point number.
@@ -6,7 +6,7 @@ use derive_more::{Display, FromStr};
 /// See: [4.2. Attribute Lists]
 ///
 /// [4.2. Attribute Lists]: https://tools.ietf.org/html/rfc8216#section-4.2
-#[derive(Default, Debug, Clone, Copy, PartialEq, PartialOrd, Display, FromStr)]
+#[derive(Deref, Default, Debug, Clone, Copy, PartialEq, PartialOrd, Display, FromStr)]
 pub(crate) struct SignedDecimalFloatingPoint(f64);
 
 impl SignedDecimalFloatingPoint {
@@ -26,12 +26,6 @@ impl SignedDecimalFloatingPoint {
 
     /// Converts [`DecimalFloatingPoint`] to [`f64`].
     pub const fn as_f64(self) -> f64 { self.0 }
-}
-
-impl Deref for SignedDecimalFloatingPoint {
-    type Target = f64;
-
-    fn deref(&self) -> &Self::Target { &self.0 }
 }
 
 #[cfg(test)]

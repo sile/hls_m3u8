@@ -1,6 +1,7 @@
 use std::fmt;
-use std::ops::{Deref, DerefMut};
 use std::str::FromStr;
+
+use derive_more::{Deref, DerefMut};
 
 use crate::attribute::AttributePairs;
 use crate::types::{HdcpLevel, ProtocolVersion, StreamInf, StreamInfBuilder};
@@ -18,9 +19,11 @@ use crate::{Error, RequiredVersion};
 /// [`Master Playlist`]: crate::MasterPlaylist
 /// [`Media Playlist`]: crate::MediaPlaylist
 /// [4.3.5.3. EXT-X-I-FRAME-STREAM-INF]: https://tools.ietf.org/html/rfc8216#section-4.3.4.5
-#[derive(PartialOrd, Debug, Clone, PartialEq, Eq, Hash)]
+#[derive(Deref, DerefMut, PartialOrd, Debug, Clone, PartialEq, Eq, Hash)]
 pub struct ExtXIFrameStreamInf {
     uri: String,
+    #[deref]
+    #[deref_mut]
     stream_inf: StreamInf,
 }
 
@@ -178,16 +181,6 @@ impl FromStr for ExtXIFrameStreamInf {
             stream_inf: input.parse()?,
         })
     }
-}
-
-impl Deref for ExtXIFrameStreamInf {
-    type Target = StreamInf;
-
-    fn deref(&self) -> &Self::Target { &self.stream_inf }
-}
-
-impl DerefMut for ExtXIFrameStreamInf {
-    fn deref_mut(&mut self) -> &mut Self::Target { &mut self.stream_inf }
 }
 
 #[cfg(test)]

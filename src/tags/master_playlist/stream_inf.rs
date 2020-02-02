@@ -1,7 +1,7 @@
 use std::fmt;
-use std::ops::{Deref, DerefMut};
 use std::str::FromStr;
 
+use derive_more::{Deref, DerefMut};
 use shorthand::ShortHand;
 
 use crate::attribute::AttributePairs;
@@ -23,7 +23,7 @@ use crate::{Error, RequiredVersion};
 /// Renditions SHOULD play this Rendition.
 ///
 /// [4.3.4.2. EXT-X-STREAM-INF]: https://tools.ietf.org/html/rfc8216#section-4.3.4.2
-#[derive(ShortHand, PartialOrd, Debug, Clone, PartialEq)]
+#[derive(Deref, DerefMut, ShortHand, PartialOrd, Debug, Clone, PartialEq)]
 #[shorthand(enable(must_use, into))]
 pub struct ExtXStreamInf {
     /// The `URI` that identifies the associated media playlist.
@@ -37,6 +37,8 @@ pub struct ExtXStreamInf {
     /// The value of the [`ClosedCaptions`] attribute.
     closed_captions: Option<ClosedCaptions>,
     #[shorthand(enable(skip))]
+    #[deref]
+    #[deref_mut]
     stream_inf: StreamInf,
 }
 
@@ -247,16 +249,6 @@ impl FromStr for ExtXStreamInf {
             stream_inf: input.parse()?,
         })
     }
-}
-
-impl Deref for ExtXStreamInf {
-    type Target = StreamInf;
-
-    fn deref(&self) -> &Self::Target { &self.stream_inf }
-}
-
-impl DerefMut for ExtXStreamInf {
-    fn deref_mut(&mut self) -> &mut Self::Target { &mut self.stream_inf }
 }
 
 #[cfg(test)]

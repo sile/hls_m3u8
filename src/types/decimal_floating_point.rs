@@ -1,7 +1,6 @@
-use core::ops::Deref;
 use core::str::FromStr;
 
-use derive_more::Display;
+use derive_more::{Deref, Display};
 
 use crate::Error;
 
@@ -11,7 +10,7 @@ use crate::Error;
 ///
 /// [4.2. Attribute Lists]:
 /// https://tools.ietf.org/html/draft-pantos-hls-rfc8216bis-05#section-4.2
-#[derive(Default, Debug, Clone, Copy, PartialEq, PartialOrd, Display)]
+#[derive(Deref, Default, Debug, Clone, Copy, PartialEq, PartialOrd, Display)]
 pub(crate) struct DecimalFloatingPoint(f64);
 
 impl DecimalFloatingPoint {
@@ -43,12 +42,6 @@ impl FromStr for DecimalFloatingPoint {
     fn from_str(input: &str) -> Result<Self, Self::Err> {
         Self::new(input.parse().map_err(Error::parse_float)?)
     }
-}
-
-impl Deref for DecimalFloatingPoint {
-    type Target = f64;
-
-    fn deref(&self) -> &Self::Target { &self.0 }
 }
 
 #[doc(hidden)]

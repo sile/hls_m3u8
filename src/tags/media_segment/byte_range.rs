@@ -1,6 +1,7 @@
 use std::fmt;
-use std::ops::{Deref, DerefMut};
 use std::str::FromStr;
+
+use derive_more::{Deref, DerefMut};
 
 use crate::types::{ByteRange, ProtocolVersion};
 use crate::utils::tag;
@@ -14,7 +15,7 @@ use crate::{Error, RequiredVersion};
 /// [`Media Segment`]: crate::MediaSegment
 /// [4.4.2.2. EXT-X-BYTERANGE]:
 /// https://tools.ietf.org/html/draft-pantos-hls-rfc8216bis-04#section-4.4.2.2
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, PartialOrd, Ord)]
+#[derive(Deref, DerefMut, Debug, Clone, Copy, PartialEq, Eq, Hash, PartialOrd, Ord)]
 pub struct ExtXByteRange(ByteRange);
 
 impl ExtXByteRange {
@@ -49,16 +50,6 @@ impl ExtXByteRange {
 /// This tag requires [`ProtocolVersion::V4`].
 impl RequiredVersion for ExtXByteRange {
     fn required_version(&self) -> ProtocolVersion { ProtocolVersion::V4 }
-}
-
-impl Deref for ExtXByteRange {
-    type Target = ByteRange;
-
-    fn deref(&self) -> &Self::Target { &self.0 }
-}
-
-impl DerefMut for ExtXByteRange {
-    fn deref_mut(&mut self) -> &mut Self::Target { &mut self.0 }
 }
 
 impl fmt::Display for ExtXByteRange {

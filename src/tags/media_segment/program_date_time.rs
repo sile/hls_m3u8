@@ -1,8 +1,8 @@
 use std::fmt;
-use std::ops::{Deref, DerefMut};
 use std::str::FromStr;
 
 use chrono::{DateTime, FixedOffset, SecondsFormat};
+use derive_more::{Deref, DerefMut};
 
 use crate::types::ProtocolVersion;
 use crate::utils::tag;
@@ -16,7 +16,7 @@ use crate::{Error, RequiredVersion};
 /// [`Media Segment`]: crate::MediaSegment
 /// [4.3.2.6. EXT-X-PROGRAM-DATE-TIME]:
 /// https://tools.ietf.org/html/rfc8216#section-4.3.2.6
-#[derive(Debug, Copy, Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]
+#[derive(Deref, DerefMut, Debug, Copy, Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]
 pub struct ExtXProgramDateTime(DateTime<FixedOffset>);
 
 impl ExtXProgramDateTime {
@@ -124,20 +124,11 @@ impl FromStr for ExtXProgramDateTime {
     }
 }
 
-impl Deref for ExtXProgramDateTime {
-    type Target = DateTime<FixedOffset>;
-
-    fn deref(&self) -> &Self::Target { &self.0 }
-}
-
-impl DerefMut for ExtXProgramDateTime {
-    fn deref_mut(&mut self) -> &mut Self::Target { &mut self.0 }
-}
-
 #[cfg(test)]
 mod test {
     use super::*;
     use chrono::{Datelike, TimeZone};
+    use core::ops::DerefMut;
     use pretty_assertions::assert_eq;
 
     const HOURS_IN_SECS: i32 = 3600; // 1 hour = 3600 seconds

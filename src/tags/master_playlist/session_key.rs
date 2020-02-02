@@ -1,6 +1,7 @@
 use std::fmt;
-use std::ops::{Deref, DerefMut};
 use std::str::FromStr;
+
+use derive_more::{Deref, DerefMut};
 
 use crate::types::{DecryptionKey, EncryptionMethod, ProtocolVersion};
 use crate::utils::tag;
@@ -16,7 +17,7 @@ use crate::{Error, RequiredVersion};
 /// [`Media Playlist`]: crate::MediaPlaylist
 /// [`Master Playlist`]: crate::MasterPlaylist
 /// [4.3.4.5. EXT-X-SESSION-KEY]: https://tools.ietf.org/html/rfc8216#section-4.3.4.5
-#[derive(Debug, Clone, PartialEq, Eq, Hash)]
+#[derive(Deref, DerefMut, Debug, Clone, PartialEq, Eq, Hash)]
 pub struct ExtXSessionKey(DecryptionKey);
 
 impl ExtXSessionKey {
@@ -72,16 +73,6 @@ impl FromStr for ExtXSessionKey {
         let input = tag(input, Self::PREFIX)?;
         Ok(Self(input.parse()?))
     }
-}
-
-impl Deref for ExtXSessionKey {
-    type Target = DecryptionKey;
-
-    fn deref(&self) -> &Self::Target { &self.0 }
-}
-
-impl DerefMut for ExtXSessionKey {
-    fn deref_mut(&mut self) -> &mut Self::Target { &mut self.0 }
 }
 
 #[cfg(test)]
