@@ -272,8 +272,8 @@ impl FromStr for MasterPlaylist {
         let mut session_key_tags = vec![];
         let mut unknown_tags = vec![];
 
-        for (i, line) in input.parse::<Lines>()?.into_iter().enumerate() {
-            match line {
+        for (i, line) in Lines::from(input).enumerate() {
+            match line? {
                 Line::Tag(tag) => {
                     if i == 0 {
                         if tag != Tag::ExtM3u(ExtM3u) {

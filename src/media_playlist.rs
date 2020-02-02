@@ -285,8 +285,8 @@ fn parse_media_playlist(
 
     let mut available_key_tags: Vec<crate::tags::ExtXKey> = vec![];
 
-    for (i, line) in input.parse::<Lines>()?.into_iter().enumerate() {
-        match line {
+    for (i, line) in Lines::from(input).enumerate() {
+        match line? {
             Line::Tag(tag) => {
                 if i == 0 {
                     if tag != Tag::ExtM3u(ExtM3u) {

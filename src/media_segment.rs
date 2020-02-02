@@ -14,7 +14,7 @@ use crate::{Encrypted, RequiredVersion};
 #[builder(setter(into, strip_option))]
 #[shorthand(enable(must_use, get_mut, collection_magic))]
 pub struct MediaSegment {
-    /// Sets all [`ExtXKey`] tags.
+    /// All [`ExtXKey`] tags.
     #[builder(default)]
     keys: Vec<ExtXKey>,
     /// The [`ExtXMap`] tag associated with the media segment.

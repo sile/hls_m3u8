@@ -1,93 +1,86 @@
 use std::fmt;
-use std::ops::{Deref, DerefMut};
 use std::str::FromStr;
 
 use crate::tags;
 use crate::Error;
 
-#[derive(Debug, Default)]
-pub struct Lines(Vec<Line>);
-
-impl Lines {
-    pub fn new() -> Self { Self::default() }
+#[derive(Debug, Clone, Copy, PartialEq, PartialOrd, Ord, Eq, Hash)]
+pub(crate) struct Lines<'a> {
+    buffer: &'a str,
+    // the line at which the iterator currently is
+    position: usize,
 }
 
-impl FromStr for Lines {
-    type Err = Error;
+impl<'a> Iterator for Lines<'a> {
+    type Item = crate::Result<Line>;
 
-    fn from_str(input: &str) -> Result<Self, Self::Err> {
-        let mut result = Self::new();
-
+    fn next(&mut self) -> Option<Self::Item> {
         let mut stream_inf = false;
         let mut stream_inf_line = None;
 
-        for l in input.lines() {
-            let raw_line = l.trim();
+        for line in self.buffer.lines().skip(self.position) {
+            let line = line.trim();
+            self.position += 1;
 
-            if raw_line.is_empty() {
+            if line.is_empty() {
                 continue;
             }
 
-            let line = {
-                if raw_line.starts_with(tags::ExtXStreamInf::PREFIX) {
-                    stream_inf = true;
-                    stream_inf_line = Some(raw_line);
+            if line.starts_with(tags::ExtXStreamInf::PREFIX) {
+                stream_inf = true;
+                stream_inf_line = Some(line);
 
-                    continue;
-                } else if raw_line.starts_with("#EXT") {
-                    Line::Tag(raw_line.parse()?)
-                } else if raw_line.starts_with('#') {
-                    continue; // ignore comments
-                } else {
-                    // stream inf line needs special treatment
-                    if stream_inf {
-                        stream_inf = false;
-                        if let Some(first_line) = stream_inf_line {
-                            let res = Line::Tag(format!("{}\n{}", first_line, raw_line).parse()?);
-                            stream_inf_line = None;
-                            res
-                        } else {
-                            continue;
+                continue;
+            } else if line.starts_with("#EXT") {
+                match line.parse() {
+                    Ok(value) => return Some(Ok(Line::Tag(value))),
+                    Err(e) => return Some(Err(e)),
+                }
+            } else if line.starts_with('#') {
+                continue; // ignore comments
+            } else {
+                // stream inf line needs special treatment
+                if stream_inf {
+                    stream_inf = false;
+
+                    if let Some(first_line) = stream_inf_line {
+                        match format!("{}\n{}", first_line, line).parse() {
+                            Ok(value) => {
+                                return Some(Ok(Line::Tag(value)));
+                            }
+                            Err(e) => return Some(Err(e)),
                         }
                     } else {
-                        Line::Uri(raw_line.to_string())
+                        continue;
                     }
+                } else {
+                    return Some(Ok(Line::Uri(line.to_string())));
                 }
-            };
-
-            result.push(line);
+            }
         }
 
-        Ok(result)
+        None
     }
 }
 
-impl IntoIterator for Lines {
-    type IntoIter = ::std::vec::IntoIter<Line>;
-    type Item = Line;
-
-    fn into_iter(self) -> Self::IntoIter { self.0.into_iter() }
-}
-
-impl Deref for Lines {
-    type Target = Vec<Line>;
-
-    fn deref(&self) -> &Self::Target { &self.0 }
-}
-
-impl DerefMut for Lines {
-    fn deref_mut(&mut self) -> &mut Self::Target { &mut self.0 }
+impl<'a> From<&'a str> for Lines<'a> {
+    fn from(buffer: &'a str) -> Self {
+        Self {
+            buffer,
+            position: 0,
+        }
+    }
 }
 
 #[derive(Debug, Clone, PartialEq)]
-pub enum Line {
+pub(crate) enum Line {
     Tag(Tag),
     Uri(String),
 }
 
 #[allow(clippy::large_enum_variant)]
 #[derive(Debug, Clone, PartialEq)]
-pub enum Tag {
+pub(crate) enum Tag {
     ExtM3u(tags::ExtM3u),
     ExtXVersion(tags::ExtXVersion),
     ExtInf(tags::ExtInf),

@@ -4,7 +4,12 @@
     clippy::nursery,
     clippy::cargo
 )]
-#![allow(clippy::multiple_crate_versions, clippy::must_use_candidate)]
+#![allow(
+    clippy::multiple_crate_versions,
+    clippy::must_use_candidate,
+    clippy::module_name_repetitions,
+    clippy::default_trait_access
+)]
 #![warn(
     missing_docs,
     missing_copy_implementations,
