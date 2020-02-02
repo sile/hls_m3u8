@@ -2,6 +2,7 @@ use std::fmt;
 use std::str::FromStr;
 
 use derive_builder::Builder;
+use shorthand::ShortHand;
 
 use crate::attribute::AttributePairs;
 use crate::types::{Channels, InStreamId, MediaType, ProtocolVersion};
@@ -22,17 +23,19 @@ use crate::{Error, RequiredVersion};
 /// [`Media Playlist`]: crate::MediaPlaylist
 /// [4.4.5.1. EXT-X-MEDIA]:
 /// https://tools.ietf.org/html/draft-pantos-hls-rfc8216bis-05#section-4.4.5.1
-#[derive(Builder, Debug, Clone, PartialEq, Eq, Hash)]
+#[derive(ShortHand, Builder, Debug, Clone, PartialEq, Eq, Hash)]
+#[shorthand(enable(must_use, into))]
 #[builder(setter(into))]
 #[builder(build_fn(validate = "Self::validate"))]
 pub struct ExtXMedia {
-    /// Sets the [`MediaType`] of the rendition.
+    /// The [`MediaType`] that is associated with this tag.
     ///
     /// # Note
     ///
     /// This attribute is **required**.
+    #[shorthand(enable(copy))]
     media_type: MediaType,
-    /// Sets the `URI` that identifies the [`Media Playlist`].
+    /// The `URI` that identifies the [`Media Playlist`].
     ///
     /// # Note
     ///
@@ -44,14 +47,14 @@ pub struct ExtXMedia {
     /// [`Media Playlist`]: crate::MediaPlaylist
     #[builder(setter(strip_option), default)]
     uri: Option<String>,
-    /// Sets the identifier, that specifies the group to which the rendition
+    /// The identifier that specifies the group to which the rendition
     /// belongs.
     ///
     /// # Note
     ///
     /// This attribute is **required**.
     group_id: String,
-    /// Sets the name of the primary language used in the rendition.
+    /// The name of the primary language used in the rendition.
     /// The value has to conform to [`RFC5646`].
     ///
     /// # Note
@@ -61,7 +64,10 @@ pub struct ExtXMedia {
     /// [`RFC5646`]: https://tools.ietf.org/html/rfc5646
     #[builder(setter(strip_option), default)]
     language: Option<String>,
-    /// Sets the name of a language associated with the rendition.
+    /// The name of a language associated with the rendition.
+    /// An associated language is often used in a different role, than the
+    /// language specified by the [`language`] attribute (e.g., written versus
+    /// spoken, or a fallback dialect).
     ///
     /// # Note
     ///
@@ -70,7 +76,7 @@ pub struct ExtXMedia {
     /// [`language`]: #method.language
     #[builder(setter(strip_option), default)]
     assoc_language: Option<String>,
-    /// Sets a human-readable description of the rendition.
+    /// A human-readable description of the rendition.
     ///
     /// # Note
     ///
@@ -81,7 +87,10 @@ pub struct ExtXMedia {
     ///
     /// [`language`]: #method.language
     name: String,
-    /// Sets the value of the `default` flag.
+    /// The value of the `default` flag.
+    /// A value of `true` indicates, that the client should play
+    /// this rendition of the content in the absence of information
+    /// from the user indicating a different choice.
     ///
     /// # Note
     ///
@@ -89,7 +98,8 @@ pub struct ExtXMedia {
     /// of `false`.
     #[builder(default)]
     is_default: bool,
-    /// Sets the value of the `autoselect` flag.
+    /// Whether the client may choose to play this rendition in the absence of
+    /// explicit user preference.
     ///
     /// # Note
     ///
@@ -97,17 +107,37 @@ pub struct ExtXMedia {
     /// of `false`.
     #[builder(default)]
     is_autoselect: bool,
-    /// Sets the value of the `forced` flag.
+    /// Whether the rendition contains content that is considered
+    /// essential to play.
     #[builder(default)]
     is_forced: bool,
-    /// Sets the identifier that specifies a rendition within the segments in
-    /// the media playlist.
+    /// An [`InStreamId`] specifies a rendition within the
+    /// segments in the [`Media Playlist`].
+    ///
+    /// [`Media Playlist`]: crate::MediaPlaylist
     #[builder(setter(strip_option), default)]
+    #[shorthand(enable(copy))]
     instream_id: Option<InStreamId>,
-    /// Sets the string that represents uniform type identifiers (UTI).
+    /// The characteristics attribute, containing one or more Uniform Type
+    /// Identifiers (UTI) separated by comma.
+    /// Each [`UTI`] indicates an individual characteristic of the Rendition.
+    ///
+    /// A [`subtitles`] rendition may include the following characteristics:
+    /// "public.accessibility.transcribes-spoken-dialog",
+    /// "public.accessibility.describes-music-and-sound", and
+    /// "public.easy-to-read" (which indicates that the subtitles have
+    /// been edited for ease of reading).
+    ///
+    /// An AUDIO Rendition MAY include the following characteristic:
+    /// "public.accessibility.describes-video".
+    ///
+    /// The characteristics attribute may include private UTIs.
+    ///
+    /// [`UTI`]: https://tools.ietf.org/html/draft-pantos-hls-rfc8216bis-05#ref-UTI
+    /// [`subtitles`]: crate::types::MediaType::Subtitles
     #[builder(setter(strip_option), default)]
     characteristics: Option<String>,
-    /// Sets the parameters of the rendition.
+    /// The [`Channels`].
     #[builder(setter(strip_option), default)]
     channels: Option<Channels>,
 }
@@ -173,495 +203,6 @@ impl ExtXMedia {
 
     /// Returns a builder for [`ExtXMedia`].
     pub fn builder() -> ExtXMediaBuilder { ExtXMediaBuilder::default() }
-
-    /// Returns the type of the media, associated with this tag.
-    ///
-    /// # Example
-    ///
-    /// ```
-    /// # use hls_m3u8::tags::ExtXMedia;
-    /// use hls_m3u8::types::MediaType;
-    ///
-    /// assert_eq!(
-    ///     ExtXMedia::new(MediaType::Audio, "audio", "name").media_type(),
-    ///     MediaType::Audio
-    /// );
-    /// ```
-    pub const fn media_type(&self) -> MediaType { self.media_type }
-
-    /// Sets the type of the media, associated with this tag.
-    ///
-    /// # Example
-    ///
-    /// ```
-    /// # use hls_m3u8::tags::ExtXMedia;
-    /// use hls_m3u8::types::MediaType;
-    ///
-    /// let mut media = ExtXMedia::new(MediaType::Audio, "audio", "name");
-    ///
-    /// media.set_media_type(MediaType::Video);
-    ///
-    /// assert_eq!(media.media_type(), MediaType::Video);
-    /// ```
-    pub fn set_media_type(&mut self, value: MediaType) -> &mut Self {
-        self.media_type = value;
-        self
-    }
-
-    /// Returns the identifier that specifies the group to which the rendition
-    /// belongs.
-    ///
-    /// # Example
-    ///
-    /// ```
-    /// # use hls_m3u8::tags::ExtXMedia;
-    /// use hls_m3u8::types::MediaType;
-    ///
-    /// assert_eq!(
-    ///     ExtXMedia::new(MediaType::Audio, "audio", "name").group_id(),
-    ///     &"audio".to_string()
-    /// );
-    /// ```
-    pub const fn group_id(&self) -> &String { &self.group_id }
-
-    /// Sets the identifier that specifies the group, to which the rendition
-    /// belongs.
-    ///
-    /// # Example
-    ///
-    /// ```
-    /// # use hls_m3u8::tags::ExtXMedia;
-    /// use hls_m3u8::types::MediaType;
-    ///
-    /// let mut media = ExtXMedia::new(MediaType::Audio, "audio", "name");
-    ///
-    /// media.set_group_id("video");
-    ///
-    /// assert_eq!(media.group_id(), &"video".to_string());
-    /// ```
-    pub fn set_group_id<T: Into<String>>(&mut self, value: T) -> &mut Self {
-        self.group_id = value.into();
-        self
-    }
-
-    /// Returns a human-readable description of the rendition.
-    ///
-    /// # Example
-    ///
-    /// ```
-    /// # use hls_m3u8::tags::ExtXMedia;
-    /// use hls_m3u8::types::MediaType;
-    ///
-    /// assert_eq!(
-    ///     ExtXMedia::new(MediaType::Audio, "audio", "name").name(),
-    ///     &"name".to_string()
-    /// );
-    /// ```
-    pub const fn name(&self) -> &String { &self.name }
-
-    /// Sets a human-readable description of the rendition.
-    ///
-    /// # Note
-    ///
-    /// If the [`language`] attribute is present, this attribute should be in
-    /// that language.
-    ///
-    /// # Example
-    ///
-    /// ```
-    /// # use hls_m3u8::tags::ExtXMedia;
-    /// use hls_m3u8::types::MediaType;
-    ///
-    /// let mut media = ExtXMedia::new(MediaType::Audio, "audio", "name");
-    ///
-    /// media.set_name("new_name");
-    ///
-    /// assert_eq!(media.name(), &"new_name".to_string());
-    /// ```
-    ///
-    /// [`language`]: #method.language
-    pub fn set_name<T: Into<String>>(&mut self, value: T) -> &mut Self {
-        self.name = value.into();
-        self
-    }
-
-    /// Returns the `URI`, that identifies the [`Media Playlist`].
-    ///
-    /// # Example
-    ///
-    /// ```
-    /// # use hls_m3u8::tags::ExtXMedia;
-    /// use hls_m3u8::types::MediaType;
-    ///
-    /// let mut media = ExtXMedia::new(MediaType::Audio, "audio", "name");
-    /// # assert_eq!(media.uri(), &None);
-    ///
-    /// media.set_uri(Some("https://www.example.com/"));
-    ///
-    /// assert_eq!(media.uri(), &Some("https://www.example.com/".into()));
-    /// ```
-    ///
-    /// [`Media Playlist`]: crate::MediaPlaylist
-    pub const fn uri(&self) -> &Option<String> { &self.uri }
-
-    /// Sets the `URI`, that identifies the [`Media Playlist`].
-    ///
-    /// # Note
-    ///
-    /// This attribute is **required**, if the [`MediaType`] is
-    /// [`MediaType::Subtitles`]. This attribute is **not allowed**, if the
-    /// [`MediaType`] is [`MediaType::ClosedCaptions`].
-    ///
-    /// # Example
-    ///
-    /// ```
-    /// # use hls_m3u8::tags::ExtXMedia;
-    /// use hls_m3u8::types::MediaType;
-    ///
-    /// let mut media = ExtXMedia::new(MediaType::Audio, "audio", "name");
-    /// # assert_eq!(media.uri(), &None);
-    ///
-    /// media.set_uri(Some("https://www.example.com/"));
-    ///
-    /// assert_eq!(media.uri(), &Some("https://www.example.com/".into()));
-    /// ```
-    ///
-    /// [`Media Playlist`]: crate::MediaPlaylist
-    pub fn set_uri<T: Into<String>>(&mut self, value: Option<T>) -> &mut Self {
-        self.uri = value.map(Into::into);
-        self
-    }
-
-    /// Returns the name of the primary language used in the rendition.
-    ///
-    /// # Example
-    ///
-    /// ```
-    /// # use hls_m3u8::tags::ExtXMedia;
-    /// use hls_m3u8::types::MediaType;
-    ///
-    /// let mut media = ExtXMedia::new(MediaType::Audio, "audio", "name");
-    /// # assert_eq!(media.language(), &None);
-    ///
-    /// media.set_language(Some("english"));
-    ///
-    /// assert_eq!(media.language(), &Some("english".into()));
-    /// ```
-    pub const fn language(&self) -> &Option<String> { &self.language }
-
-    /// Sets the name of the primary language used in the rendition.
-    /// The value has to conform to [`RFC5646`].
-    ///
-    /// # Example
-    ///
-    /// ```
-    /// # use hls_m3u8::tags::ExtXMedia;
-    /// use hls_m3u8::types::MediaType;
-    ///
-    /// let mut media = ExtXMedia::new(MediaType::Audio, "audio", "name");
-    /// # assert_eq!(media.language(), &None);
-    ///
-    /// media.set_language(Some("english"));
-    ///
-    /// assert_eq!(media.language(), &Some("english".into()));
-    /// ```
-    ///
-    /// [`RFC5646`]: https://tools.ietf.org/html/rfc5646
-    pub fn set_language<T: Into<String>>(&mut self, value: Option<T>) -> &mut Self {
-        self.language = value.map(Into::into);
-        self
-    }
-
-    /// Returns the name of a language associated with the rendition.
-    ///
-    /// # Example
-    ///
-    /// ```
-    /// # use hls_m3u8::tags::ExtXMedia;
-    /// use hls_m3u8::types::MediaType;
-    ///
-    /// let mut media = ExtXMedia::new(MediaType::Audio, "audio", "name");
-    /// # assert_eq!(media.assoc_language(), &None);
-    ///
-    /// media.set_assoc_language(Some("spanish"));
-    ///
-    /// assert_eq!(media.assoc_language(), &Some("spanish".into()));
-    /// ```
-    pub const fn assoc_language(&self) -> &Option<String> { &self.assoc_language }
-
-    /// Sets the name of a language associated with the rendition.
-    /// An associated language is often used in a different role, than the
-    /// language specified by the [`language`] attribute (e.g., written versus
-    /// spoken, or a fallback dialect).
-    ///
-    /// # Example
-    ///
-    /// ```
-    /// # use hls_m3u8::tags::ExtXMedia;
-    /// use hls_m3u8::types::MediaType;
-    ///
-    /// let mut media = ExtXMedia::new(MediaType::Audio, "audio", "name");
-    /// # assert_eq!(media.assoc_language(), &None);
-    ///
-    /// media.set_assoc_language(Some("spanish"));
-    ///
-    /// assert_eq!(media.assoc_language(), &Some("spanish".into()));
-    /// ```
-    ///
-    /// [`language`]: #method.language
-    pub fn set_assoc_language<T: Into<String>>(&mut self, value: Option<T>) -> &mut Self {
-        self.assoc_language = value.map(Into::into);
-        self
-    }
-
-    /// Returns whether this is the `default` rendition.
-    ///
-    /// # Example
-    ///
-    /// ```
-    /// # use hls_m3u8::tags::ExtXMedia;
-    /// use hls_m3u8::types::MediaType;
-    ///
-    /// let mut media = ExtXMedia::new(MediaType::Audio, "audio", "name");
-    /// # assert_eq!(media.is_default(), false);
-    ///
-    /// media.set_default(true);
-    ///
-    /// assert_eq!(media.is_default(), true);
-    /// ```
-    pub const fn is_default(&self) -> bool { self.is_default }
-
-    /// Sets the `default` flag.
-    /// A value of `true` indicates, that the client should play
-    /// this rendition of the content in the absence of information
-    /// from the user indicating a different choice.
-    ///
-    /// # Example
-    ///
-    /// ```
-    /// # use hls_m3u8::tags::ExtXMedia;
-    /// use hls_m3u8::types::MediaType;
-    ///
-    /// let mut media = ExtXMedia::new(MediaType::Audio, "audio", "name");
-    /// # assert_eq!(media.is_default(), false);
-    ///
-    /// media.set_default(true);
-    ///
-    /// assert_eq!(media.is_default(), true);
-    /// ```
-    pub fn set_default(&mut self, value: bool) -> &mut Self {
-        self.is_default = value;
-        self
-    }
-
-    /// Returns whether the client may choose to
-    /// play this rendition in the absence of explicit user preference.
-    ///
-    /// # Example
-    ///
-    /// ```
-    /// # use hls_m3u8::tags::ExtXMedia;
-    /// use hls_m3u8::types::MediaType;
-    ///
-    /// let mut media = ExtXMedia::new(MediaType::Audio, "audio", "name");
-    /// # assert_eq!(media.is_autoselect(), false);
-    ///
-    /// media.set_autoselect(true);
-    ///
-    /// assert_eq!(media.is_autoselect(), true);
-    /// ```
-    pub const fn is_autoselect(&self) -> bool { self.is_autoselect }
-
-    /// Sets the `autoselect` flag.
-    ///
-    /// # Example
-    ///
-    /// ```
-    /// # use hls_m3u8::tags::ExtXMedia;
-    /// use hls_m3u8::types::MediaType;
-    ///
-    /// let mut media = ExtXMedia::new(MediaType::Audio, "audio", "name");
-    /// # assert_eq!(media.is_autoselect(), false);
-    ///
-    /// media.set_autoselect(true);
-    ///
-    /// assert_eq!(media.is_autoselect(), true);
-    /// ```
-    pub fn set_autoselect(&mut self, value: bool) -> &mut Self {
-        self.is_autoselect = value;
-        self
-    }
-
-    /// Returns whether the rendition contains content that is considered
-    /// essential to play.
-    ///
-    /// # Example
-    ///
-    /// ```
-    /// # use hls_m3u8::tags::ExtXMedia;
-    /// use hls_m3u8::types::MediaType;
-    ///
-    /// let mut media = ExtXMedia::new(MediaType::Audio, "audio", "name");
-    /// # assert_eq!(media.is_forced(), false);
-    ///
-    /// media.set_forced(true);
-    ///
-    /// assert_eq!(media.is_forced(), true);
-    /// ```
-    pub const fn is_forced(&self) -> bool { self.is_forced }
-
-    /// Sets the `forced` flag.
-    ///
-    /// # Example
-    ///
-    /// ```
-    /// # use hls_m3u8::tags::ExtXMedia;
-    /// use hls_m3u8::types::MediaType;
-    ///
-    /// let mut media = ExtXMedia::new(MediaType::Audio, "audio", "name");
-    /// # assert_eq!(media.is_forced(), false);
-    ///
-    /// media.set_forced(true);
-    ///
-    /// assert_eq!(media.is_forced(), true);
-    /// ```
-    pub fn set_forced(&mut self, value: bool) -> &mut Self {
-        self.is_forced = value;
-        self
-    }
-
-    /// Returns the identifier that specifies a rendition within the segments in
-    /// the [`Media Playlist`].
-    ///
-    /// # Example
-    ///
-    /// ```
-    /// # use hls_m3u8::tags::ExtXMedia;
-    /// use hls_m3u8::types::{InStreamId, MediaType};
-    ///
-    /// let mut media = ExtXMedia::new(MediaType::Audio, "audio", "name");
-    /// # assert_eq!(media.instream_id(), None);
-    ///
-    /// media.set_instream_id(Some(InStreamId::Cc1));
-    ///
-    /// assert_eq!(media.instream_id(), Some(InStreamId::Cc1));
-    /// ```
-    ///
-    /// [`Media Playlist`]: crate::MediaPlaylist
-    pub const fn instream_id(&self) -> Option<InStreamId> { self.instream_id }
-
-    /// Sets the [`InStreamId`], that specifies a rendition within the
-    /// segments in the [`Media Playlist`].
-    ///
-    /// # Example
-    ///
-    /// ```
-    /// # use hls_m3u8::tags::ExtXMedia;
-    /// use hls_m3u8::types::{InStreamId, MediaType};
-    ///
-    /// let mut media = ExtXMedia::new(MediaType::Audio, "audio", "name");
-    /// # assert_eq!(media.instream_id(), None);
-    ///
-    /// media.set_instream_id(Some(InStreamId::Cc1));
-    ///
-    /// assert_eq!(media.instream_id(), Some(InStreamId::Cc1));
-    /// ```
-    pub fn set_instream_id(&mut self, value: Option<InStreamId>) -> &mut Self {
-        self.instream_id = value;
-        self
-    }
-
-    /// Returns a string that represents uniform type identifiers (UTI).
-    ///
-    /// Each UTI indicates an individual characteristic of the rendition.
-    ///
-    /// # Example
-    ///
-    /// ```
-    /// # use hls_m3u8::tags::ExtXMedia;
-    /// use hls_m3u8::types::MediaType;
-    ///
-    /// let mut media = ExtXMedia::new(MediaType::Audio, "audio", "name");
-    /// # assert_eq!(media.characteristics(), &None);
-    ///
-    /// media.set_characteristics(Some("characteristic"));
-    ///
-    /// assert_eq!(media.characteristics(), &Some("characteristic".into()));
-    /// ```
-    pub const fn characteristics(&self) -> &Option<String> { &self.characteristics }
-
-    /// Sets the characteristics attribute, containing one or more Uniform Type
-    /// Identifiers separated by comma.
-    /// Each [`UTI`] indicates an individual characteristic of the Rendition.
-    ///
-    /// A [`subtitles`] Rendition may include the following characteristics:
-    /// "public.accessibility.transcribes-spoken-dialog",
-    /// "public.accessibility.describes-music-and-sound", and
-    /// "public.easy-to-read" (which indicates that the subtitles have
-    /// been edited for ease of reading).
-    ///
-    /// An AUDIO Rendition MAY include the following characteristic:
-    /// "public.accessibility.describes-video".
-    ///
-    /// The characteristics attribute may include private UTIs.
-    ///
-    /// # Example
-    ///
-    /// ```
-    /// # use hls_m3u8::tags::ExtXMedia;
-    /// use hls_m3u8::types::MediaType;
-    ///
-    /// let mut media = ExtXMedia::new(MediaType::Audio, "audio", "name");
-    /// # assert_eq!(media.characteristics(), &None);
-    ///
-    /// media.set_characteristics(Some("characteristic"));
-    ///
-    /// assert_eq!(media.characteristics(), &Some("characteristic".into()));
-    /// ```
-    ///
-    /// [`UTI`]: https://tools.ietf.org/html/draft-pantos-hls-rfc8216bis-05#ref-UTI
-    /// [`subtitles`]: crate::types::MediaType::Subtitles
-    pub fn set_characteristics<T: Into<String>>(&mut self, value: Option<T>) -> &mut Self {
-        self.characteristics = value.map(Into::into);
-        self
-    }
-
-    /// Returns the channels.
-    ///
-    /// # Example
-    ///
-    /// ```
-    /// # use hls_m3u8::tags::ExtXMedia;
-    /// use hls_m3u8::types::{Channels, MediaType};
-    ///
-    /// let mut media = ExtXMedia::new(MediaType::Audio, "audio", "name");
-    /// # assert_eq!(media.channels(), &None);
-    ///
-    /// media.set_channels(Some(Channels::new(6)));
-    ///
-    /// assert_eq!(media.channels(), &Some(Channels::new(6)));
-    /// ```
-    pub const fn channels(&self) -> &Option<Channels> { &self.channels }
-
-    /// Sets the channels.
-    ///
-    /// # Example
-    ///
-    /// ```
-    /// # use hls_m3u8::tags::ExtXMedia;
-    /// use hls_m3u8::types::{Channels, MediaType};
-    ///
-    /// let mut media = ExtXMedia::new(MediaType::Audio, "audio", "name");
-    /// # assert_eq!(media.channels(), &None);
-    ///
-    /// media.set_channels(Some(Channels::new(6)));
-    ///
-    /// assert_eq!(media.channels(), &Some(Channels::new(6)));
-    /// ```
-    pub fn set_channels<T: Into<Channels>>(&mut self, value: Option<T>) -> &mut Self {
-        self.channels = value.map(Into::into);
-        self
-    }
 }
 
 impl RequiredVersion for ExtXMedia {

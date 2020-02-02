@@ -6,13 +6,9 @@ use crate::utils::tag;
 use crate::{Error, RequiredVersion};
 
 /// # [4.4.3.4. EXT-X-ENDLIST]
+///
 /// The [`ExtXEndList`] tag indicates, that no more [`Media Segment`]s will be
 /// added to the [`Media Playlist`] file.
-///
-/// Its format is:
-/// ```text
-/// #EXT-X-ENDLIST
-/// ```
 ///
 /// [`Media Segment`]: crate::MediaSegment
 /// [`Media Playlist`]: crate::MediaPlaylist
@@ -25,6 +21,7 @@ impl ExtXEndList {
     pub(crate) const PREFIX: &'static str = "#EXT-X-ENDLIST";
 }
 
+/// This tag requires [`ProtocolVersion::V1`].
 impl RequiredVersion for ExtXEndList {
     fn required_version(&self) -> ProtocolVersion { ProtocolVersion::V1 }
 }

@@ -6,6 +6,7 @@ use crate::utils::tag;
 use crate::{Error, RequiredVersion};
 
 /// # [4.4.3.2. EXT-X-MEDIA-SEQUENCE]
+///
 /// The [`ExtXMediaSequence`] tag indicates the Media Sequence Number of
 /// the first [`Media Segment`] that appears in a Playlist file.
 ///
@@ -21,6 +22,7 @@ impl ExtXMediaSequence {
     /// Makes a new [`ExtXMediaSequence`] tag.
     ///
     /// # Example
+    ///
     /// ```
     /// # use hls_m3u8::tags::ExtXMediaSequence;
     /// let media_sequence = ExtXMediaSequence::new(5);
@@ -31,6 +33,7 @@ impl ExtXMediaSequence {
     /// that appears in the associated playlist.
     ///
     /// # Example
+    ///
     /// ```
     /// # use hls_m3u8::tags::ExtXMediaSequence;
     /// let media_sequence = ExtXMediaSequence::new(5);
@@ -42,6 +45,7 @@ impl ExtXMediaSequence {
     /// Sets the sequence number.
     ///
     /// # Example
+    ///
     /// ```
     /// # use hls_m3u8::tags::ExtXMediaSequence;
     /// let mut media_sequence = ExtXMediaSequence::new(5);

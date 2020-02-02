@@ -2,6 +2,8 @@ use std::fmt;
 use std::ops::{Deref, DerefMut};
 use std::str::FromStr;
 
+use shorthand::ShortHand;
+
 use crate::attribute::AttributePairs;
 use crate::types::{
     ClosedCaptions, DecimalFloatingPoint, HdcpLevel, ProtocolVersion, StreamInf, StreamInfBuilder,
@@ -21,13 +23,20 @@ use crate::{Error, RequiredVersion};
 /// Renditions SHOULD play this Rendition.
 ///
 /// [4.3.4.2. EXT-X-STREAM-INF]: https://tools.ietf.org/html/rfc8216#section-4.3.4.2
-#[derive(PartialOrd, Debug, Clone, PartialEq)]
+#[derive(ShortHand, PartialOrd, Debug, Clone, PartialEq)]
+#[shorthand(enable(must_use, into))]
 pub struct ExtXStreamInf {
+    /// The `URI` that identifies the associated media playlist.
     uri: String,
+    #[shorthand(enable(skip))]
     frame_rate: Option<DecimalFloatingPoint>,
+    /// The group identifier for the audio in the variant stream.
     audio: Option<String>,
+    /// The group identifier for the subtitles in the variant stream.
     subtitles: Option<String>,
+    /// The value of the [`ClosedCaptions`] attribute.
     closed_captions: Option<ClosedCaptions>,
+    #[shorthand(enable(skip))]
     stream_inf: StreamInf,
 }
 
@@ -135,6 +144,7 @@ impl ExtXStreamInf {
     /// Creates a new [`ExtXStreamInf`] tag.
     ///
     /// # Example
+    ///
     /// ```
     /// # use hls_m3u8::tags::ExtXStreamInf;
     /// let stream = ExtXStreamInf::new("https://www.example.com/", 20);
@@ -153,149 +163,20 @@ impl ExtXStreamInf {
     /// Returns a builder for [`ExtXStreamInf`].
     pub fn builder() -> ExtXStreamInfBuilder { ExtXStreamInfBuilder::default() }
 
-    /// Returns the `URI` that identifies the associated media playlist.
-    ///
-    /// # Example
-    /// ```
-    /// # use hls_m3u8::tags::ExtXStreamInf;
-    /// let stream = ExtXStreamInf::new("https://www.example.com/", 20);
-    ///
-    /// assert_eq!(stream.uri(), &"https://www.example.com/".to_string());
-    /// ```
-    pub const fn uri(&self) -> &String { &self.uri }
+    /// The maximum frame rate for all the video in the variant stream.
+    #[must_use]
+    #[inline]
+    pub fn frame_rate(&self) -> Option<f64> { self.frame_rate.map(DecimalFloatingPoint::as_f64) }
 
-    /// Sets the `URI` that identifies the associated media playlist.
+    /// The maximum frame rate for all the video in the variant stream.
     ///
-    /// # Example
-    /// ```
-    /// # use hls_m3u8::tags::ExtXStreamInf;
-    /// let mut stream = ExtXStreamInf::new("https://www.example.com/", 20);
+    /// # Panic
     ///
-    /// stream.set_uri("https://www.google.com/");
-    /// assert_eq!(stream.uri(), &"https://www.google.com/".to_string());
-    /// ```
-    pub fn set_uri<T: ToString>(&mut self, value: T) -> &mut Self {
-        self.uri = value.to_string();
-        self
-    }
-
-    /// Sets the maximum frame rate for all the video in the variant stream.
-    ///
-    /// # Example
-    /// ```
-    /// # use hls_m3u8::tags::ExtXStreamInf;
-    /// let mut stream = ExtXStreamInf::new("https://www.example.com/", 20);
-    /// # assert_eq!(stream.frame_rate(), None);
-    ///
-    /// stream.set_frame_rate(Some(59.9));
-    /// assert_eq!(stream.frame_rate(), Some(59.9));
-    /// ```
-    pub fn set_frame_rate(&mut self, value: Option<f64>) -> &mut Self {
-        self.frame_rate = value.map(Into::into);
-        self
-    }
-
-    /// Returns the maximum frame rate for all the video in the variant stream.
-    ///
-    /// # Example
-    /// ```
-    /// # use hls_m3u8::tags::ExtXStreamInf;
-    /// let mut stream = ExtXStreamInf::new("https://www.example.com/", 20);
-    /// # assert_eq!(stream.frame_rate(), None);
-    ///
-    /// stream.set_frame_rate(Some(59.9));
-    /// assert_eq!(stream.frame_rate(), Some(59.9));
-    /// ```
-    pub fn frame_rate(&self) -> Option<f64> { self.frame_rate.map(|v| v.as_f64()) }
-
-    /// Returns the group identifier for the audio in the variant stream.
-    ///
-    /// # Example
-    /// ```
-    /// # use hls_m3u8::tags::ExtXStreamInf;
-    /// let mut stream = ExtXStreamInf::new("https://www.example.com/", 20);
-    /// # assert_eq!(stream.audio(), &None);
-    ///
-    /// stream.set_audio(Some("audio"));
-    /// assert_eq!(stream.audio(), &Some("audio".to_string()));
-    /// ```
-    pub const fn audio(&self) -> &Option<String> { &self.audio }
-
-    /// Sets the group identifier for the audio in the variant stream.
-    ///
-    /// # Example
-    /// ```
-    /// # use hls_m3u8::tags::ExtXStreamInf;
-    /// let mut stream = ExtXStreamInf::new("https://www.example.com/", 20);
-    /// # assert_eq!(stream.audio(), &None);
-    ///
-    /// stream.set_audio(Some("audio"));
-    /// assert_eq!(stream.audio(), &Some("audio".to_string()));
-    /// ```
-    pub fn set_audio<T: Into<String>>(&mut self, value: Option<T>) -> &mut Self {
-        self.audio = value.map(Into::into);
-        self
-    }
-
-    /// Returns the group identifier for the subtitles in the variant stream.
-    ///
-    /// # Example
-    /// ```
-    /// # use hls_m3u8::tags::ExtXStreamInf;
-    /// let mut stream = ExtXStreamInf::new("https://www.example.com/", 20);
-    /// # assert_eq!(stream.subtitles(), &None);
-    ///
-    /// stream.set_subtitles(Some("subs"));
-    /// assert_eq!(stream.subtitles(), &Some("subs".to_string()));
-    /// ```
-    pub const fn subtitles(&self) -> &Option<String> { &self.subtitles }
-
-    /// Sets the group identifier for the subtitles in the variant stream.
-    ///
-    /// # Example
-    /// ```
-    /// # use hls_m3u8::tags::ExtXStreamInf;
-    /// let mut stream = ExtXStreamInf::new("https://www.example.com/", 20);
-    /// # assert_eq!(stream.subtitles(), &None);
-    ///
-    /// stream.set_subtitles(Some("subs"));
-    /// assert_eq!(stream.subtitles(), &Some("subs".to_string()));
-    /// ```
-    pub fn set_subtitles<T: Into<String>>(&mut self, value: Option<T>) -> &mut Self {
-        self.subtitles = value.map(Into::into);
-        self
-    }
-
-    /// Returns the value of [`ClosedCaptions`] attribute.
-    ///
-    /// # Example
-    /// ```
-    /// # use hls_m3u8::tags::ExtXStreamInf;
-    /// use hls_m3u8::types::ClosedCaptions;
-    ///
-    /// let mut stream = ExtXStreamInf::new("https://www.example.com/", 20);
-    /// # assert_eq!(stream.closed_captions(), &None);
-    ///
-    /// stream.set_closed_captions(Some(ClosedCaptions::None));
-    /// assert_eq!(stream.closed_captions(), &Some(ClosedCaptions::None));
-    /// ```
-    pub const fn closed_captions(&self) -> &Option<ClosedCaptions> { &self.closed_captions }
-
-    /// Sets the value of [`ClosedCaptions`] attribute.
-    ///
-    /// # Example
-    /// ```
-    /// # use hls_m3u8::tags::ExtXStreamInf;
-    /// use hls_m3u8::types::ClosedCaptions;
-    ///
-    /// let mut stream = ExtXStreamInf::new("https://www.example.com/", 20);
-    /// # assert_eq!(stream.closed_captions(), &None);
-    ///
-    /// stream.set_closed_captions(Some(ClosedCaptions::None));
-    /// assert_eq!(stream.closed_captions(), &Some(ClosedCaptions::None));
-    /// ```
-    pub fn set_closed_captions(&mut self, value: Option<ClosedCaptions>) -> &mut Self {
-        self.closed_captions = value;
+    /// This function panics, if the float is infinite or negative.
+    pub fn set_frame_rate<VALUE: Into<f64>>(&mut self, value_0: Option<VALUE>) -> &mut Self {
+        self.frame_rate = value_0.map(|v| {
+            DecimalFloatingPoint::new(v.into()).expect("the float must be positive and finite")
+        });
         self
     }
 }
@@ -308,18 +189,23 @@ impl RequiredVersion for ExtXStreamInf {
 impl fmt::Display for ExtXStreamInf {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         write!(f, "{}{}", Self::PREFIX, self.stream_inf)?;
+
         if let Some(value) = &self.frame_rate {
             write!(f, ",FRAME-RATE={:.3}", value.as_f64())?;
         }
+
         if let Some(value) = &self.audio {
             write!(f, ",AUDIO={}", quote(value))?;
         }
+
         if let Some(value) = &self.subtitles {
             write!(f, ",SUBTITLES={}", quote(value))?;
         }
+
         if let Some(value) = &self.closed_captions {
             write!(f, ",CLOSED-CAPTIONS={}", value)?;
         }
+
         write!(f, "\n{}", self.uri)?;
         Ok(())
     }

@@ -9,11 +9,13 @@ use crate::utils::tag;
 use crate::{Error, RequiredVersion};
 
 /// # [4.3.2.6. EXT-X-PROGRAM-DATE-TIME]
+///
 /// The [`ExtXProgramDateTime`] tag associates the first sample of a
 /// [`Media Segment`] with an absolute date and/or time.
 ///
 /// [`Media Segment`]: crate::MediaSegment
-/// [4.3.2.6. EXT-X-PROGRAM-DATE-TIME]: https://tools.ietf.org/html/rfc8216#section-4.3.2.6
+/// [4.3.2.6. EXT-X-PROGRAM-DATE-TIME]:
+/// https://tools.ietf.org/html/rfc8216#section-4.3.2.6
 #[derive(Debug, Copy, Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]
 pub struct ExtXProgramDateTime(DateTime<FixedOffset>);
 
@@ -23,6 +25,7 @@ impl ExtXProgramDateTime {
     /// Makes a new [`ExtXProgramDateTime`] tag.
     ///
     /// # Example
+    ///
     /// ```
     /// # use hls_m3u8::tags::ExtXProgramDateTime;
     /// use chrono::{FixedOffset, TimeZone};
@@ -41,6 +44,7 @@ impl ExtXProgramDateTime {
     /// segment.
     ///
     /// # Example
+    ///
     /// ```
     /// # use hls_m3u8::tags::ExtXProgramDateTime;
     /// use chrono::{FixedOffset, TimeZone};
@@ -65,6 +69,7 @@ impl ExtXProgramDateTime {
     /// Sets the date-time of the first sample of the associated media segment.
     ///
     /// # Example
+    ///
     /// ```
     /// # use hls_m3u8::tags::ExtXProgramDateTime;
     /// use chrono::{FixedOffset, TimeZone};

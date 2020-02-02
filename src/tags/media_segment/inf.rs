@@ -25,6 +25,7 @@ impl ExtInf {
     /// Makes a new [`ExtInf`] tag.
     ///
     /// # Example
+    ///
     /// ```
     /// # use hls_m3u8::tags::ExtInf;
     /// use std::time::Duration;
@@ -41,6 +42,7 @@ impl ExtInf {
     /// Makes a new [`ExtInf`] tag with the given title.
     ///
     /// # Example
+    ///
     /// ```
     /// # use hls_m3u8::tags::ExtInf;
     /// use std::time::Duration;
@@ -57,6 +59,7 @@ impl ExtInf {
     /// Returns the duration of the associated media segment.
     ///
     /// # Example
+    ///
     /// ```
     /// # use hls_m3u8::tags::ExtInf;
     /// use std::time::Duration;
@@ -70,6 +73,7 @@ impl ExtInf {
     /// Sets the duration of the associated media segment.
     ///
     /// # Example
+    ///
     /// ```
     /// # use hls_m3u8::tags::ExtInf;
     /// use std::time::Duration;
@@ -88,6 +92,7 @@ impl ExtInf {
     /// Returns the title of the associated media segment.
     ///
     /// # Example
+    ///
     /// ```
     /// # use hls_m3u8::tags::ExtInf;
     /// use std::time::Duration;
@@ -101,6 +106,7 @@ impl ExtInf {
     /// Sets the title of the associated media segment.
     ///
     /// # Example
+    ///
     /// ```
     /// # use hls_m3u8::tags::ExtInf;
     /// use std::time::Duration;
@@ -117,6 +123,8 @@ impl ExtInf {
     }
 }
 
+/// This tag requires [`ProtocolVersion::V1`], if the duration does not have
+/// nanoseconds, otherwise it requires [`ProtocolVersion::V3`].
 impl RequiredVersion for ExtInf {
     fn required_version(&self) -> ProtocolVersion {
         if self.duration.subsec_nanos() == 0 {

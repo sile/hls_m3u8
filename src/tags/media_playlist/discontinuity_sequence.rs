@@ -11,12 +11,6 @@ use crate::RequiredVersion;
 /// different Renditions of the same Variant Stream or different Variant
 /// Streams that have [`ExtXDiscontinuity`] tags in their [`Media Playlist`]s.
 ///
-/// Its format is:
-/// ```text
-/// #EXT-X-DISCONTINUITY-SEQUENCE:<number>
-/// ```
-/// where `number` is a [u64].
-///
 /// [`ExtXDiscontinuity`]: crate::tags::ExtXDiscontinuity
 /// [`Media Playlist`]: crate::MediaPlaylist
 /// [4.4.3.3. EXT-X-DISCONTINUITY-SEQUENCE]:
@@ -30,6 +24,7 @@ impl ExtXDiscontinuitySequence {
     /// Makes a new [ExtXDiscontinuitySequence] tag.
     ///
     /// # Example
+    ///
     /// ```
     /// # use hls_m3u8::tags::ExtXDiscontinuitySequence;
     /// let discontinuity_sequence = ExtXDiscontinuitySequence::new(5);
@@ -40,6 +35,7 @@ impl ExtXDiscontinuitySequence {
     /// the first media segment that appears in the associated playlist.
     ///
     /// # Example
+    ///
     /// ```
     /// # use hls_m3u8::tags::ExtXDiscontinuitySequence;
     /// let discontinuity_sequence = ExtXDiscontinuitySequence::new(5);
@@ -51,6 +47,7 @@ impl ExtXDiscontinuitySequence {
     /// Sets the sequence number.
     ///
     /// # Example
+    ///
     /// ```
     /// # use hls_m3u8::tags::ExtXDiscontinuitySequence;
     /// let mut discontinuity_sequence = ExtXDiscontinuitySequence::new(5);
@@ -64,6 +61,7 @@ impl ExtXDiscontinuitySequence {
     }
 }
 
+/// This tag requires [`ProtocolVersion::V1`].
 impl RequiredVersion for ExtXDiscontinuitySequence {
     fn required_version(&self) -> ProtocolVersion { ProtocolVersion::V1 }
 }

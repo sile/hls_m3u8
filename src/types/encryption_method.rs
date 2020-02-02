@@ -9,14 +9,15 @@ use strum::{Display, EnumString};
 #[derive(Ord, PartialOrd, Debug, Clone, Copy, PartialEq, Eq, Hash, Display, EnumString)]
 #[strum(serialize_all = "SCREAMING-KEBAB-CASE")]
 pub enum EncryptionMethod {
-    /// `None` means that [MediaSegment]s are not encrypted.
+    /// `None` means that the [`MediaSegment`]s are not encrypted.
     ///
     /// [MediaSegment]: crate::MediaSegment
     None,
     /// `Aes128` signals that the [MediaSegment]s are completely encrypted
-    /// using the Advanced Encryption Standard ([AES_128]) with a 128-bit
+    /// using the Advanced Encryption Standard ([AES-128]) with a 128-bit
     /// key, Cipher Block Chaining (CBC), and
     /// [Public-Key Cryptography Standards #7 (PKCS7)] padding.
+    ///
     /// CBC is restarted on each segment boundary, using either the
     /// Initialization Vector (IV) attribute value or the Media Sequence
     /// Number as the IV.
@@ -37,8 +38,8 @@ pub enum EncryptionMethod {
     /// and Enhanced [AC-3] media streams is described in the HTTP
     /// Live Streaming (HLS) [SampleEncryption specification].
     ///
-    /// [MediaSegment]: crate::MediaSegment
-    /// [AES_128]: http://nvlpubs.nist.gov/nistpubs/FIPS/NIST.FIPS.197.pdf
+    /// [`MediaSegment`]: crate::MediaSegment
+    /// [AES-128]: http://nvlpubs.nist.gov/nistpubs/FIPS/NIST.FIPS.197.pdf
     /// [Common Encryption]: https://tools.ietf.org/html/rfc8216#ref-COMMON_ENC
     /// [H.264]: https://tools.ietf.org/html/rfc8216#ref-H_264
     /// [AAC]: https://tools.ietf.org/html/rfc8216#ref-ISO_14496

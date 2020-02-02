@@ -13,6 +13,7 @@ impl SignedDecimalFloatingPoint {
     /// Makes a new [`SignedDecimalFloatingPoint`] instance.
     ///
     /// # Panics
+    ///
     /// The given value must be finite, otherwise this function will panic!
     pub fn new(value: f64) -> Self {
         if value.is_infinite() || value.is_nan() {

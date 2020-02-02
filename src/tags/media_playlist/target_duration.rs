@@ -8,11 +8,13 @@ use crate::utils::tag;
 use crate::{Error, RequiredVersion};
 
 /// # [4.3.3.1. EXT-X-TARGETDURATION]
+///
 /// The [`ExtXTargetDuration`] tag specifies the maximum [`MediaSegment`]
 /// duration.
 ///
 /// [`MediaSegment`]: crate::MediaSegment
-/// [4.3.3.1. EXT-X-TARGETDURATION]: https://tools.ietf.org/html/rfc8216#section-4.3.3.1
+/// [4.3.3.1. EXT-X-TARGETDURATION]:
+/// https://tools.ietf.org/html/rfc8216#section-4.3.3.1
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Default, PartialOrd, Ord)]
 pub struct ExtXTargetDuration(Duration);
 
@@ -22,6 +24,7 @@ impl ExtXTargetDuration {
     /// Makes a new [`ExtXTargetDuration`] tag.
     ///
     /// # Example
+    ///
     /// ```
     /// # use hls_m3u8::tags::ExtXTargetDuration;
     /// use std::time::Duration;
@@ -30,12 +33,14 @@ impl ExtXTargetDuration {
     /// ```
     ///
     /// # Note
+    ///
     /// The nanoseconds part of the [`Duration`] will be discarded.
     pub const fn new(duration: Duration) -> Self { Self(Duration::from_secs(duration.as_secs())) }
 
     /// Returns the maximum media segment duration.
     ///
     /// # Example
+    ///
     /// ```
     /// # use hls_m3u8::tags::ExtXTargetDuration;
     /// use std::time::Duration;

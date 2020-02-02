@@ -4,6 +4,7 @@ use crate::types::{EncryptionMethod, ProtocolVersion};
 /// A trait, that is implemented on all tags, that could be encrypted.
 ///
 /// # Example
+///
 /// ```
 /// use hls_m3u8::tags::ExtXKey;
 /// use hls_m3u8::types::EncryptionMethod;
@@ -76,7 +77,9 @@ pub trait Encrypted {
     /// Returns `true`, if the tag is encrypted.
     ///
     /// # Note
+    ///
     /// This will return `true`, if any of the keys satisfies
+    ///
     /// ```text
     /// key.method() != EncryptionMethod::None
     /// ```
@@ -92,6 +95,7 @@ pub trait Encrypted {
     /// Returns `false`, if the tag is not encrypted.
     ///
     /// # Note
+    ///
     /// This is the inverse of [`is_encrypted`].
     ///
     /// [`is_encrypted`]: #method.is_encrypted
@@ -99,7 +103,9 @@ pub trait Encrypted {
 }
 
 /// # Example
+///
 /// Implementing it:
+///
 /// ```
 /// # use hls_m3u8::RequiredVersion;
 /// use hls_m3u8::types::ProtocolVersion;
@@ -122,6 +128,7 @@ pub trait RequiredVersion {
     /// Returns the protocol compatibility version that this tag requires.
     ///
     /// # Note
+    ///
     /// This is for the latest working [`ProtocolVersion`] and a client, that
     /// only supports an older version would break.
     fn required_version(&self) -> ProtocolVersion;

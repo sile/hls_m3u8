@@ -4,6 +4,7 @@ use std::str::FromStr;
 use crate::Error;
 
 /// # [7. Protocol Version Compatibility]
+///
 /// The [`ProtocolVersion`] specifies, which m3u8 revision is required, to parse
 /// a certain tag correctly.
 ///
@@ -26,6 +27,7 @@ impl ProtocolVersion {
     /// this library.
     ///
     /// # Example
+    ///
     /// ```
     /// # use hls_m3u8::types::ProtocolVersion;
     /// assert_eq!(ProtocolVersion::latest(), ProtocolVersion::V7);
@@ -66,6 +68,7 @@ impl FromStr for ProtocolVersion {
     }
 }
 
+/// The default is [`ProtocolVersion::V1`].
 impl Default for ProtocolVersion {
     fn default() -> Self { Self::V1 }
 }

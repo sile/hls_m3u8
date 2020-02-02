@@ -7,15 +7,11 @@ use crate::utils::tag;
 use crate::{Error, RequiredVersion};
 
 /// # [4.3.4.5. EXT-X-SESSION-KEY]
+///
 /// The [`ExtXSessionKey`] tag allows encryption keys from [`Media Playlist`]s
 /// to be specified in a [`Master Playlist`]. This allows the client to
 /// preload these keys without having to read the [`Media Playlist`]s
 /// first.
-///
-/// Its format is:
-/// ```text
-/// #EXT-X-SESSION-KEY:<attribute-list>
-/// ```
 ///
 /// [`Media Playlist`]: crate::MediaPlaylist
 /// [`Master Playlist`]: crate::MasterPlaylist
@@ -29,12 +25,14 @@ impl ExtXSessionKey {
     /// Makes a new [`ExtXSessionKey`] tag.
     ///
     /// # Panic
+    ///
     /// An [`ExtXSessionKey`] should only be used,
     /// if the segments of the stream are encrypted.
     /// Therefore this function will panic,
     /// if the `method` is [`EncryptionMethod::None`].
     ///
     /// # Example
+    ///
     /// ```
     /// # use hls_m3u8::tags::ExtXSessionKey;
     /// use hls_m3u8::types::EncryptionMethod;
@@ -50,6 +48,8 @@ impl ExtXSessionKey {
     }
 }
 
+/// This tag requires the version returned by
+/// [`DecryptionKey::required_version`].
 impl RequiredVersion for ExtXSessionKey {
     fn required_version(&self) -> ProtocolVersion { self.0.required_version() }
 }
@@ -57,8 +57,10 @@ impl RequiredVersion for ExtXSessionKey {
 impl fmt::Display for ExtXSessionKey {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         if self.0.method == EncryptionMethod::None {
+            // TODO: this is bad practice, this function should never fail!
             return Err(fmt::Error);
         }
+
         write!(f, "{}{}", Self::PREFIX, self.0)
     }
 }
@@ -159,10 +161,10 @@ mod test {
         );
     }
 
-    #[test]
-    #[should_panic]
     // ExtXSessionKey::new should panic, if the provided
     // EncryptionMethod is None!
+    #[test]
+    #[should_panic]
     fn test_new_panic() { ExtXSessionKey::new(EncryptionMethod::None, ""); }
 
     #[test]
@@ -176,7 +178,7 @@ mod test {
         let key = ExtXSessionKey::new(EncryptionMethod::Aes128, "https://www.example.com/");
 
         assert_eq!(key.method(), EncryptionMethod::Aes128);
-        assert_eq!(key.uri(), &Some("https://www.example.com/".into()));
+        assert_eq!(key.uri(), Some(&"https://www.example.com/".into()));
     }
 
     #[test]
@@ -186,6 +188,6 @@ mod test {
         key.set_method(EncryptionMethod::None);
         assert_eq!(key.method(), EncryptionMethod::None);
         key.set_uri(Some("https://www.github.com/"));
-        assert_eq!(key.uri(), &Some("https://www.github.com/".into()));
+        assert_eq!(key.uri(), Some(&"https://www.github.com/".into()));
     }
 }

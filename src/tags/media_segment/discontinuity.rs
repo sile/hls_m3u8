@@ -6,13 +6,9 @@ use crate::utils::tag;
 use crate::{Error, RequiredVersion};
 
 /// # [4.4.2.3. EXT-X-DISCONTINUITY]
+///
 /// The [`ExtXDiscontinuity`] tag indicates a discontinuity between the
 /// [`Media Segment`] that follows it and the one that preceded it.
-///
-/// Its format is:
-/// ```text
-/// #EXT-X-DISCONTINUITY
-/// ```
 ///
 /// [`Media Segment`]: crate::MediaSegment
 /// [4.4.2.3. EXT-X-DISCONTINUITY]:
@@ -24,6 +20,7 @@ impl ExtXDiscontinuity {
     pub(crate) const PREFIX: &'static str = "#EXT-X-DISCONTINUITY";
 }
 
+/// This tag requires [`ProtocolVersion::V1`].
 impl RequiredVersion for ExtXDiscontinuity {
     fn required_version(&self) -> ProtocolVersion { ProtocolVersion::V1 }
 }

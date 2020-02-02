@@ -1,6 +1,6 @@
 use core::iter::FusedIterator;
 
-#[derive(Clone, Debug, Default, Eq, PartialEq)]
+#[derive(Copy, Clone, Debug, Default, Eq, PartialEq, PartialOrd, Ord, Hash)]
 pub(crate) struct AttributePairs<'a> {
     string: &'a str,
     index: usize,

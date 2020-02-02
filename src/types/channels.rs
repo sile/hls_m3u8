@@ -6,13 +6,17 @@ use crate::Error;
 /// Specifies a list of parameters.
 ///
 /// # `MediaType::Audio`
+///
 /// The first parameter is a count of audio channels expressed as a [`u64`],
 /// indicating the maximum number of independent, simultaneous audio channels
-/// present in any [`MediaSegment`] in the rendition. For example, an
-/// `AC-3 5.1` rendition would have a `CHANNELS="6"` attribute.
+/// present in any [`MediaSegment`] in the rendition.
+///
+/// For example, an `AC-3 5.1` rendition would have a `CHANNELS="6"` attribute.
 ///
 /// # Example
+///
 /// Creating a `CHANNELS="6"` attribute
+///
 /// ```
 /// # use hls_m3u8::types::Channels;
 /// let mut channels = Channels::new(6);
@@ -34,6 +38,7 @@ impl Channels {
     /// Makes a new [`Channels`] struct.
     ///
     /// # Example
+    ///
     /// ```
     /// # use hls_m3u8::types::Channels;
     /// let mut channels = Channels::new(6);
@@ -48,6 +53,7 @@ impl Channels {
     /// Returns the channel number.
     ///
     /// # Example
+    ///
     /// ```
     /// # use hls_m3u8::types::Channels;
     /// let mut channels = Channels::new(6);
@@ -59,6 +65,7 @@ impl Channels {
     /// Sets the channel number.
     ///
     /// # Example
+    ///
     /// ```
     /// # use hls_m3u8::types::Channels;
     /// let mut channels = Channels::new(3);
@@ -77,9 +84,10 @@ impl FromStr for Channels {
 
     fn from_str(input: &str) -> Result<Self, Self::Err> {
         let parameters = input.split('/').collect::<Vec<_>>();
+
         let channel_number = parameters
             .first()
-            .ok_or_else(|| Error::missing_attribute("First parameter of channels!"))?
+            .ok_or_else(|| Error::missing_attribute("first parameter of channels"))?
             .parse()
             .map_err(Error::parse_int)?;
 
@@ -93,6 +101,7 @@ impl FromStr for Channels {
 impl fmt::Display for Channels {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         write!(f, "{}", self.channel_number)?;
+
         if !self.unknown.is_empty() {
             write!(f, "{}", self.unknown.join(","))?;
         }

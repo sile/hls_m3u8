@@ -32,6 +32,29 @@ impl_from![
     u8, i8, u16, i16, u32, i32, f32, f64 => crate::types::SignedDecimalFloatingPoint
 ];
 
+pub(crate) fn parse_iv_from_str(input: &str) -> crate::Result<[u8; 16]> {
+    if !(input.starts_with("0x") || input.starts_with("0X")) {
+        return Err(Error::invalid_input());
+    }
+
+    if input.len() - 2 != 32 {
+        return Err(Error::invalid_input());
+    }
+
+    let mut result = [0; 16];
+
+    // TODO:
+    // hex::decode_to_slice(value.as_bytes()[2..], &mut result)?;
+
+    for (i, c) in input.as_bytes().chunks(2).skip(1).enumerate() {
+        let d = core::str::from_utf8(c).map_err(Error::custom)?;
+        let b = u8::from_str_radix(d, 16).map_err(Error::custom)?;
+        result[i] = b;
+    }
+
+    Ok(result)
+}
+
 pub(crate) fn parse_yes_or_no<T: AsRef<str>>(s: T) -> crate::Result<bool> {
     match s.as_ref() {
         "YES" => Ok(true),

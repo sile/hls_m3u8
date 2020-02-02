@@ -11,15 +11,6 @@ use crate::{Error, RequiredVersion};
 /// The [`ExtXByteRange`] tag indicates that a [`Media Segment`] is a sub-range
 /// of the resource identified by its `URI`.
 ///
-/// Its format is:
-/// ```text
-/// #EXT-X-BYTERANGE:<n>[@<o>]
-/// ```
-///
-/// where `n` is a [usize] indicating the length of the sub-range in bytes.
-/// If present, `o` is a [usize] indicating the start of the sub-range,
-/// as a byte offset from the beginning of the resource.
-///
 /// [`Media Segment`]: crate::MediaSegment
 /// [4.4.2.2. EXT-X-BYTERANGE]:
 /// https://tools.ietf.org/html/draft-pantos-hls-rfc8216bis-04#section-4.4.2.2
@@ -32,6 +23,7 @@ impl ExtXByteRange {
     /// Makes a new [`ExtXByteRange`] tag.
     ///
     /// # Example
+    ///
     /// ```
     /// # use hls_m3u8::tags::ExtXByteRange;
     /// let byte_range = ExtXByteRange::new(20, Some(5));
@@ -43,6 +35,7 @@ impl ExtXByteRange {
     /// Converts the [`ExtXByteRange`] to a [`ByteRange`].
     ///
     /// # Example
+    ///
     /// ```
     /// # use hls_m3u8::tags::ExtXByteRange;
     /// use hls_m3u8::types::ByteRange;
@@ -53,6 +46,7 @@ impl ExtXByteRange {
     pub const fn to_range(&self) -> ByteRange { self.0 }
 }
 
+/// This tag requires [`ProtocolVersion::V4`].
 impl RequiredVersion for ExtXByteRange {
     fn required_version(&self) -> ProtocolVersion { ProtocolVersion::V4 }
 }

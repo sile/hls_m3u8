@@ -15,6 +15,7 @@ use crate::{Error, RequiredVersion};
 /// same [`KeyFormat`] attribute (or the end of the Playlist file).
 ///
 /// # Note
+///
 /// In case of an empty key ([`EncryptionMethod::None`]),
 /// all attributes will be ignored.
 ///
@@ -31,6 +32,7 @@ impl ExtXKey {
     /// Makes a new [`ExtXKey`] tag.
     ///
     /// # Example
+    ///
     /// ```
     /// # use hls_m3u8::tags::ExtXKey;
     /// use hls_m3u8::types::EncryptionMethod;
@@ -49,6 +51,7 @@ impl ExtXKey {
     /// Makes a new [`ExtXKey`] tag without a decryption key.
     ///
     /// # Example
+    ///
     /// ```
     /// # use hls_m3u8::tags::ExtXKey;
     /// let key = ExtXKey::empty();
@@ -69,6 +72,7 @@ impl ExtXKey {
     /// [`None`].
     ///
     /// # Example
+    ///
     /// ```
     /// # use hls_m3u8::tags::ExtXKey;
     /// use hls_m3u8::types::EncryptionMethod;
@@ -82,6 +86,8 @@ impl ExtXKey {
     pub fn is_empty(&self) -> bool { self.0.method() == EncryptionMethod::None }
 }
 
+/// This tag requires the [`ProtocolVersion`] returned by
+/// [`DecryptionKey::required_version`].
 impl RequiredVersion for ExtXKey {
     fn required_version(&self) -> ProtocolVersion { self.0.required_version() }
 }

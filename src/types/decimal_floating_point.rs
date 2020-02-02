@@ -51,6 +51,7 @@ impl Deref for DecimalFloatingPoint {
     fn deref(&self) -> &Self::Target { &self.0 }
 }
 
+#[doc(hidden)]
 impl From<f64> for DecimalFloatingPoint {
     fn from(value: f64) -> Self {
         let mut result = value;
@@ -64,6 +65,7 @@ impl From<f64> for DecimalFloatingPoint {
     }
 }
 
+#[doc(hidden)]
 impl From<f32> for DecimalFloatingPoint {
     fn from(value: f32) -> Self { f64::from(value).into() }
 }
@@ -102,15 +104,13 @@ mod tests {
 
     #[test]
     pub fn test_parser() {
-        let decimal_floating_point = DecimalFloatingPoint::new(22.0).unwrap();
         assert_eq!(
-            decimal_floating_point,
+            DecimalFloatingPoint::new(22.0).unwrap(),
             "22".parse::<DecimalFloatingPoint>().unwrap()
         );
 
-        let decimal_floating_point = DecimalFloatingPoint::new(4.1).unwrap();
         assert_eq!(
-            decimal_floating_point,
+            DecimalFloatingPoint::new(4.1).unwrap(),
             "4.1".parse::<DecimalFloatingPoint>().unwrap()
         );
 

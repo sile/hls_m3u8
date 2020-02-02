@@ -6,7 +6,7 @@ use crate::types::{ProtocolVersion, SignedDecimalFloatingPoint};
 use crate::utils::{parse_yes_or_no, tag};
 use crate::{Error, RequiredVersion};
 
-/// [4.3.5.2. EXT-X-START]
+/// # [4.3.5.2. EXT-X-START]
 ///
 /// [4.3.5.2. EXT-X-START]: https://tools.ietf.org/html/rfc8216#section-4.3.5.2
 #[derive(PartialOrd, Debug, Clone, Copy, PartialEq)]
@@ -21,9 +21,11 @@ impl ExtXStart {
     /// Makes a new [`ExtXStart`] tag.
     ///
     /// # Panic
+    ///
     /// Panics if the time_offset value is infinite.
     ///
     /// # Example
+    ///
     /// ```
     /// # use hls_m3u8::tags::ExtXStart;
     /// let start = ExtXStart::new(20.123456);
@@ -38,9 +40,11 @@ impl ExtXStart {
     /// Makes a new [`ExtXStart`] tag with the given `precise` flag.
     ///
     /// # Panic
+    ///
     /// Panics if the time_offset value is infinite.
     ///
     /// # Example
+    ///
     /// ```
     /// # use hls_m3u8::tags::ExtXStart;
     /// let start = ExtXStart::with_precise(20.123456, true);
@@ -56,6 +60,7 @@ impl ExtXStart {
     /// Returns the time offset of the media segments in the playlist.
     ///
     /// # Example
+    ///
     /// ```
     /// # use hls_m3u8::tags::ExtXStart;
     /// let start = ExtXStart::new(20.123456);
@@ -66,6 +71,7 @@ impl ExtXStart {
     /// Sets the time offset of the media segments in the playlist.
     ///
     /// # Example
+    ///
     /// ```
     /// # use hls_m3u8::tags::ExtXStart;
     /// let mut start = ExtXStart::new(20.123456);
@@ -84,6 +90,7 @@ impl ExtXStart {
     /// presentation times are prior to the specified time offset.
     ///
     /// # Example
+    ///
     /// ```
     /// # use hls_m3u8::tags::ExtXStart;
     /// let start = ExtXStart::with_precise(20.123456, true);
@@ -94,6 +101,7 @@ impl ExtXStart {
     /// Sets the `precise` flag.
     ///
     /// # Example
+    ///
     /// ```
     /// # use hls_m3u8::tags::ExtXStart;
     /// let mut start = ExtXStart::new(20.123456);
@@ -109,6 +117,7 @@ impl ExtXStart {
     }
 }
 
+/// This tag requires [`ProtocolVersion::V1`].
 impl RequiredVersion for ExtXStart {
     fn required_version(&self) -> ProtocolVersion { ProtocolVersion::V1 }
 }

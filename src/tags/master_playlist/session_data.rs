@@ -2,6 +2,7 @@ use std::fmt;
 use std::str::FromStr;
 
 use derive_builder::Builder;
+use shorthand::ShortHand;
 
 use crate::attribute::AttributePairs;
 use crate::types::ProtocolVersion;
@@ -34,26 +35,31 @@ pub enum SessionData {
 ///
 /// [`Master Playlist`]: crate::MasterPlaylist
 /// [4.3.4.4. EXT-X-SESSION-DATA]: https://tools.ietf.org/html/rfc8216#section-4.3.4.4
-#[derive(Builder, Hash, Eq, Ord, Debug, PartialEq, Clone, PartialOrd)]
+#[derive(ShortHand, Builder, Hash, Eq, Ord, Debug, PartialEq, Clone, PartialOrd)]
 #[builder(setter(into))]
+#[shorthand(enable(must_use, into))]
 pub struct ExtXSessionData {
-    /// The identifier of the data.
-    /// For more information look [`here`].
+    /// Sets the `data_id` attribute, that should conform to a [reverse DNS]
+    /// naming convention, such as `com.example.movie.title`.
     ///
     /// # Note
+    ///
+    /// There is no central registration authority, so a value
+    /// should be choosen, that is unlikely to collide with others.
+    ///
     /// This field is required.
     ///
-    /// [`here`]: ExtXSessionData::set_data_id
+    /// [reverse DNS]: https://en.wikipedia.org/wiki/Reverse_domain_name_notation
     data_id: String,
     /// The data associated with the [`data_id`].
     /// For more information look [`here`](SessionData).
     ///
     /// # Note
-    /// This field is required.
     ///
-    /// [`data_id`]: ExtXSessionDataBuilder::data_id
+    /// This field is required.
     data: SessionData,
-    /// The language of the [`data`](ExtXSessionDataBuilder::data).
+    /// The `language` attribute identifies the language of [`SessionData`].
+    /// See [rfc5646](https://tools.ietf.org/html/rfc5646).
     #[builder(setter(into, strip_option), default)]
     language: Option<String>,
 }
@@ -107,6 +113,7 @@ impl ExtXSessionData {
     /// Makes a new [`ExtXSessionData`] tag, with the given language.
     ///
     /// # Example
+    ///
     /// ```
     /// use hls_m3u8::tags::{ExtXSessionData, SessionData};
     ///
@@ -123,125 +130,9 @@ impl ExtXSessionData {
             language: Some(language.to_string()),
         }
     }
-
-    /// Returns the `data_id`, that identifies a `data_value`.
-    ///
-    /// # Example
-    /// ```
-    /// # use hls_m3u8::tags::{ExtXSessionData, SessionData};
-    /// #
-    /// let data = ExtXSessionData::new(
-    ///     "com.example.movie.title",
-    ///     SessionData::Value("some data".to_string()),
-    /// );
-    ///
-    /// assert_eq!(data.data_id(), &"com.example.movie.title".to_string())
-    /// ```
-    pub const fn data_id(&self) -> &String { &self.data_id }
-
-    /// Returns the `data`.
-    ///
-    /// # Example
-    /// ```
-    /// # use hls_m3u8::tags::{ExtXSessionData, SessionData};
-    /// #
-    /// let data = ExtXSessionData::new(
-    ///     "com.example.movie.title",
-    ///     SessionData::Value("some data".to_string()),
-    /// );
-    ///
-    /// assert_eq!(data.data(), &SessionData::Value("some data".to_string()))
-    /// ```
-    pub const fn data(&self) -> &SessionData { &self.data }
-
-    /// Returns the `language` tag, that identifies the language of
-    /// [`SessionData`].
-    ///
-    /// # Example
-    /// ```
-    /// # use hls_m3u8::tags::{ExtXSessionData, SessionData};
-    /// #
-    /// let data = ExtXSessionData::with_language(
-    ///     "com.example.movie.title",
-    ///     SessionData::Value("some data".to_string()),
-    ///     "english",
-    /// );
-    ///
-    /// assert_eq!(data.language(), &Some("english".to_string()))
-    /// ```
-    pub const fn language(&self) -> &Option<String> { &self.language }
-
-    /// Sets the `language` attribute, that identifies the language of
-    /// [`SessionData`]. See [rfc5646](https://tools.ietf.org/html/rfc5646).
-    ///
-    /// # Example
-    /// ```
-    /// # use hls_m3u8::tags::{ExtXSessionData, SessionData};
-    /// #
-    /// let mut data = ExtXSessionData::new(
-    ///     "com.example.movie.title",
-    ///     SessionData::Value("some data".to_string()),
-    /// );
-    ///
-    /// assert_eq!(data.language(), &None);
-    ///
-    /// data.set_language(Some("english"));
-    /// assert_eq!(data.language(), &Some("english".to_string()));
-    /// ```
-    pub fn set_language<T: ToString>(&mut self, value: Option<T>) -> &mut Self {
-        self.language = value.map(|v| v.to_string());
-        self
-    }
-
-    /// Sets the `data_id` attribute, that should conform to a [reverse DNS]
-    /// naming convention, such as `com.example.movie.title`.
-    ///
-    /// # Note:
-    /// There is no central registration authority, so a value
-    /// should be choosen, that is unlikely to collide with others.
-    ///
-    /// # Example
-    /// ```
-    /// # use hls_m3u8::tags::{ExtXSessionData, SessionData};
-    /// #
-    /// let mut data = ExtXSessionData::new(
-    ///     "com.example.movie.title",
-    ///     SessionData::Value("some data".to_string()),
-    /// );
-    ///
-    /// assert_eq!(data.data_id(), &"com.example.movie.title".to_string());
-    ///
-    /// data.set_data_id("com.other.movie.title");
-    /// assert_eq!(data.data_id(), &"com.other.movie.title".to_string());
-    /// ```
-    /// [reverse DNS]: https://en.wikipedia.org/wiki/Reverse_domain_name_notation
-    pub fn set_data_id<T: ToString>(&mut self, value: T) -> &mut Self {
-        self.data_id = value.to_string();
-        self
-    }
-
-    /// Sets the [`data`](ExtXSessionData::data) of this tag.
-    ///
-    /// # Example
-    /// ```
-    /// # use hls_m3u8::tags::{ExtXSessionData, SessionData};
-    /// #
-    /// let mut data = ExtXSessionData::new(
-    ///     "com.example.movie.title",
-    ///     SessionData::Value("some data".to_string()),
-    /// );
-    ///
-    /// assert_eq!(data.data(), &SessionData::Value("some data".to_string()));
-    ///
-    /// data.set_data(SessionData::Value("new data".to_string()));
-    /// assert_eq!(data.data(), &SessionData::Value("new data".to_string()));
-    /// ```
-    pub fn set_data(&mut self, value: SessionData) -> &mut Self {
-        self.data = value;
-        self
-    }
 }
 
+/// This tag requires [`ProtocolVersion::V1`].
 impl RequiredVersion for ExtXSessionData {
     fn required_version(&self) -> ProtocolVersion { ProtocolVersion::V1 }
 }

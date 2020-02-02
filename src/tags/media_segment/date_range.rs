@@ -5,6 +5,7 @@ use std::time::Duration;
 
 use chrono::{DateTime, FixedOffset, SecondsFormat};
 use derive_builder::Builder;
+use shorthand::ShortHand;
 
 use crate::attribute::AttributePairs;
 use crate::types::{ProtocolVersion, Value};
@@ -12,84 +13,98 @@ use crate::utils::{quote, tag, unquote};
 use crate::{Error, RequiredVersion};
 
 /// # [4.3.2.7. EXT-X-DATERANGE]
+///
 /// The [`ExtXDateRange`] tag associates a date range (i.e., a range of
 /// time defined by a starting and ending date) with a set of attribute/
 /// value pairs.
 ///
 /// [4.3.2.7. EXT-X-DATERANGE]: https://tools.ietf.org/html/rfc8216#section-4.3.2.7
-#[derive(Builder, Debug, Clone, PartialEq, PartialOrd)]
+#[derive(ShortHand, Builder, Debug, Clone, PartialEq, PartialOrd)]
 #[builder(setter(into))]
+#[shorthand(enable(must_use, into))]
 pub struct ExtXDateRange {
     /// A string that uniquely identifies an [`ExtXDateRange`] in the Playlist.
     ///
     /// # Note
+    ///
     /// This attribute is required.
     id: String,
-    #[builder(setter(strip_option), default)]
     /// A client-defined string that specifies some set of attributes and their
     /// associated value semantics. All [`ExtXDateRange`]s with the same class
     /// attribute value must adhere to these semantics.
     ///
     /// # Note
+    ///
     /// This attribute is optional.
+    #[builder(setter(strip_option), default)]
     class: Option<String>,
     /// The date at which the [`ExtXDateRange`] begins.
     ///
     /// # Note
+    ///
     /// This attribute is required.
     start_date: DateTime<FixedOffset>,
-    #[builder(setter(strip_option), default)]
     /// The date at which the [`ExtXDateRange`] ends. It must be equal to or
     /// later than the value of the [`start-date`] attribute.
     ///
     /// # Note
+    ///
     /// This attribute is optional.
     ///
     /// [`start-date`]: #method.start_date
-    end_date: Option<DateTime<FixedOffset>>,
     #[builder(setter(strip_option), default)]
+    end_date: Option<DateTime<FixedOffset>>,
     /// The duration of the [`ExtXDateRange`]. A single instant in time (e.g.,
     /// crossing a finish line) should be represented with a duration of 0.
     ///
     /// # Note
+    ///
     /// This attribute is optional.
-    duration: Option<Duration>,
     #[builder(setter(strip_option), default)]
+    duration: Option<Duration>,
     /// The expected duration of the [`ExtXDateRange`].
     /// This attribute should be used to indicate the expected duration of a
     /// [`ExtXDateRange`] whose actual duration is not yet known.
     ///
     /// # Note
+    ///
     /// This attribute is optional.
+    #[builder(setter(strip_option), default)]
     planned_duration: Option<Duration>,
-    #[builder(setter(strip_option), default)]
-    /// https://tools.ietf.org/html/rfc8216#section-4.3.2.7.1
+    /// You can read about this attribute here
+    /// <https://tools.ietf.org/html/rfc8216#section-4.3.2.7.1>
     ///
     /// # Note
+    ///
     /// This attribute is optional.
+    #[builder(setter(strip_option), default)]
     scte35_cmd: Option<String>,
-    #[builder(setter(strip_option), default)]
-    /// https://tools.ietf.org/html/rfc8216#section-4.3.2.7.1
+    /// You can read about this attribute here
+    /// <https://tools.ietf.org/html/rfc8216#section-4.3.2.7.1>
     ///
     /// # Note
+    ///
     /// This attribute is optional.
+    #[builder(setter(strip_option), default)]
     scte35_out: Option<String>,
-    #[builder(setter(strip_option), default)]
-    /// https://tools.ietf.org/html/rfc8216#section-4.3.2.7.1
+    /// You can read about this attribute here
+    /// <https://tools.ietf.org/html/rfc8216#section-4.3.2.7.1>
     ///
     /// # Note
+    ///
     /// This attribute is optional.
+    #[builder(setter(strip_option), default)]
     scte35_in: Option<String>,
-    #[builder(default)]
     /// This attribute indicates that the end of the range containing it is
     /// equal to the [`start-date`] of its following range. The following range
     /// is the [`ExtXDateRange`] of the same class, that has the earliest
     /// [`start-date`] after the [`start-date`] of the range in question.
     ///
     /// # Note
+    ///
     /// This attribute is optional.
-    end_on_next: bool,
     #[builder(default)]
+    end_on_next: bool,
     /// The `"X-"` prefix defines a namespace reserved for client-defined
     /// attributes. The client-attribute must be a uppercase characters.
     /// Clients should use a reverse-DNS syntax when defining their own
@@ -97,7 +112,10 @@ pub struct ExtXDateRange {
     /// attribute is `X-COM-EXAMPLE-AD-ID="XYZ123"`.
     ///
     /// # Note
+    ///
     /// This attribute is optional.
+    #[builder(default)]
+    #[shorthand(enable(collection_magic, get_mut))]
     client_attributes: BTreeMap<String, Value>,
 }
 
@@ -127,6 +145,7 @@ impl ExtXDateRange {
     /// Makes a new [`ExtXDateRange`] tag.
     ///
     /// # Example
+    ///
     /// ```
     /// # use hls_m3u8::tags::ExtXDateRange;
     /// use chrono::offset::TimeZone;
@@ -159,535 +178,6 @@ impl ExtXDateRange {
 
     /// Returns a builder for [`ExtXDateRange`].
     pub fn builder() -> ExtXDateRangeBuilder { ExtXDateRangeBuilder::default() }
-
-    /// A string that uniquely identifies an [`ExtXDateRange`] in the Playlist.
-    ///
-    /// # Example
-    /// ```
-    /// # use hls_m3u8::tags::ExtXDateRange;
-    /// use chrono::offset::TimeZone;
-    /// use chrono::{DateTime, FixedOffset};
-    ///
-    /// const HOURS_IN_SECS: i32 = 3600; // 1 hour = 3600 seconds
-    ///
-    /// let date_range = ExtXDateRange::new(
-    ///     "id",
-    ///     FixedOffset::east(8 * HOURS_IN_SECS)
-    ///         .ymd(2010, 2, 19)
-    ///         .and_hms_milli(14, 54, 23, 31),
-    /// );
-    ///
-    /// assert_eq!(date_range.id(), &"id".to_string());
-    /// ```
-    pub const fn id(&self) -> &String { &self.id }
-
-    /// A string that uniquely identifies an [`ExtXDateRange`] in the Playlist.
-    ///
-    /// # Example
-    /// ```
-    /// # use hls_m3u8::tags::ExtXDateRange;
-    /// use chrono::offset::TimeZone;
-    /// use chrono::{DateTime, FixedOffset};
-    ///
-    /// const HOURS_IN_SECS: i32 = 3600; // 1 hour = 3600 seconds
-    ///
-    /// let mut date_range = ExtXDateRange::new(
-    ///     "id",
-    ///     FixedOffset::east(8 * HOURS_IN_SECS)
-    ///         .ymd(2010, 2, 19)
-    ///         .and_hms_milli(14, 54, 23, 31),
-    /// );
-    ///
-    /// date_range.set_id("new_id");
-    /// assert_eq!(date_range.id(), &"new_id".to_string());
-    /// ```
-    pub fn set_id<T: ToString>(&mut self, value: T) -> &mut Self {
-        self.id = value.to_string();
-        self
-    }
-
-    /// A client-defined string that specifies some set of attributes and their
-    /// associated value semantics. All [`ExtXDateRange`]s with the same class
-    /// attribute value must adhere to these semantics.
-    ///
-    /// # Example
-    /// ```
-    /// # use hls_m3u8::tags::ExtXDateRange;
-    /// use chrono::offset::TimeZone;
-    /// use chrono::{DateTime, FixedOffset};
-    ///
-    /// const HOURS_IN_SECS: i32 = 3600; // 1 hour = 3600 seconds
-    ///
-    /// let mut date_range = ExtXDateRange::new(
-    ///     "id",
-    ///     FixedOffset::east(8 * HOURS_IN_SECS)
-    ///         .ymd(2010, 2, 19)
-    ///         .and_hms_milli(14, 54, 23, 31),
-    /// );
-    /// # assert_eq!(date_range.class(), &None);
-    ///
-    /// date_range.set_class(Some("example_class"));
-    /// assert_eq!(date_range.class(), &Some("example_class".to_string()));
-    /// ```
-    pub const fn class(&self) -> &Option<String> { &self.class }
-
-    /// A client-defined string that specifies some set of attributes and their
-    /// associated value semantics. All [`ExtXDateRange`]s with the same class
-    /// attribute value must adhere to these semantics.
-    ///
-    /// # Example
-    /// ```
-    /// # use hls_m3u8::tags::ExtXDateRange;
-    /// use chrono::offset::TimeZone;
-    /// use chrono::{DateTime, FixedOffset};
-    ///
-    /// const HOURS_IN_SECS: i32 = 3600; // 1 hour = 3600 seconds
-    ///
-    /// let mut date_range = ExtXDateRange::new(
-    ///     "id",
-    ///     FixedOffset::east(8 * HOURS_IN_SECS)
-    ///         .ymd(2010, 2, 19)
-    ///         .and_hms_milli(14, 54, 23, 31),
-    /// );
-    /// # assert_eq!(date_range.class(), &None);
-    ///
-    /// date_range.set_class(Some("example_class"));
-    /// assert_eq!(date_range.class(), &Some("example_class".to_string()));
-    /// ```
-    pub fn set_class<T: ToString>(&mut self, value: Option<T>) -> &mut Self {
-        self.class = value.map(|v| v.to_string());
-        self
-    }
-
-    /// The date at which the [`ExtXDateRange`] begins.
-    ///
-    /// # Example
-    /// ```
-    /// # use hls_m3u8::tags::ExtXDateRange;
-    /// use chrono::offset::TimeZone;
-    /// use chrono::{DateTime, FixedOffset};
-    ///
-    /// const HOURS_IN_SECS: i32 = 3600; // 1 hour = 3600 seconds
-    ///
-    /// let date_range = ExtXDateRange::new(
-    ///     "id",
-    ///     FixedOffset::east(8 * HOURS_IN_SECS)
-    ///         .ymd(2010, 2, 19)
-    ///         .and_hms_milli(14, 54, 23, 31),
-    /// );
-    ///
-    /// assert_eq!(
-    ///     date_range.start_date(),
-    ///     FixedOffset::east(8 * HOURS_IN_SECS)
-    ///         .ymd(2010, 2, 19)
-    ///         .and_hms_milli(14, 54, 23, 31)
-    /// );
-    /// ```
-    pub const fn start_date(&self) -> DateTime<FixedOffset> { self.start_date }
-
-    /// The date at which the [`ExtXDateRange`] begins.
-    ///
-    /// # Example
-    /// ```
-    /// # use hls_m3u8::tags::ExtXDateRange;
-    /// use chrono::offset::TimeZone;
-    /// use chrono::{DateTime, FixedOffset};
-    ///
-    /// const HOURS_IN_SECS: i32 = 3600; // 1 hour = 3600 seconds
-    ///
-    /// let mut date_range = ExtXDateRange::new(
-    ///     "id",
-    ///     FixedOffset::east(8 * HOURS_IN_SECS)
-    ///         .ymd(2010, 2, 19)
-    ///         .and_hms_milli(14, 54, 23, 31),
-    /// );
-    ///
-    /// date_range.set_start_date(
-    ///     FixedOffset::east(8 * HOURS_IN_SECS)
-    ///         .ymd(2010, 10, 10)
-    ///         .and_hms_milli(10, 10, 10, 10),
-    /// );
-    /// assert_eq!(
-    ///     date_range.start_date(),
-    ///     FixedOffset::east(8 * HOURS_IN_SECS)
-    ///         .ymd(2010, 10, 10)
-    ///         .and_hms_milli(10, 10, 10, 10)
-    /// );
-    /// ```
-    pub fn set_start_date<T>(&mut self, value: T) -> &mut Self
-    where
-        T: Into<DateTime<FixedOffset>>,
-    {
-        self.start_date = value.into();
-        self
-    }
-
-    /// The date at which the [`ExtXDateRange`] ends. It must be equal to or
-    /// later than the value of the [`start-date`] attribute.
-    ///
-    /// # Example
-    /// ```
-    /// # use hls_m3u8::tags::ExtXDateRange;
-    /// use chrono::offset::TimeZone;
-    /// use chrono::{DateTime, FixedOffset};
-    ///
-    /// const HOURS_IN_SECS: i32 = 3600; // 1 hour = 3600 seconds
-    ///
-    /// let mut date_range = ExtXDateRange::new(
-    ///     "id",
-    ///     FixedOffset::east(8 * HOURS_IN_SECS)
-    ///         .ymd(2010, 2, 19)
-    ///         .and_hms_milli(14, 54, 23, 31),
-    /// );
-    /// # assert_eq!(date_range.end_date(), None);
-    ///
-    /// date_range.set_end_date(Some(
-    ///     FixedOffset::east(8 * HOURS_IN_SECS)
-    ///         .ymd(2010, 10, 10)
-    ///         .and_hms_milli(10, 10, 10, 10),
-    /// ));
-    /// assert_eq!(
-    ///     date_range.end_date(),
-    ///     Some(
-    ///         FixedOffset::east(8 * HOURS_IN_SECS)
-    ///             .ymd(2010, 10, 10)
-    ///             .and_hms_milli(10, 10, 10, 10)
-    ///     )
-    /// );
-    /// ```
-    pub const fn end_date(&self) -> Option<DateTime<FixedOffset>> { self.end_date }
-
-    /// The date at which the [`ExtXDateRange`] ends. It must be equal to or
-    /// later than the value of the [`start-date`] attribute.
-    ///
-    /// # Example
-    /// ```
-    /// # use hls_m3u8::tags::ExtXDateRange;
-    /// use chrono::offset::TimeZone;
-    /// use chrono::{DateTime, FixedOffset};
-    ///
-    /// const HOURS_IN_SECS: i32 = 3600; // 1 hour = 3600 seconds
-    ///
-    /// let mut date_range = ExtXDateRange::new(
-    ///     "id",
-    ///     FixedOffset::east(8 * HOURS_IN_SECS)
-    ///         .ymd(2010, 2, 19)
-    ///         .and_hms_milli(14, 54, 23, 31),
-    /// );
-    /// # assert_eq!(date_range.end_date(), None);
-    ///
-    /// date_range.set_end_date(Some(
-    ///     FixedOffset::east(8 * HOURS_IN_SECS)
-    ///         .ymd(2010, 10, 10)
-    ///         .and_hms_milli(10, 10, 10, 10),
-    /// ));
-    /// assert_eq!(
-    ///     date_range.end_date(),
-    ///     Some(
-    ///         FixedOffset::east(8 * HOURS_IN_SECS)
-    ///             .ymd(2010, 10, 10)
-    ///             .and_hms_milli(10, 10, 10, 10)
-    ///     )
-    /// );
-    /// ```
-    pub fn set_end_date<T>(&mut self, value: Option<T>) -> &mut Self
-    where
-        T: Into<DateTime<FixedOffset>>,
-    {
-        self.end_date = value.map(Into::into);
-        self
-    }
-
-    /// The duration of the [`ExtXDateRange`]. A single instant in time (e.g.,
-    /// crossing a finish line) should be represented with a duration of 0.
-    ///
-    /// # Example
-    /// ```
-    /// # use hls_m3u8::tags::ExtXDateRange;
-    /// use chrono::offset::TimeZone;
-    /// use chrono::{DateTime, FixedOffset};
-    /// use std::time::Duration;
-    ///
-    /// const HOURS_IN_SECS: i32 = 3600; // 1 hour = 3600 seconds
-    ///
-    /// let mut date_range = ExtXDateRange::new(
-    ///     "id",
-    ///     FixedOffset::east(8 * HOURS_IN_SECS)
-    ///         .ymd(2010, 2, 19)
-    ///         .and_hms_milli(14, 54, 23, 31),
-    /// );
-    /// # assert_eq!(date_range.duration(), None);
-    ///
-    /// date_range.set_duration(Some(Duration::from_secs_f64(1.234)));
-    /// assert_eq!(date_range.duration(), Some(Duration::from_secs_f64(1.234)));
-    /// ```
-    pub const fn duration(&self) -> Option<Duration> { self.duration }
-
-    /// The duration of the [`ExtXDateRange`]. A single instant in time (e.g.,
-    /// crossing a finish line) should be represented with a duration of 0.
-    ///
-    /// # Example
-    /// ```
-    /// # use hls_m3u8::tags::ExtXDateRange;
-    /// use chrono::offset::TimeZone;
-    /// use chrono::{DateTime, FixedOffset};
-    /// use std::time::Duration;
-    ///
-    /// const HOURS_IN_SECS: i32 = 3600; // 1 hour = 3600 seconds
-    ///
-    /// let mut date_range = ExtXDateRange::new(
-    ///     "id",
-    ///     FixedOffset::east(8 * HOURS_IN_SECS)
-    ///         .ymd(2010, 2, 19)
-    ///         .and_hms_milli(14, 54, 23, 31),
-    /// );
-    /// # assert_eq!(date_range.duration(), None);
-    ///
-    /// date_range.set_duration(Some(Duration::from_secs_f64(1.234)));
-    /// assert_eq!(date_range.duration(), Some(Duration::from_secs_f64(1.234)));
-    /// ```
-    pub fn set_duration(&mut self, value: Option<Duration>) -> &mut Self {
-        self.duration = value;
-        self
-    }
-
-    /// The expected duration of the [`ExtXDateRange`].
-    /// This attribute should be used to indicate the expected duration of a
-    /// [`ExtXDateRange`] whose actual duration is not yet known.
-    /// The date at which the [`ExtXDateRange`] ends. It must be equal to or
-    /// later than the value of the [`start-date`] attribute.
-    ///
-    /// # Example
-    /// ```
-    /// # use hls_m3u8::tags::ExtXDateRange;
-    /// use chrono::offset::TimeZone;
-    /// use chrono::{DateTime, FixedOffset};
-    /// use std::time::Duration;
-    ///
-    /// const HOURS_IN_SECS: i32 = 3600; // 1 hour = 3600 seconds
-    ///
-    /// let mut date_range = ExtXDateRange::new(
-    ///     "id",
-    ///     FixedOffset::east(8 * HOURS_IN_SECS)
-    ///         .ymd(2010, 2, 19)
-    ///         .and_hms_milli(14, 54, 23, 31),
-    /// );
-    /// # assert_eq!(date_range.planned_duration(), None);
-    ///
-    /// date_range.set_planned_duration(Some(Duration::from_secs_f64(1.2345)));
-    /// assert_eq!(
-    ///     date_range.planned_duration(),
-    ///     Some(Duration::from_secs_f64(1.2345))
-    /// );
-    /// ```
-    pub const fn planned_duration(&self) -> Option<Duration> { self.planned_duration }
-
-    /// The expected duration of the [`ExtXDateRange`].
-    /// This attribute should be used to indicate the expected duration of a
-    /// [`ExtXDateRange`] whose actual duration is not yet known.
-    /// The date at which the [`ExtXDateRange`] ends. It must be equal to or
-    /// later than the value of the [`start-date`] attribute.
-    ///
-    /// # Example
-    /// ```
-    /// # use hls_m3u8::tags::ExtXDateRange;
-    /// use chrono::offset::TimeZone;
-    /// use chrono::{DateTime, FixedOffset};
-    /// use std::time::Duration;
-    ///
-    /// const HOURS_IN_SECS: i32 = 3600; // 1 hour = 3600 seconds
-    ///
-    /// let mut date_range = ExtXDateRange::new(
-    ///     "id",
-    ///     FixedOffset::east(8 * HOURS_IN_SECS)
-    ///         .ymd(2010, 2, 19)
-    ///         .and_hms_milli(14, 54, 23, 31),
-    /// );
-    /// # assert_eq!(date_range.planned_duration(), None);
-    ///
-    /// date_range.set_planned_duration(Some(Duration::from_secs_f64(1.2345)));
-    /// assert_eq!(
-    ///     date_range.planned_duration(),
-    ///     Some(Duration::from_secs_f64(1.2345))
-    /// );
-    /// ```
-    pub fn set_planned_duration(&mut self, value: Option<Duration>) -> &mut Self {
-        self.planned_duration = value;
-        self
-    }
-
-    /// See here for reference: https://www.scte.org/SCTEDocs/Standards/ANSI_SCTE%2035%202019r1.pdf
-    pub const fn scte35_cmd(&self) -> &Option<String> { &self.scte35_cmd }
-
-    /// See here for reference: https://www.scte.org/SCTEDocs/Standards/ANSI_SCTE%2035%202019r1.pdf
-    pub const fn scte35_in(&self) -> &Option<String> { &self.scte35_in }
-
-    /// See here for reference: https://www.scte.org/SCTEDocs/Standards/ANSI_SCTE%2035%202019r1.pdf
-    pub const fn scte35_out(&self) -> &Option<String> { &self.scte35_out }
-
-    /// This attribute indicates that the end of the range containing it is
-    /// equal to the [`start-date`] of its following range. The following range
-    /// is the [`ExtXDateRange`] of the same class, that has the earliest
-    /// [`start-date`] after the [`start-date`] of the range in question.
-    ///
-    /// # Example
-    /// ```
-    /// # use hls_m3u8::tags::ExtXDateRange;
-    /// use chrono::offset::TimeZone;
-    /// use chrono::{DateTime, FixedOffset};
-    /// use std::time::Duration;
-    ///
-    /// const HOURS_IN_SECS: i32 = 3600; // 1 hour = 3600 seconds
-    ///
-    /// let mut date_range = ExtXDateRange::new(
-    ///     "id",
-    ///     FixedOffset::east(8 * HOURS_IN_SECS)
-    ///         .ymd(2010, 2, 19)
-    ///         .and_hms_milli(14, 54, 23, 31),
-    /// );
-    /// # assert_eq!(date_range.end_on_next(), false);
-    ///
-    /// date_range.set_end_on_next(true);
-    /// assert_eq!(date_range.end_on_next(), true);
-    /// ```
-    pub const fn end_on_next(&self) -> bool { self.end_on_next }
-
-    /// This attribute indicates that the end of the range containing it is
-    /// equal to the [`start-date`] of its following range. The following range
-    /// is the [`ExtXDateRange`] of the same class, that has the earliest
-    /// [`start-date`] after the [`start-date`] of the range in question.
-    ///
-    /// # Example
-    /// ```
-    /// # use hls_m3u8::tags::ExtXDateRange;
-    /// use chrono::offset::TimeZone;
-    /// use chrono::{DateTime, FixedOffset};
-    /// use std::time::Duration;
-    ///
-    /// const HOURS_IN_SECS: i32 = 3600; // 1 hour = 3600 seconds
-    ///
-    /// let mut date_range = ExtXDateRange::new(
-    ///     "id",
-    ///     FixedOffset::east(8 * HOURS_IN_SECS)
-    ///         .ymd(2010, 2, 19)
-    ///         .and_hms_milli(14, 54, 23, 31),
-    /// );
-    /// # assert_eq!(date_range.end_on_next(), false);
-    ///
-    /// date_range.set_end_on_next(true);
-    /// assert_eq!(date_range.end_on_next(), true);
-    /// ```
-    pub fn set_end_on_next(&mut self, value: bool) -> &mut Self {
-        self.end_on_next = value;
-        self
-    }
-
-    /// The "X-" prefix defines a namespace reserved for client-defined
-    /// attributes. The client-attribute must be a uppercase characters.
-    /// Clients should use a reverse-DNS syntax when defining their own
-    /// attribute names to avoid collisions. An example of a client-defined
-    /// attribute is `X-COM-EXAMPLE-AD-ID="XYZ123"`.
-    ///
-    /// # Example
-    /// ```
-    /// # use hls_m3u8::tags::ExtXDateRange;
-    /// use std::collections::BTreeMap;
-    ///
-    /// use chrono::offset::TimeZone;
-    /// use chrono::{DateTime, FixedOffset};
-    /// use hls_m3u8::types::Value;
-    ///
-    /// const HOURS_IN_SECS: i32 = 3600; // 1 hour = 3600 seconds
-    ///
-    /// let mut date_range = ExtXDateRange::new(
-    ///     "id",
-    ///     FixedOffset::east(8 * HOURS_IN_SECS)
-    ///         .ymd(2010, 2, 19)
-    ///         .and_hms_milli(14, 54, 23, 31),
-    /// );
-    /// # assert_eq!(date_range.client_attributes(), &BTreeMap::new());
-    ///
-    /// let mut attributes = BTreeMap::new();
-    /// attributes.insert("X-COM-EXAMPLE-FLOAT".to_string(), Value::Float(1.1));
-    ///
-    /// date_range.set_client_attributes(attributes.clone());
-    /// assert_eq!(date_range.client_attributes(), &attributes);
-    /// ```
-    pub const fn client_attributes(&self) -> &BTreeMap<String, Value> { &self.client_attributes }
-
-    /// The "X-" prefix defines a namespace reserved for client-defined
-    /// attributes. The client-attribute must be a uppercase characters.
-    /// Clients should use a reverse-DNS syntax when defining their own
-    /// attribute names to avoid collisions. An example of a client-defined
-    /// attribute is `X-COM-EXAMPLE-AD-ID="XYZ123"`.
-    ///
-    /// # Example
-    /// ```
-    /// # use hls_m3u8::tags::ExtXDateRange;
-    /// use std::collections::BTreeMap;
-    ///
-    /// use chrono::offset::TimeZone;
-    /// use chrono::{DateTime, FixedOffset};
-    /// use hls_m3u8::types::Value;
-    ///
-    /// const HOURS_IN_SECS: i32 = 3600; // 1 hour = 3600 seconds
-    ///
-    /// let mut date_range = ExtXDateRange::new(
-    ///     "id",
-    ///     FixedOffset::east(8 * HOURS_IN_SECS)
-    ///         .ymd(2010, 2, 19)
-    ///         .and_hms_milli(14, 54, 23, 31),
-    /// );
-    /// # assert_eq!(date_range.client_attributes(), &BTreeMap::new());
-    ///
-    /// let mut attributes = BTreeMap::new();
-    /// attributes.insert("X-COM-EXAMPLE-FLOAT".to_string(), Value::Float(1.1));
-    ///
-    /// date_range
-    ///     .client_attributes_mut()
-    ///     .insert("X-COM-EXAMPLE-FLOAT".to_string(), Value::Float(1.1));
-    ///
-    /// assert_eq!(date_range.client_attributes(), &attributes);
-    /// ```
-    pub fn client_attributes_mut(&mut self) -> &mut BTreeMap<String, Value> {
-        &mut self.client_attributes
-    }
-
-    /// The "X-" prefix defines a namespace reserved for client-defined
-    /// attributes. The client-attribute must be a uppercase characters.
-    /// Clients should use a reverse-DNS syntax when defining their own
-    /// attribute names to avoid collisions. An example of a client-defined
-    /// attribute is `X-COM-EXAMPLE-AD-ID="XYZ123"`.
-    ///
-    /// # Example
-    /// ```
-    /// # use hls_m3u8::tags::ExtXDateRange;
-    /// use std::collections::BTreeMap;
-    ///
-    /// use chrono::offset::TimeZone;
-    /// use chrono::{DateTime, FixedOffset};
-    /// use hls_m3u8::types::Value;
-    ///
-    /// const HOURS_IN_SECS: i32 = 3600; // 1 hour = 3600 seconds
-    ///
-    /// let mut date_range = ExtXDateRange::new(
-    ///     "id",
-    ///     FixedOffset::east(8 * HOURS_IN_SECS)
-    ///         .ymd(2010, 2, 19)
-    ///         .and_hms_milli(14, 54, 23, 31),
-    /// );
-    /// # assert_eq!(date_range.client_attributes(), &BTreeMap::new());
-    ///
-    /// let mut attributes = BTreeMap::new();
-    /// attributes.insert("X-COM-EXAMPLE-FLOAT".to_string(), Value::Float(1.1));
-    ///
-    /// date_range.set_client_attributes(attributes.clone());
-    /// assert_eq!(date_range.client_attributes(), &attributes);
-    /// ```
-    pub fn set_client_attributes(&mut self, value: BTreeMap<String, Value>) -> &mut Self {
-        self.client_attributes = value;
-        self
-    }
 }
 
 /// This tag requires [`ProtocolVersion::V1`].
@@ -776,6 +266,7 @@ impl fmt::Display for ExtXDateRange {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         write!(f, "{}", Self::PREFIX)?;
         write!(f, "ID={}", quote(&self.id))?;
+
         if let Some(value) = &self.class {
             write!(f, ",CLASS={}", quote(value))?;
         }

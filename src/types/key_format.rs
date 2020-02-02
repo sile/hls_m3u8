@@ -5,9 +5,9 @@ use crate::types::ProtocolVersion;
 use crate::utils::{quote, tag, unquote};
 use crate::{Error, RequiredVersion};
 
-#[derive(Copy, Clone, Eq, PartialEq, Ord, PartialOrd, Hash, Debug)]
 /// [`KeyFormat`] specifies, how the key is represented in the
 /// resource identified by the `URI`.
+#[derive(Copy, Clone, Eq, PartialEq, Ord, PartialOrd, Hash, Debug)]
 pub enum KeyFormat {
     /// The key is a single packed array of 16 octets in binary format.
     Identity,

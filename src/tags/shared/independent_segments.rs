@@ -5,9 +5,10 @@ use crate::types::ProtocolVersion;
 use crate::utils::tag;
 use crate::{Error, RequiredVersion};
 
-/// [4.3.5.1. EXT-X-INDEPENDENT-SEGMENTS]
+/// # [4.3.5.1. EXT-X-INDEPENDENT-SEGMENTS]
 ///
-/// [4.3.5.1. EXT-X-INDEPENDENT-SEGMENTS]: https://tools.ietf.org/html/rfc8216#section-4.3.5.1
+/// [4.3.5.1. EXT-X-INDEPENDENT-SEGMENTS]:
+/// https://tools.ietf.org/html/rfc8216#section-4.3.5.1
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Ord, PartialOrd)]
 pub struct ExtXIndependentSegments;
 
@@ -15,6 +16,7 @@ impl ExtXIndependentSegments {
     pub(crate) const PREFIX: &'static str = "#EXT-X-INDEPENDENT-SEGMENTS";
 }
 
+/// This tag requires [`ProtocolVersion::V1`].
 impl RequiredVersion for ExtXIndependentSegments {
     fn required_version(&self) -> ProtocolVersion { ProtocolVersion::V1 }
 }

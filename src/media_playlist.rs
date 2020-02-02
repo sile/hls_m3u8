@@ -3,6 +3,7 @@ use std::str::FromStr;
 use std::time::Duration;
 
 use derive_builder::Builder;
+use shorthand::ShortHand;
 
 use crate::line::{Line, Lines, Tag};
 use crate::media_segment::MediaSegment;
@@ -14,44 +15,87 @@ use crate::types::ProtocolVersion;
 use crate::{Encrypted, Error, RequiredVersion};
 
 /// Media playlist.
-#[derive(Debug, Clone, Builder, PartialEq, PartialOrd)]
+#[derive(ShortHand, Debug, Clone, Builder, PartialEq, PartialOrd)]
 #[builder(build_fn(validate = "Self::validate"))]
 #[builder(setter(into, strip_option))]
+#[shorthand(enable(must_use, collection_magic, get_mut))]
 pub struct MediaPlaylist {
-    /// Sets the [`ExtXTargetDuration`] tag.
+    /// The [`ExtXTargetDuration`] tag of the playlist.
+    ///
+    /// # Note
+    ///
+    /// This field is required.
+    #[shorthand(enable(copy))]
     target_duration_tag: ExtXTargetDuration,
-    #[builder(default)]
     /// Sets the [`ExtXMediaSequence`] tag.
+    ///
+    /// # Note
+    ///
+    /// This field is optional.
+    #[builder(default)]
     media_sequence_tag: Option<ExtXMediaSequence>,
-    #[builder(default)]
     /// Sets the [`ExtXDiscontinuitySequence`] tag.
+    ///
+    /// # Note
+    ///
+    /// This field is optional.
+    #[builder(default)]
     discontinuity_sequence_tag: Option<ExtXDiscontinuitySequence>,
-    #[builder(default)]
     /// Sets the [`ExtXPlaylistType`] tag.
+    ///
+    /// # Note
+    ///
+    /// This field is optional.
+    #[builder(default)]
     playlist_type_tag: Option<ExtXPlaylistType>,
-    #[builder(default)]
     /// Sets the [`ExtXIFramesOnly`] tag.
+    ///
+    /// # Note
+    ///
+    /// This field is optional.
+    #[builder(default)]
     i_frames_only_tag: Option<ExtXIFramesOnly>,
-    #[builder(default)]
     /// Sets the [`ExtXIndependentSegments`] tag.
+    ///
+    /// # Note
+    ///
+    /// This field is optional.
+    #[builder(default)]
     independent_segments_tag: Option<ExtXIndependentSegments>,
-    #[builder(default)]
     /// Sets the [`ExtXStart`] tag.
-    start_tag: Option<ExtXStart>,
+    ///
+    /// # Note
+    ///
+    /// This field is optional.
     #[builder(default)]
+    start_tag: Option<ExtXStart>,
     /// Sets the [`ExtXEndList`] tag.
+    ///
+    /// # Note
+    ///
+    /// This field is optional.
+    #[builder(default)]
     end_list_tag: Option<ExtXEndList>,
-    /// Sets all [`MediaSegment`]s.
+    /// A list of all [`MediaSegment`]s.
+    ///
+    /// # Note
+    ///
+    /// This field is required.
     segments: Vec<MediaSegment>,
-    /// Sets the allowable excess duration of each media segment in the
+    /// The allowable excess duration of each media segment in the
     /// associated playlist.
     ///
     /// # Error
+    ///
     /// If there is a media segment of which duration exceeds
     /// `#EXT-X-TARGETDURATION + allowable_excess_duration`,
     /// the invocation of `MediaPlaylistBuilder::build()` method will fail.
     ///
-    /// The default value is `Duration::from_secs(0)`.
+    ///
+    /// # Note
+    ///
+    /// This field is optional and the default value is
+    /// `Duration::from_secs(0)`.
     #[builder(default = "Duration::from_secs(0)")]
     allowable_excess_duration: Duration,
 }
@@ -68,6 +112,7 @@ impl MediaPlaylistBuilder {
 
     fn validate_media_segments(&self, target_duration: Duration) -> crate::Result<()> {
         let mut last_range_uri = None;
+
         if let Some(segments) = &self.segments {
             for s in segments {
                 // CHECK: `#EXT-X-TARGETDURATION`
@@ -113,6 +158,7 @@ impl MediaPlaylistBuilder {
                 }
             }
         }
+
         Ok(())
     }
 
@@ -151,38 +197,6 @@ impl RequiredVersion for MediaPlaylistBuilder {
 impl MediaPlaylist {
     /// Returns a builder for [`MediaPlaylist`].
     pub fn builder() -> MediaPlaylistBuilder { MediaPlaylistBuilder::default() }
-
-    /// Returns the [`ExtXTargetDuration`] tag contained in the playlist.
-    pub const fn target_duration_tag(&self) -> ExtXTargetDuration { self.target_duration_tag }
-
-    /// Returns the `EXT-X-MEDIA-SEQUENCE` tag contained in the playlist.
-    pub const fn media_sequence_tag(&self) -> Option<ExtXMediaSequence> { self.media_sequence_tag }
-
-    /// Returns the [`ExtXDiscontinuitySequence`] tag contained in the
-    /// playlist.
-    pub const fn discontinuity_sequence_tag(&self) -> Option<ExtXDiscontinuitySequence> {
-        self.discontinuity_sequence_tag
-    }
-
-    /// Returns the [`ExtXPlaylistType`] tag contained in the playlist.
-    pub const fn playlist_type_tag(&self) -> Option<ExtXPlaylistType> { self.playlist_type_tag }
-
-    /// Returns the [`ExtXIFramesOnly`] tag contained in the playlist.
-    pub const fn i_frames_only_tag(&self) -> Option<ExtXIFramesOnly> { self.i_frames_only_tag }
-
-    /// Returns the [`ExtXIndependentSegments`] tag contained in the playlist.
-    pub const fn independent_segments_tag(&self) -> Option<ExtXIndependentSegments> {
-        self.independent_segments_tag
-    }
-
-    /// Returns the [`ExtXStart`] tag contained in the playlist.
-    pub const fn start_tag(&self) -> Option<ExtXStart> { self.start_tag }
-
-    /// Returns the [`ExtXEndList`] tag contained in the playlist.
-    pub const fn end_list_tag(&self) -> Option<ExtXEndList> { self.end_list_tag }
-
-    /// Returns the [`MediaSegment`]s contained in the playlist.
-    pub const fn segments(&self) -> &Vec<MediaSegment> { &self.segments }
 }
 
 impl RequiredVersion for MediaPlaylist {
@@ -204,34 +218,45 @@ impl RequiredVersion for MediaPlaylist {
 impl fmt::Display for MediaPlaylist {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         writeln!(f, "{}", ExtM3u)?;
+
         if self.required_version() != ProtocolVersion::V1 {
             writeln!(f, "{}", ExtXVersion::new(self.required_version()))?;
         }
+
         writeln!(f, "{}", self.target_duration_tag)?;
+
         if let Some(value) = &self.media_sequence_tag {
             writeln!(f, "{}", value)?;
         }
+
         if let Some(value) = &self.discontinuity_sequence_tag {
             writeln!(f, "{}", value)?;
         }
+
         if let Some(value) = &self.playlist_type_tag {
             writeln!(f, "{}", value)?;
         }
+
         if let Some(value) = &self.i_frames_only_tag {
             writeln!(f, "{}", value)?;
         }
+
         if let Some(value) = &self.independent_segments_tag {
             writeln!(f, "{}", value)?;
         }
+
         if let Some(value) = &self.start_tag {
             writeln!(f, "{}", value)?;
         }
+
         for segment in &self.segments {
             write!(f, "{}", segment)?;
         }
+
         if let Some(value) = &self.end_list_tag {
             writeln!(f, "{}", value)?;
         }
+
         Ok(())
     }
 }

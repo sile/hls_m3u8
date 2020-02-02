@@ -96,6 +96,7 @@ impl ExtXIFrameStreamInf {
     /// Makes a new [`ExtXIFrameStreamInf`] tag.
     ///
     /// # Example
+    ///
     /// ```
     /// # use hls_m3u8::tags::ExtXIFrameStreamInf;
     /// let stream = ExtXIFrameStreamInf::new("https://www.example.com", 20);
@@ -113,6 +114,7 @@ impl ExtXIFrameStreamInf {
     /// Returns the `URI`, that identifies the associated [`media playlist`].
     ///
     /// # Example
+    ///
     /// ```
     /// # use hls_m3u8::tags::ExtXIFrameStreamInf;
     /// let stream = ExtXIFrameStreamInf::new("https://www.example.com", 20);
@@ -125,6 +127,7 @@ impl ExtXIFrameStreamInf {
     /// Sets the `URI`, that identifies the associated [`media playlist`].
     ///
     /// # Example
+    ///
     /// ```
     /// # use hls_m3u8::tags::ExtXIFrameStreamInf;
     /// #
@@ -200,7 +203,7 @@ mod test {
         i_frame_stream_inf
             .set_average_bandwidth(Some(100_000))
             .set_codecs(Some("mp4a.40.5"))
-            .set_resolution(1920, 1080)
+            .set_resolution(Some((1920, 1080)))
             .set_hdcp_level(Some(HdcpLevel::None))
             .set_video(Some("video"));
 

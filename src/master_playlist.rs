@@ -3,6 +3,7 @@ use std::fmt;
 use std::str::FromStr;
 
 use derive_builder::Builder;
+use shorthand::ShortHand;
 
 use crate::line::{Line, Lines, Tag};
 use crate::tags::{
@@ -12,57 +13,65 @@ use crate::tags::{
 use crate::types::{ClosedCaptions, MediaType, ProtocolVersion};
 use crate::{Error, RequiredVersion};
 
-#[derive(Debug, Clone, Builder, PartialEq)]
+/// Master playlist.
+#[derive(ShortHand, Debug, Clone, Builder, PartialEq)]
 #[builder(build_fn(validate = "Self::validate"))]
 #[builder(setter(into, strip_option))]
-/// Master playlist.
+#[shorthand(enable(must_use, get_mut, collection_magic))]
 pub struct MasterPlaylist {
-    #[builder(default)]
-    /// Sets the [`ExtXIndependentSegments`] tag.
+    /// The [`ExtXIndependentSegments`] tag of the playlist.
     ///
     /// # Note
+    ///
     /// This tag is optional.
+    #[builder(default)]
     independent_segments_tag: Option<ExtXIndependentSegments>,
-    #[builder(default)]
-    /// Sets the [`ExtXStart`] tag.
+    /// The [`ExtXStart`] tag of the playlist.
     ///
     /// # Note
+    ///
     /// This tag is optional.
+    #[builder(default)]
     start_tag: Option<ExtXStart>,
-    #[builder(default)]
-    /// Sets the [`ExtXMedia`] tag.
+    /// The [`ExtXMedia`] tags of the playlist.
     ///
     /// # Note
+    ///
     /// This tag is optional.
+    #[builder(default)]
     media_tags: Vec<ExtXMedia>,
-    #[builder(default)]
-    /// Sets all [`ExtXStreamInf`] tags.
+    /// The [`ExtXStreamInf`] tags of the playlist.
     ///
     /// # Note
+    ///
     /// This tag is optional.
+    #[builder(default)]
     stream_inf_tags: Vec<ExtXStreamInf>,
-    #[builder(default)]
-    /// Sets all [`ExtXIFrameStreamInf`] tags.
+    /// The [`ExtXIFrameStreamInf`] tags of the playlist.
     ///
     /// # Note
+    ///
     /// This tag is optional.
+    #[builder(default)]
     i_frame_stream_inf_tags: Vec<ExtXIFrameStreamInf>,
-    #[builder(default)]
-    /// Sets all [`ExtXSessionData`] tags.
+    /// The [`ExtXSessionData`] tags of the playlist.
     ///
     /// # Note
+    ///
     /// This tag is optional.
+    #[builder(default)]
     session_data_tags: Vec<ExtXSessionData>,
-    #[builder(default)]
-    /// Sets all [`ExtXSessionKey`] tags.
+    /// The [`ExtXSessionKey`] tags of the playlist.
     ///
     /// # Note
+    ///
     /// This tag is optional.
+    #[builder(default)]
     session_key_tags: Vec<ExtXSessionKey>,
 }
 
 impl MasterPlaylist {
-    /// Returns a Builder for a [`MasterPlaylist`].
+    /// Returns a builder for a [`MasterPlaylist`].
     ///
     /// # Example
     ///
@@ -76,124 +85,6 @@ impl MasterPlaylist {
     /// # Ok::<(), Box<dyn ::std::error::Error>>(())
     /// ```
     pub fn builder() -> MasterPlaylistBuilder { MasterPlaylistBuilder::default() }
-
-    /// Returns the [`ExtXIndependentSegments`] tag contained in the playlist.
-    pub const fn independent_segments(&self) -> Option<ExtXIndependentSegments> {
-        self.independent_segments_tag
-    }
-
-    /// Sets the [`ExtXIndependentSegments`] tag contained in the playlist.
-    pub fn set_independent_segments<T>(&mut self, value: Option<T>) -> &mut Self
-    where
-        T: Into<ExtXIndependentSegments>,
-    {
-        self.independent_segments_tag = value.map(Into::into);
-        self
-    }
-
-    /// Returns the [`ExtXStart`] tag contained in the playlist.
-    pub const fn start(&self) -> Option<ExtXStart> { self.start_tag }
-
-    /// Sets the [`ExtXStart`] tag contained in the playlist.
-    pub fn set_start<T>(&mut self, value: Option<T>) -> &mut Self
-    where
-        T: Into<ExtXStart>,
-    {
-        self.start_tag = value.map(Into::into);
-        self
-    }
-
-    /// Returns the [`ExtXMedia`] tags contained in the playlist.
-    pub const fn media_tags(&self) -> &Vec<ExtXMedia> { &self.media_tags }
-
-    /// Appends an [`ExtXMedia`].
-    pub fn push_media_tag(&mut self, value: ExtXMedia) -> &mut Self {
-        self.media_tags.push(value);
-        self
-    }
-
-    /// Sets the [`ExtXMedia`] tags contained in the playlist.
-    pub fn set_media_tags<T>(&mut self, value: Vec<T>) -> &mut Self
-    where
-        T: Into<ExtXMedia>,
-    {
-        self.media_tags = value.into_iter().map(Into::into).collect();
-        self
-    }
-
-    /// Returns the [`ExtXStreamInf`] tags contained in the playlist.
-    pub const fn stream_inf_tags(&self) -> &Vec<ExtXStreamInf> { &self.stream_inf_tags }
-
-    /// Appends an [`ExtXStreamInf`].
-    pub fn push_stream_inf(&mut self, value: ExtXStreamInf) -> &mut Self {
-        self.stream_inf_tags.push(value);
-        self
-    }
-
-    /// Sets the [`ExtXStreamInf`] tags contained in the playlist.
-    pub fn set_stream_inf_tags<T>(&mut self, value: Vec<T>) -> &mut Self
-    where
-        T: Into<ExtXStreamInf>,
-    {
-        self.stream_inf_tags = value.into_iter().map(Into::into).collect();
-        self
-    }
-
-    /// Returns the [`ExtXIFrameStreamInf`] tags contained in the playlist.
-    pub const fn i_frame_stream_inf_tags(&self) -> &Vec<ExtXIFrameStreamInf> {
-        &self.i_frame_stream_inf_tags
-    }
-
-    /// Appends an [`ExtXIFrameStreamInf`].
-    pub fn push_i_frame_stream_inf(&mut self, value: ExtXIFrameStreamInf) -> &mut Self {
-        self.i_frame_stream_inf_tags.push(value);
-        self
-    }
-
-    /// Sets the [`ExtXIFrameStreamInf`] tags contained in the playlist.
-    pub fn set_i_frame_stream_inf_tags<T>(&mut self, value: Vec<T>) -> &mut Self
-    where
-        T: Into<ExtXIFrameStreamInf>,
-    {
-        self.i_frame_stream_inf_tags = value.into_iter().map(Into::into).collect();
-        self
-    }
-
-    /// Returns the [`ExtXSessionData`] tags contained in the playlist.
-    pub const fn session_data_tags(&self) -> &Vec<ExtXSessionData> { &self.session_data_tags }
-
-    /// Appends an [`ExtXSessionData`].
-    pub fn push_session_data(&mut self, value: ExtXSessionData) -> &mut Self {
-        self.session_data_tags.push(value);
-        self
-    }
-
-    /// Sets the [`ExtXSessionData`] tags contained in the playlist.
-    pub fn set_session_data_tags<T>(&mut self, value: Vec<T>) -> &mut Self
-    where
-        T: Into<ExtXSessionData>,
-    {
-        self.session_data_tags = value.into_iter().map(Into::into).collect();
-        self
-    }
-
-    /// Returns the [`ExtXSessionKey`] tags contained in the playlist.
-    pub const fn session_key_tags(&self) -> &Vec<ExtXSessionKey> { &self.session_key_tags }
-
-    /// Appends an [`ExtXSessionKey`].
-    pub fn push_session_key(&mut self, value: ExtXSessionKey) -> &mut Self {
-        self.session_key_tags.push(value);
-        self
-    }
-
-    /// Sets the [`ExtXSessionKey`] tags contained in the playlist.
-    pub fn set_session_key_tags<T>(&mut self, value: Vec<T>) -> &mut Self
-    where
-        T: Into<ExtXSessionKey>,
-    {
-        self.session_key_tags = value.into_iter().map(Into::into).collect();
-        self
-    }
 }
 
 impl RequiredVersion for MasterPlaylist {
@@ -241,22 +132,22 @@ impl MasterPlaylistBuilder {
                         return Err(Error::unmatched_group(group_id));
                     }
                 }
-                match t.closed_captions() {
-                    &Some(ClosedCaptions::GroupId(ref group_id)) => {
+                match &t.closed_captions() {
+                    Some(ClosedCaptions::GroupId(group_id)) => {
                         if !self.check_media_group(MediaType::ClosedCaptions, group_id) {
                             return Err(Error::unmatched_group(group_id));
                         }
                     }
-                    &Some(ClosedCaptions::None) => {
+                    Some(ClosedCaptions::None) => {
                         has_none_closed_captions = true;
                     }
-                    None => {}
+                    _ => {}
                 }
             }
             if has_none_closed_captions
                 && !value
                     .iter()
-                    .all(|t| t.closed_captions() == &Some(ClosedCaptions::None))
+                    .all(|t| t.closed_captions() == Some(&ClosedCaptions::None))
             {
                 return Err(Error::invalid_input());
             }
@@ -324,27 +215,35 @@ impl fmt::Display for MasterPlaylist {
         if self.required_version() != ProtocolVersion::V1 {
             writeln!(f, "{}", ExtXVersion::new(self.required_version()))?;
         }
+
         for t in &self.media_tags {
             writeln!(f, "{}", t)?;
         }
+
         for t in &self.stream_inf_tags {
             writeln!(f, "{}", t)?;
         }
+
         for t in &self.i_frame_stream_inf_tags {
             writeln!(f, "{}", t)?;
         }
+
         for t in &self.session_data_tags {
             writeln!(f, "{}", t)?;
         }
+
         for t in &self.session_key_tags {
             writeln!(f, "{}", t)?;
         }
+
         if let Some(value) = &self.independent_segments_tag {
             writeln!(f, "{}", value)?;
         }
+
         if let Some(value) = &self.start_tag {
             writeln!(f, "{}", value)?;
         }
+
         Ok(())
     }
 }
