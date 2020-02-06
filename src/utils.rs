@@ -90,6 +90,7 @@ pub(crate) fn quote<T: ToString>(value: T) -> String {
 /// it will remove it and return the rest of the input.
 ///
 /// # Error
+///
 /// This function will return `Error::MissingTag`, if the input doesn't start
 /// with the tag, that has been passed to this function.
 pub(crate) fn tag<T>(input: &str, tag: T) -> crate::Result<&str>
@@ -99,8 +100,8 @@ where
     if !input.trim().starts_with(tag.as_ref()) {
         return Err(Error::missing_tag(tag.as_ref(), input));
     }
-    let result = input.split_at(tag.as_ref().len()).1;
-    Ok(result)
+
+    Ok(input.trim().split_at(tag.as_ref().len()).1)
 }
 
 #[cfg(test)]
@@ -145,5 +146,30 @@ mod tests {
         assert_eq!(input, "SampleString");
 
         assert!(tag(input, "B").is_err());
+
+        assert_eq!(
+            tag(
+                concat!(
+                    "\n    #EXTM3U\n",
+                    "    #EXT-X-TARGETDURATION:5220\n",
+                    "    #EXTINF:0,\n",
+                    "    http://media.example.com/entire1.ts\n",
+                    "    #EXTINF:5220,\n",
+                    "    http://media.example.com/entire2.ts\n",
+                    "    #EXT-X-ENDLIST"
+                ),
+                "#EXTM3U"
+            )
+            .unwrap(),
+            concat!(
+                "\n",
+                "    #EXT-X-TARGETDURATION:5220\n",
+                "    #EXTINF:0,\n",
+                "    http://media.example.com/entire1.ts\n",
+                "    #EXTINF:5220,\n",
+                "    http://media.example.com/entire2.ts\n",
+                "    #EXT-X-ENDLIST"
+            )
+        );
     }
 }

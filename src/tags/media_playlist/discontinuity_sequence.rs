@@ -67,7 +67,10 @@ impl RequiredVersion for ExtXDiscontinuitySequence {
 }
 
 impl fmt::Display for ExtXDiscontinuitySequence {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result { write!(f, "{}{}", Self::PREFIX, self.0) }
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        //
+        write!(f, "{}{}", Self::PREFIX, self.0)
+    }
 }
 
 impl FromStr for ExtXDiscontinuitySequence {

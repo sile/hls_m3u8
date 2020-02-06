@@ -27,8 +27,8 @@ pub struct ExtXIFrameStreamInf {
     stream_inf: StreamInf,
 }
 
-#[derive(Default, Debug, Clone, PartialEq)]
 /// Builder for [`ExtXIFrameStreamInf`].
+#[derive(Default, Debug, Clone, PartialEq)]
 pub struct ExtXIFrameStreamInfBuilder {
     uri: Option<String>,
     stream_inf: StreamInfBuilder,

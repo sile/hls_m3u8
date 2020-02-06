@@ -53,6 +53,7 @@ mod test {
     #[test]
     fn test_parser() {
         assert_eq!("#EXTM3U".parse::<ExtM3u>().unwrap(), ExtM3u);
+        assert!("#EXTM2U".parse::<ExtM3u>().is_err());
     }
 
     #[test]

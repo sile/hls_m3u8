@@ -14,6 +14,7 @@ use crate::{Error, RequiredVersion};
 /// # Examples
 ///
 /// Parsing from a [`str`]:
+///
 /// ```
 /// # use hls_m3u8::tags::ExtXVersion;
 /// #
@@ -25,7 +26,9 @@ use crate::{Error, RequiredVersion};
 /// );
 /// # Ok::<(), Box<dyn ::std::error::Error>>(())
 /// ```
+///
 /// Converting to a [`str`]:
+///
 /// ```
 /// # use hls_m3u8::tags::ExtXVersion;
 /// #
@@ -49,6 +52,7 @@ impl ExtXVersion {
     /// Makes a new [`ExtXVersion`] tag.
     ///
     /// # Example
+    ///
     /// ```
     /// # use hls_m3u8::tags::ExtXVersion;
     /// use hls_m3u8::types::ProtocolVersion;
@@ -60,6 +64,7 @@ impl ExtXVersion {
     /// Returns the [`ProtocolVersion`] of the playlist, containing this tag.
     ///
     /// # Example
+    ///
     /// ```
     /// # use hls_m3u8::tags::ExtXVersion;
     /// use hls_m3u8::types::ProtocolVersion;
@@ -78,11 +83,14 @@ impl RequiredVersion for ExtXVersion {
 }
 
 impl fmt::Display for ExtXVersion {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result { write!(f, "{}{}", Self::PREFIX, self.0) }
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        //
+        write!(f, "{}{}", Self::PREFIX, self.0)
+    }
 }
 
 impl Default for ExtXVersion {
-    fn default() -> Self { Self(ProtocolVersion::V1) }
+    fn default() -> Self { Self(ProtocolVersion::default()) }
 }
 
 impl From<ProtocolVersion> for ExtXVersion {

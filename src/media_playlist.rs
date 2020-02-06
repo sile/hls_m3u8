@@ -419,17 +419,18 @@ mod tests {
 
     #[test]
     fn too_large_segment_duration_test() {
-        let playlist = r#"
-        #EXTM3U
-        #EXT-X-TARGETDURATION:8
-        #EXT-X-VERSION:3
-        #EXTINF:9.009,
-        http://media.example.com/first.ts
-        #EXTINF:9.509,
-        http://media.example.com/second.ts
-        #EXTINF:3.003,
-        http://media.example.com/third.ts
-        #EXT-X-ENDLIST"#;
+        let playlist = concat!(
+            "#EXTM3U\n",
+            "#EXT-X-TARGETDURATION:8\n",
+            "#EXT-X-VERSION:3\n",
+            "#EXTINF:9.009,\n",
+            "http://media.example.com/first.ts\n",
+            "#EXTINF:9.509,\n",
+            "http://media.example.com/second.ts\n",
+            "#EXTINF:3.003,\n",
+            "http://media.example.com/third.ts\n",
+            "#EXT-X-ENDLIST\n"
+        );
 
         // Error (allowable segment duration = target duration = 8)
         assert!(playlist.parse::<MediaPlaylist>().is_err());
