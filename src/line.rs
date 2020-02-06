@@ -4,7 +4,7 @@ use std::str::FromStr;
 use crate::tags;
 use crate::Error;
 
-#[derive(Debug, Clone, Copy, PartialEq, PartialOrd, Ord, Eq, Hash)]
+#[derive(Debug, Clone, PartialEq, PartialOrd, Ord, Eq, Hash)]
 pub(crate) struct Lines<'a> {
     buffer: &'a str,
     // the line at which the iterator currently is
