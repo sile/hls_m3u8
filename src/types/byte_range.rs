@@ -74,22 +74,15 @@ impl fmt::Display for ByteRange {
 impl FromStr for ByteRange {
     type Err = Error;
 
-    fn from_str(s: &str) -> Result<Self, Self::Err> {
-        let tokens = s.splitn(2, '@').collect::<Vec<_>>();
+    fn from_str(input: &str) -> Result<Self, Self::Err> {
+        let mut input = input.splitn(2, '@');
 
-        if tokens.is_empty() {
-            return Err(Error::invalid_input());
-        }
+        let length = input
+            .next()
+            .ok_or_else(|| Error::custom("missing length for #EXT-X-BYTERANGE"))
+            .and_then(|s| s.parse().map_err(Error::parse_int))?;
 
-        let length = tokens[0].parse()?;
-
-        let start = {
-            if tokens.len() == 2 {
-                Some(tokens[1].parse()?)
-            } else {
-                None
-            }
-        };
+        let start = input.next().map(str::parse).transpose()?;
 
         Ok(Self::new(length, start))
     }

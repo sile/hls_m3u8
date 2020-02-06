@@ -12,6 +12,7 @@ use crate::tags::{
     ExtXMediaSequence, ExtXPlaylistType, ExtXStart, ExtXTargetDuration, ExtXVersion,
 };
 use crate::types::ProtocolVersion;
+use crate::utils::tag;
 use crate::{Encrypted, Error, RequiredVersion};
 
 /// Media playlist.
@@ -276,6 +277,8 @@ fn parse_media_playlist(
     input: &str,
     builder: &mut MediaPlaylistBuilder,
 ) -> crate::Result<MediaPlaylist> {
+    let input = tag(input, "#EXTM3U")?;
+
     let mut segment = MediaSegment::builder();
     let mut segments = vec![];
 
@@ -285,17 +288,10 @@ fn parse_media_playlist(
 
     let mut available_key_tags: Vec<crate::tags::ExtXKey> = vec![];
 
-    for (i, line) in Lines::from(input).enumerate() {
+    for line in Lines::from(input) {
         match line? {
             Line::Tag(tag) => {
-                if i == 0 {
-                    if tag != Tag::ExtM3u(ExtM3u) {
-                        return Err(Error::custom("m3u8 doesn't start with #EXTM3U"));
-                    }
-                    continue;
-                }
                 match tag {
-                    Tag::ExtM3u(_) => return Err(Error::invalid_input()),
                     Tag::ExtInf(t) => {
                         has_partial_segment = true;
                         segment.inf_tag(t);

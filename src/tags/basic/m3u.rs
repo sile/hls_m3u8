@@ -11,31 +11,12 @@ use crate::{Error, RequiredVersion};
 /// Playlist file.
 /// It is the at the start of every [`Media Playlist`] and [`Master Playlist`].
 ///
-/// # Examples
-///
-/// Parsing from a [`str`]:
-///
-/// ```
-/// # use hls_m3u8::tags::ExtM3u;
-/// #
-/// assert_eq!("#EXTM3U".parse::<ExtM3u>()?, ExtM3u);
-/// # Ok::<(), Box<dyn ::std::error::Error>>(())
-/// ```
-///
-/// Converting to a [`str`]:
-///
-/// ```
-/// # use hls_m3u8::tags::ExtM3u;
-/// #
-/// assert_eq!("#EXTM3U".to_string(), ExtM3u.to_string());
-/// ```
-///
 /// [`Media Playlist`]: crate::MediaPlaylist
 /// [`Master Playlist`]: crate::MasterPlaylist
 /// [`M3U`]: https://en.wikipedia.org/wiki/M3U
 /// [4.3.1.1. EXTM3U]: https://tools.ietf.org/html/rfc8216#section-4.3.1.1
 #[derive(Copy, Clone, Eq, PartialEq, Ord, PartialOrd, Hash, Debug, Default)]
-pub struct ExtM3u;
+pub(crate) struct ExtM3u;
 
 impl ExtM3u {
     pub(crate) const PREFIX: &'static str = "#EXTM3U";

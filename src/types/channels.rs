@@ -83,17 +83,17 @@ impl FromStr for Channels {
     type Err = Error;
 
     fn from_str(input: &str) -> Result<Self, Self::Err> {
-        let parameters = input.split('/').collect::<Vec<_>>();
+        let mut parameters = input.split('/');
 
         let channel_number = parameters
-            .first()
+            .next()
             .ok_or_else(|| Error::missing_attribute("first parameter of channels"))?
             .parse()
             .map_err(Error::parse_int)?;
 
         Ok(Self {
             channel_number,
-            unknown: parameters[1..].iter().map(|v| v.to_string()).collect(),
+            unknown: parameters.map(|v| (*v).to_string()).collect(),
         })
     }
 }

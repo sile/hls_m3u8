@@ -1,3 +1,4 @@
+use std::convert::TryFrom;
 use std::fmt;
 use std::str::FromStr;
 
@@ -12,7 +13,7 @@ pub(crate) struct Lines<'a> {
 }
 
 impl<'a> Iterator for Lines<'a> {
-    type Item = crate::Result<Line>;
+    type Item = crate::Result<Line<'a>>;
 
     fn next(&mut self) -> Option<Self::Item> {
         let mut stream_inf = false;
@@ -32,10 +33,7 @@ impl<'a> Iterator for Lines<'a> {
 
                 continue;
             } else if line.starts_with("#EXT") {
-                match line.parse() {
-                    Ok(value) => return Some(Ok(Line::Tag(value))),
-                    Err(e) => return Some(Err(e)),
-                }
+                return Some(Tag::try_from(line).map(Line::Tag));
             } else if line.starts_with('#') {
                 continue; // ignore comments
             } else {
@@ -44,17 +42,15 @@ impl<'a> Iterator for Lines<'a> {
                     stream_inf = false;
 
                     if let Some(first_line) = stream_inf_line {
-                        match format!("{}\n{}", first_line, line).parse() {
-                            Ok(value) => {
-                                return Some(Ok(Line::Tag(value)));
-                            }
-                            Err(e) => return Some(Err(e)),
-                        }
+                        return Some(
+                            tags::ExtXStreamInf::from_str(&format!("{}\n{}", first_line, line))
+                                .map(|v| Line::Tag(Tag::ExtXStreamInf(v))),
+                        );
                     } else {
                         continue;
                     }
                 } else {
-                    return Some(Ok(Line::Uri(line.to_string())));
+                    return Some(Ok(Line::Uri(line)));
                 }
             }
         }
@@ -73,15 +69,14 @@ impl<'a> From<&'a str> for Lines<'a> {
 }
 
 #[derive(Debug, Clone, PartialEq)]
-pub(crate) enum Line {
-    Tag(Tag),
-    Uri(String),
+pub(crate) enum Line<'a> {
+    Tag(Tag<'a>),
+    Uri(&'a str),
 }
 
 #[allow(clippy::large_enum_variant)]
 #[derive(Debug, Clone, PartialEq)]
-pub(crate) enum Tag {
-    ExtM3u(tags::ExtM3u),
+pub(crate) enum Tag<'a> {
     ExtXVersion(tags::ExtXVersion),
     ExtInf(tags::ExtInf),
     ExtXByteRange(tags::ExtXByteRange),
@@ -103,13 +98,12 @@ pub(crate) enum Tag {
     ExtXSessionKey(tags::ExtXSessionKey),
     ExtXIndependentSegments(tags::ExtXIndependentSegments),
     ExtXStart(tags::ExtXStart),
-    Unknown(String),
+    Unknown(&'a str),
 }
 
-impl fmt::Display for Tag {
+impl<'a> fmt::Display for Tag<'a> {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         match &self {
-            Self::ExtM3u(value) => value.fmt(f),
             Self::ExtXVersion(value) => value.fmt(f),
             Self::ExtInf(value) => value.fmt(f),
             Self::ExtXByteRange(value) => value.fmt(f),
@@ -136,13 +130,11 @@ impl fmt::Display for Tag {
     }
 }
 
-impl FromStr for Tag {
-    type Err = Error;
+impl<'a> TryFrom<&'a str> for Tag<'a> {
+    type Error = Error;
 
-    fn from_str(input: &str) -> Result<Self, Self::Err> {
-        if input.starts_with(tags::ExtM3u::PREFIX) {
-            input.parse().map(Self::ExtM3u)
-        } else if input.starts_with(tags::ExtXVersion::PREFIX) {
+    fn try_from(input: &'a str) -> Result<Self, Self::Error> {
+        if input.starts_with(tags::ExtXVersion::PREFIX) {
             input.parse().map(Self::ExtXVersion)
         } else if input.starts_with(tags::ExtInf::PREFIX) {
             input.parse().map(Self::ExtInf)
@@ -185,7 +177,7 @@ impl FromStr for Tag {
         } else if input.starts_with(tags::ExtXStart::PREFIX) {
             input.parse().map(Self::ExtXStart)
         } else {
-            Ok(Self::Unknown(input.to_string()))
+            Ok(Self::Unknown(input))
         }
     }
 }

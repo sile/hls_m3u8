@@ -151,29 +151,14 @@ impl FromStr for ExtInf {
     type Err = Error;
 
     fn from_str(input: &str) -> Result<Self, Self::Err> {
-        let input = tag(input, Self::PREFIX)?;
-        let tokens = input.splitn(2, ',').collect::<Vec<_>>();
+        let mut input = tag(input, Self::PREFIX)?.splitn(2, ',');
 
-        if tokens.is_empty() {
-            return Err(Error::custom(format!(
-                "failed to parse #EXTINF tag, couldn't split input: {:?}",
-                input
-            )));
-        }
-
-        let duration = Duration::from_secs_f64(tokens[0].parse()?);
-
-        let title = {
-            if tokens.len() >= 2 {
-                if tokens[1].trim().is_empty() {
-                    None
-                } else {
-                    Some(tokens[1].to_string())
-                }
-            } else {
-                None
-            }
-        };
+        let duration = Duration::from_secs_f64(input.next().unwrap().parse()?);
+        let title = input
+            .next()
+            .map(|value| value.trim())
+            .filter(|value| !value.is_empty())
+            .map(|value| value.to_string());
 
         Ok(Self { duration, title })
     }

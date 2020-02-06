@@ -66,23 +66,7 @@ impl FromStr for ExtXByteRange {
     fn from_str(input: &str) -> Result<Self, Self::Err> {
         let input = tag(input, Self::PREFIX)?;
 
-        let tokens = input.splitn(2, '@').collect::<Vec<_>>();
-
-        if tokens.is_empty() {
-            return Err(Error::invalid_input());
-        }
-
-        let length = tokens[0].parse()?;
-
-        let start = {
-            if tokens.len() == 2 {
-                Some(tokens[1].parse()?)
-            } else {
-                None
-            }
-        };
-
-        Ok(Self::new(length, start))
+        Ok(Self(ByteRange::from_str(input)?))
     }
 }
 

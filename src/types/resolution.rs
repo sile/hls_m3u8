@@ -36,19 +36,19 @@ impl FromStr for Resolution {
     type Err = Error;
 
     fn from_str(input: &str) -> Result<Self, Self::Err> {
-        let tokens = input.splitn(2, 'x').collect::<Vec<_>>();
+        let mut input = input.splitn(2, 'x');
 
-        if tokens.len() != 2 {
-            return Err(Error::custom(format!(
-                "InvalidInput: Expected input format: [width]x[height] (ex. 1920x1080), got {:?}",
-                input,
-            )));
-        }
+        let width = input
+            .next()
+            .ok_or_else(|| Error::custom("missing width for `Resolution` or an invalid input"))
+            .and_then(|v| v.parse().map_err(Error::parse_int))?;
 
-        Ok(Self {
-            width: tokens[0].parse().map_err(Error::parse_int)?,
-            height: tokens[1].parse().map_err(Error::parse_int)?,
-        })
+        let height = input
+            .next()
+            .ok_or_else(|| Error::custom("missing height for `Resolution` or an invalid input"))
+            .and_then(|v| v.parse().map_err(Error::parse_int))?;
+
+        Ok(Self { width, height })
     }
 }
 

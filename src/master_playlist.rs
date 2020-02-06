@@ -11,6 +11,7 @@ use crate::tags::{
     ExtXSessionKey, ExtXStart, ExtXStreamInf, ExtXVersion,
 };
 use crate::types::{ClosedCaptions, MediaType, ProtocolVersion};
+use crate::utils::tag;
 use crate::{Error, RequiredVersion};
 
 /// Master playlist.
@@ -263,6 +264,7 @@ impl FromStr for MasterPlaylist {
     type Err = Error;
 
     fn from_str(input: &str) -> Result<Self, Self::Err> {
+        let input = tag(input, ExtM3u::PREFIX)?;
         let mut builder = Self::builder();
 
         let mut media_tags = vec![];
@@ -272,23 +274,15 @@ impl FromStr for MasterPlaylist {
         let mut session_key_tags = vec![];
         let mut unknown_tags = vec![];
 
-        for (i, line) in Lines::from(input).enumerate() {
+        for line in Lines::from(input) {
             match line? {
                 Line::Tag(tag) => {
-                    if i == 0 {
-                        if tag != Tag::ExtM3u(ExtM3u) {
-                            return Err(Error::invalid_input());
-                        }
-                        continue;
-                    }
                     match tag {
-                        Tag::ExtM3u(_) => {
-                            return Err(Error::invalid_input());
-                        }
                         Tag::ExtXVersion(_) => {
                             // This tag can be ignored, because the
                             // MasterPlaylist will automatically set the
-                            // ExtXVersion tag to correct version!
+                            // ExtXVersion tag to the minimum required version
+                            // TODO: this might be verified?
                         }
                         Tag::ExtInf(_)
                         | Tag::ExtXByteRange(_)
