@@ -5,11 +5,9 @@ use std::str::FromStr;
 use crate::tags;
 use crate::Error;
 
-#[derive(Debug, Clone, PartialEq, PartialOrd, Ord, Eq, Hash)]
+#[derive(Debug, Clone)]
 pub(crate) struct Lines<'a> {
-    buffer: &'a str,
-    // the line at which the iterator currently is
-    position: usize,
+    lines: ::core::str::Lines<'a>,
 }
 
 impl<'a> Iterator for Lines<'a> {
@@ -19,9 +17,8 @@ impl<'a> Iterator for Lines<'a> {
         let mut stream_inf = false;
         let mut stream_inf_line = None;
 
-        for line in self.buffer.lines().skip(self.position) {
+        while let Some(line) = self.lines.next() {
             let line = line.trim();
-            self.position += 1;
 
             if line.is_empty() {
                 continue;
@@ -62,8 +59,7 @@ impl<'a> Iterator for Lines<'a> {
 impl<'a> From<&'a str> for Lines<'a> {
     fn from(buffer: &'a str) -> Self {
         Self {
-            buffer,
-            position: 0,
+            lines: buffer.lines(),
         }
     }
 }
