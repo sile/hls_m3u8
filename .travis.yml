@@ -2,11 +2,13 @@ language: rust
 
 cache: cargo
 
-before_cache: |
-  cargo install cargo-tarpaulin || echo "cargo-tarpaulin already installed"
-  cargo install cargo-update  || echo "cargo-update already installed"
-  cargo install cargo-audit  || echo "cargo-audit already installed"
-  cargo install-update --all
+before_cache:
+  - cargo install cargo-tarpaulin || echo "cargo-tarpaulin already installed"
+  - cargo install cargo-update  || echo "cargo-update already installed"
+  - cargo install cargo-audit  || echo "cargo-audit already installed"
+  - cargo install-update --all
+  # Travis can't cache files that are not readable by "others"
+  - chmod -R a+r $HOME/.cargo
 
 # before_cache:
 #     - rm -rf /home/travis/.cargo/registry
@@ -19,15 +21,16 @@ matrix:
   allow_failures:
     - rust: nightly
 
-script: |
-  cargo clean
-  cargo build
-  cargo test
+script:
+  - cargo clean
+  - cargo build
+  - cargo test
 
   # it's enough to run this once:
-  if [[ "$TRAVIS_RUST_VERSION" == stable ]]; then
-    cargo audit
-  fi
+  - |
+    if [[ "$TRAVIS_RUST_VERSION" == stable ]]; then
+      cargo audit
+    fi
 
 after_success: |
   # this does require a -Z flag for Doctests, which is unstable!
