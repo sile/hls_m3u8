@@ -391,6 +391,7 @@ fn parse_media_playlist(
                 segment = MediaSegment::builder();
                 has_partial_segment = false;
             }
+            _ => {}
         }
     }
 

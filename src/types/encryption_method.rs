@@ -5,15 +5,16 @@ use strum::{Display, EnumString};
 /// See: [4.3.2.4. EXT-X-KEY]
 ///
 /// [4.3.2.4. EXT-X-KEY]: https://tools.ietf.org/html/rfc8216#section-4.3.2.4
+#[non_exhaustive]
 #[allow(missing_docs)]
 #[derive(Ord, PartialOrd, Debug, Clone, Copy, PartialEq, Eq, Hash, Display, EnumString)]
 #[strum(serialize_all = "SCREAMING-KEBAB-CASE")]
 pub enum EncryptionMethod {
     /// `None` means that the [`MediaSegment`]s are not encrypted.
     ///
-    /// [MediaSegment]: crate::MediaSegment
+    /// [`MediaSegment`]: crate::MediaSegment
     None,
-    /// `Aes128` signals that the [MediaSegment]s are completely encrypted
+    /// `Aes128` signals that the [`MediaSegment`]s are completely encrypted
     /// using the Advanced Encryption Standard ([AES-128]) with a 128-bit
     /// key, Cipher Block Chaining (CBC), and
     /// [Public-Key Cryptography Standards #7 (PKCS7)] padding.
@@ -22,14 +23,14 @@ pub enum EncryptionMethod {
     /// Initialization Vector (IV) attribute value or the Media Sequence
     /// Number as the IV.
     ///
-    /// [MediaSegment]: crate::MediaSegment
-    /// [AES_128]: http://nvlpubs.nist.gov/nistpubs/FIPS/NIST.FIPS.197.pdf
+    /// [`MediaSegment`]: crate::MediaSegment
+    /// [AES-128]: http://nvlpubs.nist.gov/nistpubs/FIPS/NIST.FIPS.197.pdf
     /// [Public-Key Cryptography Standards #7 (PKCS7)]: https://tools.ietf.org/html/rfc5652
     #[strum(serialize = "AES-128")]
     Aes128,
-    /// `SampleAes` means that the [MediaSegment]s
+    /// `SampleAes` means that the [`MediaSegment`]s
     /// contain media samples, such as audio or video, that are encrypted
-    /// using the Advanced Encryption Standard ([AES_128]). How these media
+    /// using the Advanced Encryption Standard ([`AES-128`]). How these media
     /// streams are encrypted and encapsulated in a segment depends on the
     /// media encoding and the media format of the segment. fMP4 Media
     /// Segments are encrypted using the 'cbcs' scheme of
@@ -39,7 +40,7 @@ pub enum EncryptionMethod {
     /// Live Streaming (HLS) [SampleEncryption specification].
     ///
     /// [`MediaSegment`]: crate::MediaSegment
-    /// [AES-128]: http://nvlpubs.nist.gov/nistpubs/FIPS/NIST.FIPS.197.pdf
+    /// [`AES-128`]: http://nvlpubs.nist.gov/nistpubs/FIPS/NIST.FIPS.197.pdf
     /// [Common Encryption]: https://tools.ietf.org/html/rfc8216#ref-COMMON_ENC
     /// [H.264]: https://tools.ietf.org/html/rfc8216#ref-H_264
     /// [AAC]: https://tools.ietf.org/html/rfc8216#ref-ISO_14496

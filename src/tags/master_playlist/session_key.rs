@@ -40,7 +40,7 @@ impl ExtXSessionKey {
     ///
     /// let session_key = ExtXSessionKey::new(EncryptionMethod::Aes128, "https://www.example.com/");
     /// ```
-    pub fn new<T: ToString>(method: EncryptionMethod, uri: T) -> Self {
+    pub fn new<T: Into<String>>(method: EncryptionMethod, uri: T) -> Self {
         if method == EncryptionMethod::None {
             panic!("The EncryptionMethod is not allowed to be None");
         }
@@ -49,8 +49,8 @@ impl ExtXSessionKey {
     }
 }
 
-/// This tag requires the version returned by
-/// [`DecryptionKey::required_version`].
+/// This tag requires the same [`ProtocolVersion`] that is returned by
+/// `DecryptionKey::required_version`.
 impl RequiredVersion for ExtXSessionKey {
     fn required_version(&self) -> ProtocolVersion { self.0.required_version() }
 }

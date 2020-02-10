@@ -14,7 +14,7 @@
     missing_docs,
     missing_copy_implementations,
     missing_debug_implementations,
-    trivial_casts, // TODO (needed?)
+    trivial_casts,
     trivial_numeric_casts
 )]
 //! [HLS] m3u8 parser/generator.

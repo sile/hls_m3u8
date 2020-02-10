@@ -121,7 +121,7 @@ pub struct ExtXDateRange {
 
 impl ExtXDateRangeBuilder {
     /// Inserts a key value pair.
-    pub fn insert_client_attribute<K: ToString, V: Into<Value>>(
+    pub fn insert_client_attribute<K: Into<String>, V: Into<Value>>(
         &mut self,
         key: K,
         value: V,
@@ -131,7 +131,7 @@ impl ExtXDateRangeBuilder {
         }
 
         if let Some(client_attributes) = &mut self.client_attributes {
-            client_attributes.insert(key.to_string(), value.into());
+            client_attributes.insert(key.into(), value.into());
         } else {
             unreachable!();
         }
@@ -160,9 +160,9 @@ impl ExtXDateRange {
     ///         .and_hms_milli(14, 54, 23, 31),
     /// );
     /// ```
-    pub fn new<T: ToString>(id: T, start_date: DateTime<FixedOffset>) -> Self {
+    pub fn new<T: Into<String>>(id: T, start_date: DateTime<FixedOffset>) -> Self {
         Self {
-            id: id.to_string(),
+            id: id.into(),
             class: None,
             start_date,
             end_date: None,
@@ -281,7 +281,7 @@ impl fmt::Display for ExtXDateRange {
             write!(
                 f,
                 ",END-DATE={}",
-                quote(value.to_rfc3339_opts(SecondsFormat::AutoSi, true))
+                quote(&value.to_rfc3339_opts(SecondsFormat::AutoSi, true))
             )?;
         }
 

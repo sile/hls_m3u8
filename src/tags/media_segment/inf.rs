@@ -49,10 +49,10 @@ impl ExtInf {
     ///
     /// let ext_inf = ExtInf::with_title(Duration::from_secs(5), "title");
     /// ```
-    pub fn with_title<T: ToString>(duration: Duration, title: T) -> Self {
+    pub fn with_title<T: Into<String>>(duration: Duration, title: T) -> Self {
         Self {
             duration,
-            title: Some(title.to_string()),
+            title: Some(title.into()),
         }
     }
 
@@ -156,9 +156,9 @@ impl FromStr for ExtInf {
         let duration = Duration::from_secs_f64(input.next().unwrap().parse()?);
         let title = input
             .next()
-            .map(|value| value.trim())
+            .map(str::trim)
             .filter(|value| !value.is_empty())
-            .map(|value| value.to_string());
+            .map(ToString::to_string);
 
         Ok(Self { duration, title })
     }

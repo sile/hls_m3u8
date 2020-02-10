@@ -12,10 +12,10 @@ use crate::{Error, RequiredVersion};
 /// # [4.4.5.1. EXT-X-MEDIA]
 ///
 /// The [`ExtXMedia`] tag is used to relate [`Media Playlist`]s,
-/// that contain alternative Renditions of the same content.
+/// that contain alternative renditions of the same content.
 ///
 /// For example, three [`ExtXMedia`] tags can be used to identify audio-only
-/// [`Media Playlist`]s, that contain English, French, and Spanish Renditions
+/// [`Media Playlist`]s, that contain English, French, and Spanish renditions
 /// of the same presentation. Or, two [`ExtXMedia`] tags can be used to
 /// identify video-only [`Media Playlist`]s that show two different camera
 /// angles.
@@ -35,7 +35,7 @@ pub struct ExtXMedia {
     /// This attribute is **required**.
     #[shorthand(enable(copy))]
     media_type: MediaType,
-    /// The `URI` that identifies the [`Media Playlist`].
+    /// An `URI` to a [`Media Playlist`].
     ///
     /// # Note
     ///
@@ -184,14 +184,18 @@ impl ExtXMedia {
     pub(crate) const PREFIX: &'static str = "#EXT-X-MEDIA:";
 
     /// Makes a new [`ExtXMedia`] tag.
-    pub fn new<T: ToString>(media_type: MediaType, group_id: T, name: T) -> Self {
+    pub fn new<T, K>(media_type: MediaType, group_id: T, name: K) -> Self
+    where
+        T: Into<String>,
+        K: Into<String>,
+    {
         Self {
             media_type,
             uri: None,
-            group_id: group_id.to_string(),
+            group_id: group_id.into(),
             language: None,
             assoc_language: None,
-            name: name.to_string(),
+            name: name.into(),
             is_default: false,
             is_autoselect: false,
             is_forced: false,

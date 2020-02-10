@@ -18,7 +18,9 @@ use crate::{Error, RequiredVersion};
 #[builder(setter(into), build_fn(validate = "Self::validate"))]
 #[shorthand(enable(must_use, into))]
 pub struct DecryptionKey {
-    /// The [`EncryptionMethod`].
+    /// HLS supports multiple encryption methods for a segment.
+    ///
+    /// For example `AES-128`.
     ///
     /// # Example
     ///
@@ -41,9 +43,10 @@ pub struct DecryptionKey {
     /// This attribute is required.
     #[shorthand(enable(copy))]
     pub(crate) method: EncryptionMethod,
-    /// An `URI`, that specifies how to obtain the key.
+    /// An `URI` that specifies how to obtain the key.
     ///
     /// # Example
+    ///
     /// ```
     /// # use hls_m3u8::types::DecryptionKey;
     /// use hls_m3u8::types::EncryptionMethod;
@@ -63,8 +66,10 @@ pub struct DecryptionKey {
     /// This attribute is required, if the [`EncryptionMethod`] is not `None`.
     #[builder(setter(into, strip_option), default)]
     pub(crate) uri: Option<String>,
-    /// The IV (Initialization Vector) for the key.
+    /// An IV (initialization vector) is used to prevent repetitions between
+    /// segments of encrypted data.
     ///
+    /// <https://en.wikipedia.org/wiki/Initialization_vector>
     ///
     /// # Example
     ///
@@ -90,7 +95,7 @@ pub struct DecryptionKey {
     // TODO: workaround for https://github.com/Luro02/shorthand/issues/20
     #[shorthand(enable(copy), disable(option_as_ref))]
     pub(crate) iv: Option<[u8; 16]>,
-    /// [`KeyFormat`] specifies how the key is
+    /// The [`KeyFormat`] specifies how the key is
     /// represented in the resource identified by the `URI`.
     ///
     /// # Example
@@ -157,23 +162,25 @@ impl DecryptionKey {
     ///
     /// let key = DecryptionKey::new(EncryptionMethod::Aes128, "https://www.example.com/");
     /// ```
-    pub fn new<T: ToString>(method: EncryptionMethod, uri: T) -> Self {
+    #[doc(hidden)]
+    pub fn new<T: Into<String>>(method: EncryptionMethod, uri: T) -> Self {
         Self {
             method,
-            uri: Some(uri.to_string()),
+            uri: Some(uri.into()),
             iv: None,
             key_format: None,
             key_format_versions: None,
         }
     }
 
-    /// Returns a Builder to build a [DecryptionKey].
+    /// Returns a Builder to build a [`DecryptionKey`].
     pub fn builder() -> DecryptionKeyBuilder { DecryptionKeyBuilder::default() }
 }
 
 /// This tag requires [`ProtocolVersion::V5`], if [`KeyFormat`] or
 /// [`KeyFormatVersions`] is specified and [`ProtocolVersion::V2`] if an iv is
 /// specified.
+///
 /// Otherwise [`ProtocolVersion::V1`] is required.
 impl RequiredVersion for DecryptionKey {
     fn required_version(&self) -> ProtocolVersion {
@@ -187,6 +194,7 @@ impl RequiredVersion for DecryptionKey {
     }
 }
 
+#[doc(hidden)]
 impl FromStr for DecryptionKey {
     type Err = Error;
 

@@ -13,7 +13,7 @@ use crate::{Error, RequiredVersion};
 #[derive(Hash, Eq, Ord, Debug, PartialEq, Clone, PartialOrd)]
 pub enum SessionData {
     /// A String, that contains the data identified by
-    /// [`data_id`].
+    /// [`data_id`](ExtXSessionData::data_id).
     /// If a [`language`] is specified, the value
     /// should contain a human-readable string written in the specified
     /// language.
@@ -51,7 +51,7 @@ pub struct ExtXSessionData {
     ///
     /// [reverse DNS]: https://en.wikipedia.org/wiki/Reverse_domain_name_notation
     data_id: String,
-    /// The data associated with the [`data_id`].
+    /// The data associated with the [`data_id`](ExtXSessionData::data_id).
     /// For more information look [`here`](SessionData).
     ///
     /// # Note
@@ -70,6 +70,7 @@ impl ExtXSessionData {
     /// Makes a new [`ExtXSessionData`] tag.
     ///
     /// # Example
+    ///
     /// ```
     /// use hls_m3u8::tags::{ExtXSessionData, SessionData};
     ///
@@ -78,9 +79,9 @@ impl ExtXSessionData {
     ///     SessionData::Uri("https://www.example.com/".to_string()),
     /// );
     /// ```
-    pub fn new<T: ToString>(data_id: T, data: SessionData) -> Self {
+    pub fn new<T: Into<String>>(data_id: T, data: SessionData) -> Self {
         Self {
-            data_id: data_id.to_string(),
+            data_id: data_id.into(),
             data,
             language: None,
         }
@@ -89,6 +90,7 @@ impl ExtXSessionData {
     /// Returns a new Builder for [`ExtXSessionData`].
     ///
     /// # Example
+    ///
     /// ```
     /// use hls_m3u8::tags::{ExtXSessionData, SessionData};
     ///
@@ -123,11 +125,15 @@ impl ExtXSessionData {
     ///     "english",
     /// );
     /// ```
-    pub fn with_language<T: ToString>(data_id: T, data: SessionData, language: T) -> Self {
+    pub fn with_language<T, K>(data_id: T, data: SessionData, language: K) -> Self
+    where
+        T: Into<String>,
+        K: Into<String>,
+    {
         Self {
-            data_id: data_id.to_string(),
+            data_id: data_id.into(),
             data,
-            language: Some(language.to_string()),
+            language: Some(language.into()),
         }
     }
 }

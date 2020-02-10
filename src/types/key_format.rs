@@ -7,6 +7,7 @@ use crate::{Error, RequiredVersion};
 
 /// [`KeyFormat`] specifies, how the key is represented in the
 /// resource identified by the `URI`.
+#[non_exhaustive]
 #[derive(Copy, Clone, Eq, PartialEq, Ord, PartialOrd, Hash, Debug)]
 pub enum KeyFormat {
     /// The key is a single packed array of 16 octets in binary format.
@@ -28,7 +29,7 @@ impl FromStr for KeyFormat {
 }
 
 impl fmt::Display for KeyFormat {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result { write!(f, "{}", quote("identity")) }
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result { write!(f, "{}", quote(&"identity")) }
 }
 
 /// This tag requires [`ProtocolVersion::V5`].

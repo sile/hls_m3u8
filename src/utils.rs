@@ -1,4 +1,5 @@
 use crate::Error;
+use core::iter;
 
 macro_rules! required_version {
     ( $( $tag:expr ),* ) => {
@@ -22,14 +23,7 @@ pub(crate) fn parse_iv_from_str(input: &str) -> crate::Result<[u8; 16]> {
 
     let mut result = [0; 16];
 
-    // TODO:
-    // hex::decode_to_slice(value.as_bytes()[2..], &mut result)?;
-
-    for (i, c) in input.as_bytes().chunks(2).skip(1).enumerate() {
-        let d = core::str::from_utf8(c).map_err(Error::custom)?;
-        let b = u8::from_str_radix(d, 16).map_err(Error::custom)?;
-        result[i] = b;
-    }
+    hex::decode_to_slice(&input.as_bytes()[2..], &mut result).map_err(Error::hex)?;
 
     Ok(result)
 }
@@ -50,19 +44,23 @@ pub(crate) fn parse_yes_or_no<T: AsRef<str>>(s: T) -> crate::Result<bool> {
 ///
 /// Therefore it is safe to simply remove any occurence of those characters.
 /// [rfc8216#section-4.2](https://tools.ietf.org/html/rfc8216#section-4.2)
-pub(crate) fn unquote<T: ToString>(value: T) -> String {
+pub(crate) fn unquote<T: AsRef<str>>(value: T) -> String {
     value
-        .to_string()
-        .replace("\"", "")
-        .replace("\n", "")
-        .replace("\r", "")
+        .as_ref()
+        .chars()
+        .filter(|c| *c != '"' && *c != '\n' && *c != '\r')
+        .collect()
 }
 
 /// Puts a string inside quotes.
+#[allow(clippy::needless_pass_by_value)]
 pub(crate) fn quote<T: ToString>(value: T) -> String {
     // the replace is for the case, that quote is called on an already quoted
     // string, which could cause problems!
-    format!("\"{}\"", value.to_string().replace("\"", ""))
+    iter::once('"')
+        .chain(value.to_string().chars().filter(|c| *c != '"'))
+        .chain(iter::once('"'))
+        .collect()
 }
 
 /// Checks, if the given tag is at the start of the input. If this is the case,

@@ -31,7 +31,10 @@ impl KeyFormatVersions {
 
     /// Returns `true`, if [`KeyFormatVersions`] has the default value of
     /// `vec![1]`.
-    pub fn is_default(&self) -> bool { self.0 == vec![1] && self.0.len() == 1 || self.0.is_empty() }
+    pub fn is_default(&self) -> bool {
+        //
+        self.0 == vec![1] && self.0.len() == 1 || self.0.is_empty()
+    }
 }
 
 impl Default for KeyFormatVersions {
@@ -73,7 +76,7 @@ impl fmt::Display for KeyFormatVersions {
                 // vec![1, 2, 3] -> "1/2/3"
                 self.0
                     .iter()
-                    .map(|v| v.to_string())
+                    .map(ToString::to_string)
                     .collect::<Vec<String>>()
                     .join("/")
             )

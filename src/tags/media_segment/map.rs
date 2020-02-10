@@ -69,9 +69,9 @@ impl ExtXMap {
     /// # use hls_m3u8::tags::ExtXMap;
     /// let map = ExtXMap::new("https://prod.mediaspace.com/init.bin");
     /// ```
-    pub fn new<T: ToString>(uri: T) -> Self {
+    pub fn new<T: Into<String>>(uri: T) -> Self {
         Self {
-            uri: uri.to_string(),
+            uri: uri.into(),
             range: None,
             keys: vec![],
         }
@@ -90,9 +90,9 @@ impl ExtXMap {
     ///     ByteRange::new(9, Some(2)),
     /// );
     /// ```
-    pub fn with_range<T: ToString>(uri: T, range: ByteRange) -> Self {
+    pub fn with_range<T: Into<String>>(uri: T, range: ByteRange) -> Self {
         Self {
-            uri: uri.to_string(),
+            uri: uri.into(),
             range: Some(range),
             keys: vec![],
         }

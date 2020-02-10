@@ -5,6 +5,7 @@ use strum::{Display, EnumString};
 /// See: [4.3.4.2. EXT-X-STREAM-INF]
 ///
 /// [4.3.4.2. EXT-X-STREAM-INF]: https://tools.ietf.org/html/rfc8216#section-4.3.4.2
+#[non_exhaustive]
 #[allow(missing_docs)]
 #[derive(Ord, PartialOrd, Debug, Clone, Copy, PartialEq, Eq, Hash, Display, EnumString)]
 #[strum(serialize_all = "SCREAMING-KEBAB-CASE")]

@@ -5,9 +5,11 @@ use strum::{Display, EnumString};
 /// See: [4.3.4.1. EXT-X-MEDIA]
 ///
 /// [4.3.4.1. EXT-X-MEDIA]: https://tools.ietf.org/html/rfc8216#section-4.3.4.1
+#[non_exhaustive]
 #[allow(missing_docs)]
-#[derive(Ord, PartialOrd, Debug, Clone, Copy, PartialEq, Eq, Hash, Display, EnumString)]
 #[strum(serialize_all = "UPPERCASE")]
+#[derive(Ord, PartialOrd, Debug, Clone, Copy, PartialEq, Eq, Hash, Display, EnumString)]
+#[non_exhaustive]
 pub enum InStreamId {
     Cc1,
     Cc2,

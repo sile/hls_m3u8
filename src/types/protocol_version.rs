@@ -10,6 +10,7 @@ use crate::Error;
 ///
 /// [7. Protocol Version Compatibility]:
 /// https://tools.ietf.org/html/draft-pantos-hls-rfc8216bis-05#section-7
+#[non_exhaustive]
 #[allow(missing_docs)]
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub enum ProtocolVersion {

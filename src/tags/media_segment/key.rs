@@ -45,7 +45,7 @@ impl ExtXKey {
     ///     "#EXT-X-KEY:METHOD=AES-128,URI=\"https://www.example.com/\""
     /// );
     /// ```
-    pub fn new<T: ToString>(method: EncryptionMethod, uri: T) -> Self {
+    pub fn new<T: Into<String>>(method: EncryptionMethod, uri: T) -> Self {
         Self(DecryptionKey::new(method, uri))
     }
 
@@ -87,8 +87,8 @@ impl ExtXKey {
     pub fn is_empty(&self) -> bool { self.0.method() == EncryptionMethod::None }
 }
 
-/// This tag requires the [`ProtocolVersion`] returned by
-/// [`DecryptionKey::required_version`].
+/// This tag requires the same [`ProtocolVersion`] that is returned by
+/// `DecryptionKey::required_version`.
 impl RequiredVersion for ExtXKey {
     fn required_version(&self) -> ProtocolVersion { self.0.required_version() }
 }
@@ -103,7 +103,10 @@ impl FromStr for ExtXKey {
 }
 
 impl fmt::Display for ExtXKey {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result { write!(f, "{}{}", Self::PREFIX, self.0) }
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        //
+        write!(f, "{}{}", Self::PREFIX, self.0)
+    }
 }
 
 #[cfg(test)]

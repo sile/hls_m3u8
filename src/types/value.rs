@@ -6,8 +6,9 @@ use hex;
 use crate::utils::{quote, unquote};
 use crate::Error;
 
-#[derive(Debug, Clone, PartialEq, PartialOrd)]
 /// A [`Value`].
+#[non_exhaustive]
+#[derive(Debug, Clone, PartialEq, PartialOrd)]
 pub enum Value {
     /// A [`String`].
     String(String),
