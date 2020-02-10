@@ -2,7 +2,6 @@
 mod byte_range;
 mod channels;
 mod closed_captions;
-mod decimal_floating_point;
 mod decryption_key;
 mod encryption_method;
 mod hdcp_level;
@@ -12,14 +11,15 @@ mod key_format_versions;
 mod media_type;
 mod protocol_version;
 mod resolution;
-mod signed_decimal_floating_point;
 mod stream_inf;
 mod value;
+
+mod float;
+mod ufloat;
 
 pub use byte_range::*;
 pub use channels::*;
 pub use closed_captions::*;
-pub(crate) use decimal_floating_point::*;
 pub use decryption_key::*;
 pub use encryption_method::*;
 pub use hdcp_level::*;
@@ -29,6 +29,8 @@ pub use key_format_versions::*;
 pub use media_type::*;
 pub use protocol_version::*;
 pub use resolution::*;
-pub(crate) use signed_decimal_floating_point::*;
 pub use stream_inf::*;
 pub use value::*;
+
+pub use float::Float;
+pub use ufloat::UFloat;

@@ -11,27 +11,6 @@ macro_rules! required_version {
     }
 }
 
-macro_rules! impl_from {
-    ( $($( $type:tt ),* => $target:path ),* ) => {
-        use ::core::convert::From;
-
-        $( // repeat $target
-            $( // repeat $type
-                impl From<$type> for $target {
-                    fn from(value: $type) -> Self {
-                        Self::from_f64_unchecked(value.into())
-                    }
-                }
-            )*
-        )*
-    };
-}
-
-impl_from![
-    u8, u16, u32 => crate::types::DecimalFloatingPoint,
-    u8, i8, u16, i16, u32, i32, f32, f64 => crate::types::SignedDecimalFloatingPoint
-];
-
 pub(crate) fn parse_iv_from_str(input: &str) -> crate::Result<[u8; 16]> {
     if !(input.starts_with("0x") || input.starts_with("0X")) {
         return Err(Error::invalid_input());
