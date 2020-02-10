@@ -8,71 +8,71 @@ use crate::types::{ClosedCaptions, ProtocolVersion, StreamData, UFloat};
 use crate::utils::{quote, tag, unquote};
 use crate::Error;
 
-/// A server MAY offer multiple Media Playlist files to provide different
-/// encodings of the same presentation.  If it does so, it SHOULD provide
-/// a Master Playlist file that lists each Variant Stream to allow
+/// A server may offer multiple [`MediaPlaylist`] files to provide different
+/// encodings of the same presentation. If it does so, it should provide
+/// a [`MasterPlaylist`] that lists each [`VariantStream`] to allow
 /// clients to switch between encodings dynamically.
 ///
-/// Master Playlists describe regular Variant Streams with EXT-X-STREAM-
-/// INF tags and I-frame Variant Streams with EXT-X-I-FRAME-STREAM-INF
-/// tags.
+/// The server must meet the following constraints when producing
+/// [`VariantStream`]s in order to allow clients to switch between them
+/// seamlessly:
 ///
-/// If an EXT-X-STREAM-INF tag or EXT-X-I-FRAME-STREAM-INF tag contains
-/// the CODECS attribute, the attribute value MUST include every media
-/// format [RFC6381] present in any Media Segment in any of the
-/// Renditions specified by the Variant Stream.
+/// - Each [`VariantStream`] must present the same content.
 ///
-/// The server MUST meet the following constraints when producing Variant
-/// Streams in order to allow clients to switch between them seamlessly:
+/// - Matching content in [`VariantStream`]s must have matching timestamps. This
+///   allows clients to synchronize the media.
 ///
-/// o  Each Variant Stream MUST present the same content.
+/// - Matching content in [`VariantStream`]s must have matching
+///   [`ExtXDiscontinuitySequence`].
 ///
+/// - Each [`MediaPlaylist`] in each [`VariantStream`] must have the same target
+///   duration. The only exceptions are subtitle renditions and
+///   [`MediaPlaylist`]s containing an [`ExtXIFramesOnly`] tag, which may have
+///   different target durations if they have [`ExtXPlaylistType::Vod`].
 ///
-/// o  Matching content in Variant Streams MUST have matching timestamps.
-///    This allows clients to synchronize the media.
+/// - Content that appears in a [`MediaPlaylist`] of one [`VariantStream`] but
+///   not in another must appear either at the beginning or at the end of the
+///   [`MediaPlaylist`] and must not be longer than the target duration.
 ///
-/// o  Matching content in Variant Streams MUST have matching
-///    Discontinuity Sequence Numbers (see Section 4.3.3.3).
+/// - If any [`MediaPlaylist`]s have an [`ExtXPlaylistType`] tag, all
+///   [`MediaPlaylist`]s must have an [`ExtXPlaylistType`] tag with the same
+///   value.
 ///
-/// o  Each Media Playlist in each Variant Stream MUST have the same
-///    target duration.  The only exceptions are SUBTITLES Renditions and
-///    Media Playlists containing an EXT-X-I-FRAMES-ONLY tag, which MAY
-///    have different target durations if they have an EXT-X-PLAYLIST-
-///    TYPE of VOD.
+/// - If the Playlist contains an [`ExtXPlaylistType`] tag with the value of
+///   VOD, the first segment of every [`MediaPlaylist`] in every
+///   [`VariantStream`] must start at the same media timestamp.
 ///
-/// o  Content that appears in a Media Playlist of one Variant Stream but
-///    not in another MUST appear either at the beginning or at the end
-///    of the Media Playlist file and MUST NOT be longer than the target
-///    duration.
+/// - If any [`MediaPlaylist`] in a [`MasterPlaylist`] contains an
+///   [`ExtXProgramDateTime`] tag, then all [`MediaPlaylist`]s in that
+///   [`MasterPlaylist`] must contain [`ExtXProgramDateTime`] tags with
+///   consistent mappings of date and time to media timestamps.
 ///
-/// o  If any Media Playlists have an EXT-X-PLAYLIST-TYPE tag, all Media
-///    Playlists MUST have an EXT-X-PLAYLIST-TYPE tag with the same
-///    value.
+/// - Each [`VariantStream`] must contain the same set of Date Ranges, each one
+///   identified by an [`ExtXDateRange`] tag(s) with the same ID attribute value
+///   and containing the same set of attribute/value pairs.
 ///
-/// o  If the Playlist contains an EXT-X-PLAYLIST-TYPE tag with the value
-///    of VOD, the first segment of every Media Playlist in every Variant
-///    Stream MUST start at the same media timestamp.
-///
-/// o  If any Media Playlist in a Master Playlist contains an EXT-X-
-///    PROGRAM-DATE-TIME tag, then all Media Playlists in that Master
-///    Playlist MUST contain EXT-X-PROGRAM-DATE-TIME tags with consistent
-///    mappings of date and time to media timestamps.
-///
-/// o  Each Variant Stream MUST contain the same set of Date Ranges, each
-///    one identified by an EXT-X-DATERANGE tag(s) with the same ID
-///    attribute value and containing the same set of attribute/value
-///    pairs.
-///
-/// In addition, for broadest compatibility, Variant Streams SHOULD
-/// contain the same encoded audio bitstream.  This allows clients to
-/// switch between Variant Streams without audible glitching.
-///
-/// The rules for Variant Streams also apply to alternative Renditions
-/// (see Section 4.3.4.2.1).
+/// In addition, for broadest compatibility, [`VariantStream`]s should
+/// contain the same encoded audio bitstream. This allows clients to
+/// switch between [`VariantStream`]s without audible glitching.
 ///
 /// [RFC6381]: https://tools.ietf.org/html/rfc6381
+/// [`ExtXDiscontinuitySequence`]: crate::tags::ExtXDiscontinuitySequence
+/// [`ExtXPlaylistType::Vod`]: crate::tags::ExtXPlaylistType::Vod
+/// [`MediaPlaylist`]: crate::MediaPlaylist
+/// [`MasterPlaylist`]: crate::MasterPlaylist
+/// [`ExtXDateRange`]: crate::tags::ExtXDateRange
+/// [`ExtXProgramDateTime`]: crate::tags::ExtXProgramDateTime
+/// [`ExtXPlaylistType`]: crate::tags::ExtXPlaylistType
+/// [`ExtXIFramesOnly`]: crate::tags::ExtXIFramesOnly
 #[derive(Debug, Clone, PartialEq, PartialOrd)]
 pub enum VariantStream {
+    /// The [`VariantStream::ExtXIFrame`] variant identifies a [`MediaPlaylist`]
+    /// file containing the I-frames of a multimedia presentation.
+    /// It stands alone, in that it does not apply to a particular URI in the
+    /// [`MasterPlaylist`].
+    ///
+    /// [`MasterPlaylist`]: crate::MasterPlaylist
+    /// [`MediaPlaylist`]: crate::MediaPlaylist
     ExtXIFrame {
         /// The URI identifies the I-frame [`MediaPlaylist`] file.
         /// That Playlist file must contain an [`ExtXIFramesOnly`] tag.
@@ -82,6 +82,7 @@ pub enum VariantStream {
         /// This field is required.
         ///
         /// [`MediaPlaylist`]: crate::MediaPlaylist
+        /// [`ExtXIFramesOnly`]: crate::tags::ExtXIFramesOnly
         uri: String,
         /// Some fields are shared between [`VariantStream::ExtXStreamInf`] and
         /// [`VariantStream::ExtXIFrame`].
@@ -91,6 +92,8 @@ pub enum VariantStream {
         /// This field is optional.
         stream_data: StreamData,
     },
+    /// [`VariantStream::ExtXStreamInf`] specifies a [`VariantStream`], which is
+    /// a set of renditions that can be combined to play the presentation.
     ExtXStreamInf {
         /// The URI specifies a [`MediaPlaylist`] that carries a rendition of
         /// the [`VariantStream`]. Clients that do not support multiple video
