@@ -25,5 +25,4 @@ hex = "0.4"
 shorthand = "0.1"
 
 [dev-dependencies]
-clap = "2.33"
 pretty_assertions = "0.6"
