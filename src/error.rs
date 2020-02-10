@@ -1,33 +1,27 @@
 use std::fmt;
 
 use thiserror::Error;
-
-use crate::types::ProtocolVersion;
+//use crate::types::ProtocolVersion;
 
 /// This crate specific `Result` type.
 pub type Result<T> = std::result::Result<T, Error>;
 
-/// The [`ErrorKind`].
 #[derive(Debug, Error, Clone, PartialEq)]
+#[non_exhaustive]
 enum ErrorKind {
-    /// A required value is missing.
-    #[error("A value is missing for the attribute {}", _0)]
+    #[error("a value is missing for the attribute {}", _0)]
     MissingValue(String),
 
-    /// Error for anything.
-    #[error("Invalid Input")]
+    #[error("invalid input")]
     InvalidInput,
 
     #[error("{}", _0)]
-    /// Failed to parse a String to int.
     ParseIntError(::std::num::ParseIntError),
 
     #[error("{}", _0)]
-    /// Failed to parse a String to float.
     ParseFloatError(::std::num::ParseFloatError),
 
-    /// A tag is missing, that is required at the start of the input.
-    #[error("Expected `{}` at the start of {:?}", tag, input)]
+    #[error("expected `{}` at the start of {:?}", tag, input)]
     MissingTag {
         /// The required tag.
         tag: String,
@@ -36,56 +30,34 @@ enum ErrorKind {
     },
 
     #[error("{}", _0)]
-    /// A custom error.
     Custom(String),
 
-    /// Unmatched Group
-    #[error("Unmatched Group: {:?}", _0)]
+    #[error("unmatched group: {:?}", _0)]
     UnmatchedGroup(String),
 
-    /// Unknown m3u8 version. This library supports up to ProtocolVersion 7.
-    #[error("Unknown protocol version {:?}", _0)]
+    #[error("unknown protocol version {:?}", _0)]
     UnknownProtocolVersion(String),
 
-    /// Some io error
-    #[error("{}", _0)]
-    Io(String),
-
-    /// This error occurs, if there is a ProtocolVersion mismatch.
-    #[error("required_version: {:?}, specified_version: {:?}", _0, _1)]
-    VersionError(ProtocolVersion, ProtocolVersion),
-
-    /// An attribute is missing.
-    #[error("Missing Attribute: {}", _0)]
+    // #[error("required_version: {:?}, specified_version: {:?}", _0, _1)]
+    // VersionError(ProtocolVersion, ProtocolVersion),
+    #[error("missing attribute: {}", _0)]
     MissingAttribute(String),
 
-    /// An unexpected value.
-    #[error("Unexpected Attribute: {:?}", _0)]
+    #[error("unexpected attribute: {:?}", _0)]
     UnexpectedAttribute(String),
 
-    /// An unexpected tag.
-    #[error("Unexpected Tag: {:?}", _0)]
+    #[error("unexpected tag: {:?}", _0)]
     UnexpectedTag(String),
 
-    /// An error from the [`chrono`] crate.
     #[error("{}", _0)]
     ChronoParseError(chrono::ParseError),
 
-    /// An error from a Builder.
-    #[error("BuilderError: {}", _0)]
+    #[error("builder error: {}", _0)]
     Builder(String),
 
+    #[doc(hidden)]
     #[error("{}", _0)]
     Hex(hex::FromHexError),
-
-    /// Hints that destructuring should not be exhaustive.
-    ///
-    /// This enum may grow additional variants, so this makes sure clients
-    /// don't count on exhaustive matching. (Otherwise, adding a new variant
-    /// could break existing code.)
-    #[doc(hidden)]
-    #[error("Invalid error")]
-    __Nonexhaustive,
 }
 
 /// The Error type of this library.
@@ -100,6 +72,7 @@ impl fmt::Display for Error {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result { self.inner.fmt(f) }
 }
 
+#[allow(clippy::needless_pass_by_value)]
 impl Error {
     const fn new(inner: ErrorKind) -> Self { Self { inner } }
 
@@ -119,7 +92,7 @@ impl Error {
         Self::new(ErrorKind::UnexpectedTag(value.to_string()))
     }
 
-    pub(crate) fn invalid_input() -> Self { Self::new(ErrorKind::InvalidInput) }
+    pub(crate) const fn invalid_input() -> Self { Self::new(ErrorKind::InvalidInput) }
 
     pub(crate) fn parse_int(value: ::std::num::ParseIntError) -> Self {
         Self::new(ErrorKind::ParseIntError(value))
@@ -147,8 +120,6 @@ impl Error {
     pub(crate) fn unknown_protocol_version<T: ToString>(value: T) -> Self {
         Self::new(ErrorKind::UnknownProtocolVersion(value.to_string()))
     }
-
-    pub(crate) fn io<T: ToString>(value: T) -> Self { Self::new(ErrorKind::Io(value.to_string())) }
 
     pub(crate) fn builder<T: ToString>(value: T) -> Self {
         Self::new(ErrorKind::Builder(value.to_string()))
