@@ -9,7 +9,7 @@ use crate::Error;
 /// with a negative float (ex. `-1.1`), [`NaN`], [`INFINITY`] or
 /// [`NEG_INFINITY`].
 ///
-/// [`NaN`]: core::f32::NaN
+/// [`NaN`]: core::f32::NAN
 /// [`INFINITY`]: core::f32::INFINITY
 /// [`NEG_INFINITY`]: core::f32::NEG_INFINITY
 #[derive(Deref, Default, Debug, Copy, Clone, PartialEq, PartialOrd, Display)]

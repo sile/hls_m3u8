@@ -5,14 +5,32 @@ use std::str::FromStr;
 use crate::utils::{quote, unquote};
 
 /// The identifier of a closed captions group or its absence.
-///
-/// See: [4.3.4.2. EXT-X-STREAM-INF]
-///
-/// [4.3.4.2. EXT-X-STREAM-INF]: https://tools.ietf.org/html/rfc8216#section-4.3.4.2
-#[allow(missing_docs)]
+#[non_exhaustive]
 #[derive(Clone, Eq, PartialEq, Ord, PartialOrd, Hash, Debug)]
 pub enum ClosedCaptions {
+    /// It indicates the set of closed-caption renditions that can be used when
+    /// playing the presentation.
+    ///
+    /// The [`String`] must match [`ExtXMedia::group_id`] elsewhere in the
+    /// Playlist and it's [`ExtXMedia::media_type`] must be
+    /// [`MediaType::ClosedCaptions`].
+    ///
+    /// [`ExtXMedia::group_id`]: crate::tags::ExtXMedia::group_id
+    /// [`ExtXMedia::media_type`]: crate::tags::ExtXMedia::media_type
+    /// [`MediaType::ClosedCaptions`]: crate::types::MediaType::ClosedCaptions
     GroupId(String),
+    /// [`ClosedCaptions::None`] indicates that there are no closed captions in
+    /// any [`VariantStream`] in the [`MasterPlaylist`], therefore all
+    /// [`VariantStream::ExtXStreamInf`] tags must have this attribute with a
+    /// value of [`ClosedCaptions::None`].
+    ///
+    /// Having [`ClosedCaptions`] in one [`VariantStream`] but not in another
+    /// can trigger playback inconsistencies.
+    ///
+    /// [`MasterPlaylist`]: crate::MasterPlaylist
+    /// [`VariantStream`]: crate::tags::VariantStream
+    /// [`VariantStream::ExtXStreamInf`]:
+    /// crate::tags::VariantStream::ExtXStreamInf
     None,
 }
 

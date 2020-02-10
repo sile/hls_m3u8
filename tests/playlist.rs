@@ -7,18 +7,19 @@ use std::time::Duration;
 
 #[test]
 fn test_simple_playlist() {
-    let playlist = r#"
-    #EXTM3U
-    #EXT-X-TARGETDURATION:5220
-    #EXTINF:0,
-    http://media.example.com/entire1.ts
-    #EXTINF:5220,
-    http://media.example.com/entire2.ts
-    #EXT-X-ENDLIST"#;
+    let playlist = concat!(
+        "#EXTM3U\n",
+        "#EXT-X-TARGETDURATION:5220\n",
+        "#EXTINF:0,\n",
+        "http://media.example.com/entire1.ts\n",
+        "#EXTINF:5220,\n",
+        "http://media.example.com/entire2.ts\n",
+        "#EXT-X-ENDLIST\n"
+    );
 
     let media_playlist = playlist.parse::<MediaPlaylist>().unwrap();
     assert_eq!(
-        media_playlist.target_duration_tag(),
+        media_playlist.target_duration(),
         ExtXTargetDuration::new(Duration::from_secs(5220))
     );
 

@@ -27,56 +27,56 @@ pub struct MediaPlaylist {
     ///
     /// This field is required.
     #[shorthand(enable(copy))]
-    target_duration_tag: ExtXTargetDuration,
+    target_duration: ExtXTargetDuration,
     /// Sets the [`ExtXMediaSequence`] tag.
     ///
     /// # Note
     ///
     /// This field is optional.
     #[builder(default)]
-    media_sequence_tag: Option<ExtXMediaSequence>,
+    media_sequence: Option<ExtXMediaSequence>,
     /// Sets the [`ExtXDiscontinuitySequence`] tag.
     ///
     /// # Note
     ///
     /// This field is optional.
     #[builder(default)]
-    discontinuity_sequence_tag: Option<ExtXDiscontinuitySequence>,
+    discontinuity_sequence: Option<ExtXDiscontinuitySequence>,
     /// Sets the [`ExtXPlaylistType`] tag.
     ///
     /// # Note
     ///
     /// This field is optional.
     #[builder(default)]
-    playlist_type_tag: Option<ExtXPlaylistType>,
+    playlist_type: Option<ExtXPlaylistType>,
     /// Sets the [`ExtXIFramesOnly`] tag.
     ///
     /// # Note
     ///
     /// This field is optional.
     #[builder(default)]
-    i_frames_only_tag: Option<ExtXIFramesOnly>,
+    i_frames_only: Option<ExtXIFramesOnly>,
     /// Sets the [`ExtXIndependentSegments`] tag.
     ///
     /// # Note
     ///
     /// This field is optional.
     #[builder(default)]
-    independent_segments_tag: Option<ExtXIndependentSegments>,
+    independent_segments: Option<ExtXIndependentSegments>,
     /// Sets the [`ExtXStart`] tag.
     ///
     /// # Note
     ///
     /// This field is optional.
     #[builder(default)]
-    start_tag: Option<ExtXStart>,
+    start: Option<ExtXStart>,
     /// Sets the [`ExtXEndList`] tag.
     ///
     /// # Note
     ///
     /// This field is optional.
     #[builder(default)]
-    end_list_tag: Option<ExtXEndList>,
+    end_list: Option<ExtXEndList>,
     /// A list of all [`MediaSegment`]s.
     ///
     /// # Note
@@ -110,7 +110,7 @@ pub struct MediaPlaylist {
 
 impl MediaPlaylistBuilder {
     fn validate(&self) -> Result<(), String> {
-        if let Some(target_duration) = &self.target_duration_tag {
+        if let Some(target_duration) = &self.target_duration {
             self.validate_media_segments(target_duration.duration())
                 .map_err(|e| e.to_string())?;
         }
@@ -189,14 +189,14 @@ impl MediaPlaylistBuilder {
 impl RequiredVersion for MediaPlaylistBuilder {
     fn required_version(&self) -> ProtocolVersion {
         required_version![
-            self.target_duration_tag,
-            self.media_sequence_tag,
-            self.discontinuity_sequence_tag,
-            self.playlist_type_tag,
-            self.i_frames_only_tag,
-            self.independent_segments_tag,
-            self.start_tag,
-            self.end_list_tag,
+            self.target_duration,
+            self.media_sequence,
+            self.discontinuity_sequence,
+            self.playlist_type,
+            self.i_frames_only,
+            self.independent_segments,
+            self.start,
+            self.end_list,
             self.segments
         ]
     }
@@ -210,14 +210,14 @@ impl MediaPlaylist {
 impl RequiredVersion for MediaPlaylist {
     fn required_version(&self) -> ProtocolVersion {
         required_version![
-            self.target_duration_tag,
-            self.media_sequence_tag,
-            self.discontinuity_sequence_tag,
-            self.playlist_type_tag,
-            self.i_frames_only_tag,
-            self.independent_segments_tag,
-            self.start_tag,
-            self.end_list_tag,
+            self.target_duration,
+            self.media_sequence,
+            self.discontinuity_sequence,
+            self.playlist_type,
+            self.i_frames_only,
+            self.independent_segments,
+            self.start,
+            self.end_list,
             self.segments
         ]
     }
@@ -231,29 +231,29 @@ impl fmt::Display for MediaPlaylist {
             writeln!(f, "{}", ExtXVersion::new(self.required_version()))?;
         }
 
-        writeln!(f, "{}", self.target_duration_tag)?;
+        writeln!(f, "{}", self.target_duration)?;
 
-        if let Some(value) = &self.media_sequence_tag {
+        if let Some(value) = &self.media_sequence {
             writeln!(f, "{}", value)?;
         }
 
-        if let Some(value) = &self.discontinuity_sequence_tag {
+        if let Some(value) = &self.discontinuity_sequence {
             writeln!(f, "{}", value)?;
         }
 
-        if let Some(value) = &self.playlist_type_tag {
+        if let Some(value) = &self.playlist_type {
             writeln!(f, "{}", value)?;
         }
 
-        if let Some(value) = &self.i_frames_only_tag {
+        if let Some(value) = &self.i_frames_only {
             writeln!(f, "{}", value)?;
         }
 
-        if let Some(value) = &self.independent_segments_tag {
+        if let Some(value) = &self.independent_segments {
             writeln!(f, "{}", value)?;
         }
 
-        if let Some(value) = &self.start_tag {
+        if let Some(value) = &self.start {
             writeln!(f, "{}", value)?;
         }
 
@@ -261,7 +261,7 @@ impl fmt::Display for MediaPlaylist {
             write!(f, "{}", segment)?;
         }
 
-        if let Some(value) = &self.end_list_tag {
+        if let Some(value) = &self.end_list {
             writeln!(f, "{}", value)?;
         }
 
@@ -341,10 +341,10 @@ fn parse_media_playlist(
                         segment.date_range_tag(t);
                     }
                     Tag::ExtXTargetDuration(t) => {
-                        builder.target_duration_tag(t);
+                        builder.target_duration(t);
                     }
                     Tag::ExtXMediaSequence(t) => {
-                        builder.media_sequence_tag(t);
+                        builder.media_sequence(t);
                     }
                     Tag::ExtXDiscontinuitySequence(t) => {
                         if segments.is_empty() {
@@ -353,29 +353,28 @@ fn parse_media_playlist(
                         if has_discontinuity_tag {
                             return Err(Error::invalid_input());
                         }
-                        builder.discontinuity_sequence_tag(t);
+                        builder.discontinuity_sequence(t);
                     }
                     Tag::ExtXEndList(t) => {
-                        builder.end_list_tag(t);
+                        builder.end_list(t);
                     }
                     Tag::ExtXPlaylistType(t) => {
-                        builder.playlist_type_tag(t);
+                        builder.playlist_type(t);
                     }
                     Tag::ExtXIFramesOnly(t) => {
-                        builder.i_frames_only_tag(t);
+                        builder.i_frames_only(t);
                     }
                     Tag::ExtXMedia(_)
-                    | Tag::ExtXStreamInf(_)
-                    | Tag::ExtXIFrameStreamInf(_)
+                    | Tag::VariantStream(_)
                     | Tag::ExtXSessionData(_)
                     | Tag::ExtXSessionKey(_) => {
                         return Err(Error::unexpected_tag(tag));
                     }
                     Tag::ExtXIndependentSegments(t) => {
-                        builder.independent_segments_tag(t);
+                        builder.independent_segments(t);
                     }
                     Tag::ExtXStart(t) => {
-                        builder.start_tag(t);
+                        builder.start(t);
                     }
                     Tag::ExtXVersion(_) => {}
                     Tag::Unknown(_) => {

@@ -6,26 +6,28 @@ use pretty_assertions::assert_eq;
 
 #[test]
 fn test_media_playlist_with_byterange() {
-    let media_playlist = "#EXTM3U\n\
-                          #EXT-X-TARGETDURATION:10\n\
-                          #EXT-X-VERSION:4\n\
-                          #EXT-X-MEDIA-SEQUENCE:0\n\
-                          #EXTINF:10.0,\n\
-                          #EXT-X-BYTERANGE:75232@0\n\
-                          video.ts\n\
-                          #EXT-X-BYTERANGE:82112@752321\n\
-                          #EXTINF:10.0,\n\
-                          video.ts\n\
-                          #EXTINF:10.0,\n\
-                          #EXT-X-BYTERANGE:69864\n\
-                          video.ts"
-        .parse::<MediaPlaylist>()
-        .unwrap();
+    let media_playlist = concat!(
+        "#EXTM3U\n",
+        "#EXT-X-TARGETDURATION:10\n",
+        "#EXT-X-VERSION:4\n",
+        "#EXT-X-MEDIA-SEQUENCE:0\n",
+        "#EXTINF:10.0,\n",
+        "#EXT-X-BYTERANGE:75232@0\n",
+        "video.ts\n",
+        "#EXT-X-BYTERANGE:82112@752321\n",
+        "#EXTINF:10.0,\n",
+        "video.ts\n",
+        "#EXTINF:10.0,\n",
+        "#EXT-X-BYTERANGE:69864\n",
+        "video.ts\n"
+    )
+    .parse::<MediaPlaylist>()
+    .unwrap();
 
     assert_eq!(
         MediaPlaylist::builder()
-            .target_duration_tag(ExtXTargetDuration::new(Duration::from_secs(10)))
-            .media_sequence_tag(ExtXMediaSequence::new(0))
+            .target_duration(ExtXTargetDuration::new(Duration::from_secs(10)))
+            .media_sequence(ExtXMediaSequence::new(0))
             .segments(vec![
                 MediaSegment::builder()
                     .inf_tag(ExtInf::new(Duration::from_secs_f64(10.0)))

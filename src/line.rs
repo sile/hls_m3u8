@@ -1,65 +1,48 @@
-use std::convert::TryFrom;
-use std::fmt;
-use std::str::FromStr;
+use core::convert::TryFrom;
+use core::fmt;
+use core::str::FromStr;
 
 use crate::tags;
 use crate::Error;
 
 #[derive(Debug, Clone)]
 pub(crate) struct Lines<'a> {
-    lines: ::core::str::Lines<'a>,
+    lines: ::core::iter::FilterMap<::core::str::Lines<'a>, fn(&'a str) -> Option<&'a str>>,
 }
 
 impl<'a> Iterator for Lines<'a> {
     type Item = crate::Result<Line<'a>>;
 
     fn next(&mut self) -> Option<Self::Item> {
-        let mut stream_inf = false;
-        let mut stream_inf_line = None;
+        let line = self.lines.next()?;
 
-        while let Some(line) = self.lines.next() {
-            let line = line.trim();
+        if line.starts_with(tags::VariantStream::PREFIX_EXTXSTREAMINF) {
+            let uri = self.lines.next()?;
 
-            if line.is_empty() {
-                continue;
-            }
-
-            if line.starts_with(tags::ExtXStreamInf::PREFIX) {
-                stream_inf = true;
-                stream_inf_line = Some(line);
-
-                continue;
-            } else if line.starts_with("#EXT") {
-                return Some(Tag::try_from(line).map(Line::Tag));
-            } else if line.starts_with('#') {
-                continue; // ignore comments
-            } else {
-                // stream inf line needs special treatment
-                if stream_inf {
-                    stream_inf = false;
-
-                    if let Some(first_line) = stream_inf_line {
-                        return Some(
-                            tags::ExtXStreamInf::from_str(&format!("{}\n{}", first_line, line))
-                                .map(|v| Line::Tag(Tag::ExtXStreamInf(v))),
-                        );
-                    } else {
-                        continue;
-                    }
-                } else {
-                    return Some(Ok(Line::Uri(line)));
-                }
-            }
+            Some(
+                tags::VariantStream::from_str(&format!("{}\n{}", line, uri))
+                    .map(|v| Line::Tag(Tag::VariantStream(v))),
+            )
+        } else if line.starts_with("#EXT") {
+            Some(Tag::try_from(line).map(Line::Tag))
+        } else if line.starts_with('#') {
+            Some(Ok(Line::Comment(line)))
+        } else {
+            Some(Ok(Line::Uri(line)))
         }
-
-        None
     }
 }
 
 impl<'a> From<&'a str> for Lines<'a> {
     fn from(buffer: &'a str) -> Self {
         Self {
-            lines: buffer.lines(),
+            lines: buffer.lines().filter_map(|line| {
+                if line.trim().is_empty() {
+                    None
+                } else {
+                    Some(line.trim())
+                }
+            }),
         }
     }
 }
@@ -67,6 +50,7 @@ impl<'a> From<&'a str> for Lines<'a> {
 #[derive(Debug, Clone, PartialEq)]
 pub(crate) enum Line<'a> {
     Tag(Tag<'a>),
+    Comment(&'a str),
     Uri(&'a str),
 }
 
@@ -88,12 +72,11 @@ pub(crate) enum Tag<'a> {
     ExtXPlaylistType(tags::ExtXPlaylistType),
     ExtXIFramesOnly(tags::ExtXIFramesOnly),
     ExtXMedia(tags::ExtXMedia),
-    ExtXStreamInf(tags::ExtXStreamInf),
-    ExtXIFrameStreamInf(tags::ExtXIFrameStreamInf),
     ExtXSessionData(tags::ExtXSessionData),
     ExtXSessionKey(tags::ExtXSessionKey),
     ExtXIndependentSegments(tags::ExtXIndependentSegments),
     ExtXStart(tags::ExtXStart),
+    VariantStream(tags::VariantStream),
     Unknown(&'a str),
 }
 
@@ -115,8 +98,7 @@ impl<'a> fmt::Display for Tag<'a> {
             Self::ExtXPlaylistType(value) => value.fmt(f),
             Self::ExtXIFramesOnly(value) => value.fmt(f),
             Self::ExtXMedia(value) => value.fmt(f),
-            Self::ExtXStreamInf(value) => value.fmt(f),
-            Self::ExtXIFrameStreamInf(value) => value.fmt(f),
+            Self::VariantStream(value) => value.fmt(f),
             Self::ExtXSessionData(value) => value.fmt(f),
             Self::ExtXSessionKey(value) => value.fmt(f),
             Self::ExtXIndependentSegments(value) => value.fmt(f),
@@ -160,10 +142,13 @@ impl<'a> TryFrom<&'a str> for Tag<'a> {
             input.parse().map(Self::ExtXIFramesOnly)
         } else if input.starts_with(tags::ExtXMedia::PREFIX) {
             input.parse().map(Self::ExtXMedia).map_err(Error::custom)
-        } else if input.starts_with(tags::ExtXStreamInf::PREFIX) {
-            input.parse().map(Self::ExtXStreamInf)
-        } else if input.starts_with(tags::ExtXIFrameStreamInf::PREFIX) {
-            input.parse().map(Self::ExtXIFrameStreamInf)
+        } else if input.starts_with(tags::VariantStream::PREFIX_EXTXIFRAME)
+            || input.starts_with(tags::VariantStream::PREFIX_EXTXSTREAMINF)
+        {
+            input
+                .parse()
+                .map(Self::VariantStream)
+                .map_err(Error::custom)
         } else if input.starts_with(tags::ExtXSessionData::PREFIX) {
             input.parse().map(Self::ExtXSessionData)
         } else if input.starts_with(tags::ExtXSessionKey::PREFIX) {

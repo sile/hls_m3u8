@@ -11,7 +11,7 @@ mod key_format_versions;
 mod media_type;
 mod protocol_version;
 mod resolution;
-mod stream_inf;
+mod stream_data;
 mod value;
 
 mod float;
@@ -29,7 +29,7 @@ pub use key_format_versions::*;
 pub use media_type::*;
 pub use protocol_version::*;
 pub use resolution::*;
-pub use stream_inf::*;
+pub use stream_data::*;
 pub use value::*;
 
 pub use float::Float;
