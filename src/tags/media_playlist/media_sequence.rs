@@ -65,7 +65,10 @@ impl RequiredVersion for ExtXMediaSequence {
 }
 
 impl fmt::Display for ExtXMediaSequence {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result { write!(f, "{}{}", Self::PREFIX, self.0) }
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        //
+        write!(f, "{}{}", Self::PREFIX, self.0)
+    }
 }
 
 impl FromStr for ExtXMediaSequence {

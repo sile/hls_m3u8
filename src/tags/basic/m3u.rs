@@ -9,10 +9,10 @@ use crate::{Error, RequiredVersion};
 ///
 /// The [`ExtM3u`] tag indicates that the file is an **Ext**ended **[`M3U`]**
 /// Playlist file.
-/// It is the at the start of every [`Media Playlist`] and [`Master Playlist`].
+/// It is the at the start of every [`MediaPlaylist`] and [`MasterPlaylist`].
 ///
-/// [`Media Playlist`]: crate::MediaPlaylist
-/// [`Master Playlist`]: crate::MasterPlaylist
+/// [`MediaPlaylist`]: crate::MediaPlaylist
+/// [`MasterPlaylist`]: crate::MasterPlaylist
 /// [`M3U`]: https://en.wikipedia.org/wiki/M3U
 /// [4.3.1.1. EXTM3U]: https://tools.ietf.org/html/rfc8216#section-4.3.1.1
 #[derive(Copy, Clone, Eq, PartialEq, Ord, PartialOrd, Hash, Debug, Default)]

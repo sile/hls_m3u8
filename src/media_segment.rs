@@ -41,9 +41,7 @@ pub struct MediaSegment {
 }
 
 impl MediaSegment {
-    /// Returns a builder for a [`MasterPlaylist`].
-    ///
-    /// [`MasterPlaylist`]: crate::MasterPlaylist
+    /// Returns a builder for a [`MediaSegment`].
     pub fn builder() -> MediaSegmentBuilder { MediaSegmentBuilder::default() }
 }
 
@@ -131,13 +129,15 @@ mod tests {
                 .build()
                 .unwrap()
                 .to_string(),
-            "#EXT-X-KEY:METHOD=NONE\n\
-             #EXT-X-MAP:URI=\"https://www.example.com/\"\n\
-             #EXT-X-BYTERANGE:20@5\n\
-             #EXT-X-DISCONTINUITY\n\
-             #EXTINF:4,\n\
-             http://www.uri.com/\n"
-                .to_string()
+            concat!(
+                "#EXT-X-KEY:METHOD=NONE\n",
+                "#EXT-X-MAP:URI=\"https://www.example.com/\"\n",
+                "#EXT-X-BYTERANGE:20@5\n",
+                "#EXT-X-DISCONTINUITY\n",
+                "#EXTINF:4,\n",
+                "http://www.uri.com/\n"
+            )
+            .to_string()
         );
     }
 }

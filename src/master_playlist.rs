@@ -15,8 +15,9 @@ use crate::utils::tag;
 use crate::{Error, RequiredVersion};
 
 /// The master playlist describes all of the available variants for your
-/// content. Each variant is a version of the stream at a particular bitrate
-/// and is contained in a separate playlist.
+/// content.
+/// Each variant is a version of the stream at a particular bitrate and is
+/// contained in a separate playlist.
 #[derive(ShortHand, Debug, Clone, Builder, PartialEq)]
 #[builder(build_fn(validate = "Self::validate"))]
 #[builder(setter(into, strip_option))]
@@ -67,21 +68,24 @@ pub struct MasterPlaylist {
     /// This tag is optional.
     #[builder(default)]
     variants: Vec<VariantStream>,
-    /// The [`ExtXSessionData`] tags of the playlist.
+    /// The [`ExtXSessionData`] tag allows arbitrary session data to be
+    /// carried in a [`MasterPlaylist`].
     ///
     /// # Note
     ///
     /// This tag is optional.
     #[builder(default)]
     session_data: Vec<ExtXSessionData>,
-    /// The [`ExtXSessionKey`] tags of the playlist.
+    /// This is a list of [`ExtXSessionKey`]s, that allows the client to preload
+    /// these keys without having to read the [`MediaPlaylist`]s first.
     ///
     /// # Note
     ///
     /// This tag is optional.
     #[builder(default)]
     session_keys: Vec<ExtXSessionKey>,
-    /// A list of tags that are unknown.
+    /// This is a list of all tags that could not be identified while parsing
+    /// the input.
     ///
     /// # Note
     ///
@@ -140,7 +144,7 @@ impl MasterPlaylistBuilder {
     }
 
     fn validate_stream_inf(&self, value: &[VariantStream]) -> crate::Result<()> {
-        let mut has_none_closed_captions = false;
+        let mut closed_captions_none = false;
 
         for t in value {
             if let VariantStream::ExtXStreamInf {
@@ -170,31 +174,24 @@ impl MasterPlaylistBuilder {
                 if let Some(closed_captions) = &closed_captions {
                     match &closed_captions {
                         ClosedCaptions::GroupId(group_id) => {
+                            if closed_captions_none {
+                                return Err(Error::custom(
+                                    "If one ClosedCaptions is None all have to be None!",
+                                ));
+                            }
+
                             if !self.check_media_group(MediaType::ClosedCaptions, group_id) {
                                 return Err(Error::unmatched_group(group_id));
                             }
                         }
-                        ClosedCaptions::None => {
-                            has_none_closed_captions = true;
+                        _ => {
+                            if !closed_captions_none {
+                                closed_captions_none = true;
+                            }
                         }
                     }
                 }
             }
-        }
-
-        if has_none_closed_captions
-            && !value.iter().all(|t| {
-                if let VariantStream::ExtXStreamInf {
-                    closed_captions, ..
-                } = &t
-                {
-                    closed_captions == &Some(ClosedCaptions::None)
-                } else {
-                    false
-                }
-            })
-        {
-            return Err(Error::invalid_input());
         }
 
         Ok(())
@@ -218,6 +215,8 @@ impl MasterPlaylistBuilder {
         let mut set = HashSet::new();
 
         if let Some(value) = &self.session_data {
+            set.reserve(value.len());
+
             for t in value {
                 if !set.insert((t.data_id(), t.language())) {
                     return Err(Error::custom(format!("Conflict: {}", t)));
@@ -264,20 +263,20 @@ impl fmt::Display for MasterPlaylist {
             writeln!(f, "{}", ExtXVersion::new(self.required_version()))?;
         }
 
-        for t in &self.media {
-            writeln!(f, "{}", t)?;
+        for value in &self.media {
+            writeln!(f, "{}", value)?;
         }
 
-        for t in &self.variants {
-            writeln!(f, "{}", t)?;
+        for value in &self.variants {
+            writeln!(f, "{}", value)?;
         }
 
-        for t in &self.session_data {
-            writeln!(f, "{}", t)?;
+        for value in &self.session_data {
+            writeln!(f, "{}", value)?;
         }
 
-        for t in &self.session_keys {
-            writeln!(f, "{}", t)?;
+        for value in &self.session_keys {
+            writeln!(f, "{}", value)?;
         }
 
         if let Some(value) = &self.independent_segments {
@@ -288,8 +287,8 @@ impl fmt::Display for MasterPlaylist {
             writeln!(f, "{}", value)?;
         }
 
-        for t in &self.unknown_tags {
-            writeln!(f, "{}", t)?;
+        for value in &self.unknown_tags {
+            writeln!(f, "{}", value)?;
         }
 
         Ok(())
@@ -382,40 +381,194 @@ impl FromStr for MasterPlaylist {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::types::StreamData;
     use pretty_assertions::assert_eq;
 
     #[test]
     fn test_parser() {
-        "#EXTM3U\n\
-         #EXT-X-STREAM-INF:BANDWIDTH=150000,CODECS=\"avc1.42e00a,mp4a.40.2\",RESOLUTION=416x234\n\
-         http://example.com/low/index.m3u8\n\
-         #EXT-X-STREAM-INF:BANDWIDTH=240000,CODECS=\"avc1.42e00a,mp4a.40.2\",RESOLUTION=416x234\n\
-         http://example.com/lo_mid/index.m3u8\n\
-         #EXT-X-STREAM-INF:BANDWIDTH=440000,CODECS=\"avc1.42e00a,mp4a.40.2\",RESOLUTION=416x234\n\
-         http://example.com/hi_mid/index.m3u8\n\
-         #EXT-X-STREAM-INF:BANDWIDTH=640000,CODECS=\"avc1.42e00a,mp4a.40.2\",RESOLUTION=640x360\n\
-         http://example.com/high/index.m3u8\n\
-         #EXT-X-STREAM-INF:BANDWIDTH=64000,CODECS=\"mp4a.40.5\"\n\
-         http://example.com/audio/index.m3u8\n"
+        assert_eq!(
+            concat!(
+                "#EXTM3U\n",
+                "#EXT-X-STREAM-INF:",
+                "BANDWIDTH=150000,CODECS=\"avc1.42e00a,mp4a.40.2\",RESOLUTION=416x234\n",
+                "http://example.com/low/index.m3u8\n",
+                "#EXT-X-STREAM-INF:",
+                "BANDWIDTH=240000,CODECS=\"avc1.42e00a,mp4a.40.2\",RESOLUTION=416x234\n",
+                "http://example.com/lo_mid/index.m3u8\n",
+                "#EXT-X-STREAM-INF:",
+                "BANDWIDTH=440000,CODECS=\"avc1.42e00a,mp4a.40.2\",RESOLUTION=416x234\n",
+                "http://example.com/hi_mid/index.m3u8\n",
+                "#EXT-X-STREAM-INF:",
+                "BANDWIDTH=640000,CODECS=\"avc1.42e00a,mp4a.40.2\",RESOLUTION=640x360\n",
+                "http://example.com/high/index.m3u8\n",
+                "#EXT-X-STREAM-INF:BANDWIDTH=64000,CODECS=\"mp4a.40.5\"\n",
+                "http://example.com/audio/index.m3u8\n"
+            )
             .parse::<MasterPlaylist>()
-            .unwrap();
+            .unwrap(),
+            MasterPlaylist::builder()
+                .variants(vec![
+                    VariantStream::ExtXStreamInf {
+                        uri: "http://example.com/low/index.m3u8".into(),
+                        frame_rate: None,
+                        audio: None,
+                        subtitles: None,
+                        closed_captions: None,
+                        stream_data: StreamData::builder()
+                            .bandwidth(150000)
+                            .codecs("avc1.42e00a,mp4a.40.2")
+                            .resolution((416, 234))
+                            .build()
+                            .unwrap()
+                    },
+                    VariantStream::ExtXStreamInf {
+                        uri: "http://example.com/lo_mid/index.m3u8".into(),
+                        frame_rate: None,
+                        audio: None,
+                        subtitles: None,
+                        closed_captions: None,
+                        stream_data: StreamData::builder()
+                            .bandwidth(240000)
+                            .codecs("avc1.42e00a,mp4a.40.2")
+                            .resolution((416, 234))
+                            .build()
+                            .unwrap()
+                    },
+                    VariantStream::ExtXStreamInf {
+                        uri: "http://example.com/hi_mid/index.m3u8".into(),
+                        frame_rate: None,
+                        audio: None,
+                        subtitles: None,
+                        closed_captions: None,
+                        stream_data: StreamData::builder()
+                            .bandwidth(440000)
+                            .codecs("avc1.42e00a,mp4a.40.2")
+                            .resolution((416, 234))
+                            .build()
+                            .unwrap()
+                    },
+                    VariantStream::ExtXStreamInf {
+                        uri: "http://example.com/high/index.m3u8".into(),
+                        frame_rate: None,
+                        audio: None,
+                        subtitles: None,
+                        closed_captions: None,
+                        stream_data: StreamData::builder()
+                            .bandwidth(640000)
+                            .codecs("avc1.42e00a,mp4a.40.2")
+                            .resolution((640, 360))
+                            .build()
+                            .unwrap()
+                    },
+                    VariantStream::ExtXStreamInf {
+                        uri: "http://example.com/audio/index.m3u8".into(),
+                        frame_rate: None,
+                        audio: None,
+                        subtitles: None,
+                        closed_captions: None,
+                        stream_data: StreamData::builder()
+                            .bandwidth(64000)
+                            .codecs("mp4a.40.5")
+                            .build()
+                            .unwrap()
+                    },
+                ])
+                .build()
+                .unwrap()
+        );
     }
 
     #[test]
     fn test_display() {
-        let input = "#EXTM3U\n\
-        #EXT-X-STREAM-INF:BANDWIDTH=150000,CODECS=\"avc1.42e00a,mp4a.40.2\",RESOLUTION=416x234\n\
-        http://example.com/low/index.m3u8\n\
-        #EXT-X-STREAM-INF:BANDWIDTH=240000,CODECS=\"avc1.42e00a,mp4a.40.2\",RESOLUTION=416x234\n\
-        http://example.com/lo_mid/index.m3u8\n\
-        #EXT-X-STREAM-INF:BANDWIDTH=440000,CODECS=\"avc1.42e00a,mp4a.40.2\",RESOLUTION=416x234\n\
-        http://example.com/hi_mid/index.m3u8\n\
-        #EXT-X-STREAM-INF:BANDWIDTH=640000,CODECS=\"avc1.42e00a,mp4a.40.2\",RESOLUTION=640x360\n\
-        http://example.com/high/index.m3u8\n\
-        #EXT-X-STREAM-INF:BANDWIDTH=64000,CODECS=\"mp4a.40.5\"\n\
-        http://example.com/audio/index.m3u8\n";
-
-        let playlist = input.parse::<MasterPlaylist>().unwrap();
-        assert_eq!(playlist.to_string(), input);
+        assert_eq!(
+            concat!(
+                "#EXTM3U\n",
+                "#EXT-X-STREAM-INF:",
+                "BANDWIDTH=150000,CODECS=\"avc1.42e00a,mp4a.40.2\",RESOLUTION=416x234\n",
+                "http://example.com/low/index.m3u8\n",
+                "#EXT-X-STREAM-INF:",
+                "BANDWIDTH=240000,CODECS=\"avc1.42e00a,mp4a.40.2\",RESOLUTION=416x234\n",
+                "http://example.com/lo_mid/index.m3u8\n",
+                "#EXT-X-STREAM-INF:",
+                "BANDWIDTH=440000,CODECS=\"avc1.42e00a,mp4a.40.2\",RESOLUTION=416x234\n",
+                "http://example.com/hi_mid/index.m3u8\n",
+                "#EXT-X-STREAM-INF:",
+                "BANDWIDTH=640000,CODECS=\"avc1.42e00a,mp4a.40.2\",RESOLUTION=640x360\n",
+                "http://example.com/high/index.m3u8\n",
+                "#EXT-X-STREAM-INF:BANDWIDTH=64000,CODECS=\"mp4a.40.5\"\n",
+                "http://example.com/audio/index.m3u8\n"
+            )
+            .to_string(),
+            MasterPlaylist::builder()
+                .variants(vec![
+                    VariantStream::ExtXStreamInf {
+                        uri: "http://example.com/low/index.m3u8".into(),
+                        frame_rate: None,
+                        audio: None,
+                        subtitles: None,
+                        closed_captions: None,
+                        stream_data: StreamData::builder()
+                            .bandwidth(150000)
+                            .codecs("avc1.42e00a,mp4a.40.2")
+                            .resolution((416, 234))
+                            .build()
+                            .unwrap()
+                    },
+                    VariantStream::ExtXStreamInf {
+                        uri: "http://example.com/lo_mid/index.m3u8".into(),
+                        frame_rate: None,
+                        audio: None,
+                        subtitles: None,
+                        closed_captions: None,
+                        stream_data: StreamData::builder()
+                            .bandwidth(240000)
+                            .codecs("avc1.42e00a,mp4a.40.2")
+                            .resolution((416, 234))
+                            .build()
+                            .unwrap()
+                    },
+                    VariantStream::ExtXStreamInf {
+                        uri: "http://example.com/hi_mid/index.m3u8".into(),
+                        frame_rate: None,
+                        audio: None,
+                        subtitles: None,
+                        closed_captions: None,
+                        stream_data: StreamData::builder()
+                            .bandwidth(440000)
+                            .codecs("avc1.42e00a,mp4a.40.2")
+                            .resolution((416, 234))
+                            .build()
+                            .unwrap()
+                    },
+                    VariantStream::ExtXStreamInf {
+                        uri: "http://example.com/high/index.m3u8".into(),
+                        frame_rate: None,
+                        audio: None,
+                        subtitles: None,
+                        closed_captions: None,
+                        stream_data: StreamData::builder()
+                            .bandwidth(640000)
+                            .codecs("avc1.42e00a,mp4a.40.2")
+                            .resolution((640, 360))
+                            .build()
+                            .unwrap()
+                    },
+                    VariantStream::ExtXStreamInf {
+                        uri: "http://example.com/audio/index.m3u8".into(),
+                        frame_rate: None,
+                        audio: None,
+                        subtitles: None,
+                        closed_captions: None,
+                        stream_data: StreamData::builder()
+                            .bandwidth(64000)
+                            .codecs("mp4a.40.5")
+                            .build()
+                            .unwrap()
+                    },
+                ])
+                .build()
+                .unwrap()
+                .to_string()
+        );
     }
 }

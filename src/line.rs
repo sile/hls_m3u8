@@ -1,6 +1,8 @@
 use core::convert::TryFrom;
-use core::fmt;
+use core::iter::FusedIterator;
 use core::str::FromStr;
+
+use derive_more::Display;
 
 use crate::tags;
 use crate::Error;
@@ -33,16 +35,14 @@ impl<'a> Iterator for Lines<'a> {
     }
 }
 
+impl<'a> FusedIterator for Lines<'a> {}
+
 impl<'a> From<&'a str> for Lines<'a> {
     fn from(buffer: &'a str) -> Self {
         Self {
-            lines: buffer.lines().filter_map(|line| {
-                if line.trim().is_empty() {
-                    None
-                } else {
-                    Some(line.trim())
-                }
-            }),
+            lines: buffer
+                .lines()
+                .filter_map(|line| Some(line.trim()).filter(|v| !v.is_empty())),
         }
     }
 }
@@ -55,7 +55,8 @@ pub(crate) enum Line<'a> {
 }
 
 #[allow(clippy::large_enum_variant)]
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq, Display)]
+#[display(fmt = "{}")]
 pub(crate) enum Tag<'a> {
     ExtXVersion(tags::ExtXVersion),
     ExtInf(tags::ExtInf),
@@ -78,34 +79,6 @@ pub(crate) enum Tag<'a> {
     ExtXStart(tags::ExtXStart),
     VariantStream(tags::VariantStream),
     Unknown(&'a str),
-}
-
-impl<'a> fmt::Display for Tag<'a> {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        match &self {
-            Self::ExtXVersion(value) => value.fmt(f),
-            Self::ExtInf(value) => value.fmt(f),
-            Self::ExtXByteRange(value) => value.fmt(f),
-            Self::ExtXDiscontinuity(value) => value.fmt(f),
-            Self::ExtXKey(value) => value.fmt(f),
-            Self::ExtXMap(value) => value.fmt(f),
-            Self::ExtXProgramDateTime(value) => value.fmt(f),
-            Self::ExtXDateRange(value) => value.fmt(f),
-            Self::ExtXTargetDuration(value) => value.fmt(f),
-            Self::ExtXMediaSequence(value) => value.fmt(f),
-            Self::ExtXDiscontinuitySequence(value) => value.fmt(f),
-            Self::ExtXEndList(value) => value.fmt(f),
-            Self::ExtXPlaylistType(value) => value.fmt(f),
-            Self::ExtXIFramesOnly(value) => value.fmt(f),
-            Self::ExtXMedia(value) => value.fmt(f),
-            Self::VariantStream(value) => value.fmt(f),
-            Self::ExtXSessionData(value) => value.fmt(f),
-            Self::ExtXSessionKey(value) => value.fmt(f),
-            Self::ExtXIndependentSegments(value) => value.fmt(f),
-            Self::ExtXStart(value) => value.fmt(f),
-            Self::Unknown(value) => value.fmt(f),
-        }
-    }
 }
 
 impl<'a> TryFrom<&'a str> for Tag<'a> {

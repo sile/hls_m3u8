@@ -87,6 +87,32 @@ mod tests {
     use pretty_assertions::assert_eq;
 
     #[test]
+    fn test_parse_iv_from_str() {
+        assert_eq!(
+            parse_iv_from_str("0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF").unwrap(),
+            [
+                0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
+                0xFF, 0xFF
+            ]
+        );
+
+        assert_eq!(
+            parse_iv_from_str("0XFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF").unwrap(),
+            [
+                0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
+                0xFF, 0xFF
+            ]
+        );
+
+        // missing `0x` at the start:
+        assert!(parse_iv_from_str("0FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF").is_err());
+        // too small:
+        assert!(parse_iv_from_str("0xFF").is_err());
+        // too large:
+        assert!(parse_iv_from_str("0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF").is_err());
+    }
+
+    #[test]
     fn test_parse_yes_or_no() {
         assert!(parse_yes_or_no("YES").unwrap());
         assert!(!parse_yes_or_no("NO").unwrap());

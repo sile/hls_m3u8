@@ -31,9 +31,9 @@ pub enum SessionData {
 /// # [4.3.4.4. EXT-X-SESSION-DATA]
 ///
 /// The [`ExtXSessionData`] tag allows arbitrary session data to be
-/// carried in a [`Master Playlist`].
+/// carried in a [`MasterPlaylist`].
 ///
-/// [`Master Playlist`]: crate::MasterPlaylist
+/// [`MasterPlaylist`]: crate::MasterPlaylist
 /// [4.3.4.4. EXT-X-SESSION-DATA]: https://tools.ietf.org/html/rfc8216#section-4.3.4.4
 #[derive(ShortHand, Builder, Hash, Eq, Ord, Debug, PartialEq, Clone, PartialOrd)]
 #[builder(setter(into))]
@@ -58,7 +58,7 @@ pub struct ExtXSessionData {
     ///
     /// This field is required.
     data: SessionData,
-    /// The `language` attribute identifies the language of [`SessionData`].
+    /// The `language` attribute identifies the language of the [`SessionData`].
     /// See [rfc5646](https://tools.ietf.org/html/rfc5646).
     #[builder(setter(into, strip_option), default)]
     language: Option<String>,

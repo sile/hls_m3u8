@@ -7,11 +7,11 @@ use crate::{Error, RequiredVersion};
 
 /// # [4.4.3.4. EXT-X-ENDLIST]
 ///
-/// The [`ExtXEndList`] tag indicates, that no more [`Media Segment`]s will be
-/// added to the [`Media Playlist`] file.
+/// The [`ExtXEndList`] tag indicates, that no more [`MediaSegment`]s will be
+/// added to the [`MediaPlaylist`] file.
 ///
-/// [`Media Segment`]: crate::MediaSegment
-/// [`Media Playlist`]: crate::MediaPlaylist
+/// [`MediaSegment`]: crate::MediaSegment
+/// [`MediaPlaylist`]: crate::MediaPlaylist
 /// [4.4.3.4. EXT-X-ENDLIST]:
 /// https://tools.ietf.org/html/draft-pantos-hls-rfc8216bis-04#section-4.4.3.4
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, PartialOrd, Ord)]

@@ -9,13 +9,13 @@ use crate::{Error, RequiredVersion};
 
 /// # [4.3.4.5. EXT-X-SESSION-KEY]
 ///
-/// The [`ExtXSessionKey`] tag allows encryption keys from [`Media Playlist`]s
-/// to be specified in a [`Master Playlist`]. This allows the client to
-/// preload these keys without having to read the [`Media Playlist`]s
+/// The [`ExtXSessionKey`] tag allows encryption keys from [`MediaPlaylist`]s
+/// to be specified in a [`MasterPlaylist`]. This allows the client to
+/// preload these keys without having to read the [`MediaPlaylist`]s
 /// first.
 ///
-/// [`Media Playlist`]: crate::MediaPlaylist
-/// [`Master Playlist`]: crate::MasterPlaylist
+/// [`MediaPlaylist`]: crate::MediaPlaylist
+/// [`MasterPlaylist`]: crate::MasterPlaylist
 /// [4.3.4.5. EXT-X-SESSION-KEY]: https://tools.ietf.org/html/rfc8216#section-4.3.4.5
 #[derive(Deref, DerefMut, Debug, Clone, PartialEq, Eq, Hash)]
 pub struct ExtXSessionKey(DecryptionKey);

@@ -87,6 +87,7 @@ pub trait Encrypted {
         if self.keys().is_empty() {
             return false;
         }
+
         self.keys()
             .iter()
             .any(|k| k.method() != EncryptionMethod::None)
@@ -140,7 +141,7 @@ pub trait RequiredVersion {
 impl<T: RequiredVersion> RequiredVersion for Vec<T> {
     fn required_version(&self) -> ProtocolVersion {
         self.iter()
-            .map(|v| v.required_version())
+            .map(RequiredVersion::required_version)
             .max()
             // return ProtocolVersion::V1, if the iterator is empty:
             .unwrap_or_default()
@@ -150,8 +151,26 @@ impl<T: RequiredVersion> RequiredVersion for Vec<T> {
 impl<T: RequiredVersion> RequiredVersion for Option<T> {
     fn required_version(&self) -> ProtocolVersion {
         self.iter()
-            .map(|v| v.required_version())
+            .map(RequiredVersion::required_version)
             .max()
             .unwrap_or_default()
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use pretty_assertions::assert_eq;
+
+    #[test]
+    fn test_required_version_trait() {
+        struct Example;
+
+        impl RequiredVersion for Example {
+            fn required_version(&self) -> ProtocolVersion { ProtocolVersion::V3 }
+        }
+
+        assert_eq!(Example.required_version(), ProtocolVersion::V3);
+        assert_eq!(Example.introduced_version(), ProtocolVersion::V3);
     }
 }

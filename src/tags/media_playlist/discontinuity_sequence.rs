@@ -11,11 +11,13 @@ use crate::RequiredVersion;
 /// # [4.4.3.3. EXT-X-DISCONTINUITY-SEQUENCE]
 ///
 /// The [`ExtXDiscontinuitySequence`] tag allows synchronization between
-/// different Renditions of the same Variant Stream or different Variant
-/// Streams that have [`ExtXDiscontinuity`] tags in their [`Media Playlist`]s.
+/// different renditions of the same [`VariantStream`] or different
+/// [`VariantStream`]s that have [`ExtXDiscontinuity`] tags in their
+/// [`MediaPlaylist`]s.
 ///
+/// [`VariantStream`]: crate::tags::VariantStream
 /// [`ExtXDiscontinuity`]: crate::tags::ExtXDiscontinuity
-/// [`Media Playlist`]: crate::MediaPlaylist
+/// [`MediaPlaylist`]: crate::MediaPlaylist
 /// [4.4.3.3. EXT-X-DISCONTINUITY-SEQUENCE]:
 /// https://tools.ietf.org/html/draft-pantos-hls-rfc8216bis-04#section-4.4.3.3
 #[derive(ShortHand, Default, Debug, Clone, Copy, PartialEq, Eq, Hash, Ord, PartialOrd)]

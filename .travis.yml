@@ -35,6 +35,6 @@ script:
 after_success: |
   # this does require a -Z flag for Doctests, which is unstable!
   if [[ "$TRAVIS_RUST_VERSION" == nightly ]]; then
-    cargo tarpaulin --run-types Tests Doctests --out Xml
+    cargo tarpaulin --ignore-panics --ignore-tests --run-types Tests Doctests --out Xml
     bash <(curl -s https://codecov.io/bash)
   fi

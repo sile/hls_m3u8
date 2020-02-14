@@ -11,16 +11,16 @@ use crate::{Error, RequiredVersion};
 
 /// # [4.4.5.1. EXT-X-MEDIA]
 ///
-/// The [`ExtXMedia`] tag is used to relate [`Media Playlist`]s,
+/// The [`ExtXMedia`] tag is used to relate [`MediaPlaylist`]s,
 /// that contain alternative renditions of the same content.
 ///
 /// For example, three [`ExtXMedia`] tags can be used to identify audio-only
-/// [`Media Playlist`]s, that contain English, French, and Spanish renditions
+/// [`MediaPlaylist`]s, that contain English, French, and Spanish renditions
 /// of the same presentation. Or, two [`ExtXMedia`] tags can be used to
-/// identify video-only [`Media Playlist`]s that show two different camera
+/// identify video-only [`MediaPlaylist`]s that show two different camera
 /// angles.
 ///
-/// [`Media Playlist`]: crate::MediaPlaylist
+/// [`MediaPlaylist`]: crate::MediaPlaylist
 /// [4.4.5.1. EXT-X-MEDIA]:
 /// https://tools.ietf.org/html/draft-pantos-hls-rfc8216bis-05#section-4.4.5.1
 #[derive(ShortHand, Builder, Debug, Clone, PartialEq, Eq, Hash)]
@@ -35,7 +35,7 @@ pub struct ExtXMedia {
     /// This attribute is **required**.
     #[shorthand(enable(copy))]
     media_type: MediaType,
-    /// An `URI` to a [`Media Playlist`].
+    /// An `URI` to a [`MediaPlaylist`].
     ///
     /// # Note
     ///
@@ -44,7 +44,7 @@ pub struct ExtXMedia {
     /// - This attribute is **not allowed**, if the [`MediaType`] is
     /// [`MediaType::ClosedCaptions`].
     ///
-    /// [`Media Playlist`]: crate::MediaPlaylist
+    /// [`MediaPlaylist`]: crate::MediaPlaylist
     #[builder(setter(strip_option), default)]
     uri: Option<String>,
     /// The identifier that specifies the group to which the rendition
@@ -112,9 +112,9 @@ pub struct ExtXMedia {
     #[builder(default)]
     is_forced: bool,
     /// An [`InStreamId`] specifies a rendition within the
-    /// segments in the [`Media Playlist`].
+    /// segments in the [`MediaPlaylist`].
     ///
-    /// [`Media Playlist`]: crate::MediaPlaylist
+    /// [`MediaPlaylist`]: crate::MediaPlaylist
     #[builder(setter(strip_option), default)]
     #[shorthand(enable(copy))]
     instream_id: Option<InStreamId>,

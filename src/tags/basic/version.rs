@@ -8,7 +8,7 @@ use crate::{Error, RequiredVersion};
 /// # [4.3.1.2. EXT-X-VERSION]
 ///
 /// The [`ExtXVersion`] tag indicates the compatibility version of the
-/// [`Master Playlist`] or [`Media Playlist`] file.
+/// [`MasterPlaylist`] or [`MediaPlaylist`] file.
 /// It applies to the entire Playlist.
 ///
 /// # Examples
@@ -40,8 +40,8 @@ use crate::{Error, RequiredVersion};
 /// );
 /// ```
 ///
-/// [`Media Playlist`]: crate::MediaPlaylist
-/// [`Master Playlist`]: crate::MasterPlaylist
+/// [`MediaPlaylist`]: crate::MediaPlaylist
+/// [`MasterPlaylist`]: crate::MasterPlaylist
 /// [4.3.1.2. EXT-X-VERSION]: https://tools.ietf.org/html/rfc8216#section-4.3.1.2
 #[derive(Copy, Clone, Eq, PartialEq, Ord, PartialOrd, Hash, Debug)]
 pub struct ExtXVersion(ProtocolVersion);
