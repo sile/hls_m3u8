@@ -68,7 +68,9 @@ impl FromStr for ExtXTargetDuration {
     type Err = Error;
 
     fn from_str(input: &str) -> Result<Self, Self::Err> {
-        let input = tag(input, Self::PREFIX)?.parse()?;
+        let input = tag(input, Self::PREFIX)?;
+        let input = input.parse().map_err(|e| Error::parse_int(input, e))?;
+
         Ok(Self::new(Duration::from_secs(input)))
     }
 }

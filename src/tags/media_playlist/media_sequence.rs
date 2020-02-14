@@ -72,7 +72,9 @@ impl FromStr for ExtXMediaSequence {
     type Err = Error;
 
     fn from_str(input: &str) -> Result<Self, Self::Err> {
-        let seq_num = tag(input, Self::PREFIX)?.parse()?;
+        let input = tag(input, Self::PREFIX)?;
+        let seq_num = input.parse().map_err(|e| Error::parse_int(input, e))?;
+
         Ok(Self::new(seq_num))
     }
 }

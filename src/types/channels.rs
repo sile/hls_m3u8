@@ -85,11 +85,11 @@ impl FromStr for Channels {
     fn from_str(input: &str) -> Result<Self, Self::Err> {
         let mut parameters = input.split('/');
 
-        let channel_number = parameters
+        let param_1 = parameters
             .next()
-            .ok_or_else(|| Error::missing_attribute("first parameter of channels"))?
-            .parse()
-            .map_err(Error::parse_int)?;
+            .ok_or_else(|| Error::missing_attribute("first parameter of channels"))?;
+
+        let channel_number = param_1.parse().map_err(|e| Error::parse_int(param_1, e))?;
 
         Ok(Self {
             channel_number,

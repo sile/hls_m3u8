@@ -41,12 +41,12 @@ impl FromStr for Resolution {
         let width = input
             .next()
             .ok_or_else(|| Error::custom("missing width for `Resolution` or an invalid input"))
-            .and_then(|v| v.parse().map_err(Error::parse_int))?;
+            .and_then(|v| v.parse().map_err(|e| Error::parse_int(v, e)))?;
 
         let height = input
             .next()
             .ok_or_else(|| Error::custom("missing height for `Resolution` or an invalid input"))
-            .and_then(|v| v.parse().map_err(Error::parse_int))?;
+            .and_then(|v| v.parse().map_err(|e| Error::parse_int(v, e)))?;
 
         Ok(Self { width, height })
     }

@@ -79,10 +79,13 @@ impl FromStr for ByteRange {
 
         let length = input
             .next()
-            .ok_or_else(|| Error::custom("missing length for #EXT-X-BYTERANGE"))
-            .and_then(|s| s.parse().map_err(Error::parse_int))?;
+            .ok_or_else(|| Error::custom("missing length"))?;
+        let length = length.parse().map_err(|e| Error::parse_int(length, e))?;
 
-        let start = input.next().map(str::parse).transpose()?;
+        let start = input
+            .next()
+            .map(|v| v.parse().map_err(|e| Error::parse_int(v, e)))
+            .transpose()?;
 
         Ok(Self::new(length, start))
     }

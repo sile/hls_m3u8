@@ -153,7 +153,13 @@ impl FromStr for ExtInf {
     fn from_str(input: &str) -> Result<Self, Self::Err> {
         let mut input = tag(input, Self::PREFIX)?.splitn(2, ',');
 
-        let duration = Duration::from_secs_f64(input.next().unwrap().parse()?);
+        let duration = input.next().unwrap();
+        let duration = Duration::from_secs_f64(
+            duration
+                .parse()
+                .map_err(|e| Error::parse_float(duration, e))?,
+        );
+
         let title = input
             .next()
             .map(str::trim)

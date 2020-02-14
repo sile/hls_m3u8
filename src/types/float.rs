@@ -59,7 +59,7 @@ impl FromStr for Float {
     type Err = Error;
 
     fn from_str(input: &str) -> Result<Self, Self::Err> {
-        let float = f32::from_str(input).map_err(Error::parse_float)?;
+        let float = f32::from_str(input).map_err(|e| Error::parse_float(input, e))?;
         Self::try_from(float)
     }
 }

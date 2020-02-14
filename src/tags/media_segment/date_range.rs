@@ -211,10 +211,14 @@ impl FromStr for ExtXDateRange {
                 "START-DATE" => start_date = Some(unquote(value)),
                 "END-DATE" => end_date = Some(unquote(value).parse().map_err(Error::chrono)?),
                 "DURATION" => {
-                    duration = Some(Duration::from_secs_f64(value.parse()?));
+                    duration = Some(Duration::from_secs_f64(
+                        value.parse().map_err(|e| Error::parse_float(value, e))?,
+                    ));
                 }
                 "PLANNED-DURATION" => {
-                    planned_duration = Some(Duration::from_secs_f64(value.parse()?));
+                    planned_duration = Some(Duration::from_secs_f64(
+                        value.parse().map_err(|e| Error::parse_float(value, e))?,
+                    ));
                 }
                 "SCTE35-CMD" => scte35_cmd = Some(unquote(value)),
                 "SCTE35-OUT" => scte35_out = Some(unquote(value)),

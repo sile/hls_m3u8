@@ -283,9 +283,19 @@ impl FromStr for StreamData {
 
         for (key, value) in AttributePairs::new(input) {
             match key {
-                "BANDWIDTH" => bandwidth = Some(value.parse::<u64>().map_err(Error::parse_int)?),
+                "BANDWIDTH" => {
+                    bandwidth = Some(
+                        value
+                            .parse::<u64>()
+                            .map_err(|e| Error::parse_int(value, e))?,
+                    );
+                }
                 "AVERAGE-BANDWIDTH" => {
-                    average_bandwidth = Some(value.parse::<u64>().map_err(Error::parse_int)?)
+                    average_bandwidth = Some(
+                        value
+                            .parse::<u64>()
+                            .map_err(|e| Error::parse_int(value, e))?,
+                    )
                 }
                 "CODECS" => codecs = Some(unquote(value)),
                 "RESOLUTION" => resolution = Some(value.parse()?),

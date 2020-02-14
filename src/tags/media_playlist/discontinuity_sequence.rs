@@ -5,6 +5,7 @@ use shorthand::ShortHand;
 
 use crate::types::ProtocolVersion;
 use crate::utils::tag;
+use crate::Error;
 use crate::RequiredVersion;
 
 /// # [4.4.3.3. EXT-X-DISCONTINUITY-SEQUENCE]
@@ -62,10 +63,12 @@ impl fmt::Display for ExtXDiscontinuitySequence {
 }
 
 impl FromStr for ExtXDiscontinuitySequence {
-    type Err = crate::Error;
+    type Err = Error;
 
     fn from_str(input: &str) -> Result<Self, Self::Err> {
-        let seq_num = tag(input, Self::PREFIX)?.parse()?;
+        let input = tag(input, Self::PREFIX)?;
+        let seq_num = input.parse().map_err(|e| Error::parse_int(input, e))?;
+
         Ok(Self::new(seq_num))
     }
 }
@@ -96,6 +99,11 @@ mod test {
         assert_eq!(
             ExtXDiscontinuitySequence::new(123),
             "#EXT-X-DISCONTINUITY-SEQUENCE:123".parse().unwrap()
+        );
+
+        assert_eq!(
+            ExtXDiscontinuitySequence::from_str("#EXT-X-DISCONTINUITY-SEQUENCE:12A"),
+            Err(Error::parse_int("12A", "12A".parse::<u64>().expect_err("")))
         );
     }
 

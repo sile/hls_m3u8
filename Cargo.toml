@@ -23,6 +23,7 @@ hex = "0.4"
 shorthand = "0.1"
 strum = { version = "0.17", features = ["derive"] }
 thiserror = "1.0"
+backtrace = { version = "0.3", features = ["std"], optional = true }
 
 [dev-dependencies]
 pretty_assertions = "0.6"
