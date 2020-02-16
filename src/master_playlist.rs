@@ -481,24 +481,6 @@ mod tests {
     #[test]
     fn test_display() {
         assert_eq!(
-            concat!(
-                "#EXTM3U\n",
-                "#EXT-X-STREAM-INF:",
-                "BANDWIDTH=150000,CODECS=\"avc1.42e00a,mp4a.40.2\",RESOLUTION=416x234\n",
-                "http://example.com/low/index.m3u8\n",
-                "#EXT-X-STREAM-INF:",
-                "BANDWIDTH=240000,CODECS=\"avc1.42e00a,mp4a.40.2\",RESOLUTION=416x234\n",
-                "http://example.com/lo_mid/index.m3u8\n",
-                "#EXT-X-STREAM-INF:",
-                "BANDWIDTH=440000,CODECS=\"avc1.42e00a,mp4a.40.2\",RESOLUTION=416x234\n",
-                "http://example.com/hi_mid/index.m3u8\n",
-                "#EXT-X-STREAM-INF:",
-                "BANDWIDTH=640000,CODECS=\"avc1.42e00a,mp4a.40.2\",RESOLUTION=640x360\n",
-                "http://example.com/high/index.m3u8\n",
-                "#EXT-X-STREAM-INF:BANDWIDTH=64000,CODECS=\"mp4a.40.5\"\n",
-                "http://example.com/audio/index.m3u8\n"
-            )
-            .to_string(),
             MasterPlaylist::builder()
                 .variants(vec![
                     VariantStream::ExtXStreamInf {
@@ -568,7 +550,30 @@ mod tests {
                 ])
                 .build()
                 .unwrap()
-                .to_string()
+                .to_string(),
+            concat!(
+                "#EXTM3U\n",
+                //
+                "#EXT-X-STREAM-INF:",
+                "BANDWIDTH=150000,CODECS=\"avc1.42e00a,mp4a.40.2\",RESOLUTION=416x234\n",
+                "http://example.com/low/index.m3u8\n",
+                //
+                "#EXT-X-STREAM-INF:",
+                "BANDWIDTH=240000,CODECS=\"avc1.42e00a,mp4a.40.2\",RESOLUTION=416x234\n",
+                "http://example.com/lo_mid/index.m3u8\n",
+                //
+                "#EXT-X-STREAM-INF:",
+                "BANDWIDTH=440000,CODECS=\"avc1.42e00a,mp4a.40.2\",RESOLUTION=416x234\n",
+                "http://example.com/hi_mid/index.m3u8\n",
+                //
+                "#EXT-X-STREAM-INF:",
+                "BANDWIDTH=640000,CODECS=\"avc1.42e00a,mp4a.40.2\",RESOLUTION=640x360\n",
+                "http://example.com/high/index.m3u8\n",
+                //
+                "#EXT-X-STREAM-INF:BANDWIDTH=64000,CODECS=\"mp4a.40.5\"\n",
+                "http://example.com/audio/index.m3u8\n"
+            )
+            .to_string()
         );
     }
 }
