@@ -19,22 +19,22 @@ pub struct MediaSegment {
     keys: Vec<ExtXKey>,
     /// The [`ExtXMap`] tag associated with the media segment.
     #[builder(default)]
-    map_tag: Option<ExtXMap>,
+    map: Option<ExtXMap>,
     /// The [`ExtXByteRange`] tag associated with the [`MediaSegment`].
     #[builder(default)]
-    byte_range_tag: Option<ExtXByteRange>,
+    byte_range: Option<ExtXByteRange>,
     /// The [`ExtXDateRange`] tag associated with the media segment.
     #[builder(default)]
-    date_range_tag: Option<ExtXDateRange>,
+    date_range: Option<ExtXDateRange>,
     /// The [`ExtXDiscontinuity`] tag associated with the media segment.
     #[builder(default)]
-    discontinuity_tag: Option<ExtXDiscontinuity>,
+    discontinuity: Option<ExtXDiscontinuity>,
     /// The [`ExtXProgramDateTime`] tag associated with the media
     /// segment.
     #[builder(default)]
-    program_date_time_tag: Option<ExtXProgramDateTime>,
+    program_date_time: Option<ExtXProgramDateTime>,
     /// The [`ExtInf`] tag associated with the [`MediaSegment`].
-    inf_tag: ExtInf,
+    inf: ExtInf,
     /// The `URI` of the [`MediaSegment`].
     #[shorthand(enable(into))]
     uri: String,
@@ -47,12 +47,13 @@ impl MediaSegment {
 
 impl MediaSegmentBuilder {
     /// Pushes an [`ExtXKey`] tag.
-    pub fn push_key_tag<VALUE: Into<ExtXKey>>(&mut self, value: VALUE) -> &mut Self {
-        if let Some(key_tags) = &mut self.keys {
-            key_tags.push(value.into());
+    pub fn push_key<VALUE: Into<ExtXKey>>(&mut self, value: VALUE) -> &mut Self {
+        if let Some(keys) = &mut self.keys {
+            keys.push(value.into());
         } else {
             self.keys = Some(vec![value.into()]);
         }
+
         self
     }
 }
@@ -63,27 +64,27 @@ impl fmt::Display for MediaSegment {
             writeln!(f, "{}", value)?;
         }
 
-        if let Some(value) = &self.map_tag {
+        if let Some(value) = &self.map {
             writeln!(f, "{}", value)?;
         }
 
-        if let Some(value) = &self.byte_range_tag {
+        if let Some(value) = &self.byte_range {
             writeln!(f, "{}", value)?;
         }
 
-        if let Some(value) = &self.date_range_tag {
+        if let Some(value) = &self.date_range {
             writeln!(f, "{}", value)?;
         }
 
-        if let Some(value) = &self.discontinuity_tag {
+        if let Some(value) = &self.discontinuity {
             writeln!(f, "{}", value)?;
         }
 
-        if let Some(value) = &self.program_date_time_tag {
+        if let Some(value) = &self.program_date_time {
             writeln!(f, "{}", value)?;
         }
 
-        writeln!(f, "{}", self.inf_tag)?; // TODO: there might be a `,` missing
+        writeln!(f, "{}", self.inf)?; // TODO: there might be a `,` missing
         writeln!(f, "{}", self.uri)?;
         Ok(())
     }
@@ -93,12 +94,12 @@ impl RequiredVersion for MediaSegment {
     fn required_version(&self) -> ProtocolVersion {
         required_version![
             self.keys,
-            self.map_tag,
-            self.byte_range_tag,
-            self.date_range_tag,
-            self.discontinuity_tag,
-            self.program_date_time_tag,
-            self.inf_tag
+            self.map,
+            self.byte_range,
+            self.date_range,
+            self.discontinuity,
+            self.program_date_time,
+            self.inf
         ]
     }
 }
@@ -120,11 +121,11 @@ mod tests {
         assert_eq!(
             MediaSegment::builder()
                 .keys(vec![ExtXKey::empty()])
-                .map_tag(ExtXMap::new("https://www.example.com/"))
-                .byte_range_tag(ExtXByteRange::new(20, Some(5)))
-                //.date_range_tag() // TODO!
-                .discontinuity_tag(ExtXDiscontinuity)
-                .inf_tag(ExtInf::new(Duration::from_secs(4)))
+                .map(ExtXMap::new("https://www.example.com/"))
+                .byte_range(ExtXByteRange::new(20, Some(5)))
+                //.date_range() // TODO!
+                .discontinuity(ExtXDiscontinuity)
+                .inf(ExtInf::new(Duration::from_secs(4)))
                 .uri("http://www.uri.com/")
                 .build()
                 .unwrap()

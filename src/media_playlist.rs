@@ -124,7 +124,7 @@ impl MediaPlaylistBuilder {
         if let Some(segments) = &self.segments {
             for s in segments {
                 // CHECK: `#EXT-X-TARGETDURATION`
-                let segment_duration = s.inf_tag().duration();
+                let segment_duration = s.inf().duration();
                 let rounded_segment_duration = {
                     if segment_duration.subsec_nanos() < 500_000_000 {
                         Duration::from_secs(segment_duration.as_secs())
@@ -152,7 +152,7 @@ impl MediaPlaylistBuilder {
                 }
 
                 // CHECK: `#EXT-X-BYTE-RANGE`
-                if let Some(tag) = s.byte_range_tag() {
+                if let Some(tag) = s.byte_range() {
                     if tag.to_range().start().is_none() {
                         let last_uri = last_range_uri.ok_or_else(Error::invalid_input)?;
                         if last_uri != s.uri() {
@@ -286,7 +286,7 @@ fn parse_media_playlist(
     let mut has_discontinuity_tag = false;
     let mut unknown_tags = vec![];
 
-    let mut available_key_tags: Vec<crate::tags::ExtXKey> = vec![];
+    let mut available_keys: Vec<crate::tags::ExtXKey> = vec![];
 
     for line in Lines::from(input) {
         match line? {
@@ -294,25 +294,25 @@ fn parse_media_playlist(
                 match tag {
                     Tag::ExtInf(t) => {
                         has_partial_segment = true;
-                        segment.inf_tag(t);
+                        segment.inf(t);
                     }
                     Tag::ExtXByteRange(t) => {
                         has_partial_segment = true;
-                        segment.byte_range_tag(t);
+                        segment.byte_range(t);
                     }
                     Tag::ExtXDiscontinuity(t) => {
                         has_discontinuity_tag = true;
                         has_partial_segment = true;
-                        segment.discontinuity_tag(t);
+                        segment.discontinuity(t);
                     }
                     Tag::ExtXKey(t) => {
                         has_partial_segment = true;
-                        if available_key_tags.is_empty() {
+                        if available_keys.is_empty() {
                             // An ExtXKey applies to every MediaSegment and to every Media
                             // Initialization Section declared by an EXT-X-MAP tag, that appears
                             // between it and the next EXT-X-KEY tag in the Playlist file with the
                             // same KEYFORMAT attribute (or the end of the Playlist file).
-                            available_key_tags = available_key_tags
+                            available_keys = available_keys
                                 .into_iter()
                                 .map(|k| {
                                     if t.key_format() == k.key_format() {
@@ -323,22 +323,22 @@ fn parse_media_playlist(
                                 })
                                 .collect();
                         } else {
-                            available_key_tags.push(t);
+                            available_keys.push(t);
                         }
                     }
                     Tag::ExtXMap(mut t) => {
                         has_partial_segment = true;
 
-                        t.set_keys(available_key_tags.clone());
-                        segment.map_tag(t);
+                        t.set_keys(available_keys.clone());
+                        segment.map(t);
                     }
                     Tag::ExtXProgramDateTime(t) => {
                         has_partial_segment = true;
-                        segment.program_date_time_tag(t);
+                        segment.program_date_time(t);
                     }
                     Tag::ExtXDateRange(t) => {
                         has_partial_segment = true;
-                        segment.date_range_tag(t);
+                        segment.date_range(t);
                     }
                     Tag::ExtXTargetDuration(t) => {
                         builder.target_duration(t);
@@ -350,9 +350,11 @@ fn parse_media_playlist(
                         if segments.is_empty() {
                             return Err(Error::invalid_input());
                         }
+
                         if has_discontinuity_tag {
                             return Err(Error::invalid_input());
                         }
+
                         builder.discontinuity_sequence(t);
                     }
                     Tag::ExtXEndList(t) => {
@@ -386,7 +388,7 @@ fn parse_media_playlist(
             }
             Line::Uri(uri) => {
                 segment.uri(uri);
-                segment.keys(available_key_tags.clone());
+                segment.keys(available_keys.clone());
                 segments.push(segment.build().map_err(Error::builder)?);
                 segment = MediaSegment::builder();
                 has_partial_segment = false;

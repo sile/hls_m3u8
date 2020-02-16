@@ -1,9 +1,10 @@
 //! Credits go to
 //! - https://github.com/globocom/m3u8/blob/master/tests/playlists.py
-use hls_m3u8::tags::*;
-use hls_m3u8::MediaPlaylist;
-
 use std::time::Duration;
+
+use hls_m3u8::tags::{ExtInf, ExtXEndList};
+use hls_m3u8::{MediaPlaylist, MediaSegment};
+use pretty_assertions::assert_eq;
 
 #[test]
 fn test_simple_playlist() {
@@ -17,31 +18,24 @@ fn test_simple_playlist() {
         "#EXT-X-ENDLIST\n"
     );
 
-    let media_playlist = playlist.parse::<MediaPlaylist>().unwrap();
     assert_eq!(
-        media_playlist.target_duration(),
-        ExtXTargetDuration::new(Duration::from_secs(5220))
-    );
-
-    assert_eq!(media_playlist.segments().len(), 2);
-
-    assert_eq!(
-        media_playlist.segments()[0].inf_tag(),
-        &ExtInf::new(Duration::from_secs(0))
-    );
-
-    assert_eq!(
-        media_playlist.segments()[1].inf_tag(),
-        &ExtInf::new(Duration::from_secs(5220))
-    );
-
-    assert_eq!(
-        media_playlist.segments()[0].uri(),
-        &"http://media.example.com/entire1.ts".to_string()
-    );
-
-    assert_eq!(
-        media_playlist.segments()[1].uri(),
-        &"http://media.example.com/entire2.ts".to_string()
+        MediaPlaylist::builder()
+            .target_duration(Duration::from_secs(5220))
+            .segments(vec![
+                MediaSegment::builder()
+                    .inf(ExtInf::new(Duration::from_secs(0)))
+                    .uri("http://media.example.com/entire1.ts")
+                    .build()
+                    .unwrap(),
+                MediaSegment::builder()
+                    .inf(ExtInf::new(Duration::from_secs(5220)))
+                    .uri("http://media.example.com/entire2.ts")
+                    .build()
+                    .unwrap(),
+            ])
+            .end_list(ExtXEndList)
+            .build()
+            .unwrap(),
+        playlist.parse::<MediaPlaylist>().unwrap(),
     );
 }

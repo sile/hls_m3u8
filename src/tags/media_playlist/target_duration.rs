@@ -75,6 +75,10 @@ impl FromStr for ExtXTargetDuration {
     }
 }
 
+impl From<Duration> for ExtXTargetDuration {
+    fn from(value: Duration) -> Self { Self::new(value) }
+}
+
 #[cfg(test)]
 mod test {
     use super::*;
