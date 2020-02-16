@@ -60,9 +60,7 @@ impl MediaSegmentBuilder {
 
 impl fmt::Display for MediaSegment {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        for value in &self.keys {
-            writeln!(f, "{}", value)?;
-        }
+        // self.keys will be printed by MediaPlaylist!
 
         if let Some(value) = &self.map {
             writeln!(f, "{}", value)?;
@@ -120,7 +118,7 @@ mod tests {
     fn test_display() {
         assert_eq!(
             MediaSegment::builder()
-                .keys(vec![ExtXKey::empty()])
+                //.keys(vec![ExtXKey::empty()])
                 .map(ExtXMap::new("https://www.example.com/"))
                 .byte_range(ExtXByteRange::new(20, Some(5)))
                 //.date_range() // TODO!
@@ -131,7 +129,7 @@ mod tests {
                 .unwrap()
                 .to_string(),
             concat!(
-                "#EXT-X-KEY:METHOD=NONE\n",
+                //"#EXT-X-KEY:METHOD=NONE\n",
                 "#EXT-X-MAP:URI=\"https://www.example.com/\"\n",
                 "#EXT-X-BYTERANGE:20@5\n",
                 "#EXT-X-DISCONTINUITY\n",

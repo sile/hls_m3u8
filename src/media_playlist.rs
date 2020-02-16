@@ -1,3 +1,4 @@
+use std::collections::HashSet;
 use std::fmt;
 use std::str::FromStr;
 use std::time::Duration;
@@ -257,7 +258,33 @@ impl fmt::Display for MediaPlaylist {
             writeln!(f, "{}", value)?;
         }
 
+        // most likely only 1 ExtXKey will be in the HashSet:
+        let mut available_keys = HashSet::with_capacity(1);
+
         for segment in &self.segments {
+            for key in segment.keys() {
+                // the key is new:
+                if available_keys.insert(key) {
+                    let mut remove_key = None;
+
+                    // an old key might be removed:
+                    for k in &available_keys {
+                        if k.key_format() == key.key_format() && &key != k {
+                            remove_key = Some(k.clone());
+                            break;
+                        }
+                    }
+
+                    if let Some(k) = remove_key {
+                        // this should always be true:
+                        let res = available_keys.remove(k);
+                        debug_assert!(res);
+                    }
+
+                    writeln!(f, "{}", key)?;
+                }
+            }
+
             write!(f, "{}", segment)?;
         }
 
@@ -305,25 +332,28 @@ fn parse_media_playlist(
                         has_partial_segment = true;
                         segment.discontinuity(t);
                     }
-                    Tag::ExtXKey(t) => {
+                    Tag::ExtXKey(key) => {
                         has_partial_segment = true;
-                        if available_keys.is_empty() {
-                            // An ExtXKey applies to every MediaSegment and to every Media
-                            // Initialization Section declared by an EXT-X-MAP tag, that appears
-                            // between it and the next EXT-X-KEY tag in the Playlist file with the
-                            // same KEYFORMAT attribute (or the end of the Playlist file).
-                            available_keys = available_keys
-                                .into_iter()
-                                .map(|k| {
-                                    if t.key_format() == k.key_format() {
-                                        t.clone()
-                                    } else {
-                                        k
-                                    }
-                                })
-                                .collect();
-                        } else {
-                            available_keys.push(t);
+
+                        // An ExtXKey applies to every MediaSegment and to every Media
+                        // Initialization Section declared by an ExtXMap tag, that appears
+                        // between it and the next ExtXKey tag in the Playlist file with the
+                        // same KEYFORMAT attribute (or the end of the Playlist file).
+
+                        let mut is_new_key = true;
+
+                        for old_key in &mut available_keys {
+                            if old_key.key_format() == key.key_format() {
+                                *old_key = key.clone();
+                                is_new_key = false;
+                                // there are no keys with the same key_format in available_keys
+                                // so the loop can stop here:
+                                break;
+                            }
+                        }
+
+                        if is_new_key {
+                            available_keys.push(key);
                         }
                     }
                     Tag::ExtXMap(mut t) => {
