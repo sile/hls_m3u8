@@ -1,3 +1,4 @@
+use core::cmp::Ordering;
 use core::convert::TryFrom;
 use core::str::FromStr;
 
@@ -110,6 +111,47 @@ impl PartialEq<f32> for UFloat {
     fn eq(&self, other: &f32) -> bool { &self.0 == other }
 }
 
+// In order to implement `Eq` a struct has to satisfy
+// the following requirements:
+// - reflexive: a == a;
+// - symmetric: a == b implies b == a; and
+// - transitive: a == b and b == c implies a == c.
+//
+// The symmetric and transitive parts are already satisfied
+// through `PartialEq`. The reflexive part is not satisfied for f32,
+// because `f32::NAN` never equals `f32::NAN`. (`assert!(f32::NAN, f32::NAN)`)
+//
+// It is ensured, that this struct can not be constructed
+// with NaN so all of the above requirements are satisfied and therefore Eq can
+// be soundly implemented.
+impl Eq for UFloat {}
+
+impl Ord for UFloat {
+    #[inline]
+    #[must_use]
+    fn cmp(&self, other: &Self) -> Ordering {
+        if *self < *other {
+            Ordering::Less
+        } else if *self == *other {
+            Ordering::Equal
+        } else {
+            Ordering::Greater
+        }
+    }
+}
+
+#[doc(hidden)]
+impl ::core::hash::Hash for UFloat {
+    fn hash<H>(&self, state: &mut H)
+    where
+        H: ::core::hash::Hasher,
+    {
+        // this should be totally fine (definitely not the most
+        // efficient implementation as this requires an allocation)
+        state.write(self.to_string().as_bytes())
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -178,5 +220,12 @@ mod tests {
         assert!(UFloat::try_from(::core::f32::INFINITY).is_err());
         assert!(UFloat::try_from(::core::f32::NAN).is_err());
         assert!(UFloat::try_from(::core::f32::NEG_INFINITY).is_err());
+    }
+
+    #[test]
+    fn test_eq() {
+        struct _AssertEq
+        where
+            UFloat: Eq;
     }
 }
