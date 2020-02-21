@@ -270,7 +270,7 @@ impl fmt::Display for MediaPlaylist {
                     // an old key might be removed:
                     for k in &available_keys {
                         if k.key_format() == key.key_format() && &key != k {
-                            remove_key = Some(k.clone());
+                            remove_key = Some(*k);
                             break;
                         }
                     }

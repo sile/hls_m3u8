@@ -11,9 +11,9 @@ use crate::{Error, RequiredVersion};
 /// # [4.3.2.6. EXT-X-PROGRAM-DATE-TIME]
 ///
 /// The [`ExtXProgramDateTime`] tag associates the first sample of a
-/// [`Media Segment`] with an absolute date and/or time.
+/// [`MediaSegment`] with an absolute date and/or time.
 ///
-/// [`Media Segment`]: crate::MediaSegment
+/// [`MediaSegment`]: crate::MediaSegment
 /// [4.3.2.6. EXT-X-PROGRAM-DATE-TIME]:
 /// https://tools.ietf.org/html/rfc8216#section-4.3.2.6
 #[derive(Deref, DerefMut, Debug, Copy, Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]

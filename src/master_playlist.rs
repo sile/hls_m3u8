@@ -82,6 +82,8 @@ pub struct MasterPlaylist {
     /// # Note
     ///
     /// This tag is optional.
+    ///
+    /// [`MediaPlaylist`]: crate::MediaPlaylist
     #[builder(default)]
     session_keys: Vec<ExtXSessionKey>,
     /// This is a list of all tags that could not be identified while parsing

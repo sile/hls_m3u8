@@ -5,9 +5,9 @@ use derive_builder::Builder;
 use shorthand::ShortHand;
 
 use crate::attribute::AttributePairs;
-use crate::types::{HdcpLevel, Resolution};
+use crate::types::{HdcpLevel, ProtocolVersion, Resolution};
 use crate::utils::{quote, unquote};
-use crate::Error;
+use crate::{Error, RequiredVersion};
 
 /// The [`StreamData`] struct contains the data that is shared between both
 /// variants of the [`VariantStream`].
@@ -15,7 +15,7 @@ use crate::Error;
 /// [`VariantStream`]: crate::tags::VariantStream
 #[derive(ShortHand, Builder, PartialOrd, Debug, Clone, PartialEq, Eq, Hash, Ord)]
 #[builder(setter(strip_option))]
-#[builder(derive(Debug, PartialEq))]
+#[builder(derive(Debug, PartialEq, PartialOrd, Ord, Eq, Hash))]
 #[shorthand(enable(must_use, into))]
 pub struct StreamData {
     /// The peak segment bitrate of the [`VariantStream`] in bits per second.
@@ -321,6 +321,19 @@ impl FromStr for StreamData {
             hdcp_level,
             video,
         })
+    }
+}
+
+/// This struct requires [`ProtocolVersion::V1`].
+impl RequiredVersion for StreamData {
+    fn required_version(&self) -> ProtocolVersion { ProtocolVersion::V1 }
+
+    fn introduced_version(&self) -> ProtocolVersion {
+        if self.video.is_some() {
+            ProtocolVersion::V4
+        } else {
+            ProtocolVersion::V1
+        }
     }
 }
 

@@ -50,6 +50,8 @@ pub struct ExtXKey {
     /// # Note
     ///
     /// This attribute is required.
+    ///
+    /// [`MediaSegment`]: crate::MediaSegment
     #[shorthand(enable(copy))]
     pub(crate) method: EncryptionMethod,
     /// An `URI` that specifies how to obtain the key.
@@ -100,7 +102,7 @@ pub struct ExtXKey {
     #[builder(setter(into, strip_option), default)]
     // TODO: workaround for https://github.com/Luro02/shorthand/issues/20
     #[shorthand(enable(copy), disable(option_as_ref))]
-    pub(crate) iv: Option<[u8; 16]>,
+    pub(crate) iv: Option<[u8; 0x10]>,
     /// The [`KeyFormat`] specifies how the key is
     /// represented in the resource identified by the `URI`.
     ///
@@ -151,8 +153,9 @@ pub struct ExtXKey {
 impl ExtXKeyBuilder {
     fn validate(&self) -> Result<(), String> {
         if self.method != Some(EncryptionMethod::None) && self.uri.is_none() {
-            return Err(Error::custom("missing URL").to_string());
+            return Err(Error::missing_value("URL").to_string());
         }
+
         Ok(())
     }
 }
@@ -332,8 +335,10 @@ impl fmt::Display for ExtXKey {
         }
 
         if let Some(value) = &self.iv {
-            // TODO: use hex::encode_to_slice
-            write!(f, ",IV=0x{}", hex::encode(&value))?;
+            let mut result = [0; 0x10 * 2];
+            hex::encode_to_slice(value, &mut result).unwrap();
+
+            write!(f, ",IV=0x{}", ::core::str::from_utf8(&result).unwrap())?;
         }
 
         if let Some(value) = &self.key_format {
