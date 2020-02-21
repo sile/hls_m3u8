@@ -1,15 +1,26 @@
 use strum::{Display, EnumString};
 
-/// Identifier of a rendition within the segments in a media playlist.
+use crate::traits::RequiredVersion;
+use crate::types::ProtocolVersion;
+
+/// Identifier of a rendition within the [`MediaSegment`]s in a
+/// [`MediaPlaylist`].
 ///
-/// See: [4.3.4.1. EXT-X-MEDIA]
+/// The variants [`InStreamId::Cc1`], [`InStreamId::Cc2`], [`InStreamId::Cc3`],
+/// and [`InStreamId::Cc4`] identify a Line 21 Data Services channel ([CEA608]).
 ///
-/// [4.3.4.1. EXT-X-MEDIA]: https://tools.ietf.org/html/rfc8216#section-4.3.4.1
+/// The `Service` variants identify a Digital Television Closed Captioning
+/// ([CEA708]) service block number. The `Service` variants range from
+/// [`InStreamId::Service1`] to [`InStreamId::Service63`].
+///
+/// [CEA608]: https://tools.ietf.org/html/rfc8216#ref-CEA608
+/// [CEA708]: https://tools.ietf.org/html/rfc8216#ref-CEA708
+/// [`MediaSegment`]: crate::MediaSegment
+/// [`MediaPlaylist`]: crate::MediaPlaylist
 #[non_exhaustive]
 #[allow(missing_docs)]
 #[strum(serialize_all = "UPPERCASE")]
 #[derive(Ord, PartialOrd, Debug, Clone, Copy, PartialEq, Eq, Hash, Display, EnumString)]
-#[non_exhaustive]
 pub enum InStreamId {
     Cc1,
     Cc2,
@@ -78,6 +89,15 @@ pub enum InStreamId {
     Service61,
     Service62,
     Service63,
+}
+
+impl RequiredVersion for InStreamId {
+    fn required_version(&self) -> ProtocolVersion {
+        match &self {
+            Self::Cc1 | Self::Cc2 | Self::Cc3 | Self::Cc4 => ProtocolVersion::V1,
+            _ => ProtocolVersion::V7,
+        }
+    }
 }
 
 #[cfg(test)]

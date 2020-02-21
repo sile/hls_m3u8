@@ -111,10 +111,17 @@ pub struct ExtXMedia {
     /// essential to play.
     #[builder(default)]
     is_forced: bool,
-    /// An [`InStreamId`] specifies a rendition within the
-    /// segments in the [`MediaPlaylist`].
+    /// An [`InStreamId`] identifies a rendition within the
+    /// [`MediaSegment`]s in a [`MediaPlaylist`].
+    ///
+    /// # Note
+    ///
+    /// This attribute is required, if the [`ExtXMedia::media_type`] is
+    /// [`MediaType::ClosedCaptions`]. For all other [`ExtXMedia::media_type`]
+    /// the [`InStreamId`] must not be specified!
     ///
     /// [`MediaPlaylist`]: crate::MediaPlaylist
+    /// [`MediaSegment`]: crate::MediaSegment
     #[builder(setter(strip_option), default)]
     #[shorthand(enable(copy))]
     instream_id: Option<InStreamId>,
