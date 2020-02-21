@@ -19,7 +19,7 @@ pub enum ClosedCaptions {
     /// [`ExtXMedia::media_type`]: crate::tags::ExtXMedia::media_type
     /// [`MediaType::ClosedCaptions`]: crate::types::MediaType::ClosedCaptions
     GroupId(String),
-    /// [`ClosedCaptions::None`] indicates that there are no closed captions in
+    /// This variant indicates that there are no closed captions in
     /// any [`VariantStream`] in the [`MasterPlaylist`], therefore all
     /// [`VariantStream::ExtXStreamInf`] tags must have this attribute with a
     /// value of [`ClosedCaptions::None`].
@@ -32,6 +32,34 @@ pub enum ClosedCaptions {
     /// [`VariantStream::ExtXStreamInf`]:
     /// crate::tags::VariantStream::ExtXStreamInf
     None,
+}
+
+impl ClosedCaptions {
+    /// Creates a [`ClosedCaptions::GroupId`] with the provided [`String`].
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// use hls_m3u8::types::ClosedCaptions;
+    ///
+    /// assert_eq!(
+    ///     ClosedCaptions::group_id("vg1"),
+    ///     ClosedCaptions::GroupId("vg1".into())
+    /// );
+    /// ```
+    pub fn group_id<I: Into<String>>(value: I) -> Self {
+        //
+        Self::GroupId(value.into())
+    }
+}
+
+impl<T: PartialEq<str>> PartialEq<T> for ClosedCaptions {
+    fn eq(&self, other: &T) -> bool {
+        match &self {
+            Self::GroupId(value) => other.eq(value),
+            Self::None => other.eq("NONE"),
+        }
+    }
 }
 
 impl fmt::Display for ClosedCaptions {
