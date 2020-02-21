@@ -3,8 +3,9 @@ use core::ops::Deref;
 use core::str::FromStr;
 
 use crate::attribute::AttributePairs;
+use crate::tags::ExtXMedia;
 use crate::traits::RequiredVersion;
-use crate::types::{ClosedCaptions, ProtocolVersion, StreamData, UFloat};
+use crate::types::{ClosedCaptions, MediaType, ProtocolVersion, StreamData, UFloat};
 use crate::utils::{quote, tag, unquote};
 use crate::Error;
 
@@ -168,11 +169,98 @@ pub enum VariantStream {
 impl VariantStream {
     pub(crate) const PREFIX_EXTXIFRAME: &'static str = "#EXT-X-I-FRAME-STREAM-INF:";
     pub(crate) const PREFIX_EXTXSTREAMINF: &'static str = "#EXT-X-STREAM-INF:";
+
+    /// Checks if a [`VariantStream`] and an [`ExtXMedia`] element are
+    /// associated.
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// use hls_m3u8::tags::{ExtXMedia, VariantStream};
+    /// use hls_m3u8::types::{ClosedCaptions, MediaType, StreamData};
+    ///
+    /// let variant_stream = VariantStream::ExtXStreamInf {
+    ///     uri: "https://www.example.com/init.bin".into(),
+    ///     frame_rate: None,
+    ///     audio: Some("ag1".into()),
+    ///     subtitles: Some("sg1".into()),
+    ///     closed_captions: Some(ClosedCaptions::group_id("cc1")),
+    ///     stream_data: StreamData::builder()
+    ///         .bandwidth(1_110_000)
+    ///         .video("vg1")
+    ///         .build()
+    ///         .unwrap(),
+    /// };
+    ///
+    /// assert!(variant_stream.is_associated(
+    ///     &ExtXMedia::builder()
+    ///         .media_type(MediaType::Audio)
+    ///         .group_id("ag1")
+    ///         .name("audio example")
+    ///         .build()
+    ///         .unwrap(),
+    /// ));
+    /// ```
+    pub fn is_associated(&self, media: &ExtXMedia) -> bool {
+        match &self {
+            Self::ExtXIFrame { stream_data, .. } => {
+                if let MediaType::Video = media.media_type() {
+                    if let Some(value) = stream_data.video() {
+                        return value == media.group_id();
+                    }
+                }
+
+                false
+            }
+            Self::ExtXStreamInf {
+                audio,
+                subtitles,
+                closed_captions,
+                stream_data,
+                ..
+            } => {
+                match media.media_type() {
+                    MediaType::Audio => audio.as_ref().map_or(false, |v| v == media.group_id()),
+                    MediaType::Video => {
+                        stream_data.video().map_or(false, |v| v == media.group_id())
+                    }
+                    MediaType::Subtitles => {
+                        subtitles.as_ref().map_or(false, |v| v == media.group_id())
+                    }
+                    MediaType::ClosedCaptions => {
+                        closed_captions
+                            .as_ref()
+                            .map_or(false, |v| v == media.group_id())
+                    }
+                }
+            }
+        }
+    }
 }
 
 /// This tag requires [`ProtocolVersion::V1`].
 impl RequiredVersion for VariantStream {
     fn required_version(&self) -> ProtocolVersion { ProtocolVersion::V1 }
+
+    fn introduced_version(&self) -> ProtocolVersion {
+        match &self {
+            Self::ExtXStreamInf {
+                audio,
+                subtitles,
+                stream_data,
+                ..
+            } => {
+                if stream_data.introduced_version() >= ProtocolVersion::V4 {
+                    stream_data.introduced_version()
+                } else if audio.is_some() || subtitles.is_some() {
+                    ProtocolVersion::V4
+                } else {
+                    ProtocolVersion::V1
+                }
+            }
+            Self::ExtXIFrame { stream_data, .. } => stream_data.introduced_version(),
+        }
+    }
 }
 
 impl fmt::Display for VariantStream {
@@ -285,5 +373,99 @@ impl Deref for VariantStream {
                 stream_data
             }
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::types::InStreamId;
+    //use pretty_assertions::assert_eq;
+
+    #[test]
+    fn test_required_version() {
+        assert_eq!(
+            VariantStream::ExtXStreamInf {
+                uri: "https://www.example.com/init.bin".into(),
+                frame_rate: None,
+                audio: None,
+                subtitles: None,
+                closed_captions: None,
+                stream_data: StreamData::new(1_110_000)
+            }
+            .required_version(),
+            ProtocolVersion::V1
+        );
+    }
+
+    #[test]
+    fn test_is_associated() {
+        let mut variant_stream = VariantStream::ExtXStreamInf {
+            uri: "https://www.example.com/init.bin".into(),
+            frame_rate: None,
+            audio: Some("ag1".into()),
+            subtitles: Some("sg1".into()),
+            closed_captions: Some(ClosedCaptions::group_id("cc1")),
+            stream_data: StreamData::builder()
+                .bandwidth(1_110_000)
+                .video("vg1")
+                .build()
+                .unwrap(),
+        };
+
+        assert!(variant_stream.is_associated(
+            &ExtXMedia::builder()
+                .media_type(MediaType::Audio)
+                .group_id("ag1")
+                .name("audio example")
+                .build()
+                .unwrap(),
+        ));
+
+        assert!(variant_stream.is_associated(
+            &ExtXMedia::builder()
+                .media_type(MediaType::Subtitles)
+                .uri("https://www.example.com/sg1.ssa")
+                .group_id("sg1")
+                .name("subtitle example")
+                .build()
+                .unwrap(),
+        ));
+
+        assert!(variant_stream.is_associated(
+            &ExtXMedia::builder()
+                .media_type(MediaType::ClosedCaptions)
+                .group_id("cc1")
+                .name("closed captions example")
+                .instream_id(InStreamId::Cc1)
+                .build()
+                .unwrap(),
+        ));
+
+        if let VariantStream::ExtXStreamInf {
+            closed_captions, ..
+        } = &mut variant_stream
+        {
+            *closed_captions = Some(ClosedCaptions::None);
+        }
+
+        assert!(variant_stream.is_associated(
+            &ExtXMedia::builder()
+                .media_type(MediaType::ClosedCaptions)
+                .group_id("NONE")
+                .name("closed captions example")
+                .instream_id(InStreamId::Cc1)
+                .build()
+                .unwrap(),
+        ));
+
+        assert!(variant_stream.is_associated(
+            &ExtXMedia::builder()
+                .media_type(MediaType::Video)
+                .group_id("vg1")
+                .name("video example")
+                .build()
+                .unwrap(),
+        ));
     }
 }
