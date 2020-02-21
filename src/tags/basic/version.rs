@@ -5,44 +5,12 @@ use crate::types::ProtocolVersion;
 use crate::utils::tag;
 use crate::{Error, RequiredVersion};
 
-/// # [4.3.1.2. EXT-X-VERSION]
+/// The compatibility version of a playlist.
 ///
-/// The [`ExtXVersion`] tag indicates the compatibility version of the
-/// [`MasterPlaylist`] or [`MediaPlaylist`] file.
-/// It applies to the entire Playlist.
-///
-/// # Examples
-///
-/// Parsing from a [`str`]:
-///
-/// ```
-/// # use hls_m3u8::tags::ExtXVersion;
-/// #
-/// use hls_m3u8::types::ProtocolVersion;
-///
-/// assert_eq!(
-///     "#EXT-X-VERSION:5".parse::<ExtXVersion>()?,
-///     ExtXVersion::new(ProtocolVersion::V5)
-/// );
-/// # Ok::<(), Box<dyn ::std::error::Error>>(())
-/// ```
-///
-/// Converting to a [`str`]:
-///
-/// ```
-/// # use hls_m3u8::tags::ExtXVersion;
-/// #
-/// use hls_m3u8::types::ProtocolVersion;
-///
-/// assert_eq!(
-///     "#EXT-X-VERSION:5".to_string(),
-///     ExtXVersion::new(ProtocolVersion::V5).to_string()
-/// );
-/// ```
+/// It applies to the entire [`MasterPlaylist`] or [`MediaPlaylist`].
 ///
 /// [`MediaPlaylist`]: crate::MediaPlaylist
 /// [`MasterPlaylist`]: crate::MasterPlaylist
-/// [4.3.1.2. EXT-X-VERSION]: https://tools.ietf.org/html/rfc8216#section-4.3.1.2
 #[derive(Copy, Clone, Eq, PartialEq, Ord, PartialOrd, Hash, Debug)]
 pub struct ExtXVersion(ProtocolVersion);
 
@@ -61,7 +29,7 @@ impl ExtXVersion {
     /// ```
     pub const fn new(version: ProtocolVersion) -> Self { Self(version) }
 
-    /// Returns the [`ProtocolVersion`] of the playlist, containing this tag.
+    /// Returns the underlying [`ProtocolVersion`].
     ///
     /// # Example
     ///
