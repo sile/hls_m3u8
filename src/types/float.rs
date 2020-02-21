@@ -12,7 +12,7 @@ use crate::Error;
 /// [`NaN`]: core::f32::NAN
 /// [`INFINITY`]: core::f32::INFINITY
 /// [`NEG_INFINITY`]: core::f32::NEG_INFINITY
-#[derive(Deref, Default, Debug, Copy, Clone, PartialEq, PartialOrd, Display)]
+#[derive(Deref, Default, Debug, Copy, Clone, Display, PartialOrd)]
 pub struct Float(f32);
 
 impl Float {
@@ -95,8 +95,14 @@ macro_rules! implement_from {
 
 implement_from!(i16, u16, i8, u8);
 
+impl PartialEq for Float {
+    #[inline]
+    fn eq(&self, other: &Self) -> bool { self.0 == other.0 }
+}
+
 // convenience implementation to compare f32 with a Float.
 impl PartialEq<f32> for Float {
+    #[inline]
     fn eq(&self, other: &f32) -> bool { &self.0 == other }
 }
 
@@ -117,11 +123,10 @@ impl Eq for Float {}
 
 impl Ord for Float {
     #[inline]
-    #[must_use]
     fn cmp(&self, other: &Self) -> Ordering {
-        if *self < *other {
+        if self.0 < other.0 {
             Ordering::Less
-        } else if *self == *other {
+        } else if self == other {
             Ordering::Equal
         } else {
             Ordering::Greater
@@ -129,15 +134,43 @@ impl Ord for Float {
     }
 }
 
+/// The output of Hash cannot be relied upon to be stable. The same version of
+/// rust can return different values in different architectures. This is not a
+/// property of the Hasher that you’re using but instead of the way Hash happens
+/// to be implemented for the type you’re using (e.g., the current
+/// implementation of Hash for slices of integers returns different values in
+/// big and little-endian architectures).
+///
+/// See <https://internals.rust-lang.org/t/f32-f64-should-implement-hash/5436/33>
 #[doc(hidden)]
 impl ::core::hash::Hash for Float {
     fn hash<H>(&self, state: &mut H)
     where
         H: ::core::hash::Hasher,
     {
-        // this should be totally fine (definitely not the most
-        // efficient implementation as this requires an allocation)
-        state.write(self.to_string().as_bytes())
+        // this implementation assumes, that the internal float is:
+        // - not NaN
+        // - neither negative nor positive infinity
+
+        // to validate those assumptions debug_assertions are here
+        // (those will be removed in a release build)
+        debug_assert!(self.0.is_finite());
+        debug_assert!(!self.0.is_nan());
+
+        // this implementation is based on
+        // https://internals.rust-lang.org/t/f32-f64-should-implement-hash/5436/33
+        //
+        // The important points are:
+        // - NaN == NaN (Float does not allow NaN, so this should be satisfied)
+        // - +0 == -0
+
+        if self.0 == 0.0 || self.0 == -0.0 {
+            state.write(&0.0_f32.to_be_bytes());
+        } else {
+            // I do not think it matters to differentiate between architectures, that use
+            // big endian by default and those, that use little endian.
+            state.write(&self.to_be_bytes())
+        }
     }
 }
 
@@ -145,6 +178,42 @@ impl ::core::hash::Hash for Float {
 mod tests {
     use super::*;
     use pretty_assertions::assert_eq;
+
+    #[test]
+    fn test_ord() {
+        assert_eq!(Float::new(1.1).cmp(&Float::new(1.1)), Ordering::Equal);
+        assert_eq!(Float::new(1.1).cmp(&Float::new(2.1)), Ordering::Less);
+        assert_eq!(Float::new(1.1).cmp(&Float::new(0.1)), Ordering::Greater);
+    }
+
+    #[test]
+    fn test_partial_ord() {
+        assert_eq!(
+            Float::new(1.1).partial_cmp(&Float::new(1.1)),
+            Some(Ordering::Equal)
+        );
+        assert_eq!(
+            Float::new(1.1).partial_cmp(&Float::new(2.1)),
+            Some(Ordering::Less)
+        );
+        assert_eq!(
+            Float::new(1.1).partial_cmp(&Float::new(0.1)),
+            Some(Ordering::Greater)
+        );
+    }
+
+    #[test]
+    fn test_eq() {
+        struct _AssertEq
+        where
+            Float: Eq;
+    }
+
+    #[test]
+    fn test_partial_eq() {
+        assert_eq!(Float::new(1.0).eq(&Float::new(1.0)), true);
+        assert_eq!(Float::new(1.0).eq(&Float::new(33.3)), false);
+    }
 
     #[test]
     fn test_display() {
@@ -186,11 +255,6 @@ mod tests {
     fn test_new_nan() { Float::new(::core::f32::NAN); }
 
     #[test]
-    fn test_partial_eq() {
-        assert_eq!(Float::new(1.1), 1.1);
-    }
-
-    #[test]
     fn test_as_f32() {
         assert_eq!(Float::new(1.1).as_f32(), 1.1_f32);
     }
@@ -211,12 +275,5 @@ mod tests {
         assert!(Float::try_from(::core::f32::INFINITY).is_err());
         assert!(Float::try_from(::core::f32::NAN).is_err());
         assert!(Float::try_from(::core::f32::NEG_INFINITY).is_err());
-    }
-
-    #[test]
-    fn test_eq() {
-        struct _AssertEq
-        where
-            Float: Eq;
     }
 }

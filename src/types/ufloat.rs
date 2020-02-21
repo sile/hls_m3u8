@@ -13,7 +13,7 @@ use crate::Error;
 /// [`NaN`]: core::f32::NAN
 /// [`INFINITY`]: core::f32::INFINITY
 /// [`NEG_INFINITY`]: core::f32::NEG_INFINITY
-#[derive(Deref, Default, Debug, Copy, Clone, PartialEq, PartialOrd, Display)]
+#[derive(Deref, Default, Debug, Copy, Clone, PartialOrd, Display)]
 pub struct UFloat(f32);
 
 impl UFloat {
@@ -106,8 +106,16 @@ macro_rules! implement_from {
 
 implement_from!(u16, u8);
 
+// This has to be implemented explicitly, because `Hash` is also implemented
+// manually and both implementations have to agree according to clippy.
+impl PartialEq for UFloat {
+    #[inline]
+    fn eq(&self, other: &Self) -> bool { self.0 == other.0 }
+}
+
 // convenience implementation to compare f32 with a Float.
 impl PartialEq<f32> for UFloat {
+    #[inline]
     fn eq(&self, other: &f32) -> bool { &self.0 == other }
 }
 
@@ -128,11 +136,10 @@ impl Eq for UFloat {}
 
 impl Ord for UFloat {
     #[inline]
-    #[must_use]
     fn cmp(&self, other: &Self) -> Ordering {
-        if *self < *other {
+        if self.0 < other.0 {
             Ordering::Less
-        } else if *self == *other {
+        } else if self == other {
             Ordering::Equal
         } else {
             Ordering::Greater
@@ -140,15 +147,41 @@ impl Ord for UFloat {
     }
 }
 
+/// The output of Hash cannot be relied upon to be stable. The same version of
+/// rust can return different values in different architectures. This is not a
+/// property of the Hasher that you’re using but instead of the way Hash happens
+/// to be implemented for the type you’re using (e.g., the current
+/// implementation of Hash for slices of integers returns different values in
+/// big and little-endian architectures).
+///
+/// See <https://internals.rust-lang.org/t/f32-f64-should-implement-hash/5436/33>
 #[doc(hidden)]
 impl ::core::hash::Hash for UFloat {
     fn hash<H>(&self, state: &mut H)
     where
         H: ::core::hash::Hasher,
     {
-        // this should be totally fine (definitely not the most
-        // efficient implementation as this requires an allocation)
-        state.write(self.to_string().as_bytes())
+        // this implementation assumes, that the internal float is:
+        // - positive
+        // - not NaN
+        // - neither negative nor positive infinity
+
+        // to validate those assumptions debug_assertions are here
+        // (those will be removed in a release build)
+        debug_assert!(self.0.is_sign_positive());
+        debug_assert!(self.0.is_finite());
+        debug_assert!(!self.0.is_nan());
+
+        // this implementation is based on
+        // https://internals.rust-lang.org/t/f32-f64-should-implement-hash/5436/33
+        //
+        // The important points are:
+        // - NaN == NaN (UFloat does not allow NaN, so this should be satisfied)
+        // - +0 != -0 (UFloat does not allow negative numbers, so this is fine too)
+
+        // I do not think it matters to differentiate between architectures, that use
+        // big endian by default and those, that use little endian.
+        state.write(&self.to_be_bytes())
     }
 }
 
@@ -183,6 +216,10 @@ mod tests {
     #[test]
     #[should_panic = "float must be positive: `-1.1`"]
     fn test_new_negative() { UFloat::new(-1.1); }
+
+    #[test]
+    #[should_panic = "float must be positive: `0`"]
+    fn test_new_negative_zero() { UFloat::new(-0.0); }
 
     #[test]
     #[should_panic = "float must be finite: `inf`"]
