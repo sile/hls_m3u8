@@ -2,7 +2,6 @@
 mod byte_range;
 mod channels;
 mod closed_captions;
-mod decryption_key;
 mod encryption_method;
 mod hdcp_level;
 mod in_stream_id;
@@ -20,7 +19,6 @@ mod ufloat;
 pub use byte_range::*;
 pub use channels::*;
 pub use closed_captions::*;
-pub use decryption_key::*;
 pub use encryption_method::*;
 pub use hdcp_level::*;
 pub use in_stream_id::*;

@@ -64,7 +64,7 @@ use crate::Error;
 /// [`ExtXProgramDateTime`]: crate::tags::ExtXProgramDateTime
 /// [`ExtXPlaylistType`]: crate::tags::ExtXPlaylistType
 /// [`ExtXIFramesOnly`]: crate::tags::ExtXIFramesOnly
-#[derive(Debug, Clone, PartialEq, PartialOrd)]
+#[derive(Debug, Clone, PartialEq, PartialOrd, Eq, Ord, Hash)]
 pub enum VariantStream {
     /// The [`VariantStream::ExtXIFrame`] variant identifies a [`MediaPlaylist`]
     /// file containing the I-frames of a multimedia presentation.

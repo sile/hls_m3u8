@@ -1,9 +1,11 @@
+use core::convert::TryFrom;
 use std::fmt;
 use std::str::FromStr;
 
 use derive_more::{Deref, DerefMut};
 
-use crate::types::{DecryptionKey, EncryptionMethod, ProtocolVersion};
+use crate::tags::ExtXKey;
+use crate::types::{EncryptionMethod, ProtocolVersion};
 use crate::utils::tag;
 use crate::{Error, RequiredVersion};
 
@@ -18,7 +20,7 @@ use crate::{Error, RequiredVersion};
 /// [`MasterPlaylist`]: crate::MasterPlaylist
 /// [4.3.4.5. EXT-X-SESSION-KEY]: https://tools.ietf.org/html/rfc8216#section-4.3.4.5
 #[derive(Deref, DerefMut, Debug, Clone, PartialEq, Eq, Hash)]
-pub struct ExtXSessionKey(DecryptionKey);
+pub struct ExtXSessionKey(ExtXKey);
 
 impl ExtXSessionKey {
     pub(crate) const PREFIX: &'static str = "#EXT-X-SESSION-KEY:";
@@ -35,17 +37,34 @@ impl ExtXSessionKey {
     /// # Example
     ///
     /// ```
-    /// # use hls_m3u8::tags::ExtXSessionKey;
+    /// # use hls_m3u8::tags::{ExtXSessionKey, ExtXKey};
     /// use hls_m3u8::types::EncryptionMethod;
     ///
-    /// let session_key = ExtXSessionKey::new(EncryptionMethod::Aes128, "https://www.example.com/");
+    /// ExtXSessionKey::new(ExtXKey::new(
+    ///     EncryptionMethod::Aes128,
+    ///     "https://www.example.com/",
+    /// ));
     /// ```
-    pub fn new<T: Into<String>>(method: EncryptionMethod, uri: T) -> Self {
-        if method == EncryptionMethod::None {
-            panic!("The EncryptionMethod is not allowed to be None");
+    pub fn new(inner: ExtXKey) -> Self {
+        if inner.method() == EncryptionMethod::None {
+            panic!("the encryption method should never be `None`");
         }
 
-        Self(DecryptionKey::new(method, uri))
+        Self(inner)
+    }
+}
+
+impl TryFrom<ExtXKey> for ExtXSessionKey {
+    type Error = Error;
+
+    fn try_from(value: ExtXKey) -> Result<Self, Self::Error> {
+        if value.method() == EncryptionMethod::None {
+            return Err(Error::custom(
+                "the encryption method should never be `None`",
+            ));
+        }
+
+        Ok(Self(value))
     }
 }
 
@@ -57,12 +76,13 @@ impl RequiredVersion for ExtXSessionKey {
 
 impl fmt::Display for ExtXSessionKey {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        if self.0.method == EncryptionMethod::None {
-            // TODO: this is bad practice, this function should never fail!
-            return Err(fmt::Error);
-        }
-
-        write!(f, "{}{}", Self::PREFIX, self.0)
+        // TODO: this is not the most elegant solution
+        write!(
+            f,
+            "{}{}",
+            Self::PREFIX,
+            self.0.to_string().replacen(ExtXKey::PREFIX, "", 1)
+        )
     }
 }
 
@@ -70,8 +90,7 @@ impl FromStr for ExtXSessionKey {
     type Err = Error;
 
     fn from_str(input: &str) -> Result<Self, Self::Err> {
-        let input = tag(input, Self::PREFIX)?;
-        Ok(Self(input.parse()?))
+        Ok(Self(ExtXKey::parse_from_str(tag(input, Self::PREFIX)?)?))
     }
 }
 
@@ -83,62 +102,75 @@ mod test {
 
     #[test]
     fn test_display() {
-        let mut key = ExtXSessionKey::new(
+        let mut key = ExtXSessionKey::new(ExtXKey::new(
             EncryptionMethod::Aes128,
             "https://www.example.com/hls-key/key.bin",
-        );
+        ));
+
         key.set_iv(Some([
             16, 239, 143, 117, 140, 165, 85, 17, 85, 132, 187, 91, 60, 104, 127, 82,
         ]));
 
         assert_eq!(
             key.to_string(),
-            "#EXT-X-SESSION-KEY:METHOD=AES-128,\
-             URI=\"https://www.example.com/hls-key/key.bin\",\
-             IV=0x10ef8f758ca555115584bb5b3c687f52"
-                .to_string()
+            concat!(
+                "#EXT-X-SESSION-KEY:",
+                "METHOD=AES-128,",
+                "URI=\"https://www.example.com/hls-key/key.bin\",",
+                "IV=0x10ef8f758ca555115584bb5b3c687f52"
+            )
+            .to_string()
         );
     }
 
     #[test]
     fn test_parser() {
         assert_eq!(
-            r#"#EXT-X-SESSION-KEY:METHOD=AES-128,URI="https://priv.example.com/key.php?r=52""#
-                .parse::<ExtXSessionKey>()
-                .unwrap(),
-            ExtXSessionKey::new(
+            concat!(
+                "#EXT-X-SESSION-KEY:",
+                "METHOD=AES-128,",
+                "URI=\"https://priv.example.com/key.php?r=52\""
+            )
+            .parse::<ExtXSessionKey>()
+            .unwrap(),
+            ExtXSessionKey::new(ExtXKey::new(
                 EncryptionMethod::Aes128,
                 "https://priv.example.com/key.php?r=52"
-            )
+            ))
         );
 
-        let mut key = ExtXSessionKey::new(
+        let mut key = ExtXSessionKey::new(ExtXKey::new(
             EncryptionMethod::Aes128,
             "https://www.example.com/hls-key/key.bin",
-        );
+        ));
         key.set_iv(Some([
             16, 239, 143, 117, 140, 165, 85, 17, 85, 132, 187, 91, 60, 104, 127, 82,
         ]));
 
         assert_eq!(
-            "#EXT-X-SESSION-KEY:METHOD=AES-128,\
-             URI=\"https://www.example.com/hls-key/key.bin\",\
-             IV=0X10ef8f758ca555115584bb5b3c687f52"
-                .parse::<ExtXSessionKey>()
-                .unwrap(),
+            concat!(
+                "#EXT-X-SESSION-KEY:",
+                "METHOD=AES-128,",
+                "URI=\"https://www.example.com/hls-key/key.bin\",",
+                "IV=0X10ef8f758ca555115584bb5b3c687f52"
+            )
+            .parse::<ExtXSessionKey>()
+            .unwrap(),
             key
         );
 
         key.set_key_format(Some(KeyFormat::Identity));
 
         assert_eq!(
-            "#EXT-X-SESSION-KEY:\
-             METHOD=AES-128,\
-             URI=\"https://www.example.com/hls-key/key.bin\",\
-             IV=0x10ef8f758ca555115584bb5b3c687f52,\
-             KEYFORMAT=\"identity\""
-                .parse::<ExtXSessionKey>()
-                .unwrap(),
+            concat!(
+                "#EXT-X-SESSION-KEY:",
+                "METHOD=AES-128,",
+                "URI=\"https://www.example.com/hls-key/key.bin\",",
+                "IV=0x10ef8f758ca555115584bb5b3c687f52,",
+                "KEYFORMAT=\"identity\"",
+            )
+            .parse::<ExtXSessionKey>()
+            .unwrap(),
             key
         )
     }
@@ -146,8 +178,11 @@ mod test {
     #[test]
     fn test_required_version() {
         assert_eq!(
-            ExtXSessionKey::new(EncryptionMethod::Aes128, "https://www.example.com/")
-                .required_version(),
+            ExtXSessionKey::new(ExtXKey::new(
+                EncryptionMethod::Aes128,
+                "https://www.example.com/"
+            ))
+            .required_version(),
             ProtocolVersion::V1
         );
     }
@@ -155,18 +190,15 @@ mod test {
     // ExtXSessionKey::new should panic, if the provided
     // EncryptionMethod is None!
     #[test]
-    #[should_panic]
-    fn test_new_panic() { ExtXSessionKey::new(EncryptionMethod::None, ""); }
-
-    #[test]
-    #[should_panic]
-    fn test_display_err() {
-        ExtXSessionKey(DecryptionKey::new(EncryptionMethod::None, "")).to_string();
-    }
+    #[should_panic = "the encryption method should never be `None`"]
+    fn test_new_panic() { ExtXSessionKey::new(ExtXKey::new(EncryptionMethod::None, "")); }
 
     #[test]
     fn test_deref() {
-        let key = ExtXSessionKey::new(EncryptionMethod::Aes128, "https://www.example.com/");
+        let key = ExtXSessionKey::new(ExtXKey::new(
+            EncryptionMethod::Aes128,
+            "https://www.example.com/",
+        ));
 
         assert_eq!(key.method(), EncryptionMethod::Aes128);
         assert_eq!(key.uri(), Some(&"https://www.example.com/".into()));
@@ -174,7 +206,10 @@ mod test {
 
     #[test]
     fn test_deref_mut() {
-        let mut key = ExtXSessionKey::new(EncryptionMethod::Aes128, "https://www.example.com/");
+        let mut key = ExtXSessionKey::new(ExtXKey::new(
+            EncryptionMethod::Aes128,
+            "https://www.example.com/",
+        ));
 
         key.set_method(EncryptionMethod::None);
         assert_eq!(key.method(), EncryptionMethod::None);
