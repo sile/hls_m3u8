@@ -153,8 +153,8 @@ impl MediaPlaylistBuilder {
                 }
 
                 // CHECK: `#EXT-X-BYTE-RANGE`
-                if let Some(tag) = s.byte_range() {
-                    if tag.to_range().start().is_none() {
+                if let Some(range) = s.byte_range() {
+                    if range.start().is_none() {
                         let last_uri = last_range_uri.ok_or_else(Error::invalid_input)?;
                         if last_uri != s.uri() {
                             return Err(Error::invalid_input());

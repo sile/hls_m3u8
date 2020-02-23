@@ -13,19 +13,19 @@ fn test_media_playlist_with_byterange() {
             .segments(vec![
                 MediaSegment::builder()
                     .inf(ExtInf::new(Duration::from_secs_f64(10.0)))
-                    .byte_range(ExtXByteRange::new(75232, Some(0)))
+                    .byte_range(ExtXByteRange::from(0..75232))
                     .uri("video.ts")
                     .build()
                     .unwrap(),
                 MediaSegment::builder()
                     .inf(ExtInf::new(Duration::from_secs_f64(10.0)))
-                    .byte_range(ExtXByteRange::new(82112, Some(752321)))
+                    .byte_range(ExtXByteRange::from(752321..82112 + 752321))
                     .uri("video.ts")
                     .build()
                     .unwrap(),
                 MediaSegment::builder()
                     .inf(ExtInf::new(Duration::from_secs_f64(10.0)))
-                    .byte_range(ExtXByteRange::new(69864, None))
+                    .byte_range(ExtXByteRange::from(..69864))
                     .uri("video.ts")
                     .build()
                     .unwrap(),

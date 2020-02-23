@@ -44,13 +44,10 @@ pub struct ExtXMap {
     /// # use hls_m3u8::tags::ExtXMap;
     /// use hls_m3u8::types::ByteRange;
     ///
-    /// let mut map = ExtXMap::with_range(
-    ///     "https://prod.mediaspace.com/init.bin",
-    ///     ByteRange::new(9, Some(2)),
-    /// );
+    /// let mut map = ExtXMap::with_range("https://prod.mediaspace.com/init.bin", ..9);
     ///
-    /// map.set_range(Some(ByteRange::new(1, None)));
-    /// assert_eq!(map.range(), Some(ByteRange::new(1, None)));
+    /// map.set_range(Some(2..5));
+    /// assert_eq!(map.range(), Some(ByteRange::from(2..5)));
     /// ```
     #[shorthand(enable(copy))]
     range: Option<ByteRange>,
@@ -85,15 +82,12 @@ impl ExtXMap {
     /// # use hls_m3u8::tags::ExtXMap;
     /// use hls_m3u8::types::ByteRange;
     ///
-    /// let map = ExtXMap::with_range(
-    ///     "https://prod.mediaspace.com/init.bin",
-    ///     ByteRange::new(9, Some(2)),
-    /// );
+    /// ExtXMap::with_range("https://prod.mediaspace.com/init.bin", 2..11);
     /// ```
-    pub fn with_range<T: Into<String>>(uri: T, range: ByteRange) -> Self {
+    pub fn with_range<I: Into<String>, B: Into<ByteRange>>(uri: I, range: B) -> Self {
         Self {
             uri: uri.into(),
-            range: Some(range),
+            range: Some(range.into()),
             keys: vec![],
         }
     }
@@ -173,7 +167,7 @@ mod test {
         );
 
         assert_eq!(
-            ExtXMap::with_range("foo", ByteRange::new(9, Some(2))).to_string(),
+            ExtXMap::with_range("foo", ByteRange::from(2..11)).to_string(),
             "#EXT-X-MAP:URI=\"foo\",BYTERANGE=\"9@2\"".to_string(),
         );
     }
@@ -186,11 +180,11 @@ mod test {
         );
 
         assert_eq!(
-            ExtXMap::with_range("foo", ByteRange::new(9, Some(2))),
+            ExtXMap::with_range("foo", ByteRange::from(2..11)),
             "#EXT-X-MAP:URI=\"foo\",BYTERANGE=\"9@2\"".parse().unwrap()
         );
         assert_eq!(
-            ExtXMap::with_range("foo", ByteRange::new(9, Some(2))),
+            ExtXMap::with_range("foo", ByteRange::from(2..11)),
             "#EXT-X-MAP:URI=\"foo\",BYTERANGE=\"9@2\",UNKNOWN=IGNORED"
                 .parse()
                 .unwrap()
@@ -201,7 +195,7 @@ mod test {
     fn test_required_version() {
         assert_eq!(ExtXMap::new("foo").required_version(), ProtocolVersion::V6);
         assert_eq!(
-            ExtXMap::with_range("foo", ByteRange::new(9, Some(2))).required_version(),
+            ExtXMap::with_range("foo", ByteRange::from(2..11)).required_version(),
             ProtocolVersion::V6
         );
     }

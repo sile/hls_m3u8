@@ -120,7 +120,7 @@ mod tests {
             MediaSegment::builder()
                 //.keys(vec![ExtXKey::empty()])
                 .map(ExtXMap::new("https://www.example.com/"))
-                .byte_range(ExtXByteRange::new(20, Some(5)))
+                .byte_range(ExtXByteRange::from(5..25))
                 //.date_range() // TODO!
                 .discontinuity(ExtXDiscontinuity)
                 .inf(ExtInf::new(Duration::from_secs(4)))
