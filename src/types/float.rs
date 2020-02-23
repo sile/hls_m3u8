@@ -177,6 +177,7 @@ impl ::core::hash::Hash for Float {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use core::hash::{Hash, Hasher};
     use pretty_assertions::assert_eq;
 
     #[test]
@@ -203,6 +204,29 @@ mod tests {
     }
 
     #[test]
+    fn test_hash() {
+        let mut hasher_left = std::collections::hash_map::DefaultHasher::new();
+        let mut hasher_right = std::collections::hash_map::DefaultHasher::new();
+
+        assert_eq!(
+            Float::new(0.0).hash(&mut hasher_left),
+            Float::new(-0.0).hash(&mut hasher_right)
+        );
+
+        assert_eq!(hasher_left.finish(), hasher_right.finish());
+
+        let mut hasher_left = std::collections::hash_map::DefaultHasher::new();
+        let mut hasher_right = std::collections::hash_map::DefaultHasher::new();
+
+        assert_eq!(
+            Float::new(1.0).hash(&mut hasher_left),
+            Float::new(1.0).hash(&mut hasher_right)
+        );
+
+        assert_eq!(hasher_left.finish(), hasher_right.finish());
+    }
+
+    #[test]
     fn test_eq() {
         struct _AssertEq
         where
@@ -213,6 +237,7 @@ mod tests {
     fn test_partial_eq() {
         assert_eq!(Float::new(1.0).eq(&Float::new(1.0)), true);
         assert_eq!(Float::new(1.0).eq(&Float::new(33.3)), false);
+        assert_eq!(Float::new(1.1), 1.1);
     }
 
     #[test]

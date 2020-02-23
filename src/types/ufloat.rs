@@ -188,6 +188,7 @@ impl ::core::hash::Hash for UFloat {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use core::hash::{Hash, Hasher};
     use pretty_assertions::assert_eq;
 
     #[test]
@@ -214,6 +215,49 @@ mod tests {
     }
 
     #[test]
+    fn test_hash() {
+        let mut hasher_left = std::collections::hash_map::DefaultHasher::new();
+        let mut hasher_right = std::collections::hash_map::DefaultHasher::new();
+
+        assert_eq!(
+            UFloat::new(1.0).hash(&mut hasher_left),
+            UFloat::new(1.0).hash(&mut hasher_right)
+        );
+
+        assert_eq!(hasher_left.finish(), hasher_right.finish());
+    }
+
+    #[test]
+    fn test_ord() {
+        assert_eq!(UFloat::new(1.1).cmp(&UFloat::new(1.1)), Ordering::Equal);
+        assert_eq!(UFloat::new(1.1).cmp(&UFloat::new(2.1)), Ordering::Less);
+        assert_eq!(UFloat::new(1.1).cmp(&UFloat::new(0.1)), Ordering::Greater);
+    }
+
+    #[test]
+    fn test_partial_ord() {
+        assert_eq!(
+            UFloat::new(1.1).partial_cmp(&UFloat::new(1.1)),
+            Some(Ordering::Equal)
+        );
+        assert_eq!(
+            UFloat::new(1.1).partial_cmp(&UFloat::new(2.1)),
+            Some(Ordering::Less)
+        );
+        assert_eq!(
+            UFloat::new(1.1).partial_cmp(&UFloat::new(0.1)),
+            Some(Ordering::Greater)
+        );
+    }
+
+    #[test]
+    fn test_partial_eq() {
+        assert_eq!(UFloat::new(1.0).eq(&UFloat::new(1.0)), true);
+        assert_eq!(UFloat::new(1.0).eq(&UFloat::new(33.3)), false);
+        assert_eq!(UFloat::new(1.1), 1.1);
+    }
+
+    #[test]
     #[should_panic = "float must be positive: `-1.1`"]
     fn test_new_negative() { UFloat::new(-1.1); }
 
@@ -234,11 +278,6 @@ mod tests {
     fn test_new_nan() { UFloat::new(::core::f32::NAN); }
 
     #[test]
-    fn test_partial_eq() {
-        assert_eq!(UFloat::new(1.1), 1.1);
-    }
-
-    #[test]
     fn test_as_f32() {
         assert_eq!(UFloat::new(1.1).as_f32(), 1.1_f32);
     }
@@ -253,7 +292,10 @@ mod tests {
     fn test_try_from() {
         assert_eq!(UFloat::try_from(1.1_f32).unwrap(), UFloat::new(1.1));
 
-        assert!(UFloat::try_from(-1.1_f32).is_err());
+        assert_eq!(
+            UFloat::try_from(-1.1_f32),
+            Err(Error::custom("float must be positive: `-1.1`"))
+        );
         assert!(UFloat::try_from(::core::f32::INFINITY).is_err());
         assert!(UFloat::try_from(::core::f32::NAN).is_err());
         assert!(UFloat::try_from(::core::f32::NEG_INFINITY).is_err());
