@@ -192,7 +192,7 @@ mod test {
     // EncryptionMethod is None!
     #[test]
     #[should_panic = "the encryption method should never be `None`"]
-    fn test_new_panic() { ExtXSessionKey::new(ExtXKey::new(EncryptionMethod::None, "")); }
+    fn test_new_panic() { let _ = ExtXSessionKey::new(ExtXKey::new(EncryptionMethod::None, "")); }
 
     #[test]
     fn test_deref() {

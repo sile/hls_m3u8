@@ -22,7 +22,9 @@ use crate::Error;
 ///
 /// [RFC6381]: https://tools.ietf.org/html/rfc6381
 /// [`VariantStream`]: crate::tags::VariantStream
-#[derive(AsMut, AsRef, Deref, DerefMut, Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
+#[derive(
+    AsMut, AsRef, Deref, DerefMut, Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash, Default,
+)]
 pub struct Codecs {
     list: Vec<String>,
 }
@@ -38,7 +40,7 @@ impl Codecs {
     /// ```
     #[inline]
     #[must_use]
-    pub fn new() -> Self { Self { list: Vec::new() } }
+    pub const fn new() -> Self { Self { list: Vec::new() } }
 }
 
 impl fmt::Display for Codecs {

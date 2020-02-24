@@ -178,6 +178,7 @@ impl ExtXKey {
     ///     "#EXT-X-KEY:METHOD=AES-128,URI=\"https://www.example.com/\""
     /// );
     /// ```
+    #[must_use]
     pub fn new<T: Into<String>>(method: EncryptionMethod, uri: T) -> Self {
         Self {
             method,
@@ -207,6 +208,7 @@ impl ExtXKey {
     ///     .build()?;
     /// # Ok::<(), Box<dyn ::std::error::Error>>(())
     /// ```
+    #[must_use]
     pub fn builder() -> ExtXKeyBuilder { ExtXKeyBuilder::default() }
 
     /// Makes a new [`ExtXKey`] tag without a decryption key.
@@ -219,6 +221,7 @@ impl ExtXKey {
     ///
     /// assert_eq!(key.to_string(), "#EXT-X-KEY:METHOD=NONE");
     /// ```
+    #[must_use]
     pub const fn empty() -> Self {
         Self {
             method: EncryptionMethod::None,
@@ -244,6 +247,7 @@ impl ExtXKey {
     /// ```
     ///
     /// [`None`]: EncryptionMethod::None
+    #[must_use]
     pub fn is_empty(&self) -> bool { self.method() == EncryptionMethod::None }
 }
 

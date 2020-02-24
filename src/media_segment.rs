@@ -42,6 +42,8 @@ pub struct MediaSegment {
 
 impl MediaSegment {
     /// Returns a builder for a [`MediaSegment`].
+    #[must_use]
+    #[inline]
     pub fn builder() -> MediaSegmentBuilder { MediaSegmentBuilder::default() }
 }
 

@@ -266,23 +266,23 @@ mod tests {
 
     #[test]
     #[should_panic = "float must be positive: `-1.1`"]
-    fn test_new_negative() { UFloat::new(-1.1); }
+    fn test_new_negative() { let _ = UFloat::new(-1.1); }
 
     #[test]
     #[should_panic = "float must be positive: `0`"]
-    fn test_new_negative_zero() { UFloat::new(-0.0); }
+    fn test_new_negative_zero() { let _ = UFloat::new(-0.0); }
 
     #[test]
     #[should_panic = "float must be finite: `inf`"]
-    fn test_new_infinite() { UFloat::new(::core::f32::INFINITY); }
+    fn test_new_infinite() { let _ = UFloat::new(::core::f32::INFINITY); }
 
     #[test]
     #[should_panic = "float must be finite: `-inf`"]
-    fn test_new_neg_infinite() { UFloat::new(::core::f32::NEG_INFINITY); }
+    fn test_new_neg_infinite() { let _ = UFloat::new(::core::f32::NEG_INFINITY); }
 
     #[test]
     #[should_panic = "float must not be `NaN`"]
-    fn test_new_nan() { UFloat::new(::core::f32::NAN); }
+    fn test_new_nan() { let _ = UFloat::new(::core::f32::NAN); }
 
     #[test]
     fn test_as_f32() {

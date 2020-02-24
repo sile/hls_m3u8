@@ -277,15 +277,15 @@ mod tests {
 
     #[test]
     #[should_panic = "float must be finite: `inf`"]
-    fn test_new_infinite() { Float::new(::core::f32::INFINITY); }
+    fn test_new_infinite() { let _ = Float::new(::core::f32::INFINITY); }
 
     #[test]
     #[should_panic = "float must be finite: `-inf`"]
-    fn test_new_neg_infinite() { Float::new(::core::f32::NEG_INFINITY); }
+    fn test_new_neg_infinite() { let _ = Float::new(::core::f32::NEG_INFINITY); }
 
     #[test]
     #[should_panic = "float must not be `NaN`"]
-    fn test_new_nan() { Float::new(::core::f32::NAN); }
+    fn test_new_nan() { let _ = Float::new(::core::f32::NAN); }
 
     #[test]
     fn test_as_f32() {

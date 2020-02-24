@@ -145,7 +145,8 @@ impl FromStr for ExtXMap {
             }
         }
 
-        let uri = uri.ok_or_else(|| Error::missing_value("EXT-X-URI"))?;
+        let uri = uri.ok_or_else(|| Error::missing_value("URI"))?;
+
         Ok(Self {
             uri,
             range,

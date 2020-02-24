@@ -22,7 +22,7 @@ pub enum EncryptionMethod {
     /// # let media_sequence_number = 5;
     /// # assert_eq!(
     /// format!("0x{:032x}", media_sequence_number)
-    /// # , "00000000000000000000000000000005".to_string());
+    /// # , "0x00000000000000000000000000000005".to_string());
     /// ```
     ///
     /// [`MediaSegment`]: crate::MediaSegment

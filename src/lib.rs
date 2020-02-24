@@ -18,8 +18,6 @@
 )]
 //! [HLS] m3u8 parser/generator.
 //!
-//! [HLS]: https://tools.ietf.org/html/rfc8216
-//!
 //! # Examples
 //!
 //! ```
@@ -38,6 +36,8 @@
 //!
 //! assert!(m3u8.parse::<MediaPlaylist>().is_ok());
 //! ```
+//!
+//! [HLS]: https://tools.ietf.org/html/rfc8216
 
 pub use error::Error;
 pub use master_playlist::MasterPlaylist;

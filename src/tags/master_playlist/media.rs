@@ -220,14 +220,8 @@ impl ExtXMedia {
 
 impl RequiredVersion for ExtXMedia {
     fn required_version(&self) -> ProtocolVersion {
-        match self.instream_id {
-            None
-            | Some(InStreamId::Cc1)
-            | Some(InStreamId::Cc2)
-            | Some(InStreamId::Cc3)
-            | Some(InStreamId::Cc4) => ProtocolVersion::V1,
-            _ => ProtocolVersion::V7,
-        }
+        self.instream_id
+            .map_or(ProtocolVersion::V1, |i| i.required_version())
     }
 }
 
