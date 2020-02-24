@@ -1,21 +1,20 @@
 use std::fmt;
 use std::str::FromStr;
 
-use hex;
-
+use crate::types::Float;
 use crate::utils::{quote, unquote};
 use crate::Error;
 
-/// A [`Value`].
+/// A `Value`.
 #[non_exhaustive]
-#[derive(Debug, Clone, PartialEq, PartialOrd)]
+#[derive(Debug, Clone, PartialEq, PartialOrd, Eq, Ord, Hash)]
 pub enum Value {
-    /// A [`String`].
+    /// A `String`.
     String(String),
     /// A sequence of bytes.
     Hex(Vec<u8>),
-    /// A floating point number, that's neither NaN nor infinite!
-    Float(f64),
+    /// A floating point number, that's neither NaN nor infinite.
+    Float(Float),
 }
 
 impl fmt::Display for Value {
@@ -46,8 +45,8 @@ impl FromStr for Value {
     }
 }
 
-impl From<f64> for Value {
-    fn from(value: f64) -> Self { Self::Float(value) }
+impl<T: Into<Float>> From<T> for Value {
+    fn from(value: T) -> Self { Self::Float(value.into()) }
 }
 
 impl From<Vec<u8>> for Value {
@@ -62,10 +61,6 @@ impl From<&str> for Value {
     fn from(value: &str) -> Self { Self::String(unquote(value)) }
 }
 
-// impl<T: AsRef<[u8]>> From<T> for Value {
-//     fn from(value: T) -> Self { Self::Hex(value.as_ref().into()) }
-// }
-
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -73,7 +68,7 @@ mod tests {
 
     #[test]
     fn test_display() {
-        assert_eq!(Value::Float(1.1).to_string(), "1.1".to_string());
+        assert_eq!(Value::Float(Float::new(1.1)).to_string(), "1.1".to_string());
         assert_eq!(
             Value::String("&str".to_string()).to_string(),
             "\"&str\"".to_string()
@@ -86,7 +81,7 @@ mod tests {
 
     #[test]
     fn test_parser() {
-        assert_eq!(Value::Float(1.1), "1.1".parse().unwrap());
+        assert_eq!(Value::Float(Float::new(1.1)), "1.1".parse().unwrap());
         assert_eq!(
             Value::String("&str".to_string()),
             "\"&str\"".parse().unwrap()
@@ -98,7 +93,7 @@ mod tests {
 
     #[test]
     fn test_from() {
-        assert_eq!(Value::from(1.0_f64), Value::Float(1.0));
+        assert_eq!(Value::from(1_u8), Value::Float(Float::new(1.0)));
         assert_eq!(Value::from("\"&str\""), Value::String("&str".to_string()));
         assert_eq!(
             Value::from("&str".to_string()),
