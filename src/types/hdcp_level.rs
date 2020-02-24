@@ -1,17 +1,22 @@
 use strum::{Display, EnumString};
 
-/// HDCP level.
+/// HDCP ([`High-bandwidth Digital Content Protection`]) level.
 ///
-/// See: [4.3.4.2. EXT-X-STREAM-INF]
-///
-/// [4.3.4.2. EXT-X-STREAM-INF]: https://tools.ietf.org/html/rfc8216#section-4.3.4.2
+/// [`High-bandwidth Digital Content Protection`]:
+/// https://www.digital-cp.com/sites/default/files/specifications/HDCP%20on%20HDMI%20Specification%20Rev2_2_Final1.pdf
 #[non_exhaustive]
-#[allow(missing_docs)]
 #[derive(Ord, PartialOrd, Debug, Clone, Copy, PartialEq, Eq, Hash, Display, EnumString)]
 #[strum(serialize_all = "SCREAMING-KEBAB-CASE")]
 pub enum HdcpLevel {
+    /// The associated [`VariantStream`] could fail to play unless the output is
+    /// protected by High-bandwidth Digital Content Protection ([`HDCP`]) Type 0
+    /// or equivalent.
+    ///
+    /// [`VariantStream`]: crate::tags::VariantStream
+    /// [`HDCP`]: https://www.digital-cp.com/sites/default/files/specifications/HDCP%20on%20HDMI%20Specification%20Rev2_2_Final1.pdf
     #[strum(serialize = "TYPE-0")]
     Type0,
+    /// The content does not require output copy protection.
     None,
 }
 
@@ -22,20 +27,14 @@ mod tests {
 
     #[test]
     fn test_display() {
-        let level = HdcpLevel::Type0;
-        assert_eq!(level.to_string(), "TYPE-0".to_string());
-
-        let level = HdcpLevel::None;
-        assert_eq!(level.to_string(), "NONE".to_string());
+        assert_eq!(HdcpLevel::Type0.to_string(), "TYPE-0".to_string());
+        assert_eq!(HdcpLevel::None.to_string(), "NONE".to_string());
     }
 
     #[test]
     fn test_parser() {
-        let level = HdcpLevel::Type0;
-        assert_eq!(level, "TYPE-0".parse::<HdcpLevel>().unwrap());
-
-        let level = HdcpLevel::None;
-        assert_eq!(level, "NONE".parse::<HdcpLevel>().unwrap());
+        assert_eq!(HdcpLevel::Type0, "TYPE-0".parse().unwrap());
+        assert_eq!(HdcpLevel::None, "NONE".parse().unwrap());
 
         assert!("unk".parse::<HdcpLevel>().is_err());
     }
