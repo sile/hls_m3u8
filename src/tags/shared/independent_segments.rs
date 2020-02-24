@@ -5,13 +5,8 @@ use crate::types::ProtocolVersion;
 use crate::utils::tag;
 use crate::{Error, RequiredVersion};
 
-/// # [4.3.5.1. EXT-X-INDEPENDENT-SEGMENTS]
-///
-/// The [`ExtXIndependentSegments`] tag signals that all media samples in a
-/// [`MediaSegment`] can be decoded without information from other segments.
-///
-/// [4.3.5.1. EXT-X-INDEPENDENT-SEGMENTS]:
-/// https://tools.ietf.org/html/rfc8216#section-4.3.5.1
+/// Signals that all media samples in a [`MediaSegment`] can be decoded without
+/// information from other segments.
 ///
 /// [`MediaSegment`]: crate::MediaSegment
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Ord, PartialOrd)]
