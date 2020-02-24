@@ -3,13 +3,8 @@ use std::str::FromStr;
 
 use crate::Error;
 
-/// # [7. Protocol Version Compatibility]
-///
-/// The [`ProtocolVersion`] specifies, which m3u8 revision is required, to parse
-/// a certain tag correctly.
-///
-/// [7. Protocol Version Compatibility]:
-/// https://tools.ietf.org/html/draft-pantos-hls-rfc8216bis-05#section-7
+/// The [`ProtocolVersion`] specifies which `m3u8` revision is required, to
+/// parse a certain tag correctly.
 #[non_exhaustive]
 #[allow(missing_docs)]
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
@@ -24,7 +19,7 @@ pub enum ProtocolVersion {
 }
 
 impl ProtocolVersion {
-    /// Returns the newest [`ProtocolVersion`], that is supported by
+    /// Returns the latest [`ProtocolVersion`] that is supported by
     /// this library.
     ///
     /// # Example
