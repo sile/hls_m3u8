@@ -2,17 +2,17 @@ use core::cmp::Ordering;
 use core::convert::TryFrom;
 use core::str::FromStr;
 
-use derive_more::{Deref, Display};
+use derive_more::{AsRef, Deref, Display};
 
 use crate::Error;
 
-/// This is a wrapper type around an [`f32`] that can not be constructed
+/// A wrapper type around an [`f32`] that can not be constructed
 /// with [`NaN`], [`INFINITY`] or [`NEG_INFINITY`].
 ///
 /// [`NaN`]: core::f32::NAN
 /// [`INFINITY`]: core::f32::INFINITY
 /// [`NEG_INFINITY`]: core::f32::NEG_INFINITY
-#[derive(Deref, Default, Debug, Copy, Clone, Display, PartialOrd)]
+#[derive(AsRef, Deref, Default, Debug, Copy, Clone, Display, PartialOrd)]
 pub struct Float(f32);
 
 impl Float {
@@ -25,16 +25,15 @@ impl Float {
     /// # Examples
     ///
     /// ```
-    /// use hls_m3u8::types::Float;
-    ///
+    /// # use hls_m3u8::types::Float;
     /// let float = Float::new(1.0);
     /// ```
     ///
     /// This would panic:
     ///
     /// ```should_panic
+    /// # use hls_m3u8::types::Float;
     /// use core::f32::NAN;
-    /// use hls_m3u8::types::Float;
     ///
     /// let float = Float::new(NAN);
     /// ```
@@ -53,6 +52,13 @@ impl Float {
     }
 
     /// Returns the underlying [`f32`].
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// # use hls_m3u8::types::Float;
+    /// assert_eq!(Float::new(1.1_f32).as_f32(), 1.1_f32);
+    /// ```
     pub const fn as_f32(self) -> f32 { self.0 }
 }
 

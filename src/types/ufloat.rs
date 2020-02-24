@@ -2,18 +2,18 @@ use core::cmp::Ordering;
 use core::convert::TryFrom;
 use core::str::FromStr;
 
-use derive_more::{Deref, Display};
+use derive_more::{AsRef, Deref, Display};
 
 use crate::Error;
 
-/// This is a wrapper type around an [`f32`] that can not be constructed
-/// with a negative float (ex. `-1.1`), [`NaN`], [`INFINITY`] or
+/// A wrapper type around an [`f32`], that can not be constructed
+/// with a negative float (e.g. `-1.1`), [`NaN`], [`INFINITY`] or
 /// [`NEG_INFINITY`].
 ///
 /// [`NaN`]: core::f32::NAN
 /// [`INFINITY`]: core::f32::INFINITY
 /// [`NEG_INFINITY`]: core::f32::NEG_INFINITY
-#[derive(Deref, Default, Debug, Copy, Clone, PartialOrd, Display)]
+#[derive(AsRef, Deref, Default, Debug, Copy, Clone, PartialOrd, Display)]
 pub struct UFloat(f32);
 
 impl UFloat {
@@ -26,16 +26,14 @@ impl UFloat {
     /// # Examples
     ///
     /// ```
-    /// use hls_m3u8::types::UFloat;
-    ///
+    /// # use hls_m3u8::types::UFloat;
     /// let float = UFloat::new(1.0);
     /// ```
     ///
     /// This would panic:
     ///
     /// ```should_panic
-    /// use hls_m3u8::types::UFloat;
-    ///
+    /// # use hls_m3u8::types::UFloat;
     /// let float = UFloat::new(-1.0);
     /// ```
     ///
@@ -57,6 +55,13 @@ impl UFloat {
     }
 
     /// Returns the underlying [`f32`].
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// # use hls_m3u8::types::UFloat;
+    /// assert_eq!(UFloat::new(1.1_f32).as_f32(), 1.1_f32);
+    /// ```
     pub const fn as_f32(self) -> f32 { self.0 }
 }
 
