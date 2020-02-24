@@ -5,31 +5,59 @@ use shorthand::ShortHand;
 
 use crate::Error;
 
-/// This is a simple wrapper type for the display resolution.
+/// The number of distinct pixels in each dimension that can be displayed (e.g.
+/// 1920x1080).
 ///
 /// For example Full HD has a resolution of 1920x1080.
-///
-/// See: [4.2. Attribute Lists]
-///
-/// [4.2. Attribute Lists]: https://tools.ietf.org/html/rfc8216#section-4.2
 #[derive(ShortHand, Ord, PartialOrd, Debug, Clone, Copy, PartialEq, Eq, Hash, Display)]
 #[display(fmt = "{}x{}", width, height)]
 #[shorthand(enable(must_use))]
 pub struct Resolution {
     /// Horizontal pixel dimension.
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// # use hls_m3u8::types::Resolution;
+    /// let mut resolution = Resolution::new(1280, 720);
+    ///
+    /// resolution.set_width(1000);
+    /// assert_eq!(resolution.width(), 1000);
+    /// ```
     width: usize,
     /// Vertical pixel dimension.
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// # use hls_m3u8::types::Resolution;
+    /// let mut resolution = Resolution::new(1280, 720);
+    ///
+    /// resolution.set_height(800);
+    /// assert_eq!(resolution.height(), 800);
+    /// ```
     height: usize,
 }
 
 impl Resolution {
-    /// Creates a new [`Resolution`].
+    /// Constructs a new [`Resolution`].
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// # use hls_m3u8::types::Resolution;
+    /// let resolution = Resolution::new(1920, 1080);
+    /// ```
+    #[must_use]
     pub const fn new(width: usize, height: usize) -> Self { Self { width, height } }
 }
 
-/// A [`Resolution`] can be constructed from a tuple `(width, height)`.
 impl From<(usize, usize)> for Resolution {
     fn from(value: (usize, usize)) -> Self { Self::new(value.0, value.1) }
+}
+
+impl Into<(usize, usize)> for Resolution {
+    fn into(self) -> (usize, usize) { (self.width, self.height) }
 }
 
 impl FromStr for Resolution {
@@ -100,5 +128,10 @@ mod tests {
     #[test]
     fn test_from() {
         assert_eq!(Resolution::from((1920, 1080)), Resolution::new(1920, 1080));
+    }
+
+    #[test]
+    fn test_into() {
+        assert_eq!((1920, 1080), Resolution::new(1920, 1080).into());
     }
 }
