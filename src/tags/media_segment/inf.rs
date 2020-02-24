@@ -32,6 +32,7 @@ impl ExtInf {
     ///
     /// let ext_inf = ExtInf::new(Duration::from_secs(5));
     /// ```
+    #[must_use]
     pub const fn new(duration: Duration) -> Self {
         Self {
             duration,
@@ -49,6 +50,7 @@ impl ExtInf {
     ///
     /// let ext_inf = ExtInf::with_title(Duration::from_secs(5), "title");
     /// ```
+    #[must_use]
     pub fn with_title<T: Into<String>>(duration: Duration, title: T) -> Self {
         Self {
             duration,
@@ -68,6 +70,7 @@ impl ExtInf {
     ///
     /// assert_eq!(ext_inf.duration(), Duration::from_secs(5));
     /// ```
+    #[must_use]
     pub const fn duration(&self) -> Duration { self.duration }
 
     /// Sets the duration of the associated media segment.
@@ -101,6 +104,7 @@ impl ExtInf {
     ///
     /// assert_eq!(ext_inf.title(), &Some("title".to_string()));
     /// ```
+    #[must_use]
     pub const fn title(&self) -> &Option<String> { &self.title }
 
     /// Sets the title of the associated media segment.

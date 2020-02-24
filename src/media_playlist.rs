@@ -205,6 +205,8 @@ impl RequiredVersion for MediaPlaylistBuilder {
 
 impl MediaPlaylist {
     /// Returns a builder for [`MediaPlaylist`].
+    #[must_use]
+    #[inline]
     pub fn builder() -> MediaPlaylistBuilder { MediaPlaylistBuilder::default() }
 }
 

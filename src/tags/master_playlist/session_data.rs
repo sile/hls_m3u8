@@ -140,6 +140,7 @@ impl ExtXSessionData {
     ///     SessionData::Uri("https://www.example.com/".to_string()),
     /// );
     /// ```
+    #[must_use]
     pub fn new<T: Into<String>>(data_id: T, data: SessionData) -> Self {
         Self {
             data_id: data_id.into(),
@@ -163,6 +164,7 @@ impl ExtXSessionData {
     ///     .build()?;
     /// # Ok::<(), Box<dyn ::std::error::Error>>(())
     /// ```
+    #[must_use]
     pub fn builder() -> ExtXSessionDataBuilder { ExtXSessionDataBuilder::default() }
 
     /// Makes a new [`ExtXSessionData`] tag, with the given language.
@@ -179,6 +181,7 @@ impl ExtXSessionData {
     ///     "en",
     /// );
     /// ```
+    #[must_use]
     pub fn with_language<T, K>(data_id: T, data: SessionData, language: K) -> Self
     where
         T: Into<String>,

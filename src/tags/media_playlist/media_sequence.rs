@@ -27,6 +27,7 @@ impl ExtXMediaSequence {
     /// # use hls_m3u8::tags::ExtXMediaSequence;
     /// let media_sequence = ExtXMediaSequence::new(5);
     /// ```
+    #[must_use]
     pub const fn new(seq_num: u64) -> Self { Self(seq_num) }
 
     /// Returns the sequence number of the first media segment,
@@ -40,6 +41,7 @@ impl ExtXMediaSequence {
     ///
     /// assert_eq!(media_sequence.seq_num(), 5);
     /// ```
+    #[must_use]
     pub const fn seq_num(self) -> u64 { self.0 }
 
     /// Sets the sequence number.

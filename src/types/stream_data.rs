@@ -223,6 +223,7 @@ impl StreamData {
     /// #
     /// let stream = StreamData::new(20);
     /// ```
+    #[must_use]
     pub const fn new(bandwidth: u64) -> Self {
         Self {
             bandwidth,
@@ -251,6 +252,7 @@ impl StreamData {
     ///     .build()?;
     /// # Ok::<(), Box<dyn ::std::error::Error>>(())
     /// ```
+    #[must_use]
     pub fn builder() -> StreamDataBuilder { StreamDataBuilder::default() }
 }
 

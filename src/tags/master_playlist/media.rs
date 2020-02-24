@@ -191,6 +191,7 @@ impl ExtXMedia {
     pub(crate) const PREFIX: &'static str = "#EXT-X-MEDIA:";
 
     /// Makes a new [`ExtXMedia`] tag.
+    #[must_use]
     pub fn new<T, K>(media_type: MediaType, group_id: T, name: K) -> Self
     where
         T: Into<String>,
@@ -213,6 +214,7 @@ impl ExtXMedia {
     }
 
     /// Returns a builder for [`ExtXMedia`].
+    #[must_use]
     pub fn builder() -> ExtXMediaBuilder { ExtXMediaBuilder::default() }
 }
 

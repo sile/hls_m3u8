@@ -39,6 +39,7 @@ impl Float {
     /// ```
     ///
     /// [`NaN`]: core::f32::NAN
+    #[must_use]
     pub fn new(float: f32) -> Self {
         if float.is_infinite() {
             panic!("float must be finite: `{}`", float);
@@ -59,6 +60,7 @@ impl Float {
     /// # use hls_m3u8::types::Float;
     /// assert_eq!(Float::new(1.1_f32).as_f32(), 1.1_f32);
     /// ```
+    #[must_use]
     pub const fn as_f32(self) -> f32 { self.0 }
 }
 

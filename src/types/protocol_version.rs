@@ -28,6 +28,8 @@ impl ProtocolVersion {
     /// # use hls_m3u8::types::ProtocolVersion;
     /// assert_eq!(ProtocolVersion::latest(), ProtocolVersion::V7);
     /// ```
+    #[must_use]
+    #[inline]
     pub const fn latest() -> Self { Self::V7 }
 }
 

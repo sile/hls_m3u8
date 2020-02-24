@@ -36,6 +36,7 @@ impl ExtXTargetDuration {
     /// # Note
     ///
     /// The nanoseconds part of the [`Duration`] will be discarded.
+    #[must_use]
     pub const fn new(duration: Duration) -> Self { Self(Duration::from_secs(duration.as_secs())) }
 
     /// Returns the maximum media segment duration.
@@ -50,6 +51,7 @@ impl ExtXTargetDuration {
     ///
     /// assert_eq!(target_duration.duration(), Duration::from_secs(2));
     /// ```
+    #[must_use]
     pub const fn duration(&self) -> Duration { self.0 }
 }
 

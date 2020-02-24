@@ -38,6 +38,7 @@ impl ExtXProgramDateTime {
     ///         .and_hms_milli(14, 54, 23, 31),
     /// );
     /// ```
+    #[must_use]
     pub const fn new(date_time: DateTime<FixedOffset>) -> Self { Self(date_time) }
 
     /// Returns the date-time of the first sample of the associated media
@@ -64,6 +65,7 @@ impl ExtXProgramDateTime {
     ///         .and_hms_milli(14, 54, 23, 31)
     /// );
     /// ```
+    #[must_use]
     pub const fn date_time(&self) -> DateTime<FixedOffset> { self.0 }
 
     /// Sets the date-time of the first sample of the associated media segment.

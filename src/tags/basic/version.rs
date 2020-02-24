@@ -27,6 +27,7 @@ impl ExtXVersion {
     ///
     /// let version = ExtXVersion::new(ProtocolVersion::V2);
     /// ```
+    #[must_use]
     pub const fn new(version: ProtocolVersion) -> Self { Self(version) }
 
     /// Returns the underlying [`ProtocolVersion`].
@@ -42,6 +43,7 @@ impl ExtXVersion {
     ///     ProtocolVersion::V6
     /// );
     /// ```
+    #[must_use]
     pub const fn version(self) -> ProtocolVersion { self.0 }
 }
 

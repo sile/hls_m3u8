@@ -6,7 +6,6 @@
 )]
 #![allow(
     clippy::multiple_crate_versions,
-    clippy::must_use_candidate,
     clippy::module_name_repetitions,
     clippy::default_trait_access
 )]

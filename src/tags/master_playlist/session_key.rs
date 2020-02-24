@@ -45,6 +45,7 @@ impl ExtXSessionKey {
     ///     "https://www.example.com/",
     /// ));
     /// ```
+    #[must_use]
     pub fn new(inner: ExtXKey) -> Self {
         if inner.method() == EncryptionMethod::None {
             panic!("the encryption method should never be `None`");

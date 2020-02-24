@@ -111,6 +111,8 @@ impl MasterPlaylist {
     ///     .build()?;
     /// # Ok::<(), Box<dyn ::std::error::Error>>(())
     /// ```
+    #[must_use]
+    #[inline]
     pub fn builder() -> MasterPlaylistBuilder { MasterPlaylistBuilder::default() }
 }
 

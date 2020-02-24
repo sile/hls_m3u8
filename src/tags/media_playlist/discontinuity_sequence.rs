@@ -49,6 +49,7 @@ impl ExtXDiscontinuitySequence {
     /// # use hls_m3u8::tags::ExtXDiscontinuitySequence;
     /// let discontinuity_sequence = ExtXDiscontinuitySequence::new(5);
     /// ```
+    #[must_use]
     pub const fn new(seq_num: u64) -> Self { Self { seq_num } }
 }
 

@@ -201,6 +201,7 @@ impl VariantStream {
     ///         .unwrap(),
     /// ));
     /// ```
+    #[must_use]
     pub fn is_associated(&self, media: &ExtXMedia) -> bool {
         match &self {
             Self::ExtXIFrame { stream_data, .. } => {

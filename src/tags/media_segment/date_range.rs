@@ -160,6 +160,7 @@ impl ExtXDateRange {
     ///         .and_hms_milli(14, 54, 23, 31),
     /// );
     /// ```
+    #[must_use]
     pub fn new<T: Into<String>>(id: T, start_date: DateTime<FixedOffset>) -> Self {
         Self {
             id: id.into(),
@@ -177,6 +178,7 @@ impl ExtXDateRange {
     }
 
     /// Returns a builder for [`ExtXDateRange`].
+    #[must_use]
     pub fn builder() -> ExtXDateRangeBuilder { ExtXDateRangeBuilder::default() }
 }
 
