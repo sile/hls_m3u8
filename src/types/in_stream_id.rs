@@ -91,6 +91,9 @@ pub enum InStreamId {
     Service63,
 }
 
+/// The variants [`InStreamId::Cc1`], [`InStreamId::Cc2`], [`InStreamId::Cc3`]
+/// and [`InStreamId::Cc4`] require [`ProtocolVersion::V1`], the other
+/// [`ProtocolVersion::V7`].
 impl RequiredVersion for InStreamId {
     fn required_version(&self) -> ProtocolVersion {
         match &self {
