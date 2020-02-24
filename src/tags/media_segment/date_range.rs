@@ -326,53 +326,70 @@ impl fmt::Display for ExtXDateRange {
 #[cfg(test)]
 mod test {
     use super::*;
+    use crate::types::Float;
     use chrono::offset::TimeZone;
     use pretty_assertions::assert_eq;
 
     const HOURS_IN_SECS: i32 = 3600; // 1 hour = 3600 seconds
 
-    #[test]
-    fn test_parser() {
-        assert_eq!(
-            "#EXT-X-DATERANGE:\
-             ID=\"splice-6FFFFFF0\",\
-             START-DATE=\"2014-03-05T11:15:00Z\",\
-             PLANNED-DURATION=59.993,\
-             SCTE35-OUT=0xFC002F0000000000FF000014056F\
-             FFFFF000E011622DCAFF000052636200000000000\
-             A0008029896F50000008700000000"
+    macro_rules! generate_tests {
+        ( $( { $left:expr, $right:expr } ),* $(,)* ) => {
+            #[test]
+            fn test_display() {
+                $(
+                    assert_eq!($left.to_string(), $right.to_string());
+                )*
+            }
+
+            #[test]
+            fn test_parser() {
+                $(
+                    assert_eq!($left, $right.parse().unwrap());
+                )*
+                assert!("#EXT-X-DATERANGE:END-ON-NEXT=NO"
+                    .parse::<ExtXDateRange>()
+                    .is_err());
+
+                assert!("garbage".parse::<ExtXDateRange>().is_err());
+                assert!("".parse::<ExtXDateRange>().is_err());
+
+                assert!(concat!(
+                    "#EXT-X-DATERANGE:",
+                    "ID=\"test_id\",",
+                    "START-DATE=\"2014-03-05T11:15:00Z\",",
+                    "END-ON-NEXT=YES"
+                )
                 .parse::<ExtXDateRange>()
-                .unwrap(),
+                .is_err());
+            }
+        }
+    }
+
+    generate_tests! {
+        {
             ExtXDateRange::builder()
                 .id("splice-6FFFFFF0")
                 .start_date(FixedOffset::east(0).ymd(2014, 3, 5).and_hms(11, 15, 0))
                 .planned_duration(Duration::from_secs_f64(59.993))
-                .scte35_out(
-                    "0xFC002F0000000000FF00001\
-                     4056FFFFFF000E011622DCAFF0\
-                     00052636200000000000A00080\
-                     29896F50000008700000000"
-                )
+                .scte35_out(concat!(
+                    "0xFC002F0000000000FF00001",
+                    "4056FFFFFF000E011622DCAFF0",
+                    "00052636200000000000A00080",
+                    "29896F50000008700000000"
+                ))
                 .build()
-                .unwrap()
-        );
-
-        assert_eq!(
-            "#EXT-X-DATERANGE:\
-             ID=\"test_id\",\
-             CLASS=\"test_class\",\
-             START-DATE=\"2014-03-05T11:15:00Z\",\
-             END-DATE=\"2014-03-05T11:16:00Z\",\
-             DURATION=60.1,\
-             PLANNED-DURATION=59.993,\
-             X-CUSTOM=45.3,\
-             SCTE35-CMD=0xFC002F0000000000FF2,\
-             SCTE35-OUT=0xFC002F0000000000FF0,\
-             SCTE35-IN=0xFC002F0000000000FF1,\
-             END-ON-NEXT=YES,\
-             UNKNOWN=PHANTOM"
-                .parse::<ExtXDateRange>()
                 .unwrap(),
+            concat!(
+                "#EXT-X-DATERANGE:",
+                "ID=\"splice-6FFFFFF0\",",
+                "START-DATE=\"2014-03-05T11:15:00Z\",",
+                "PLANNED-DURATION=59.993,",
+                "SCTE35-OUT=0xFC002F0000000000FF000014056F",
+                "FFFFF000E011622DCAFF000052636200000000000",
+                "A0008029896F50000008700000000"
+            )
+        },
+        {
             ExtXDateRange::builder()
                 .id("test_id")
                 .class("test_class")
@@ -380,61 +397,28 @@ mod test {
                 .end_date(FixedOffset::east(0).ymd(2014, 3, 5).and_hms(11, 16, 0))
                 .duration(Duration::from_secs_f64(60.1))
                 .planned_duration(Duration::from_secs_f64(59.993))
-                .insert_client_attribute("X-CUSTOM", 45.3)
+                .insert_client_attribute("X-CUSTOM", Float::new(45.3))
                 .scte35_cmd("0xFC002F0000000000FF2")
                 .scte35_out("0xFC002F0000000000FF0")
                 .scte35_in("0xFC002F0000000000FF1")
                 .end_on_next(true)
                 .build()
-                .unwrap()
-        );
-
-        assert!("#EXT-X-DATERANGE:END-ON-NEXT=NO"
-            .parse::<ExtXDateRange>()
-            .is_err());
-
-        assert!("garbage".parse::<ExtXDateRange>().is_err());
-        assert!("".parse::<ExtXDateRange>().is_err());
-
-        assert!("#EXT-X-DATERANGE:\
-                 ID=\"test_id\",\
-                 START-DATE=\"2014-03-05T11:15:00Z\",\
-                 END-ON-NEXT=YES"
-            .parse::<ExtXDateRange>()
-            .is_err());
-    }
-
-    #[test]
-    fn test_display() {
-        assert_eq!(
-            ExtXDateRange::builder()
-                .id("test_id")
-                .class("test_class")
-                .start_date(FixedOffset::east(0).ymd(2014, 3, 5).and_hms(11, 15, 0))
-                .end_date(FixedOffset::east(0).ymd(2014, 3, 5).and_hms(11, 16, 0))
-                .duration(Duration::from_secs_f64(60.1))
-                .planned_duration(Duration::from_secs_f64(59.993))
-                .insert_client_attribute("X-CUSTOM", 45.3)
-                .scte35_cmd("0xFC002F0000000000FF2")
-                .scte35_out("0xFC002F0000000000FF0")
-                .scte35_in("0xFC002F0000000000FF1")
-                .end_on_next(true)
-                .build()
-                .unwrap()
-                .to_string(),
-            "#EXT-X-DATERANGE:\
-             ID=\"test_id\",\
-             CLASS=\"test_class\",\
-             START-DATE=\"2014-03-05T11:15:00Z\",\
-             END-DATE=\"2014-03-05T11:16:00Z\",\
-             DURATION=60.1,\
-             PLANNED-DURATION=59.993,\
-             SCTE35-CMD=0xFC002F0000000000FF2,\
-             SCTE35-OUT=0xFC002F0000000000FF0,\
-             SCTE35-IN=0xFC002F0000000000FF1,\
-             X-CUSTOM=45.3,\
-             END-ON-NEXT=YES"
-        )
+                .unwrap(),
+            concat!(
+                "#EXT-X-DATERANGE:",
+                "ID=\"test_id\",",
+                "CLASS=\"test_class\",",
+                "START-DATE=\"2014-03-05T11:15:00Z\",",
+                "END-DATE=\"2014-03-05T11:16:00Z\",",
+                "DURATION=60.1,",
+                "PLANNED-DURATION=59.993,",
+                "SCTE35-CMD=0xFC002F0000000000FF2,",
+                "SCTE35-OUT=0xFC002F0000000000FF0,",
+                "SCTE35-IN=0xFC002F0000000000FF1,",
+                "X-CUSTOM=45.3,",
+                "END-ON-NEXT=YES"
+            )
+        },
     }
 
     #[test]

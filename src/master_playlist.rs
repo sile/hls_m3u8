@@ -103,11 +103,12 @@ impl MasterPlaylist {
     /// # Example
     ///
     /// ```
+    /// # use hls_m3u8::MasterPlaylist;
     /// use hls_m3u8::tags::ExtXStart;
-    /// use hls_m3u8::MasterPlaylist;
+    /// use hls_m3u8::types::Float;
     ///
     /// MasterPlaylist::builder()
-    ///     .start(ExtXStart::new(20.123456))
+    ///     .start(ExtXStart::new(Float::new(20.3)))
     ///     .build()?;
     /// # Ok::<(), Box<dyn ::std::error::Error>>(())
     /// ```

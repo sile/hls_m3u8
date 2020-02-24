@@ -8,22 +8,42 @@ use crate::types::{Float, ProtocolVersion};
 use crate::utils::{parse_yes_or_no, tag};
 use crate::{Error, RequiredVersion};
 
-/// # [4.3.5.2. EXT-X-START]
+/// This tag indicates a preferred point at which to start
+/// playing a Playlist.
 ///
-/// [4.3.5.2. EXT-X-START]: https://tools.ietf.org/html/rfc8216#section-4.3.5.2
+/// By default, clients should start playback at this point when beginning a
+/// playback session.
 #[derive(ShortHand, PartialOrd, Debug, Clone, Copy, PartialEq)]
 #[shorthand(enable(must_use))]
 pub struct ExtXStart {
-    #[shorthand(enable(skip))]
-    time_offset: Float,
-    /// Returns whether clients should not render media stream whose
-    /// presentation times are prior to the specified time offset.
+    /// The time offset of the [`MediaSegment`]s in the playlist.
     ///
     /// # Example
     ///
     /// ```
     /// # use hls_m3u8::tags::ExtXStart;
-    /// let mut start = ExtXStart::new(20.123456);
+    /// use hls_m3u8::types::Float;
+    ///
+    /// let mut start = ExtXStart::new(Float::new(20.123456));
+    /// # assert_eq!(start.time_offset(), Float::new(20.123456));
+    ///
+    /// start.set_time_offset(Float::new(1.0));
+    /// assert_eq!(start.time_offset(), Float::new(1.0));
+    /// ```
+    ///
+    /// [`MediaSegment`]: crate::MediaSegment
+    #[shorthand(enable(copy))]
+    time_offset: Float,
+    /// Whether clients should not render media stream whose presentation times
+    /// are prior to the specified time offset.
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// # use hls_m3u8::tags::ExtXStart;
+    /// use hls_m3u8::types::Float;
+    ///
+    /// let mut start = ExtXStart::new(Float::new(20.123456));
     /// # assert_eq!(start.is_precise(), false);
     /// start.set_is_precise(true);
     ///
@@ -37,75 +57,39 @@ impl ExtXStart {
 
     /// Makes a new [`ExtXStart`] tag.
     ///
-    /// # Panics
-    ///
-    /// Panics if the `time_offset` is infinite or [`NaN`].
-    ///
     /// # Example
     ///
     /// ```
     /// # use hls_m3u8::tags::ExtXStart;
-    /// let start = ExtXStart::new(20.123456);
-    /// ```
+    /// use hls_m3u8::types::Float;
     ///
-    /// [`NaN`]: core::f64::NAN
-    pub fn new(time_offset: f32) -> Self {
+    /// let start = ExtXStart::new(Float::new(20.123456));
+    /// ```
+    #[must_use]
+    pub const fn new(time_offset: Float) -> Self {
         Self {
-            time_offset: Float::new(time_offset),
+            time_offset,
             is_precise: false,
         }
     }
 
     /// Makes a new [`ExtXStart`] tag with the given `precise` flag.
     ///
-    /// # Panics
-    ///
-    /// Panics if the `time_offset` is infinite or [`NaN`].
-    ///
     /// # Example
     ///
     /// ```
     /// # use hls_m3u8::tags::ExtXStart;
-    /// let start = ExtXStart::with_precise(20.123456, true);
+    /// use hls_m3u8::types::Float;
+    ///
+    /// let start = ExtXStart::with_precise(Float::new(20.123456), true);
     /// assert_eq!(start.is_precise(), true);
     /// ```
-    ///
-    /// [`NaN`]: core::f64::NAN
-    pub fn with_precise(time_offset: f32, is_precise: bool) -> Self {
+    #[must_use]
+    pub const fn with_precise(time_offset: Float, is_precise: bool) -> Self {
         Self {
-            time_offset: Float::new(time_offset),
+            time_offset,
             is_precise,
         }
-    }
-
-    /// Returns the time offset of the media segments in the playlist.
-    ///
-    /// # Example
-    ///
-    /// ```
-    /// # use hls_m3u8::tags::ExtXStart;
-    /// let start = ExtXStart::new(20.123456);
-    ///
-    /// assert_eq!(start.time_offset(), 20.123456);
-    /// ```
-    pub const fn time_offset(self) -> f32 { self.time_offset.as_f32() }
-
-    /// Sets the time offset of the media segments in the playlist.
-    ///
-    /// # Example
-    ///
-    /// ```
-    /// # use hls_m3u8::tags::ExtXStart;
-    /// let mut start = ExtXStart::new(20.123456);
-    /// # assert_eq!(start.time_offset(), 20.123456);
-    ///
-    /// start.set_time_offset(1.0);
-    ///
-    /// assert_eq!(start.time_offset(), 1.0);
-    /// ```
-    pub fn set_time_offset(&mut self, value: f32) -> &mut Self {
-        self.time_offset = Float::new(value);
-        self
     }
 }
 
@@ -165,12 +149,12 @@ mod test {
     #[test]
     fn test_display() {
         assert_eq!(
-            ExtXStart::new(-1.23).to_string(),
+            ExtXStart::new(Float::new(-1.23)).to_string(),
             "#EXT-X-START:TIME-OFFSET=-1.23".to_string(),
         );
 
         assert_eq!(
-            ExtXStart::with_precise(1.23, true).to_string(),
+            ExtXStart::with_precise(Float::new(1.23), true).to_string(),
             "#EXT-X-START:TIME-OFFSET=1.23,PRECISE=YES".to_string(),
         );
     }
@@ -178,12 +162,12 @@ mod test {
     #[test]
     fn test_required_version() {
         assert_eq!(
-            ExtXStart::new(-1.23).required_version(),
+            ExtXStart::new(Float::new(-1.23)).required_version(),
             ProtocolVersion::V1,
         );
 
         assert_eq!(
-            ExtXStart::with_precise(1.23, true).required_version(),
+            ExtXStart::with_precise(Float::new(1.23), true).required_version(),
             ProtocolVersion::V1,
         );
     }
@@ -191,17 +175,17 @@ mod test {
     #[test]
     fn test_parser() {
         assert_eq!(
-            ExtXStart::new(-1.23),
+            ExtXStart::new(Float::new(-1.23)),
             "#EXT-X-START:TIME-OFFSET=-1.23".parse().unwrap(),
         );
 
         assert_eq!(
-            ExtXStart::with_precise(1.23, true),
+            ExtXStart::with_precise(Float::new(1.23), true),
             "#EXT-X-START:TIME-OFFSET=1.23,PRECISE=YES".parse().unwrap(),
         );
 
         assert_eq!(
-            ExtXStart::with_precise(1.23, true),
+            ExtXStart::with_precise(Float::new(1.23), true),
             "#EXT-X-START:TIME-OFFSET=1.23,PRECISE=YES,UNKNOWN=TAG"
                 .parse()
                 .unwrap(),
