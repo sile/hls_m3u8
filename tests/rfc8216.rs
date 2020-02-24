@@ -214,7 +214,7 @@ generate_tests! [
                     closed_captions: None,
                     stream_data: StreamData::builder()
                         .bandwidth(65000)
-                        .codecs("mp4a.40.5")
+                        .codecs(&["mp4a.40.5"])
                         .build()
                         .unwrap()
                 },
@@ -280,7 +280,7 @@ generate_tests! [
                     closed_captions: None,
                     stream_data: StreamData::builder()
                         .bandwidth(65000)
-                        .codecs("mp4a.40.5")
+                        .codecs(&["mp4a.40.5"])
                         .build()
                         .unwrap()
                 },
@@ -345,7 +345,7 @@ generate_tests! [
                     closed_captions: None,
                     stream_data: StreamData::builder()
                         .bandwidth(1280000)
-                        .codecs("...")
+                        .codecs(&["..."])
                         .build()
                         .unwrap()
                 },
@@ -357,7 +357,7 @@ generate_tests! [
                     closed_captions: None,
                     stream_data: StreamData::builder()
                         .bandwidth(2560000)
-                        .codecs("...")
+                        .codecs(&["..."])
                         .build()
                         .unwrap()
                 },
@@ -369,7 +369,7 @@ generate_tests! [
                     closed_captions: None,
                     stream_data: StreamData::builder()
                         .bandwidth(7680000)
-                        .codecs("...")
+                        .codecs(&["..."])
                         .build()
                         .unwrap()
                 },
@@ -381,7 +381,7 @@ generate_tests! [
                     closed_captions: None,
                     stream_data: StreamData::builder()
                         .bandwidth(65000)
-                        .codecs("mp4a.40.5")
+                        .codecs(&["mp4a.40.5"])
                         .build()
                         .unwrap()
                 },
@@ -518,7 +518,7 @@ generate_tests! [
                     closed_captions: None,
                     stream_data: StreamData::builder()
                         .bandwidth(1280000)
-                        .codecs("...")
+                        .codecs(&["..."])
                         .video("low")
                         .build()
                         .unwrap()
@@ -531,7 +531,7 @@ generate_tests! [
                     closed_captions: None,
                     stream_data: StreamData::builder()
                         .bandwidth(2560000)
-                        .codecs("...")
+                        .codecs(&["..."])
                         .video("mid")
                         .build()
                         .unwrap()
@@ -544,7 +544,7 @@ generate_tests! [
                     closed_captions: None,
                     stream_data: StreamData::builder()
                         .bandwidth(7680000)
-                        .codecs("...")
+                        .codecs(&["..."])
                         .video("hi")
                         .build()
                         .unwrap()

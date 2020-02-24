@@ -5,7 +5,7 @@ use derive_builder::Builder;
 use shorthand::ShortHand;
 
 use crate::attribute::AttributePairs;
-use crate::types::{HdcpLevel, ProtocolVersion, Resolution};
+use crate::types::{Codecs, HdcpLevel, ProtocolVersion, Resolution};
 use crate::utils::{quote, unquote};
 use crate::{Error, RequiredVersion};
 
@@ -93,27 +93,34 @@ pub struct StreamData {
     #[builder(default)]
     #[shorthand(enable(copy), disable(into, option_as_ref))]
     average_bandwidth: Option<u64>,
-    /// A string that represents a list of formats, where each format specifies
-    /// a media sample type that is present in one or more renditions specified
-    /// by the [`VariantStream`].
+    /// A list of formats, where each format specifies a media sample type that
+    /// is present in one or more renditions specified by the [`VariantStream`].
     ///
     /// Valid format identifiers are those in the ISO Base Media File Format
     /// Name Space defined by "The 'Codecs' and 'Profiles' Parameters for
-    /// "Bucket" Media Types" [RFC6381].
+    /// "Bucket" Media Types" ([RFC6381]).
     ///
     /// For example, a stream containing AAC low complexity (AAC-LC) audio and
-    /// H.264 Main Profile Level 3.0 video would have a codecs value of
-    /// "mp4a.40.2,avc1.4d401e".
+    /// H.264 Main Profile Level 3.0 video would be
+    ///
+    /// ```
+    /// # use hls_m3u8::types::Codecs;
+    /// let codecs = Codecs::from(&["mp4a.40.2", "avc1.4d401e"]);
+    /// ```
     ///
     /// # Example
     ///
     /// ```
     /// # use hls_m3u8::types::StreamData;
-    /// #
+    /// use hls_m3u8::types::Codecs;
+    ///
     /// let mut stream = StreamData::new(20);
     ///
-    /// stream.set_codecs(Some("mp4a.40.2,avc1.4d401e"));
-    /// assert_eq!(stream.codecs(), Some(&"mp4a.40.2,avc1.4d401e".to_string()));
+    /// stream.set_codecs(Some(&["mp4a.40.2", "avc1.4d401e"]));
+    /// assert_eq!(
+    ///     stream.codecs(),
+    ///     Some(&Codecs::from(&["mp4a.40.2", "avc1.4d401e"]))
+    /// );
     /// ```
     ///
     /// # Note
@@ -126,7 +133,7 @@ pub struct StreamData {
     /// crate::tags::VariantStream::ExtXStreamInf
     /// [RFC6381]: https://tools.ietf.org/html/rfc6381
     #[builder(default, setter(into))]
-    codecs: Option<String>,
+    codecs: Option<Codecs>,
     /// The resolution of the stream.
     ///
     /// # Example
@@ -237,7 +244,7 @@ impl StreamData {
     /// StreamData::builder()
     ///     .bandwidth(200)
     ///     .average_bandwidth(15)
-    ///     .codecs("mp4a.40.2,avc1.4d401e")
+    ///     .codecs(&["mp4a.40.2", "avc1.4d401e"])
     ///     .resolution((1920, 1080))
     ///     .hdcp_level(HdcpLevel::Type0)
     ///     .video("video_01")
@@ -297,7 +304,7 @@ impl FromStr for StreamData {
                             .map_err(|e| Error::parse_int(value, e))?,
                     )
                 }
-                "CODECS" => codecs = Some(unquote(value)),
+                "CODECS" => codecs = Some(unquote(value).parse()?),
                 "RESOLUTION" => resolution = Some(value.parse()?),
                 "HDCP-LEVEL" => {
                     hdcp_level = Some(value.parse::<HdcpLevel>().map_err(Error::strum)?)
@@ -346,7 +353,7 @@ mod tests {
     fn test_display() {
         let mut stream_data = StreamData::new(200);
         stream_data.set_average_bandwidth(Some(15));
-        stream_data.set_codecs(Some("mp4a.40.2,avc1.4d401e"));
+        stream_data.set_codecs(Some(&["mp4a.40.2", "avc1.4d401e"]));
         stream_data.set_resolution(Some((1920, 1080)));
         stream_data.set_hdcp_level(Some(HdcpLevel::Type0));
         stream_data.set_video(Some("video"));
@@ -369,7 +376,7 @@ mod tests {
     fn test_parser() {
         let mut stream_data = StreamData::new(200);
         stream_data.set_average_bandwidth(Some(15));
-        stream_data.set_codecs(Some("mp4a.40.2,avc1.4d401e"));
+        stream_data.set_codecs(Some(&["mp4a.40.2", "avc1.4d401e"]));
         stream_data.set_resolution(Some((1920, 1080)));
         stream_data.set_hdcp_level(Some(HdcpLevel::Type0));
         stream_data.set_video(Some("video"));

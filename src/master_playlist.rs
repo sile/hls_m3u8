@@ -418,7 +418,7 @@ mod tests {
                         closed_captions: None,
                         stream_data: StreamData::builder()
                             .bandwidth(150000)
-                            .codecs("avc1.42e00a,mp4a.40.2")
+                            .codecs(&["avc1.42e00a", "mp4a.40.2"])
                             .resolution((416, 234))
                             .build()
                             .unwrap()
@@ -431,7 +431,7 @@ mod tests {
                         closed_captions: None,
                         stream_data: StreamData::builder()
                             .bandwidth(240000)
-                            .codecs("avc1.42e00a,mp4a.40.2")
+                            .codecs(&["avc1.42e00a", "mp4a.40.2"])
                             .resolution((416, 234))
                             .build()
                             .unwrap()
@@ -444,7 +444,7 @@ mod tests {
                         closed_captions: None,
                         stream_data: StreamData::builder()
                             .bandwidth(440000)
-                            .codecs("avc1.42e00a,mp4a.40.2")
+                            .codecs(&["avc1.42e00a", "mp4a.40.2"])
                             .resolution((416, 234))
                             .build()
                             .unwrap()
@@ -457,7 +457,7 @@ mod tests {
                         closed_captions: None,
                         stream_data: StreamData::builder()
                             .bandwidth(640000)
-                            .codecs("avc1.42e00a,mp4a.40.2")
+                            .codecs(&["avc1.42e00a", "mp4a.40.2"])
                             .resolution((640, 360))
                             .build()
                             .unwrap()
@@ -470,7 +470,7 @@ mod tests {
                         closed_captions: None,
                         stream_data: StreamData::builder()
                             .bandwidth(64000)
-                            .codecs("mp4a.40.5")
+                            .codecs(&["mp4a.40.5"])
                             .build()
                             .unwrap()
                     },
@@ -493,7 +493,7 @@ mod tests {
                         closed_captions: None,
                         stream_data: StreamData::builder()
                             .bandwidth(150000)
-                            .codecs("avc1.42e00a,mp4a.40.2")
+                            .codecs(&["avc1.42e00a", "mp4a.40.2"])
                             .resolution((416, 234))
                             .build()
                             .unwrap()
@@ -506,7 +506,7 @@ mod tests {
                         closed_captions: None,
                         stream_data: StreamData::builder()
                             .bandwidth(240000)
-                            .codecs("avc1.42e00a,mp4a.40.2")
+                            .codecs(&["avc1.42e00a", "mp4a.40.2"])
                             .resolution((416, 234))
                             .build()
                             .unwrap()
@@ -519,7 +519,7 @@ mod tests {
                         closed_captions: None,
                         stream_data: StreamData::builder()
                             .bandwidth(440000)
-                            .codecs("avc1.42e00a,mp4a.40.2")
+                            .codecs(&["avc1.42e00a", "mp4a.40.2"])
                             .resolution((416, 234))
                             .build()
                             .unwrap()
@@ -532,7 +532,7 @@ mod tests {
                         closed_captions: None,
                         stream_data: StreamData::builder()
                             .bandwidth(640000)
-                            .codecs("avc1.42e00a,mp4a.40.2")
+                            .codecs(&["avc1.42e00a", "mp4a.40.2"])
                             .resolution((640, 360))
                             .build()
                             .unwrap()
@@ -545,7 +545,7 @@ mod tests {
                         closed_captions: None,
                         stream_data: StreamData::builder()
                             .bandwidth(64000)
-                            .codecs("mp4a.40.5")
+                            .codecs(&["mp4a.40.5"])
                             .build()
                             .unwrap()
                     },
