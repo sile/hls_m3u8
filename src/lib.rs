@@ -2,12 +2,30 @@
 #![warn(
     clippy::pedantic, //
     clippy::nursery,
-    clippy::cargo
+    clippy::cargo,
+    clippy::inline_always,
 )]
 #![allow(
     clippy::multiple_crate_versions,
     clippy::module_name_repetitions,
-    clippy::default_trait_access
+    clippy::default_trait_access,
+    clippy::unnecessary_operation // temporary until derive-builder uses #[allow(clippy::all)]
+)]
+#![warn(
+    clippy::clone_on_ref_ptr,
+    clippy::decimal_literal_representation,
+    clippy::get_unwrap,
+    clippy::option_expect_used,
+    clippy::unneeded_field_pattern,
+    clippy::wrong_pub_self_convention
+)]
+// those should not be present in production code:
+#![deny(
+    clippy::print_stdout,
+    clippy::todo,
+    clippy::unimplemented,
+    clippy::dbg_macro,
+    clippy::use_debug
 )]
 #![warn(
     missing_docs,
