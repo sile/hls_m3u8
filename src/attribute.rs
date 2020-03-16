@@ -14,7 +14,7 @@ impl<'a> Iterator for AttributePairs<'a> {
     type Item = (&'a str, &'a str);
 
     fn next(&mut self) -> Option<Self::Item> {
-        // return `None`, if there are no more chars
+        // return `None`, if there are no more bytes
         self.string.as_bytes().get(self.index + 1)?;
 
         let key = {
@@ -23,41 +23,55 @@ impl<'a> Iterator for AttributePairs<'a> {
             // the key ends at an `=`:
             let end = self
                 .string
-                .bytes()
-                .skip(self.index)
-                .position(|i| i == b'=')?
-                + start;
+                .char_indices()
+                .skip_while(|(i, _)| *i < self.index)
+                .find_map(|(i, c)| if c == '=' { Some(i) } else { None })?;
 
-            // advance the index to the 2nd char after the end of the key
-            // (this will skip the `=`)
+            // advance the index to the char after the end of the key (to skip the `=`)
+            // NOTE: it is okay to add 1 to the index, because an `=` is exactly 1 byte.
             self.index = end + 1;
 
-            core::str::from_utf8(&self.string.as_bytes()[start..end]).unwrap()
+            ::core::str::from_utf8(&self.string.as_bytes()[start..end]).unwrap()
         };
 
         let value = {
             let start = self.index;
-            let mut end = 0;
 
             // find the end of the value by searching for `,`.
             // it should ignore `,` that are inside double quotes.
             let mut inside_quotes = false;
-            while let Some(item) = self.string.as_bytes().get(start + end) {
-                end += 1;
 
-                if *item == b'"' {
-                    inside_quotes = !inside_quotes;
-                } else if *item == b',' && !inside_quotes {
-                    self.index += 1;
-                    end -= 1;
-                    break;
+            let end = {
+                let mut result = self.string.len();
+
+                for (i, c) in self
+                    .string
+                    .char_indices()
+                    .skip_while(|(i, _)| *i < self.index)
+                {
+                    // if a quote is encountered
+                    if c == '"' {
+                        // update variable
+                        inside_quotes = !inside_quotes;
+                    // terminate if a comma is encountered, which is not in a
+                    // quote
+                    } else if c == ',' && !inside_quotes {
+                        // move the index past the comma
+                        self.index += 1;
+                        // the result is the index of the comma (comma is not included in the
+                        // resulting string)
+                        result = i;
+                        break;
+                    }
                 }
-            }
+
+                result
+            };
 
             self.index += end;
-            end += start;
+            self.index -= start;
 
-            core::str::from_utf8(&self.string.as_bytes()[start..end]).unwrap()
+            ::core::str::from_utf8(&self.string.as_bytes()[start..end]).unwrap()
         };
 
         Some((key.trim(), value.trim()))
@@ -69,10 +83,15 @@ impl<'a> Iterator for AttributePairs<'a> {
         // each `=` in the remaining str is an iteration
         // this also ignores `=` inside quotes!
         let mut inside_quotes = false;
-        for c in self.string.as_bytes().iter().skip(self.index) {
-            if *c == b'=' && !inside_quotes {
+
+        for (_, c) in self
+            .string
+            .char_indices()
+            .skip_while(|(i, _)| *i < self.index)
+        {
+            if c == '=' && !inside_quotes {
                 remaining += 1;
-            } else if *c == b'"' {
+            } else if c == '"' {
                 inside_quotes = !inside_quotes;
             }
         }
@@ -92,44 +111,53 @@ mod test {
     #[test]
     fn test_attributes() {
         let mut attributes = AttributePairs::new("KEY=VALUE,PAIR=YES");
+
         assert_eq!((2, Some(2)), attributes.size_hint());
-        assert_eq!(Some(("KEY", "VALUE")), attributes.next());
+        assert_eq!(attributes.next(), Some(("KEY", "VALUE")));
+
         assert_eq!((1, Some(1)), attributes.size_hint());
-        assert_eq!(Some(("PAIR", "YES")), attributes.next());
+        assert_eq!(attributes.next(), Some(("PAIR", "YES")));
+
         assert_eq!((0, Some(0)), attributes.size_hint());
-        assert_eq!(None, attributes.next());
+        assert_eq!(attributes.next(), None);
 
         let mut attributes = AttributePairs::new("garbage");
         assert_eq!((0, Some(0)), attributes.size_hint());
-        assert_eq!(None, attributes.next());
+        assert_eq!(attributes.next(), None);
 
         let mut attributes = AttributePairs::new("KEY=,=VALUE,=,");
+
         assert_eq!((3, Some(3)), attributes.size_hint());
-        assert_eq!(Some(("KEY", "")), attributes.next());
+        assert_eq!(attributes.next(), Some(("KEY", "")));
+
         assert_eq!((2, Some(2)), attributes.size_hint());
-        assert_eq!(Some(("", "VALUE")), attributes.next());
+        assert_eq!(attributes.next(), Some(("", "VALUE")));
+
         assert_eq!((1, Some(1)), attributes.size_hint());
-        assert_eq!(Some(("", "")), attributes.next());
+        assert_eq!(attributes.next(), Some(("", "")));
+
         assert_eq!((0, Some(0)), attributes.size_hint());
-        assert_eq!(None, attributes.next());
+        assert_eq!(attributes.next(), None);
 
         // test quotes:
         let mut attributes = AttributePairs::new("KEY=\"VALUE,\",");
+
         assert_eq!((1, Some(1)), attributes.size_hint());
-        assert_eq!(Some(("KEY", "\"VALUE,\"")), attributes.next());
+        assert_eq!(attributes.next(), Some(("KEY", "\"VALUE,\"")));
+
         assert_eq!((0, Some(0)), attributes.size_hint());
-        assert_eq!(None, attributes.next());
+        assert_eq!(attributes.next(), None);
 
         // test with chars, that are larger, than 1 byte
-        let mut attributes = AttributePairs::new(
-            "LANGUAGE=\"fre\",\
-             NAME=\"Français\",\
-             AUTOSELECT=YES",
-        );
+        let mut attributes = AttributePairs::new(concat!(
+            "LANGUAGE=\"fre\",",
+            "NAME=\"Français\",",
+            "AUTOSELECT=YES"
+        ));
 
-        assert_eq!(Some(("LANGUAGE", "\"fre\"")), attributes.next());
-        assert_eq!(Some(("NAME", "\"Français\"")), attributes.next());
-        assert_eq!(Some(("AUTOSELECT", "YES")), attributes.next());
+        assert_eq!(attributes.next(), Some(("LANGUAGE", "\"fre\"")));
+        assert_eq!(attributes.next(), Some(("NAME", "\"Français\"")));
+        assert_eq!(attributes.next(), Some(("AUTOSELECT", "YES")));
     }
 
     #[test]
@@ -139,6 +167,42 @@ mod test {
         assert_eq!(pairs.next(), Some(("FOO", "BAR")));
         assert_eq!(pairs.next(), Some(("BAR", "\"baz,qux\"")));
         assert_eq!(pairs.next(), Some(("ABC", "12.3")));
+        assert_eq!(pairs.next(), None);
+
+        // stress test with foreign input
+        // got it from https://generator.lorem-ipsum.info/_chinese
+
+        let mut pairs = AttributePairs::new(concat!(
+            "載抗留囲軽来実基供全必式覧領意度振。=著地内方満職控努作期投綱研本模,",
+            "後文図様改表宮能本園半参裁報作神掲索=\"針支年得率新賞現報発援白少動面。矢拉年世掲注索政平定他込\",",
+            "ध्वनि स्थिति और्४५० नीचे =देखने लाभो द्वारा करके(विशेष"
+        ));
+
+        assert_eq!((3, Some(3)), pairs.size_hint());
+        assert_eq!(
+            pairs.next(),
+            Some((
+                "載抗留囲軽来実基供全必式覧領意度振。",
+                "著地内方満職控努作期投綱研本模"
+            ))
+        );
+
+        assert_eq!((2, Some(2)), pairs.size_hint());
+        assert_eq!(
+            pairs.next(),
+            Some((
+                "後文図様改表宮能本園半参裁報作神掲索",
+                "\"針支年得率新賞現報発援白少動面。矢拉年世掲注索政平定他込\""
+            ))
+        );
+
+        assert_eq!((1, Some(1)), pairs.size_hint());
+        assert_eq!(
+            pairs.next(),
+            Some(("ध्वनि स्थिति और्४५० नीचे", "देखने लाभो द्वारा करके(विशेष"))
+        );
+
+        assert_eq!((0, Some(0)), pairs.size_hint());
         assert_eq!(pairs.next(), None);
     }
 }
