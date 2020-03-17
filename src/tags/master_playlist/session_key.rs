@@ -9,12 +9,14 @@ use crate::types::{EncryptionMethod, ProtocolVersion};
 use crate::utils::tag;
 use crate::{Error, RequiredVersion};
 
-/// # [4.3.4.5. EXT-X-SESSION-KEY]
-///
 /// The [`ExtXSessionKey`] tag allows encryption keys from [`MediaPlaylist`]s
 /// to be specified in a [`MasterPlaylist`]. This allows the client to
 /// preload these keys without having to read the [`MediaPlaylist`]s
 /// first.
+///
+/// If an [`ExtXSessionKey`] is used, the values of [`ExtXKey::method`],
+/// [`ExtXKey::key_format`] and [`ExtXKey::key_format_versions`] must match any
+/// [`ExtXKey`] with the same uri field.
 ///
 /// [`MediaPlaylist`]: crate::MediaPlaylist
 /// [`MasterPlaylist`]: crate::MasterPlaylist
@@ -70,7 +72,7 @@ impl TryFrom<ExtXKey> for ExtXSessionKey {
 }
 
 /// This tag requires the same [`ProtocolVersion`] that is returned by
-/// `DecryptionKey::required_version`.
+/// `ExtXKey::required_version`.
 impl RequiredVersion for ExtXSessionKey {
     fn required_version(&self) -> ProtocolVersion { self.0.required_version() }
 }
