@@ -377,6 +377,10 @@ impl Deref for VariantStream {
     }
 }
 
+impl PartialEq<&VariantStream> for VariantStream {
+    fn eq(&self, other: &&Self) -> bool { self.eq(*other) }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
