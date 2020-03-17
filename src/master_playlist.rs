@@ -234,9 +234,9 @@ impl MasterPlaylistBuilder {
 
     fn check_media_group<T: AsRef<str>>(&self, media_type: MediaType, group_id: T) -> bool {
         if let Some(value) = &self.media {
-            value
-                .iter()
-                .any(|t| t.media_type() == media_type && t.group_id().as_str() == group_id.as_ref())
+            value.iter().any(|media| {
+                media.media_type == media_type && media.group_id().as_str() == group_id.as_ref()
+            })
         } else {
             false
         }

@@ -205,7 +205,7 @@ impl VariantStream {
     pub fn is_associated(&self, media: &ExtXMedia) -> bool {
         match &self {
             Self::ExtXIFrame { stream_data, .. } => {
-                if let MediaType::Video = media.media_type() {
+                if let MediaType::Video = media.media_type {
                     if let Some(value) = stream_data.video() {
                         return value == media.group_id();
                     }
@@ -220,7 +220,7 @@ impl VariantStream {
                 stream_data,
                 ..
             } => {
-                match media.media_type() {
+                match media.media_type {
                     MediaType::Audio => audio.as_ref().map_or(false, |v| v == media.group_id()),
                     MediaType::Video => {
                         stream_data.video().map_or(false, |v| v == media.group_id())
