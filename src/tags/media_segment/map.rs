@@ -9,13 +9,28 @@ use crate::types::{ByteRange, ProtocolVersion};
 use crate::utils::{quote, tag, unquote};
 use crate::{Encrypted, Error, RequiredVersion};
 
-/// # [4.3.2.5. EXT-X-MAP]
+/// The [`ExtXMap`] tag specifies how to obtain the [Media Initialization
+/// Section], required to parse the applicable [`MediaSegment`]s.
 ///
-/// The [`ExtXMap`] tag specifies how to obtain the Media Initialization
-/// Section, required to parse the applicable [`MediaSegment`]s.
+/// It applies to every [`MediaSegment`] that appears after it in the playlist
+/// until the next [`ExtXMap`] tag or until the end of the playlist.
 ///
+/// An [`ExtXMap`] tag should be supplied for [`MediaSegment`]s in playlists
+/// with the [`ExtXIFramesOnly`] tag when the first [`MediaSegment`] (i.e.,
+/// I-frame) in the playlist (or the first segment following an
+/// [`ExtXDiscontinuity`] tag) does not immediately follow the Media
+/// Initialization Section at the beginning of its resource.
+///
+/// If the Media Initialization Section declared by an [`ExtXMap`] tag is
+/// encrypted with [`EncryptionMethod::Aes128`], the IV attribute of
+/// the [`ExtXKey`] tag that applies to the [`ExtXMap`] is required.
+///
+/// [Media Initialization Section]: https://tools.ietf.org/html/rfc8216#section-3
 /// [`MediaSegment`]: crate::MediaSegment
-/// [4.3.2.5. EXT-X-MAP]: https://tools.ietf.org/html/rfc8216#section-4.3.2.5
+/// [`ExtXIFramesOnly`]: crate::tags::ExtXIFramesOnly
+/// [`ExtXDiscontinuity`]: crate::tags::ExtXDiscontinuity
+/// [`EncryptionMethod::Aes128`]: crate::types::EncryptionMethod::Aes128
+/// [`MediaPlaylist`]: crate::MediaPlaylist
 #[derive(ShortHand, Debug, Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]
 #[shorthand(enable(must_use, into))]
 pub struct ExtXMap {
@@ -99,7 +114,14 @@ impl Encrypted for ExtXMap {
     fn keys_mut(&mut self) -> &mut Vec<ExtXKey> { &mut self.keys }
 }
 
-/// This tag requires [`ProtocolVersion::V6`].
+/// Use of the [`ExtXMap`] tag in a [`MediaPlaylist`] that contains the
+/// [`ExtXIFramesOnly`] tag requires [`ProtocolVersion::V5`] or
+/// greater. Use of the [`ExtXMap`] tag in a [`MediaPlaylist`] that does not
+/// contain the [`ExtXIFramesOnly`] tag requires [`ProtocolVersion::V6`] or
+/// greater.
+///
+/// [`ExtXIFramesOnly`]: crate::tags::ExtXIFramesOnly
+/// [`MediaPlaylist`]: crate::MediaPlaylist
 impl RequiredVersion for ExtXMap {
     // this should return ProtocolVersion::V5, if it does not contain an
     // EXT-X-I-FRAMES-ONLY!
