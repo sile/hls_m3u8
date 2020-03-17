@@ -21,7 +21,7 @@ macro_rules! generate_tests {
     }
 }
 
-generate_tests! [
+generate_tests! {
     test_simple_playlist => {
         MediaPlaylist::builder()
             .target_duration(ExtXTargetDuration::new(Duration::from_secs(10)))
@@ -169,7 +169,7 @@ generate_tests! [
     },
     test_master_playlist => {
         MasterPlaylist::builder()
-            .variants(vec![
+            .variant_streams(vec![
                 VariantStream::ExtXStreamInf {
                     uri: "http://example.com/low.m3u8".into(),
                     frame_rate: None,
@@ -235,7 +235,7 @@ generate_tests! [
     },
     test_master_playlist_with_i_frames => {
         MasterPlaylist::builder()
-            .variants(vec![
+            .variant_streams(vec![
                 VariantStream::ExtXStreamInf {
                     uri: "low/audio-video.m3u8".into(),
                     frame_rate: None,
@@ -336,7 +336,7 @@ generate_tests! [
                     .build()
                     .unwrap(),
             ])
-            .variants(vec![
+            .variant_streams(vec![
                 VariantStream::ExtXStreamInf {
                     uri: "low/video-only.m3u8".into(),
                     frame_rate: None,
@@ -509,7 +509,7 @@ generate_tests! [
                     .build()
                     .unwrap(),
             ])
-            .variants(vec![
+            .variant_streams(vec![
                 VariantStream::ExtXStreamInf {
                     uri: "low/main/audio-video.m3u8".into(),
                     frame_rate: None,
@@ -628,4 +628,4 @@ generate_tests! [
             "hi/main/audio-video.m3u8\n",
         )
     }
-];
+}
