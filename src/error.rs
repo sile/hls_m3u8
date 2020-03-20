@@ -59,6 +59,7 @@ enum ErrorKind {
     UnexpectedTag { tag: String },
 
     #[error("{source}")]
+    #[cfg(feature = "chrono")]
     Chrono { source: chrono::ParseError },
 
     #[error("builder error: {message}")]
@@ -169,6 +170,7 @@ impl Error {
     }
 
     // third party crates:
+    #[cfg(feature = "chrono")]
     pub(crate) fn chrono(source: chrono::format::ParseError) -> Self {
         Self::new(ErrorKind::Chrono { source })
     }

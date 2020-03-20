@@ -25,6 +25,7 @@ script:
   - cargo clean
   - cargo build
   - cargo test
+  - cargo test --features chrono
 
   # it's enough to run this once:
   - |

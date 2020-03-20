@@ -3,6 +3,7 @@ use std::fmt;
 use std::str::FromStr;
 use std::time::Duration;
 
+#[cfg(feature = "chrono")]
 use chrono::{DateTime, FixedOffset, SecondsFormat};
 use derive_builder::Builder;
 use shorthand::ShortHand;
@@ -12,13 +13,8 @@ use crate::types::{ProtocolVersion, Value};
 use crate::utils::{quote, tag, unquote};
 use crate::{Error, RequiredVersion};
 
-/// # [4.3.2.7. EXT-X-DATERANGE]
-///
-/// The [`ExtXDateRange`] tag associates a date range (i.e., a range of
-/// time defined by a starting and ending date) with a set of attribute/
-/// value pairs.
-///
-/// [4.3.2.7. EXT-X-DATERANGE]: https://tools.ietf.org/html/rfc8216#section-4.3.2.7
+/// The [`ExtXDateRange`] tag associates a date range (i.e., a range of time
+/// defined by a starting and ending date) with a set of attribute/value pairs.
 #[derive(ShortHand, Builder, Debug, Clone, PartialEq, PartialOrd)]
 #[builder(setter(into))]
 #[shorthand(enable(must_use, into))]
@@ -43,6 +39,7 @@ pub struct ExtXDateRange {
     /// # Note
     ///
     /// This attribute is required.
+    #[cfg(feature = "chrono")]
     start_date: DateTime<FixedOffset>,
     /// The date at which the [`ExtXDateRange`] ends. It must be equal to or
     /// later than the value of the [`start-date`] attribute.
@@ -52,8 +49,12 @@ pub struct ExtXDateRange {
     /// This attribute is optional.
     ///
     /// [`start-date`]: #method.start_date
+    #[cfg(feature = "chrono")]
     #[builder(setter(strip_option), default)]
     end_date: Option<DateTime<FixedOffset>>,
+    #[cfg(not(feature = "chrono"))]
+    #[builder(setter(strip_option), default)]
+    end_date: Option<String>,
     /// The duration of the [`ExtXDateRange`]. A single instant in time (e.g.,
     /// crossing a finish line) should be represented with a duration of 0.
     ///
@@ -145,27 +146,48 @@ impl ExtXDateRange {
     /// Makes a new [`ExtXDateRange`] tag.
     ///
     /// # Example
-    ///
-    /// ```
-    /// # use hls_m3u8::tags::ExtXDateRange;
-    /// use chrono::offset::TimeZone;
-    /// use chrono::{DateTime, FixedOffset};
-    ///
-    /// const HOURS_IN_SECS: i32 = 3600; // 1 hour = 3600 seconds
-    ///
-    /// let date_range = ExtXDateRange::new(
-    ///     "id",
-    ///     FixedOffset::east(8 * HOURS_IN_SECS)
-    ///         .ymd(2010, 2, 19)
-    ///         .and_hms_milli(14, 54, 23, 31),
-    /// );
-    /// ```
+    #[cfg_attr(
+        feature = "chrono",
+        doc = r#"
+```
+# use hls_m3u8::tags::ExtXDateRange;
+use chrono::offset::TimeZone;
+use chrono::{DateTime, FixedOffset};
+
+const HOURS_IN_SECS: i32 = 3600; // 1 hour = 3600 seconds
+
+let date_range = ExtXDateRange::new(
+    "id",
+    FixedOffset::east(8 * HOURS_IN_SECS)
+        .ymd(2010, 2, 19)
+        .and_hms_milli(14, 54, 23, 31),
+);
+```
+"#
+    )]
+    #[cfg_attr(
+        not(feature = "chrono"),
+        doc = r#"
+```
+# use hls_m3u8::tags::ExtXDateRange;
+
+let date_range = ExtXDateRange::new("id", "2010-02-19T14:54:23.031+08:00");
+```
+    "#
+    )]
     #[must_use]
-    pub fn new<T: Into<String>>(id: T, start_date: DateTime<FixedOffset>) -> Self {
+    pub fn new<T: Into<String>, #[cfg(not(feature = "chrono"))] I: Into<String>>(
+        id: T,
+        #[cfg(feature = "chrono")] start_date: DateTime<FixedOffset>,
+        #[cfg(not(feature = "chrono"))] start_date: I,
+    ) -> Self {
         Self {
             id: id.into(),
             class: None,
+            #[cfg(feature = "chrono")]
             start_date,
+            #[cfg(not(feature = "chrono"))]
+            start_date: start_date.into(),
             end_date: None,
             duration: None,
             planned_duration: None,
@@ -210,8 +232,26 @@ impl FromStr for ExtXDateRange {
             match key {
                 "ID" => id = Some(unquote(value)),
                 "CLASS" => class = Some(unquote(value)),
-                "START-DATE" => start_date = Some(unquote(value)),
-                "END-DATE" => end_date = Some(unquote(value).parse().map_err(Error::chrono)?),
+                "START-DATE" => {
+                    #[cfg(feature = "chrono")]
+                    {
+                        start_date = Some(unquote(value).parse().map_err(Error::chrono)?)
+                    }
+                    #[cfg(not(feature = "chrono"))]
+                    {
+                        start_date = Some(unquote(value))
+                    }
+                }
+                "END-DATE" => {
+                    #[cfg(feature = "chrono")]
+                    {
+                        end_date = Some(unquote(value).parse().map_err(Error::chrono)?)
+                    }
+                    #[cfg(not(feature = "chrono"))]
+                    {
+                        end_date = Some(unquote(value))
+                    }
+                }
                 "DURATION" => {
                     duration = Some(Duration::from_secs_f64(
                         value.parse().map_err(|e| Error::parse_float(value, e))?,
@@ -244,10 +284,7 @@ impl FromStr for ExtXDateRange {
         }
 
         let id = id.ok_or_else(|| Error::missing_value("ID"))?;
-        let start_date = start_date
-            .ok_or_else(|| Error::missing_value("START-DATE"))?
-            .parse()
-            .map_err(Error::chrono)?;
+        let start_date = start_date.ok_or_else(|| Error::missing_value("START-DATE"))?;
 
         if end_on_next && class.is_none() {
             return Err(Error::invalid_input());
@@ -277,18 +314,34 @@ impl fmt::Display for ExtXDateRange {
             write!(f, ",CLASS={}", quote(value))?;
         }
 
-        write!(
-            f,
-            ",START-DATE={}",
-            quote(&self.start_date.to_rfc3339_opts(SecondsFormat::AutoSi, true))
-        )?;
-
-        if let Some(value) = &self.end_date {
+        #[cfg(feature = "chrono")]
+        {
             write!(
                 f,
-                ",END-DATE={}",
-                quote(&value.to_rfc3339_opts(SecondsFormat::AutoSi, true))
+                ",START-DATE={}",
+                quote(&self.start_date.to_rfc3339_opts(SecondsFormat::AutoSi, true))
             )?;
+        }
+
+        #[cfg(not(feature = "chrono"))]
+        {
+            write!(f, ",START-DATE={}", quote(&self.start_date))?;
+        }
+
+        if let Some(value) = &self.end_date {
+            #[cfg(feature = "chrono")]
+            {
+                write!(
+                    f,
+                    ",END-DATE={}",
+                    quote(&value.to_rfc3339_opts(SecondsFormat::AutoSi, true))
+                )?;
+            }
+
+            #[cfg(not(feature = "chrono"))]
+            {
+                write!(f, ",END-DATE={}", quote(&value))?;
+            }
         }
 
         if let Some(value) = &self.duration {
@@ -327,9 +380,11 @@ impl fmt::Display for ExtXDateRange {
 mod test {
     use super::*;
     use crate::types::Float;
+    #[cfg(feature = "chrono")]
     use chrono::offset::TimeZone;
     use pretty_assertions::assert_eq;
 
+    #[cfg(feature = "chrono")]
     const HOURS_IN_SECS: i32 = 3600; // 1 hour = 3600 seconds
 
     macro_rules! generate_tests {
@@ -369,7 +424,16 @@ mod test {
         {
             ExtXDateRange::builder()
                 .id("splice-6FFFFFF0")
-                .start_date(FixedOffset::east(0).ymd(2014, 3, 5).and_hms(11, 15, 0))
+                .start_date({
+                    #[cfg(feature = "chrono")]
+                    {
+                        FixedOffset::east(0).ymd(2014, 3, 5).and_hms(11, 15, 0)
+                    }
+                    #[cfg(not(feature = "chrono"))]
+                    {
+                        "2014-03-05T11:15:00Z"
+                    }
+                })
                 .planned_duration(Duration::from_secs_f64(59.993))
                 .scte35_out(concat!(
                     "0xFC002F0000000000FF00001",
@@ -393,8 +457,26 @@ mod test {
             ExtXDateRange::builder()
                 .id("test_id")
                 .class("test_class")
-                .start_date(FixedOffset::east(0).ymd(2014, 3, 5).and_hms(11, 15, 0))
-                .end_date(FixedOffset::east(0).ymd(2014, 3, 5).and_hms(11, 16, 0))
+                .start_date({
+                    #[cfg(feature = "chrono")]
+                    {
+                        FixedOffset::east(0).ymd(2014, 3, 5).and_hms(11, 15, 0)
+                    }
+                    #[cfg(not(feature = "chrono"))]
+                    {
+                        "2014-03-05T11:15:00Z"
+                    }
+                })
+                .end_date({
+                    #[cfg(feature = "chrono")]
+                    {
+                        FixedOffset::east(0).ymd(2014, 3, 5).and_hms(11, 16, 0)
+                    }
+                    #[cfg(not(feature = "chrono"))]
+                    {
+                        "2014-03-05T11:16:00Z"
+                    }
+                })
                 .duration(Duration::from_secs_f64(60.1))
                 .planned_duration(Duration::from_secs_f64(59.993))
                 .insert_client_attribute("X-CUSTOM", Float::new(45.3))
@@ -424,12 +506,18 @@ mod test {
     #[test]
     fn test_required_version() {
         assert_eq!(
-            ExtXDateRange::new(
-                "id",
-                FixedOffset::east(8 * HOURS_IN_SECS)
-                    .ymd(2010, 2, 19)
-                    .and_hms_milli(14, 54, 23, 31)
-            )
+            ExtXDateRange::new("id", {
+                #[cfg(feature = "chrono")]
+                {
+                    FixedOffset::east(8 * HOURS_IN_SECS)
+                        .ymd(2010, 2, 19)
+                        .and_hms_milli(14, 54, 23, 31)
+                }
+                #[cfg(not(feature = "chrono"))]
+                {
+                    "2010-02-19T14:54:23.031+08:00"
+                }
+            })
             .required_version(),
             ProtocolVersion::V1
         );
