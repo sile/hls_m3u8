@@ -10,11 +10,11 @@ use crate::line::{Line, Lines, Tag};
 use crate::media_segment::MediaSegment;
 use crate::tags::{
     ExtM3u, ExtXDiscontinuitySequence, ExtXEndList, ExtXIFramesOnly, ExtXIndependentSegments,
-    ExtXMediaSequence, ExtXPlaylistType, ExtXStart, ExtXTargetDuration, ExtXVersion,
+    ExtXKey, ExtXMediaSequence, ExtXPlaylistType, ExtXStart, ExtXTargetDuration, ExtXVersion,
 };
-use crate::types::ProtocolVersion;
+use crate::types::{EncryptionMethod, ProtocolVersion};
 use crate::utils::tag;
-use crate::{Encrypted, Error, RequiredVersion};
+use crate::{Error, RequiredVersion};
 
 /// Media playlist.
 #[derive(ShortHand, Debug, Clone, Builder, PartialEq, PartialOrd)]

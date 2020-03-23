@@ -6,10 +6,6 @@ use strum::{Display, EnumString};
 #[derive(Ord, PartialOrd, Debug, Clone, Copy, PartialEq, Eq, Hash, Display, EnumString)]
 #[strum(serialize_all = "SCREAMING-KEBAB-CASE")]
 pub enum EncryptionMethod {
-    /// The [`MediaSegment`]s are not encrypted.
-    ///
-    /// [`MediaSegment`]: crate::MediaSegment
-    None,
     /// The [`MediaSegment`]s are completely encrypted using the Advanced
     /// Encryption Standard ([AES-128]) with a 128-bit key, Cipher Block
     /// Chaining (CBC), and [Public-Key Cryptography Standards #7 (PKCS7)]
@@ -65,7 +61,6 @@ mod tests {
             EncryptionMethod::SampleAes.to_string(),
             "SAMPLE-AES".to_string()
         );
-        assert_eq!(EncryptionMethod::None.to_string(), "NONE".to_string());
     }
 
     #[test]
@@ -78,11 +73,6 @@ mod tests {
         assert_eq!(
             EncryptionMethod::SampleAes,
             "SAMPLE-AES".parse::<EncryptionMethod>().unwrap()
-        );
-
-        assert_eq!(
-            EncryptionMethod::None,
-            "NONE".parse::<EncryptionMethod>().unwrap()
         );
 
         assert!("unknown".parse::<EncryptionMethod>().is_err());

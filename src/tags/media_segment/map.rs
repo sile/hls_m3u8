@@ -5,9 +5,9 @@ use shorthand::ShortHand;
 
 use crate::attribute::AttributePairs;
 use crate::tags::ExtXKey;
-use crate::types::{ByteRange, ProtocolVersion};
+use crate::types::{ByteRange, DecryptionKey, ProtocolVersion};
 use crate::utils::{quote, tag, unquote};
-use crate::{Encrypted, Error, RequiredVersion};
+use crate::{Decryptable, Error, RequiredVersion};
 
 /// The [`ExtXMap`] tag specifies how to obtain the [Media Initialization
 /// Section], required to parse the applicable [`MediaSegment`]s.
@@ -36,38 +36,12 @@ use crate::{Encrypted, Error, RequiredVersion};
 pub struct ExtXMap {
     /// The `URI` that identifies a resource, that contains the media
     /// initialization section.
-    ///
-    /// # Example
-    ///
-    /// ```
-    /// # use hls_m3u8::tags::ExtXMap;
-    /// let mut map = ExtXMap::new("https://prod.mediaspace.com/init.bin");
-    /// # assert_eq!(
-    /// #     map.uri(),
-    /// #     &"https://prod.mediaspace.com/init.bin".to_string()
-    /// # );
-    /// map.set_uri("https://www.google.com/init.bin");
-    ///
-    /// assert_eq!(map.uri(), &"https://www.google.com/init.bin".to_string());
-    /// ```
     uri: String,
     /// The range of the media initialization section.
-    ///
-    /// # Example
-    ///
-    /// ```
-    /// # use hls_m3u8::tags::ExtXMap;
-    /// use hls_m3u8::types::ByteRange;
-    ///
-    /// let mut map = ExtXMap::with_range("https://prod.mediaspace.com/init.bin", ..9);
-    ///
-    /// map.set_range(Some(2..5));
-    /// assert_eq!(map.range(), Some(ByteRange::from(2..5)));
-    /// ```
     #[shorthand(enable(copy))]
     range: Option<ByteRange>,
     #[shorthand(enable(skip))]
-    keys: Vec<ExtXKey>,
+    pub(crate) keys: Vec<ExtXKey>,
 }
 
 impl ExtXMap {
@@ -108,10 +82,11 @@ impl ExtXMap {
     }
 }
 
-impl Encrypted for ExtXMap {
-    fn keys(&self) -> &Vec<ExtXKey> { &self.keys }
-
-    fn keys_mut(&mut self) -> &mut Vec<ExtXKey> { &mut self.keys }
+impl Decryptable for ExtXMap {
+    fn keys(&self) -> Vec<&DecryptionKey> {
+        //
+        self.keys.iter().filter_map(ExtXKey::as_ref).collect()
+    }
 }
 
 /// Use of the [`ExtXMap`] tag in a [`MediaPlaylist`] that contains the
@@ -224,8 +199,7 @@ mod test {
     }
 
     #[test]
-    fn test_encrypted() {
-        assert_eq!(ExtXMap::new("foo").keys(), &vec![]);
-        assert_eq!(ExtXMap::new("foo").keys_mut(), &mut vec![]);
+    fn test_decryptable() {
+        assert_eq!(ExtXMap::new("foo").keys(), Vec::<&DecryptionKey>::new());
     }
 }

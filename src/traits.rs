@@ -1,106 +1,54 @@
-use crate::tags::ExtXKey;
-use crate::types::{EncryptionMethod, ProtocolVersion};
+use std::collections::{BTreeMap, HashMap};
 
-/// A trait, that is implemented on all tags, that could be encrypted.
-///
-/// # Example
-///
-/// ```
-/// use hls_m3u8::tags::ExtXKey;
-/// use hls_m3u8::types::EncryptionMethod;
-/// use hls_m3u8::Encrypted;
-///
-/// struct ExampleTag {
-///     keys: Vec<ExtXKey>,
-/// }
-///
-/// // Implementing the trait is very simple:
-/// // Simply expose the internal buffer, that contains all the keys.
-/// impl Encrypted for ExampleTag {
-///     fn keys(&self) -> &Vec<ExtXKey> { &self.keys }
-///
-///     fn keys_mut(&mut self) -> &mut Vec<ExtXKey> { &mut self.keys }
-/// }
-///
-/// let mut example_tag = ExampleTag { keys: vec![] };
-///
-/// // adding new keys:
-/// example_tag.set_keys(vec![ExtXKey::empty()]);
-/// example_tag.push_key(ExtXKey::new(
-///     EncryptionMethod::Aes128,
-///     "http://www.example.com/data.bin",
-/// ));
-///
-/// // getting the keys:
-/// assert_eq!(
-///     example_tag.keys(),
-///     &vec![
-///         ExtXKey::empty(),
-///         ExtXKey::new(EncryptionMethod::Aes128, "http://www.example.com/data.bin",)
-///     ]
-/// );
-///
-/// assert_eq!(
-///     example_tag.keys_mut(),
-///     &mut vec![
-///         ExtXKey::empty(),
-///         ExtXKey::new(EncryptionMethod::Aes128, "http://www.example.com/data.bin",)
-///     ]
-/// );
-///
-/// assert!(example_tag.is_encrypted());
-/// assert!(!example_tag.is_not_encrypted());
-/// ```
-pub trait Encrypted {
-    /// Returns a shared reference to all keys, that can be used to decrypt this
-    /// tag.
-    fn keys(&self) -> &Vec<ExtXKey>;
+use crate::types::{DecryptionKey, ProtocolVersion};
 
-    /// Returns an exclusive reference to all keys, that can be used to decrypt
-    /// this tag.
-    fn keys_mut(&mut self) -> &mut Vec<ExtXKey>;
+mod private {
+    pub trait Sealed {}
+    impl Sealed for crate::MediaSegment {}
+    impl Sealed for crate::tags::ExtXMap {}
+}
 
-    /// Sets all keys, that can be used to decrypt this tag.
-    fn set_keys(&mut self, value: Vec<ExtXKey>) -> &mut Self {
-        let keys = self.keys_mut();
-        *keys = value;
-        self
-    }
-
-    /// Add a single key to the list of keys, that can be used to decrypt this
-    /// tag.
-    fn push_key(&mut self, value: ExtXKey) -> &mut Self {
-        self.keys_mut().push(value);
-        self
-    }
-
-    /// Returns `true`, if the tag is encrypted.
+/// Signals that a type or some of the asssociated data might need to be
+/// decrypted.
+///
+/// # Note
+///
+/// You are not supposed to implement this trait, therefore it is "sealed".
+pub trait Decryptable: private::Sealed {
+    /// Returns all keys, associated with the type.
     ///
-    /// # Note
+    /// # Example
     ///
-    /// This will return `true`, if any of the keys satisfies
-    ///
-    /// ```text
-    /// key.method() != EncryptionMethod::None
     /// ```
-    fn is_encrypted(&self) -> bool {
-        if self.keys().is_empty() {
-            return false;
-        }
+    /// use hls_m3u8::tags::ExtXMap;
+    /// use hls_m3u8::types::{ByteRange, EncryptionMethod};
+    /// use hls_m3u8::Decryptable;
+    ///
+    /// let map = ExtXMap::with_range("https://www.example.url/", ByteRange::from(2..11));
+    ///
+    /// for key in map.keys() {
+    ///     if key.method == EncryptionMethod::Aes128 {
+    ///         // fetch content with the uri and decrypt the result
+    ///         break;
+    ///     }
+    /// }
+    /// ```
+    #[must_use]
+    fn keys(&self) -> Vec<&DecryptionKey>;
 
-        self.keys()
-            .iter()
-            .any(|k| k.method() != EncryptionMethod::None)
+    /// Most of the time only a single key is provided, so instead of iterating
+    /// through all keys, one might as well just get the first key.
+    #[must_use]
+    fn first_key(&self) -> Option<&DecryptionKey> {
+        <Self as Decryptable>::keys(self).first().copied()
     }
 
-    /// Returns `false`, if the tag is not encrypted.
-    ///
-    /// # Note
-    ///
-    /// This is the inverse of [`is_encrypted`].
-    ///
-    /// [`is_encrypted`]: #method.is_encrypted
-    fn is_not_encrypted(&self) -> bool { !self.is_encrypted() }
+    /// Returns the number of keys.
+    #[must_use]
+    fn len(&self) -> usize { <Self as Decryptable>::keys(self).len() }
+
+    #[must_use]
+    fn is_empty(&self) -> bool { <Self as Decryptable>::len(self) == 0 }
 }
 
 /// # Example

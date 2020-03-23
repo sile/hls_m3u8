@@ -4,7 +4,7 @@ use std::time::Duration;
 use hls_m3u8::tags::{
     ExtInf, ExtXEndList, ExtXKey, ExtXMedia, ExtXMediaSequence, ExtXTargetDuration, VariantStream,
 };
-use hls_m3u8::types::{EncryptionMethod, MediaType, StreamData};
+use hls_m3u8::types::{DecryptionKey, EncryptionMethod, MediaType, StreamData};
 use hls_m3u8::{MasterPlaylist, MediaPlaylist, MediaSegment};
 use pretty_assertions::assert_eq;
 
@@ -102,10 +102,10 @@ generate_tests! {
                 MediaSegment::builder()
                     .inf(ExtInf::new(Duration::from_secs_f64(2.833)))
                     .keys(vec![
-                        ExtXKey::new(
+                        ExtXKey::new(DecryptionKey::new(
                             EncryptionMethod::Aes128,
                             "https://priv.example.com/key.php?r=52"
-                        )
+                        ))
                     ])
                     .uri("http://media.example.com/fileSequence52-A.ts")
                     .build()
@@ -113,10 +113,10 @@ generate_tests! {
                 MediaSegment::builder()
                     .inf(ExtInf::new(Duration::from_secs_f64(15.0)))
                     .keys(vec![
-                        ExtXKey::new(
+                        ExtXKey::new(DecryptionKey::new(
                             EncryptionMethod::Aes128,
                             "https://priv.example.com/key.php?r=52"
-                        )
+                        ))
                     ])
                     .uri("http://media.example.com/fileSequence52-B.ts")
                     .build()
@@ -124,10 +124,10 @@ generate_tests! {
                 MediaSegment::builder()
                     .inf(ExtInf::new(Duration::from_secs_f64(13.333)))
                     .keys(vec![
-                        ExtXKey::new(
+                        ExtXKey::new(DecryptionKey::new(
                             EncryptionMethod::Aes128,
                             "https://priv.example.com/key.php?r=52"
-                        )
+                        ))
                     ])
                     .uri("http://media.example.com/fileSequence52-C.ts")
                     .build()
@@ -135,10 +135,10 @@ generate_tests! {
                 MediaSegment::builder()
                     .inf(ExtInf::new(Duration::from_secs_f64(15.0)))
                     .keys(vec![
-                        ExtXKey::new(
+                        ExtXKey::new(DecryptionKey::new(
                             EncryptionMethod::Aes128,
                             "https://priv.example.com/key.php?r=53"
-                        )
+                        ))
                     ])
                     .uri("http://media.example.com/fileSequence53-A.ts")
                     .build()

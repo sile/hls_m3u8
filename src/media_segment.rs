@@ -6,8 +6,8 @@ use shorthand::ShortHand;
 use crate::tags::{
     ExtInf, ExtXByteRange, ExtXDateRange, ExtXDiscontinuity, ExtXKey, ExtXMap, ExtXProgramDateTime,
 };
-use crate::types::ProtocolVersion;
-use crate::{Encrypted, RequiredVersion};
+use crate::types::{DecryptionKey, ProtocolVersion};
+use crate::{Decryptable, RequiredVersion};
 
 /// Media segment.
 #[derive(ShortHand, Debug, Clone, Builder, PartialEq, PartialOrd)]
@@ -104,10 +104,11 @@ impl RequiredVersion for MediaSegment {
     }
 }
 
-impl Encrypted for MediaSegment {
-    fn keys(&self) -> &Vec<ExtXKey> { &self.keys }
-
-    fn keys_mut(&mut self) -> &mut Vec<ExtXKey> { &mut self.keys }
+impl Decryptable for MediaSegment {
+    fn keys(&self) -> Vec<&DecryptionKey> {
+        //
+        self.keys.iter().filter_map(ExtXKey::as_ref).collect()
+    }
 }
 
 #[cfg(test)]
@@ -120,7 +121,6 @@ mod tests {
     fn test_display() {
         assert_eq!(
             MediaSegment::builder()
-                //.keys(vec![ExtXKey::empty()])
                 .map(ExtXMap::new("https://www.example.com/"))
                 .byte_range(ExtXByteRange::from(5..25))
                 //.date_range() // TODO!
@@ -131,7 +131,6 @@ mod tests {
                 .unwrap()
                 .to_string(),
             concat!(
-                //"#EXT-X-KEY:METHOD=NONE\n",
                 "#EXT-X-MAP:URI=\"https://www.example.com/\"\n",
                 "#EXT-X-BYTERANGE:20@5\n",
                 "#EXT-X-DISCONTINUITY\n",
