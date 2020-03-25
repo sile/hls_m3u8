@@ -17,7 +17,7 @@ use crate::{Error, RequiredVersion};
 ///
 /// [`MediaPlaylist`]: crate::MediaPlaylist
 /// [`VariantStream`]: crate::tags::VariantStream
-#[derive(ShortHand, Builder, Debug, Clone, PartialEq, Eq, Hash)]
+#[derive(ShortHand, Builder, Debug, Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]
 #[shorthand(enable(must_use, into))]
 #[builder(setter(into))]
 #[builder(build_fn(validate = "Self::validate"))]

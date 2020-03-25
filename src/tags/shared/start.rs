@@ -13,7 +13,7 @@ use crate::{Error, RequiredVersion};
 ///
 /// By default, clients should start playback at this point when beginning a
 /// playback session.
-#[derive(ShortHand, PartialOrd, Debug, Clone, Copy, PartialEq)]
+#[derive(ShortHand, PartialOrd, Debug, Clone, Copy, PartialEq, Eq, Ord, Hash)]
 #[shorthand(enable(must_use))]
 pub struct ExtXStart {
     /// The time offset of the [`MediaSegment`]s in the playlist.

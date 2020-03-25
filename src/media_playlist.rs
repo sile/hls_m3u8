@@ -16,7 +16,7 @@ use crate::utils::tag;
 use crate::{Error, RequiredVersion};
 
 /// Media playlist.
-#[derive(Debug, Clone, Builder, PartialEq, PartialOrd)]
+#[derive(Builder, Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
 #[builder(build_fn(skip), setter(strip_option))]
 #[non_exhaustive]
 pub struct MediaPlaylist {

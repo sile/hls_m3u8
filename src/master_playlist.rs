@@ -94,7 +94,7 @@ use crate::{Error, RequiredVersion};
 /// ```
 ///
 /// [`MediaPlaylist`]: crate::MediaPlaylist
-#[derive(Debug, Clone, Builder, PartialEq, Default)]
+#[derive(Builder, Default, Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
 #[builder(build_fn(validate = "Self::validate"))]
 #[builder(setter(into, strip_option))]
 pub struct MasterPlaylist {
