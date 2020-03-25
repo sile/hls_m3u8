@@ -2,19 +2,18 @@ use std::fmt;
 use std::str::FromStr;
 use std::time::Duration;
 
+use derive_more::AsRef;
+
 use crate::types::ProtocolVersion;
 use crate::utils::tag;
 use crate::{Error, RequiredVersion};
 
-/// # [4.3.2.1. EXTINF]
-///
-/// The [`ExtInf`] tag specifies the duration of a [`Media Segment`]. It applies
-/// only to the next [`Media Segment`].
+/// Specifies the duration of a [`Media Segment`].
 ///
 /// [`Media Segment`]: crate::media_segment::MediaSegment
-/// [4.3.2.1. EXTINF]: https://tools.ietf.org/html/rfc8216#section-4.3.2.1
-#[derive(Default, Debug, Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]
+#[derive(AsRef, Default, Debug, Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]
 pub struct ExtInf {
+    #[as_ref]
     duration: Duration,
     title: Option<String>,
 }
