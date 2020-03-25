@@ -39,40 +39,23 @@ pub trait Decryptable: private::Sealed {
     /// Most of the time only a single key is provided, so instead of iterating
     /// through all keys, one might as well just get the first key.
     #[must_use]
+    #[inline]
     fn first_key(&self) -> Option<&DecryptionKey> {
         <Self as Decryptable>::keys(self).first().copied()
     }
 
     /// Returns the number of keys.
     #[must_use]
+    #[inline]
     fn len(&self) -> usize { <Self as Decryptable>::keys(self).len() }
 
+    /// Returns `true`, if the number of keys is zero.
     #[must_use]
+    #[inline]
     fn is_empty(&self) -> bool { <Self as Decryptable>::len(self) == 0 }
 }
 
-/// # Example
-///
-/// Implementing it:
-///
-/// ```
-/// # use hls_m3u8::RequiredVersion;
-/// use hls_m3u8::types::ProtocolVersion;
-///
-/// struct ExampleTag(u64);
-///
-/// impl RequiredVersion for ExampleTag {
-///     fn required_version(&self) -> ProtocolVersion {
-///         if self.0 == 5 {
-///             ProtocolVersion::V4
-///         } else {
-///             ProtocolVersion::V1
-///         }
-///     }
-/// }
-/// assert_eq!(ExampleTag(5).required_version(), ProtocolVersion::V4);
-/// assert_eq!(ExampleTag(2).required_version(), ProtocolVersion::V1);
-/// ```
+#[doc(hidden)]
 pub trait RequiredVersion {
     /// Returns the protocol compatibility version that this tag requires.
     ///
@@ -80,9 +63,11 @@ pub trait RequiredVersion {
     ///
     /// This is for the latest working [`ProtocolVersion`] and a client, that
     /// only supports an older version would break.
+    #[must_use]
     fn required_version(&self) -> ProtocolVersion;
 
     /// The protocol version, in which the tag has been introduced.
+    #[must_use]
     fn introduced_version(&self) -> ProtocolVersion { self.required_version() }
 }
 
@@ -96,9 +81,27 @@ impl<T: RequiredVersion> RequiredVersion for Vec<T> {
     }
 }
 
+impl<K, V: RequiredVersion> RequiredVersion for BTreeMap<K, V> {
+    fn required_version(&self) -> ProtocolVersion {
+        self.values()
+            .map(RequiredVersion::required_version)
+            .max()
+            .unwrap_or_default()
+    }
+}
+
 impl<T: RequiredVersion> RequiredVersion for Option<T> {
     fn required_version(&self) -> ProtocolVersion {
         self.iter()
+            .map(RequiredVersion::required_version)
+            .max()
+            .unwrap_or_default()
+    }
+}
+
+impl<K, V: RequiredVersion, S> RequiredVersion for HashMap<K, V, S> {
+    fn required_version(&self) -> ProtocolVersion {
+        self.values()
             .map(RequiredVersion::required_version)
             .max()
             .unwrap_or_default()

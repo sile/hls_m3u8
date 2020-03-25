@@ -107,6 +107,13 @@ impl Error {
         })
     }
 
+    pub(crate) fn missing_field<T: fmt::Display, D: fmt::Display>(strct: D, field: T) -> Self {
+        Self::new(ErrorKind::Custom(format!(
+            "the field `{}` is missing for `{}`",
+            field, strct
+        )))
+    }
+
     pub(crate) fn unexpected_attribute<T: ToString>(value: T) -> Self {
         Self::new(ErrorKind::UnexpectedAttribute {
             attribute: value.to_string(),
