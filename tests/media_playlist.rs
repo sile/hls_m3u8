@@ -5,7 +5,7 @@
 
 use std::time::Duration;
 
-use hls_m3u8::tags::{ExtInf, ExtXByteRange, ExtXEndList, ExtXMediaSequence, ExtXTargetDuration};
+use hls_m3u8::tags::{ExtInf, ExtXByteRange, ExtXMediaSequence, ExtXTargetDuration};
 use hls_m3u8::types::PlaylistType;
 use hls_m3u8::{MediaPlaylist, MediaSegment};
 use pretty_assertions::assert_eq;
@@ -99,7 +99,7 @@ generate_tests! {
             // .unknown(vec![
             //     "#ZEN-TOTAL-DURATION:57.9911".into()
             // ])
-            .end_list(ExtXEndList)
+            .has_end_list(true)
             .build()
             .unwrap(),
         concat!(
@@ -227,7 +227,7 @@ generate_tests! {
                     .build()
                     .unwrap(),
             ])
-            .end_list(ExtXEndList)
+            .has_end_list(true)
             .unknown(vec![
                 // deprecated tag:
                 "#EXT-X-ALLOW-CACHE:YES".into()

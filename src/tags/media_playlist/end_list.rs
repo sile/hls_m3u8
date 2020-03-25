@@ -5,17 +5,13 @@ use crate::types::ProtocolVersion;
 use crate::utils::tag;
 use crate::{Error, RequiredVersion};
 
-/// # [4.4.3.4. EXT-X-ENDLIST]
-///
-/// The [`ExtXEndList`] tag indicates, that no more [`MediaSegment`]s will be
-/// added to the [`MediaPlaylist`] file.
+/// Indicates that no more [`MediaSegment`]s will be added to the
+/// [`MediaPlaylist`] file.
 ///
 /// [`MediaSegment`]: crate::MediaSegment
 /// [`MediaPlaylist`]: crate::MediaPlaylist
-/// [4.4.3.4. EXT-X-ENDLIST]:
-/// https://tools.ietf.org/html/draft-pantos-hls-rfc8216bis-04#section-4.4.3.4
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, PartialOrd, Ord)]
-pub struct ExtXEndList;
+pub(crate) struct ExtXEndList;
 
 impl ExtXEndList {
     pub(crate) const PREFIX: &'static str = "#EXT-X-ENDLIST";

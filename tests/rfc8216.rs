@@ -2,7 +2,7 @@
 use std::time::Duration;
 
 use hls_m3u8::tags::{
-    ExtInf, ExtXEndList, ExtXKey, ExtXMedia, ExtXMediaSequence, ExtXTargetDuration, VariantStream,
+    ExtInf, ExtXKey, ExtXMedia, ExtXMediaSequence, ExtXTargetDuration, VariantStream,
 };
 use hls_m3u8::types::{DecryptionKey, EncryptionMethod, MediaType, StreamData};
 use hls_m3u8::{MasterPlaylist, MediaPlaylist, MediaSegment};
@@ -42,7 +42,7 @@ generate_tests! {
                     .build()
                     .unwrap(),
             ])
-            .end_list(ExtXEndList)
+            .has_end_list(true)
             .build()
             .unwrap(),
         concat!(
