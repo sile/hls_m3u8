@@ -1,5 +1,5 @@
-mod independent_segments;
-mod start;
+pub(crate) mod independent_segments;
+pub(crate) mod start;
 
-pub use independent_segments::*;
+pub(crate) use independent_segments::ExtXIndependentSegments;
 pub use start::*;

@@ -10,7 +10,7 @@ use crate::{Error, RequiredVersion};
 ///
 /// [`MediaSegment`]: crate::MediaSegment
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Ord, PartialOrd)]
-pub struct ExtXIndependentSegments;
+pub(crate) struct ExtXIndependentSegments;
 
 impl ExtXIndependentSegments {
     pub(crate) const PREFIX: &'static str = "#EXT-X-INDEPENDENT-SEGMENTS";
