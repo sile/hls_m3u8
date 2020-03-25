@@ -8,23 +8,15 @@ use crate::utils::tag;
 use crate::Error;
 use crate::RequiredVersion;
 
-/// # [4.4.3.3. EXT-X-DISCONTINUITY-SEQUENCE]
-///
-/// The [`ExtXDiscontinuitySequence`] tag allows synchronization between
-/// different renditions of the same [`VariantStream`] or different
-/// [`VariantStream`]s that have [`ExtXDiscontinuity`] tags in their
-/// [`MediaPlaylist`]s.
+/// Allows synchronization between different renditions of the same
+/// [`VariantStream`].
 ///
 /// [`VariantStream`]: crate::tags::VariantStream
-/// [`ExtXDiscontinuity`]: crate::tags::ExtXDiscontinuity
-/// [`MediaPlaylist`]: crate::MediaPlaylist
-/// [4.4.3.3. EXT-X-DISCONTINUITY-SEQUENCE]:
-/// https://tools.ietf.org/html/draft-pantos-hls-rfc8216bis-04#section-4.4.3.3
 #[derive(ShortHand, Default, Debug, Clone, Copy, PartialEq, Eq, Hash, Ord, PartialOrd)]
 #[shorthand(enable(must_use))]
 pub struct ExtXDiscontinuitySequence {
     /// Returns the discontinuity sequence number of
-    /// the first media segment that appears in the associated playlist.
+    /// the first [`MediaSegment`] that appears in the associated playlist.
     ///
     /// # Example
     ///
@@ -35,6 +27,8 @@ pub struct ExtXDiscontinuitySequence {
     /// discontinuity_sequence.set_seq_num(10);
     /// assert_eq!(discontinuity_sequence.seq_num(), 10);
     /// ```
+    ///
+    /// [`MediaSegment`]: crate::MediaSegment
     seq_num: u64,
 }
 
