@@ -5,7 +5,7 @@ mod media_sequence;
 mod playlist_type;
 mod target_duration;
 
-pub use discontinuity_sequence::*;
+pub(crate) use discontinuity_sequence::*;
 pub(crate) use end_list::*;
 pub(crate) use i_frames_only::*;
 pub use playlist_type::*;
