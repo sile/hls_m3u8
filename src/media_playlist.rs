@@ -1,10 +1,9 @@
-use std::collections::HashSet;
+use std::collections::{BTreeMap, HashSet};
 use std::fmt;
 use std::str::FromStr;
 use std::time::Duration;
 
 use derive_builder::Builder;
-use shorthand::ShortHand;
 
 use crate::line::{Line, Lines, Tag};
 use crate::media_segment::MediaSegment;
@@ -17,102 +16,122 @@ use crate::utils::tag;
 use crate::{Error, RequiredVersion};
 
 /// Media playlist.
-#[derive(ShortHand, Debug, Clone, Builder, PartialEq, PartialOrd)]
-#[builder(build_fn(validate = "Self::validate"))]
-#[builder(setter(into, strip_option))]
-#[shorthand(enable(must_use, collection_magic, get_mut))]
+#[derive(Debug, Clone, Builder, PartialEq, PartialOrd)]
+#[builder(build_fn(skip), setter(strip_option))]
+#[non_exhaustive]
 pub struct MediaPlaylist {
-    /// The [`ExtXTargetDuration`] tag of the playlist.
+    /// Specifies the maximum [`MediaSegment::duration`]. A typical target
+    /// duration is 10 seconds.
     ///
-    /// # Note
+    /// ### Note
     ///
     /// This field is required.
-    #[shorthand(enable(copy))]
-    target_duration: ExtXTargetDuration,
-    /// Sets the [`ExtXMediaSequence`] tag.
+    pub target_duration: Duration,
+    /// The [`MediaSegment::number`] of the first [`MediaSegment`] that
+    /// appears in a [`MediaPlaylist`].
     ///
-    /// # Note
+    /// ### Note
+    ///
+    /// This field is optional and by default a value of 0 is assumed.
+    #[builder(default)]
+    pub media_sequence: usize,
+    /// Allows synchronization between different renditions of the same
+    /// [`VariantStream`].
+    ///
+    /// ### Note
+    ///
+    /// This field is optional and by default a vaule of 0 is assumed.
+    ///
+    /// [`VariantStream`]: crate::tags::VariantStream
+    #[builder(default)]
+    pub discontinuity_sequence: usize,
+    /// Provides mutability information about a [`MediaPlaylist`].
+    ///
+    /// - [`PlaylistType::Vod`] indicates that the playlist must not change.
+    ///
+    /// - [`PlaylistType::Event`] indicates that the server does not change or
+    /// delete any part of the playlist, but may append new lines to it.
+    ///
+    /// ### Note
+    ///
+    /// This field is optional.
+    #[builder(default, setter(into))]
+    pub playlist_type: Option<PlaylistType>,
+    /// Indicates that each [`MediaSegment`] in the playlist describes a single
+    /// I-frame. I-frames are encoded video frames, whose decoding does not
+    /// depend on any other frame. I-frame Playlists can be used for trick
+    /// play, such as fast forward, rapid reverse, and scrubbing.
+    ///
+    /// ### Note
     ///
     /// This field is optional.
     #[builder(default)]
-    media_sequence: Option<ExtXMediaSequence>,
-    /// Sets the [`ExtXDiscontinuitySequence`] tag.
+    pub has_i_frames_only: bool,
+    /// This indicates that all media samples in a [`MediaSegment`] can be
+    /// decoded without information from other segments.
     ///
-    /// # Note
+    /// ### Note
+    ///
+    /// This field is optional and by default `false`. If the value is `true` it
+    /// applies to every [`MediaSegment`] in this [`MediaPlaylist`].
+    #[builder(default)]
+    pub has_independent_segments: bool,
+    /// Indicates a preferred point at which to start playing a playlist. By
+    /// default, clients should start playback at this point when beginning a
+    /// playback session.
+    ///
+    /// ### Note
     ///
     /// This field is optional.
+    #[builder(default, setter(into))]
+    pub start: Option<ExtXStart>,
+    /// Indicates that no more [`MediaSegment`]s will be added to the
+    /// [`MediaPlaylist`] file.
+    ///
+    /// ### Note
+    ///
+    /// This field is optional and by default `false`.
+    /// A `false` indicates that the client should reload the [`MediaPlaylist`]
+    /// from the server, until a playlist is encountered, where this field is
+    /// `true`.
     #[builder(default)]
-    discontinuity_sequence: Option<ExtXDiscontinuitySequence>,
-    /// Sets the [`PlaylistType`] tag.
-    ///
-    /// # Note
-    ///
-    /// This field is optional.
-    #[builder(default)]
-    playlist_type: Option<PlaylistType>,
-    /// Sets the [`ExtXIFramesOnly`] tag.
-    ///
-    /// # Note
-    ///
-    /// This field is optional.
-    #[builder(default)]
-    i_frames_only: Option<ExtXIFramesOnly>,
-    /// Sets the [`ExtXIndependentSegments`] tag.
-    ///
-    /// # Note
-    ///
-    /// This field is optional.
-    #[builder(default)]
-    independent_segments: Option<ExtXIndependentSegments>,
-    /// Sets the [`ExtXStart`] tag.
-    ///
-    /// # Note
-    ///
-    /// This field is optional.
-    #[builder(default)]
-    start: Option<ExtXStart>,
-    /// Sets the [`ExtXEndList`] tag.
-    ///
-    /// # Note
-    ///
-    /// This field is optional.
-    #[builder(default)]
-    end_list: Option<ExtXEndList>,
+    pub has_end_list: bool,
     /// A list of all [`MediaSegment`]s.
     ///
-    /// # Note
+    /// ### Note
     ///
     /// This field is required.
-    segments: Vec<MediaSegment>,
+    #[builder(setter(custom))]
+    pub segments: BTreeMap<usize, MediaSegment>,
     /// The allowable excess duration of each media segment in the
     /// associated playlist.
     ///
-    /// # Error
+    /// ### Error
     ///
     /// If there is a media segment of which duration exceeds
     /// `#EXT-X-TARGETDURATION + allowable_excess_duration`,
     /// the invocation of `MediaPlaylistBuilder::build()` method will fail.
     ///
     ///
-    /// # Note
+    /// ### Note
     ///
     /// This field is optional and the default value is
     /// `Duration::from_secs(0)`.
     #[builder(default = "Duration::from_secs(0)")]
-    allowable_excess_duration: Duration,
+    pub allowable_excess_duration: Duration,
     /// A list of unknown tags.
     ///
-    /// # Note
+    /// ### Note
     ///
     /// This field is optional.
-    #[builder(default)]
-    unknown_tags: Vec<String>,
+    #[builder(default, setter(into))]
+    pub unknown: Vec<String>,
 }
 
 impl MediaPlaylistBuilder {
     fn validate(&self) -> Result<(), String> {
         if let Some(target_duration) = &self.target_duration {
-            self.validate_media_segments(target_duration.duration())
+            self.validate_media_segments(*target_duration)
                 .map_err(|e| e.to_string())?;
         }
 
@@ -123,24 +142,53 @@ impl MediaPlaylistBuilder {
         let mut last_range_uri = None;
 
         if let Some(segments) = &self.segments {
-            for s in segments {
-                // CHECK: `#EXT-X-TARGETDURATION`
-                let segment_duration = s.inf().duration();
-                let rounded_segment_duration = {
-                    if segment_duration.subsec_nanos() < 500_000_000 {
-                        Duration::from_secs(segment_duration.as_secs())
-                    } else {
-                        Duration::from_secs(segment_duration.as_secs() + 1)
-                    }
-                };
+            // verify the independent segments
+            if self.has_independent_segments.unwrap_or(false) {
+                // If the encryption METHOD is AES-128 and the Playlist contains an EXT-
+                // X-I-FRAMES-ONLY tag, the entire resource MUST be encrypted using
+                // AES-128 CBC with PKCS7 padding [RFC5652].
+                //
+                // from the rfc: https://tools.ietf.org/html/rfc8216#section-6.2.3
 
-                let max_segment_duration = {
-                    if let Some(value) = &self.allowable_excess_duration {
-                        target_duration + *value
-                    } else {
-                        target_duration
+                let is_aes128 = segments
+                    .values()
+                    // convert iterator of segments to iterator of keys
+                    .flat_map(|s| s.keys.iter())
+                    // filter out all empty keys
+                    .filter_map(ExtXKey::as_ref)
+                    .any(|k| k.method == EncryptionMethod::Aes128);
+
+                if is_aes128 {
+                    for key in segments.values().flat_map(|s| s.keys.iter()) {
+                        if let ExtXKey(Some(key)) = key {
+                            if key.method != EncryptionMethod::Aes128 {
+                                return Err(Error::custom(concat!(
+                                    "if any independent segment is encrypted with Aes128,",
+                                    " all must be encrypted with Aes128"
+                                )));
+                            }
+                        } else {
+                            return Err(Error::custom(concat!(
+                                "if any independent segment is encrypted with Aes128,",
+                                " all must be encrypted with Aes128"
+                            )));
+                        }
                     }
-                };
+                }
+            }
+
+            for segment in segments.values() {
+                // CHECK: `#EXT-X-TARGETDURATION`
+                let segment_duration = segment.duration.duration();
+
+                // round the duration if it is .5s
+                let rounded_segment_duration =
+                    Duration::from_secs(segment_duration.as_secs_f64().round() as u64);
+
+                let max_segment_duration = self
+                    .allowable_excess_duration
+                    .as_ref()
+                    .map_or(target_duration, |value| target_duration + *value);
 
                 if rounded_segment_duration > max_segment_duration {
                     return Err(Error::custom(format!(
@@ -148,19 +196,19 @@ impl MediaPlaylistBuilder {
                         segment_duration,
                         max_segment_duration,
                         target_duration,
-                        s.uri()
+                        segment.uri()
                     )));
                 }
 
                 // CHECK: `#EXT-X-BYTE-RANGE`
-                if let Some(range) = s.byte_range() {
+                if let Some(range) = &segment.byte_range {
                     if range.start().is_none() {
-                        let last_uri = last_range_uri.ok_or_else(Error::invalid_input)?;
-                        if last_uri != s.uri() {
+                        // TODO: error messages
+                        if last_range_uri.ok_or_else(Error::invalid_input)? != segment.uri() {
                             return Err(Error::invalid_input());
                         }
                     } else {
-                        last_range_uri = Some(s.uri());
+                        last_range_uri = Some(segment.uri());
                     }
                 } else {
                     last_range_uri = None;
@@ -171,13 +219,20 @@ impl MediaPlaylistBuilder {
         Ok(())
     }
 
-    /// Adds a media segment to the resulting playlist.
-    pub fn push_segment<VALUE: Into<MediaSegment>>(&mut self, value: VALUE) -> &mut Self {
-        if let Some(segments) = &mut self.segments {
-            segments.push(value.into());
-        } else {
-            self.segments = Some(vec![value.into()]);
-        }
+    /// Adds a media segment to the resulting playlist and assigns the next free
+    /// [`MediaSegment::number`] to the segment.
+    pub fn push_segment(&mut self, segment: MediaSegment) -> &mut Self {
+        let segments = self.segments.get_or_insert_with(BTreeMap::new);
+
+        let number = {
+            if segment.explicit_number {
+                segment.number
+            } else {
+                segments.keys().last().copied().unwrap_or(0) + 1
+            }
+        };
+
+        segments.insert(number, segment);
         self
     }
 
@@ -185,19 +240,150 @@ impl MediaPlaylistBuilder {
     pub fn parse(&mut self, input: &str) -> crate::Result<MediaPlaylist> {
         parse_media_playlist(input, self)
     }
+
+    /// Adds segments to the resulting playlist and assigns a
+    /// [`MediaSegment::number`] to each segment.
+    ///
+    /// ## Note
+    ///
+    /// The [`MediaSegment::number`] will be assigned based on the order of the
+    /// input (e.g. the first element will be 0, second element 1, ..) or if a
+    /// number has been set explicitly. This function assumes, that all segments
+    /// will be present in the final media playlist and the following is only
+    /// possible if the segment is marked with `ExtXDiscontinuity`.
+    pub fn segments(&mut self, segments: Vec<MediaSegment>) -> &mut Self {
+        // media segments are numbered starting at either 0 or the discontinuity
+        // sequence, but it might not be available at the moment.
+        //
+        // -> final numbering will be applied in the build function
+        self.segments = Some(segments.into_iter().enumerate().collect());
+        self
+    }
+
+    pub fn build(&self) -> Result<MediaPlaylist, String> {
+        // validate builder
+        self.validate()?;
+
+        let sequence_number = self.media_sequence.unwrap_or(0);
+
+        let segments = self
+            .segments
+            .as_ref()
+            .ok_or_else(|| "missing field `segments`".to_string())?;
+
+        // insert all explictly numbered segments into the result
+        let mut result_segments = segments
+            .iter()
+            .filter_map(|(_, s)| {
+                if s.explicit_number {
+                    Some((s.number, s.clone()))
+                } else {
+                    None
+                }
+            })
+            .collect::<BTreeMap<_, _>>();
+
+        // no segment should exist before the sequence_number
+        if let Some(first_segment) = result_segments.keys().min() {
+            if sequence_number > *first_segment {
+                return Err(format!(
+                    "there should be no segment ({}) before the sequence_number ({})",
+                    first_segment, sequence_number,
+                ));
+            }
+        }
+
+        let mut position = sequence_number;
+        for segment in segments
+            .iter()
+            .filter_map(|(_, s)| if s.explicit_number { None } else { Some(s) })
+        {
+            while result_segments.contains_key(&position) {
+                position += 1;
+            }
+
+            let mut segment = segment.clone();
+            segment.number = position;
+
+            result_segments.insert(segment.number, segment);
+            position += 1;
+        }
+
+        let mut previous_n = None;
+
+        for n in result_segments.keys() {
+            if let Some(previous_n) = previous_n {
+                if previous_n + 1 != *n {
+                    return Err(format!("missing segment ({})", previous_n + 1));
+                }
+            }
+
+            previous_n = Some(n);
+        }
+
+        Ok(MediaPlaylist {
+            target_duration: self
+                .target_duration
+                .ok_or_else(|| "missing field `target_duration`".to_string())?,
+            media_sequence: self.media_sequence.unwrap_or(0),
+            discontinuity_sequence: self.discontinuity_sequence.unwrap_or(0),
+            playlist_type: self.playlist_type.unwrap_or(None),
+            has_i_frames_only: self.has_i_frames_only.unwrap_or(false),
+            has_independent_segments: self.has_independent_segments.unwrap_or(false),
+            start: self.start.unwrap_or(None),
+            has_end_list: self.has_end_list.unwrap_or(false),
+            segments: result_segments,
+            allowable_excess_duration: self
+                .allowable_excess_duration
+                .unwrap_or_else(|| Duration::from_secs(0)),
+            unknown: self.unknown.clone().unwrap_or_else(Vec::new),
+        })
+    }
 }
 
 impl RequiredVersion for MediaPlaylistBuilder {
     fn required_version(&self) -> ProtocolVersion {
         required_version![
-            self.target_duration,
-            self.media_sequence,
-            self.discontinuity_sequence,
+            self.target_duration.map(ExtXTargetDuration),
+            {
+                if self.media_sequence.unwrap_or(0) != 0 {
+                    Some(ExtXMediaSequence(self.media_sequence.unwrap_or(0)))
+                } else {
+                    None
+                }
+            },
+            {
+                if self.discontinuity_sequence.unwrap_or(0) != 0 {
+                    Some(ExtXDiscontinuitySequence(
+                        self.discontinuity_sequence.unwrap_or(0),
+                    ))
+                } else {
+                    None
+                }
+            },
             self.playlist_type,
-            self.i_frames_only,
-            self.independent_segments,
+            {
+                if self.has_i_frames_only.unwrap_or(false) {
+                    Some(ExtXIFramesOnly)
+                } else {
+                    None
+                }
+            },
+            {
+                if self.has_independent_segments.unwrap_or(false) {
+                    Some(ExtXIndependentSegments)
+                } else {
+                    None
+                }
+            },
             self.start,
-            self.end_list,
+            {
+                if self.has_end_list.unwrap_or(false) {
+                    Some(ExtXEndList)
+                } else {
+                    None
+                }
+            },
             self.segments
         ]
     }
@@ -208,19 +394,55 @@ impl MediaPlaylist {
     #[must_use]
     #[inline]
     pub fn builder() -> MediaPlaylistBuilder { MediaPlaylistBuilder::default() }
+
+    /// Computes the `Duration` of the [`MediaPlaylist`], by adding each segment
+    /// duration together.
+    pub fn duration(&self) -> Duration {
+        self.segments.values().map(|s| s.duration.duration()).sum()
+    }
 }
 
 impl RequiredVersion for MediaPlaylist {
     fn required_version(&self) -> ProtocolVersion {
         required_version![
-            self.target_duration,
-            self.media_sequence,
-            self.discontinuity_sequence,
+            ExtXTargetDuration(self.target_duration),
+            {
+                if self.media_sequence != 0 {
+                    Some(ExtXMediaSequence(self.media_sequence))
+                } else {
+                    None
+                }
+            },
+            {
+                if self.discontinuity_sequence != 0 {
+                    Some(ExtXDiscontinuitySequence(self.discontinuity_sequence))
+                } else {
+                    None
+                }
+            },
             self.playlist_type,
-            self.i_frames_only,
-            self.independent_segments,
+            {
+                if self.has_i_frames_only {
+                    Some(ExtXIFramesOnly)
+                } else {
+                    None
+                }
+            },
+            {
+                if self.has_independent_segments {
+                    Some(ExtXIndependentSegments)
+                } else {
+                    None
+                }
+            },
             self.start,
-            self.end_list,
+            {
+                if self.has_end_list {
+                    Some(ExtXEndList)
+                } else {
+                    None
+                }
+            },
             self.segments
         ]
     }
@@ -234,55 +456,75 @@ impl fmt::Display for MediaPlaylist {
             writeln!(f, "{}", ExtXVersion::new(self.required_version()))?;
         }
 
-        writeln!(f, "{}", self.target_duration)?;
+        writeln!(f, "{}", ExtXTargetDuration(self.target_duration))?;
 
-        if let Some(value) = &self.media_sequence {
-            writeln!(f, "{}", value)?;
+        if self.media_sequence != 0 {
+            writeln!(f, "{}", ExtXMediaSequence(self.media_sequence))?;
         }
 
-        if let Some(value) = &self.discontinuity_sequence {
-            writeln!(f, "{}", value)?;
+        if self.discontinuity_sequence != 0 {
+            writeln!(
+                f,
+                "{}",
+                ExtXDiscontinuitySequence(self.discontinuity_sequence)
+            )?;
         }
 
         if let Some(value) = &self.playlist_type {
             writeln!(f, "{}", value)?;
         }
 
-        if let Some(value) = &self.i_frames_only {
-            writeln!(f, "{}", value)?;
+        if self.has_i_frames_only {
+            writeln!(f, "{}", ExtXIFramesOnly)?;
         }
 
-        if let Some(value) = &self.independent_segments {
-            writeln!(f, "{}", value)?;
+        if self.has_independent_segments {
+            writeln!(f, "{}", ExtXIndependentSegments)?;
         }
 
         if let Some(value) = &self.start {
             writeln!(f, "{}", value)?;
         }
 
-        // most likely only 1 ExtXKey will be in the HashSet:
-        let mut available_keys = HashSet::with_capacity(1);
+        let mut available_keys = HashSet::new();
 
-        for segment in &self.segments {
-            for key in segment.keys() {
+        for segment in self.segments.values() {
+            for key in &segment.keys {
                 // the key is new:
-                if available_keys.insert(key) {
-                    let mut remove_key = None;
+                if let ExtXKey(Some(decryption_key)) = key {
+                    // TODO: this piece should be linted by clippy?
 
-                    // an old key might be removed:
-                    for k in &available_keys {
-                        if k.key_format() == key.key_format() && &key != k {
-                            remove_key = Some(*k);
-                            break;
+                    // next segment will be encrypted, so the segment can not have an empty key
+                    available_keys.remove(&ExtXKey::empty());
+
+                    // only do something if a key has been overwritten
+                    if available_keys.insert(key) {
+                        let mut remove_key = None;
+
+                        // an old key might be removed:
+                        for k in &available_keys {
+                            if let ExtXKey(Some(dk)) = k {
+                                if dk.format == decryption_key.format && &key != k {
+                                    remove_key = Some(*k);
+                                    break;
+                                }
+                            } else {
+                                unreachable!("empty keys should not exist in `available_keys`");
+                            }
                         }
-                    }
 
-                    if let Some(k) = remove_key {
-                        // this should always be true:
-                        let res = available_keys.remove(k);
-                        debug_assert!(res);
-                    }
+                        if let Some(k) = remove_key {
+                            // this should always be true:
+                            let res = available_keys.remove(k);
+                            debug_assert!(res);
+                        }
 
+                        writeln!(f, "{}", key)?;
+                    }
+                } else {
+                    // the next segment is not encrypted, so remove all available keys
+                    available_keys.clear();
+                    available_keys.insert(key);
                     writeln!(f, "{}", key)?;
                 }
             }
@@ -290,12 +532,12 @@ impl fmt::Display for MediaPlaylist {
             write!(f, "{}", segment)?;
         }
 
-        if let Some(value) = &self.end_list {
+        for value in &self.unknown {
             writeln!(f, "{}", value)?;
         }
 
-        for value in &self.unknown_tags {
-            writeln!(f, "{}", value)?;
+        if self.has_end_list {
+            writeln!(f, "{}", ExtXEndList)?;
         }
 
         Ok(())
@@ -313,9 +555,8 @@ fn parse_media_playlist(
 
     let mut has_partial_segment = false;
     let mut has_discontinuity_tag = false;
-    let mut unknown_tags = vec![];
-
-    let mut available_keys: Vec<crate::tags::ExtXKey> = vec![];
+    let mut unknown = vec![];
+    let mut available_keys = HashSet::new();
 
     for line in Lines::from(input) {
         match line? {
@@ -323,16 +564,16 @@ fn parse_media_playlist(
                 match tag {
                     Tag::ExtInf(t) => {
                         has_partial_segment = true;
-                        segment.inf(t);
+                        segment.duration(t);
                     }
                     Tag::ExtXByteRange(t) => {
                         has_partial_segment = true;
                         segment.byte_range(t);
                     }
-                    Tag::ExtXDiscontinuity(t) => {
+                    Tag::ExtXDiscontinuity(_) => {
                         has_discontinuity_tag = true;
                         has_partial_segment = true;
-                        segment.discontinuity(t);
+                        segment.has_discontinuity(true);
                     }
                     Tag::ExtXKey(key) => {
                         has_partial_segment = true;
@@ -343,25 +584,43 @@ fn parse_media_playlist(
                         // same KEYFORMAT attribute (or the end of the Playlist file).
 
                         let mut is_new_key = true;
+                        let mut remove = None;
 
-                        for old_key in &mut available_keys {
-                            if old_key.key_format() == key.key_format() {
-                                *old_key = key.clone();
-                                is_new_key = false;
-                                // there are no keys with the same key_format in available_keys
-                                // so the loop can stop here:
-                                break;
+                        if let ExtXKey(Some(decryption_key)) = &key {
+                            for old_key in &available_keys {
+                                if let ExtXKey(Some(old_decryption_key)) = &old_key {
+                                    if old_decryption_key.format == decryption_key.format {
+                                        // remove the old key
+                                        remove = Some(old_key.clone());
+
+                                        // there are no keys with the same format in
+                                        // available_keys so the loop can stop here:
+                                        break;
+                                    }
+                                } else {
+                                    // remove an empty key
+                                    remove = Some(ExtXKey::empty());
+                                    break;
+                                }
                             }
+                        } else {
+                            available_keys.clear();
+                            available_keys.insert(ExtXKey::empty());
+                            is_new_key = false;
+                        }
+
+                        if let Some(key) = &remove {
+                            available_keys.remove(key);
                         }
 
                         if is_new_key {
-                            available_keys.push(key);
+                            available_keys.insert(key);
                         }
                     }
                     Tag::ExtXMap(mut t) => {
                         has_partial_segment = true;
 
-                        t.set_keys(available_keys.clone());
+                        t.keys = available_keys.iter().cloned().collect();
                         segment.map(t);
                     }
                     Tag::ExtXProgramDateTime(t) => {
@@ -373,10 +632,10 @@ fn parse_media_playlist(
                         segment.date_range(t);
                     }
                     Tag::ExtXTargetDuration(t) => {
-                        builder.target_duration(t);
+                        builder.target_duration(t.0);
                     }
                     Tag::ExtXMediaSequence(t) => {
-                        builder.media_sequence(t);
+                        builder.media_sequence(t.0);
                     }
                     Tag::ExtXDiscontinuitySequence(t) => {
                         if segments.is_empty() {
@@ -387,16 +646,16 @@ fn parse_media_playlist(
                             return Err(Error::invalid_input());
                         }
 
-                        builder.discontinuity_sequence(t);
+                        builder.discontinuity_sequence(t.0);
                     }
-                    Tag::ExtXEndList(t) => {
-                        builder.end_list(t);
+                    Tag::ExtXEndList(_) => {
+                        builder.has_end_list(true);
                     }
                     Tag::PlaylistType(t) => {
                         builder.playlist_type(t);
                     }
-                    Tag::ExtXIFramesOnly(t) => {
-                        builder.i_frames_only(t);
+                    Tag::ExtXIFramesOnly(_) => {
+                        builder.has_i_frames_only(true);
                     }
                     Tag::ExtXMedia(_)
                     | Tag::VariantStream(_)
@@ -404,8 +663,8 @@ fn parse_media_playlist(
                     | Tag::ExtXSessionKey(_) => {
                         return Err(Error::unexpected_tag(tag));
                     }
-                    Tag::ExtXIndependentSegments(t) => {
-                        builder.independent_segments(t);
+                    Tag::ExtXIndependentSegments(_) => {
+                        builder.has_independent_segments(true);
                     }
                     Tag::ExtXStart(t) => {
                         builder.start(t);
@@ -414,14 +673,15 @@ fn parse_media_playlist(
                     Tag::Unknown(_) => {
                         // [6.3.1. General Client Responsibilities]
                         // > ignore any unrecognized tags.
-                        unknown_tags.push(tag.to_string());
+                        unknown.push(tag.to_string());
                     }
                 }
             }
             Line::Uri(uri) => {
                 segment.uri(uri);
-                segment.keys(available_keys.clone());
+                segment.keys(available_keys.iter().cloned().collect::<Vec<_>>());
                 segments.push(segment.build().map_err(Error::builder)?);
+
                 segment = MediaSegment::builder();
                 has_partial_segment = false;
             }
@@ -433,7 +693,7 @@ fn parse_media_playlist(
         return Err(Error::invalid_input());
     }
 
-    builder.unknown_tags(unknown_tags);
+    builder.unknown(unknown);
     builder.segments(segments);
     builder.build().map_err(Error::builder)
 }
@@ -476,10 +736,98 @@ mod tests {
             .is_err());
 
         // Ok (allowable segment duration = 10)
-        MediaPlaylist::builder()
+        assert_eq!(
+            MediaPlaylist::builder()
+                .allowable_excess_duration(Duration::from_secs(2))
+                .parse(playlist)
+                .unwrap(),
+            MediaPlaylist::builder()
+                .allowable_excess_duration(Duration::from_secs(2))
+                .target_duration(Duration::from_secs(8))
+                .segments(vec![
+                    MediaSegment::builder()
+                        .duration(Duration::from_secs_f64(9.009))
+                        .uri("http://media.example.com/first.ts")
+                        .build()
+                        .unwrap(),
+                    MediaSegment::builder()
+                        .duration(Duration::from_secs_f64(9.509))
+                        .uri("http://media.example.com/second.ts")
+                        .build()
+                        .unwrap(),
+                    MediaSegment::builder()
+                        .duration(Duration::from_secs_f64(3.003))
+                        .uri("http://media.example.com/third.ts")
+                        .build()
+                        .unwrap(),
+                ])
+                .has_end_list(true)
+                .build()
+                .unwrap()
+        );
+    }
+
+    #[test]
+    fn test_segment_number_simple() {
+        let playlist = MediaPlaylist::builder()
             .allowable_excess_duration(Duration::from_secs(2))
-            .parse(playlist)
+            .target_duration(Duration::from_secs(8))
+            .segments(vec![
+                MediaSegment::builder()
+                    .duration(Duration::from_secs_f64(9.009))
+                    .uri("http://media.example.com/first.ts")
+                    .build()
+                    .unwrap(),
+                MediaSegment::builder()
+                    .duration(Duration::from_secs_f64(9.509))
+                    .uri("http://media.example.com/second.ts")
+                    .build()
+                    .unwrap(),
+                MediaSegment::builder()
+                    .duration(Duration::from_secs_f64(3.003))
+                    .uri("http://media.example.com/third.ts")
+                    .build()
+                    .unwrap(),
+            ])
+            .build()
             .unwrap();
+
+        let mut segments = playlist.segments.into_iter().map(|(k, v)| (k, v.number));
+        assert_eq!(segments.next(), Some((0, 0)));
+        assert_eq!(segments.next(), Some((1, 1)));
+        assert_eq!(segments.next(), Some((2, 2)));
+        assert_eq!(segments.next(), None);
+    }
+
+    #[test]
+    fn test_segment_number_sequence() {
+        let playlist = MediaPlaylist::builder()
+            .target_duration(Duration::from_secs(8))
+            .media_sequence(2680)
+            .segments(vec![
+                MediaSegment::builder()
+                    .duration(Duration::from_secs_f64(7.975))
+                    .uri("https://priv.example.com/fileSequence2680.ts")
+                    .build()
+                    .unwrap(),
+                MediaSegment::builder()
+                    .duration(Duration::from_secs_f64(7.941))
+                    .uri("https://priv.example.com/fileSequence2681.ts")
+                    .build()
+                    .unwrap(),
+                MediaSegment::builder()
+                    .duration(Duration::from_secs_f64(7.975))
+                    .uri("https://priv.example.com/fileSequence2682.ts")
+                    .build()
+                    .unwrap(),
+            ])
+            .build()
+            .unwrap();
+        let mut segments = playlist.segments.into_iter().map(|(k, v)| (k, v.number));
+        assert_eq!(segments.next(), Some((2680, 2680)));
+        assert_eq!(segments.next(), Some((2681, 2681)));
+        assert_eq!(segments.next(), Some((2682, 2682)));
+        assert_eq!(segments.next(), None);
     }
 
     #[test]
