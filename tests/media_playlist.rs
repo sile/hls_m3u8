@@ -5,7 +5,7 @@
 
 use std::time::Duration;
 
-use hls_m3u8::tags::{ExtInf, ExtXByteRange, ExtXMediaSequence, ExtXTargetDuration};
+use hls_m3u8::tags::{ExtInf, ExtXByteRange, ExtXTargetDuration};
 use hls_m3u8::types::PlaylistType;
 use hls_m3u8::{MediaPlaylist, MediaSegment};
 use pretty_assertions::assert_eq;
@@ -26,8 +26,8 @@ macro_rules! generate_tests {
 generate_tests! {
     test_media_playlist_with_byterange => {
         MediaPlaylist::builder()
+            .media_sequence(1)
             .target_duration(ExtXTargetDuration::new(Duration::from_secs(10)))
-            .media_sequence(ExtXMediaSequence::new(0))
             .segments(vec![
                 MediaSegment::builder()
                     .inf(ExtInf::new(Duration::from_secs_f64(10.0)))
@@ -54,7 +54,7 @@ generate_tests! {
             "#EXTM3U\n",
             "#EXT-X-VERSION:4\n",
             "#EXT-X-TARGETDURATION:10\n",
-            "#EXT-X-MEDIA-SEQUENCE:0\n",
+            "#EXT-X-MEDIA-SEQUENCE:1\n",
 
             "#EXT-X-BYTERANGE:75232@0\n",
             "#EXTINF:10,\n",
@@ -121,7 +121,7 @@ generate_tests! {
     test_allow_cache => {
         MediaPlaylist::builder()
             .target_duration(Duration::from_secs(10))
-            .media_sequence(0)
+            .media_sequence(1)
             .playlist_type(PlaylistType::Vod)
             .segments(vec![
                 MediaSegment::builder()
@@ -238,7 +238,7 @@ generate_tests! {
             "#EXTM3U\n",
             "#EXT-X-VERSION:4\n",
             "#EXT-X-TARGETDURATION:10\n",
-            "#EXT-X-MEDIA-SEQUENCE:0\n",
+            "#EXT-X-MEDIA-SEQUENCE:1\n",
             "#EXT-X-PLAYLIST-TYPE:VOD\n",
 
             "#EXT-X-BYTERANGE:522828@0\n",
