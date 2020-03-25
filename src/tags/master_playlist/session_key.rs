@@ -14,14 +14,14 @@ use crate::{Error, RequiredVersion};
 /// preload these keys without having to read the [`MediaPlaylist`]s
 /// first.
 ///
-/// If an [`ExtXSessionKey`] is used, the values of [`ExtXKey::method`],
-/// [`ExtXKey::key_format`] and [`ExtXKey::key_format_versions`] must match any
+/// If an [`ExtXSessionKey`] is used, the values of [`DecryptionKey::method`],
+/// [`DecryptionKey::format`] and [`DecryptionKey::versions`] must match any
 /// [`ExtXKey`] with the same uri field.
 ///
 /// [`MediaPlaylist`]: crate::MediaPlaylist
 /// [`MasterPlaylist`]: crate::MasterPlaylist
+/// [`ExtXKey`]: crate::tags::ExtXKey
 #[derive(AsRef, AsMut, From, Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
-#[from(forward)]
 pub struct ExtXSessionKey(pub DecryptionKey);
 
 impl ExtXSessionKey {

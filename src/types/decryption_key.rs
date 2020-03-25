@@ -5,53 +5,73 @@ use derive_builder::Builder;
 use shorthand::ShortHand;
 
 use crate::attribute::AttributePairs;
-use crate::types::{EncryptionMethod, KeyFormat, KeyFormatVersions, ProtocolVersion};
-use crate::utils::{parse_iv_from_str, quote, unquote};
+use crate::types::{
+    EncryptionMethod, InitializationVector, KeyFormat, KeyFormatVersions, ProtocolVersion,
+};
+use crate::utils::{quote, unquote};
 use crate::{Error, RequiredVersion};
 
+/// Specifies how to decrypt encrypted data from the server.
 #[derive(ShortHand, Builder, Debug, Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]
 #[builder(setter(into), build_fn(validate = "Self::validate"))]
-#[shorthand(enable(must_use, into))]
+#[shorthand(enable(skip, must_use, into))]
+#[non_exhaustive]
 pub struct DecryptionKey {
-    /// HLS supports multiple [`EncryptionMethod`]s for a [`MediaSegment`].
+    /// The encryption method, which has been used to encrypt the data.
     ///
-    /// For example `AES-128`.
+    /// An [`EncryptionMethod::Aes128`] signals that the data is encrypted using
+    /// the Advanced Encryption Standard (AES) with a 128-bit key, Cipher Block
+    /// Chaining (CBC), and Public-Key Cryptography Standards #7 (PKCS7)
+    /// padding. CBC is restarted on each segment boundary, using either the
+    /// [`DecryptionKey::iv`] field or the [`MediaSegment::number`] as the IV.
+    ///
+    /// An [`EncryptionMethod::SampleAes`] means that the [`MediaSegment`]s
+    /// contain media samples, such as audio or video, that are encrypted using
+    /// the Advanced Encryption Standard (Aes128). How these media streams are
+    /// encrypted and encapsulated in a segment depends on the media encoding
+    /// and the media format of the segment.
     ///
     /// ## Note
     ///
     /// This field is required.
     ///
+    /// [`MediaSegment::number`]: crate::MediaSegment::number
     /// [`MediaSegment`]: crate::MediaSegment
-    //#[shorthand(enable(skip))]
-    #[shorthand(enable(copy))]
     pub method: EncryptionMethod,
-    /// An `URI` that specifies how to obtain the key.
+    /// This uri points to a key file, which contains the cipher key.
     ///
     /// ## Note
     ///
-    /// This attribute is required, if the [`EncryptionMethod`] is not `None`.
+    /// This field is required.
     #[builder(setter(into, strip_option), default)]
+    #[shorthand(disable(skip))]
     pub(crate) uri: String,
-    /// An IV (initialization vector) is used to prevent repetitions between
-    /// segments of encrypted data.
+    /// An initialization vector (IV) is a fixed size input that can be used
+    /// along with a secret key for data encryption.
+    ///
+    /// ## Note
+    ///
+    /// This field is optional and an absent value indicates that
+    /// [`MediaSegment::number`] should be used instead.
+    ///
+    /// [`MediaSegment::number`]: crate::MediaSegment::number
+    #[builder(setter(into, strip_option), default)]
+    pub iv: InitializationVector,
+    /// A server may offer multiple ways to retrieve a key by providing multiple
+    /// [`DecryptionKey`]s with different [`KeyFormat`] values.
+    ///
+    /// An [`EncryptionMethod::Aes128`] uses 16-octet (16 byte/128 bit) keys. If
+    /// the format is [`KeyFormat::Identity`], the key file is a single packed
+    /// array of 16 octets (16 byte/128 bit) in binary format.
     ///
     /// ## Note
     ///
     /// This field is optional.
     #[builder(setter(into, strip_option), default)]
-    // TODO: workaround for https://github.com/Luro02/shorthand/issues/20
-    #[shorthand(enable(copy), disable(option_as_ref))]
-    pub(crate) iv: Option<[u8; 0x10]>,
-    /// The [`KeyFormat`] specifies how the key is
-    /// represented in the resource identified by the `URI`.
-    ///
-    /// ## Note
-    ///
-    /// This field is optional.
-    #[builder(setter(into, strip_option), default)]
-    #[shorthand(enable(copy))]
     pub format: Option<KeyFormat>,
-    /// The [`KeyFormatVersions`] attribute.
+    /// A list of numbers that can be used to indicate which version(s)
+    /// this instance complies with, if more than one version of a particular
+    /// [`KeyFormat`] is defined.
     ///
     /// ## Note
     ///
@@ -67,7 +87,7 @@ impl DecryptionKey {
         Self {
             method,
             uri: uri.into(),
-            iv: None,
+            iv: InitializationVector::default(),
             format: None,
             versions: None,
         }
@@ -115,7 +135,7 @@ impl FromStr for DecryptionKey {
                         uri = Some(unquoted_uri);
                     }
                 }
-                "IV" => iv = Some(parse_iv_from_str(value)?),
+                "IV" => iv = Some(value.parse()?),
                 "KEYFORMAT" => format = Some(value.parse()?),
                 "KEYFORMATVERSIONS" => versions = Some(value.parse()?),
                 _ => {
@@ -128,6 +148,7 @@ impl FromStr for DecryptionKey {
 
         let method = method.ok_or_else(|| Error::missing_value("METHOD"))?;
         let uri = uri.ok_or_else(|| Error::missing_value("URI"))?;
+        let iv = iv.unwrap_or_default();
 
         Ok(Self {
             method,
@@ -143,11 +164,8 @@ impl fmt::Display for DecryptionKey {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         write!(f, "METHOD={},URI={}", self.method, quote(&self.uri))?;
 
-        if let Some(value) = &self.iv {
-            let mut result = [0; 0x10 * 2];
-            ::hex::encode_to_slice(value, &mut result).unwrap();
-
-            write!(f, ",IV=0x{}", ::core::str::from_utf8(&result).unwrap())?;
+        if let InitializationVector::Aes128(_) = &self.iv {
+            write!(f, ",IV={}", &self.iv)?;
         }
 
         if let Some(value) = &self.format {
@@ -215,9 +233,10 @@ mod test {
     #[test]
     fn test_builder() {
         let mut key = DecryptionKey::new(EncryptionMethod::Aes128, "https://www.example.com/");
-        key.set_iv(Some([
+        key.iv = [
             16, 239, 143, 117, 140, 165, 85, 17, 85, 132, 187, 91, 60, 104, 127, 82,
-        ]));
+        ]
+        .into();
         key.format = Some(KeyFormat::Identity);
         key.versions = Some(vec![1, 2, 3, 4, 5].into());
 

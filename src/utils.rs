@@ -12,22 +12,6 @@ macro_rules! required_version {
     }
 }
 
-pub(crate) fn parse_iv_from_str(input: &str) -> crate::Result<[u8; 16]> {
-    if !(input.starts_with("0x") || input.starts_with("0X")) {
-        return Err(Error::invalid_input());
-    }
-
-    if input.len() - 2 != 32 {
-        return Err(Error::invalid_input());
-    }
-
-    let mut result = [0; 16];
-
-    hex::decode_to_slice(&input.as_bytes()[2..], &mut result).map_err(Error::hex)?;
-
-    Ok(result)
-}
-
 pub(crate) fn parse_yes_or_no<T: AsRef<str>>(s: T) -> crate::Result<bool> {
     match s.as_ref() {
         "YES" => Ok(true),
@@ -85,32 +69,6 @@ where
 mod tests {
     use super::*;
     use pretty_assertions::assert_eq;
-
-    #[test]
-    fn test_parse_iv_from_str() {
-        assert_eq!(
-            parse_iv_from_str("0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF").unwrap(),
-            [
-                0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
-                0xFF, 0xFF
-            ]
-        );
-
-        assert_eq!(
-            parse_iv_from_str("0XFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF").unwrap(),
-            [
-                0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
-                0xFF, 0xFF
-            ]
-        );
-
-        // missing `0x` at the start:
-        assert!(parse_iv_from_str("0FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF").is_err());
-        // too small:
-        assert!(parse_iv_from_str("0xFF").is_err());
-        // too large:
-        assert!(parse_iv_from_str("0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF").is_err());
-    }
 
     #[test]
     fn test_parse_yes_or_no() {

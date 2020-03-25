@@ -5,12 +5,16 @@ use crate::types::ProtocolVersion;
 use crate::utils::{quote, tag, unquote};
 use crate::{Error, RequiredVersion};
 
-/// [`KeyFormat`] specifies, how the key is represented in the
-/// resource identified by the `URI`.
+/// Specifies how the key is represented in the resource identified by the
+/// `URI`.
 #[non_exhaustive]
 #[derive(Copy, Clone, Eq, PartialEq, Ord, PartialOrd, Hash, Debug)]
 pub enum KeyFormat {
-    /// The key is a single packed array of 16 octets in binary format.
+    /// An [`EncryptionMethod::Aes128`] uses 16-octet (16 byte/128 bit) keys. If
+    /// the format is [`KeyFormat::Identity`], the key file is a single packed
+    /// array of 16 octets (16 byte/128 bit) in binary format.
+    ///
+    /// [`EncryptionMethod::Aes128`]: crate::types::EncryptionMethod::Aes128
     Identity,
 }
 
