@@ -149,7 +149,7 @@ pub struct MediaSegment {
     /// This field is required.
     #[shorthand(enable(skip))]
     #[builder(setter(into))]
-    pub inf: ExtInf,
+    pub duration: ExtInf,
     /// The URI of a media segment.
     ///
     /// ## Note
@@ -174,7 +174,7 @@ impl MediaSegment {
     ///     .map(ExtXMap::new("https://www.example.com/"))
     ///     .byte_range(5..25)
     ///     .has_discontinuity(true)
-    ///     .inf(Duration::from_secs(4))
+    ///     .duration(Duration::from_secs(4))
     ///     .uri("http://www.uri.com/")
     ///     .build()?;
     /// # Ok::<(), String>(())
@@ -233,7 +233,7 @@ impl fmt::Display for MediaSegment {
             writeln!(f, "{}", value)?;
         }
 
-        writeln!(f, "{}", self.inf)?;
+        writeln!(f, "{}", self.duration)?;
         writeln!(f, "{}", self.uri)?;
         Ok(())
     }
@@ -254,7 +254,7 @@ impl RequiredVersion for MediaSegment {
                 }
             },
             self.program_date_time,
-            self.inf
+            self.duration
         ]
     }
 }
@@ -279,7 +279,7 @@ mod tests {
                 .map(ExtXMap::new("https://www.example.com/"))
                 .byte_range(ExtXByteRange::from(5..25))
                 .has_discontinuity(true)
-                .inf(ExtInf::new(Duration::from_secs(4)))
+                .duration(ExtInf::new(Duration::from_secs(4)))
                 .uri("http://www.uri.com/")
                 .build()
                 .unwrap()

@@ -25,17 +25,17 @@ generate_tests! {
             .target_duration(Duration::from_secs(10))
             .segments(vec![
                 MediaSegment::builder()
-                    .inf(ExtInf::new(Duration::from_secs_f64(9.009)))
+                    .duration(ExtInf::new(Duration::from_secs_f64(9.009)))
                     .uri("http://media.example.com/first.ts")
                     .build()
                     .unwrap(),
                 MediaSegment::builder()
-                    .inf(ExtInf::new(Duration::from_secs_f64(9.009)))
+                    .duration(ExtInf::new(Duration::from_secs_f64(9.009)))
                     .uri("http://media.example.com/second.ts")
                     .build()
                     .unwrap(),
                 MediaSegment::builder()
-                    .inf(ExtInf::new(Duration::from_secs_f64(3.003)))
+                    .duration(ExtInf::new(Duration::from_secs_f64(3.003)))
                     .uri("http://media.example.com/third.ts")
                     .build()
                     .unwrap(),
@@ -62,17 +62,17 @@ generate_tests! {
             .media_sequence(2680)
             .segments(vec![
                 MediaSegment::builder()
-                    .inf(ExtInf::new(Duration::from_secs_f64(7.975)))
+                    .duration(ExtInf::new(Duration::from_secs_f64(7.975)))
                     .uri("https://priv.example.com/fileSequence2680.ts")
                     .build()
                     .unwrap(),
                 MediaSegment::builder()
-                    .inf(ExtInf::new(Duration::from_secs_f64(7.941)))
+                    .duration(ExtInf::new(Duration::from_secs_f64(7.941)))
                     .uri("https://priv.example.com/fileSequence2681.ts")
                     .build()
                     .unwrap(),
                 MediaSegment::builder()
-                    .inf(ExtInf::new(Duration::from_secs_f64(7.975)))
+                    .duration(ExtInf::new(Duration::from_secs_f64(7.975)))
                     .uri("https://priv.example.com/fileSequence2682.ts")
                     .build()
                     .unwrap(),
@@ -98,7 +98,7 @@ generate_tests! {
             .media_sequence(7794)
             .segments(vec![
                 MediaSegment::builder()
-                    .inf(ExtInf::new(Duration::from_secs_f64(2.833)))
+                    .duration(ExtInf::new(Duration::from_secs_f64(2.833)))
                     .keys(vec![
                         ExtXKey::new(DecryptionKey::new(
                             EncryptionMethod::Aes128,
@@ -109,7 +109,7 @@ generate_tests! {
                     .build()
                     .unwrap(),
                 MediaSegment::builder()
-                    .inf(ExtInf::new(Duration::from_secs_f64(15.0)))
+                    .duration(ExtInf::new(Duration::from_secs_f64(15.0)))
                     .keys(vec![
                         ExtXKey::new(DecryptionKey::new(
                             EncryptionMethod::Aes128,
@@ -120,7 +120,7 @@ generate_tests! {
                     .build()
                     .unwrap(),
                 MediaSegment::builder()
-                    .inf(ExtInf::new(Duration::from_secs_f64(13.333)))
+                    .duration(ExtInf::new(Duration::from_secs_f64(13.333)))
                     .keys(vec![
                         ExtXKey::new(DecryptionKey::new(
                             EncryptionMethod::Aes128,
@@ -131,7 +131,7 @@ generate_tests! {
                     .build()
                     .unwrap(),
                 MediaSegment::builder()
-                    .inf(ExtInf::new(Duration::from_secs_f64(15.0)))
+                    .duration(ExtInf::new(Duration::from_secs_f64(15.0)))
                     .keys(vec![
                         ExtXKey::new(DecryptionKey::new(
                             EncryptionMethod::Aes128,
