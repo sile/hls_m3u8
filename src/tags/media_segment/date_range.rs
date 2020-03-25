@@ -19,105 +19,159 @@ use crate::{Error, RequiredVersion};
 #[builder(setter(into))]
 #[shorthand(enable(must_use, into))]
 pub struct ExtXDateRange {
-    /// A string that uniquely identifies an [`ExtXDateRange`] in the Playlist.
+    /// A string that uniquely identifies an [`ExtXDateRange`] in the playlist.
     ///
-    /// # Note
+    /// ## Note
     ///
-    /// This attribute is required.
+    /// This field is required.
     id: String,
     /// A client-defined string that specifies some set of attributes and their
     /// associated value semantics. All [`ExtXDateRange`]s with the same class
     /// attribute value must adhere to these semantics.
     ///
-    /// # Note
+    /// ## Note
     ///
-    /// This attribute is optional.
+    /// This field is optional.
     #[builder(setter(strip_option), default)]
     class: Option<String>,
     /// The date at which the [`ExtXDateRange`] begins.
     ///
-    /// # Note
+    /// ## Note
     ///
-    /// This attribute is required.
+    /// This field is required.
     #[cfg(feature = "chrono")]
+    #[shorthand(enable(copy), disable(into))]
     start_date: DateTime<FixedOffset>,
+    /// The date at which the [`ExtXDateRange`] begins.
+    ///
+    /// ## Note
+    ///
+    /// This field is required.
+    #[cfg(not(feature = "chrono"))]
+    start_date: String,
     /// The date at which the [`ExtXDateRange`] ends. It must be equal to or
     /// later than the value of the [`start-date`] attribute.
     ///
-    /// # Note
+    /// ## Note
     ///
-    /// This attribute is optional.
+    /// This field is optional.
     ///
     /// [`start-date`]: #method.start_date
     #[cfg(feature = "chrono")]
+    #[shorthand(enable(copy), disable(into))]
     #[builder(setter(strip_option), default)]
     end_date: Option<DateTime<FixedOffset>>,
+    /// The date at which the [`ExtXDateRange`] ends. It must be equal to or
+    /// later than the value of the start-date field.
+    ///
+    /// ## Note
+    ///
+    /// This field is optional.
+    ///
+    /// [`start-date`]: #method.start_date
     #[cfg(not(feature = "chrono"))]
     #[builder(setter(strip_option), default)]
     end_date: Option<String>,
     /// The duration of the [`ExtXDateRange`]. A single instant in time (e.g.,
     /// crossing a finish line) should be represented with a duration of 0.
     ///
-    /// # Note
+    /// ## Note
     ///
-    /// This attribute is optional.
+    /// This field is optional.
     #[builder(setter(strip_option), default)]
-    duration: Option<Duration>,
-    /// The expected duration of the [`ExtXDateRange`].
-    /// This attribute should be used to indicate the expected duration of a
-    /// [`ExtXDateRange`] whose actual duration is not yet known.
+    #[shorthand(enable(skip))]
+    pub duration: Option<Duration>,
+    /// This field indicates the expected duration of an [`ExtXDateRange`],
+    /// whose actual duration is not yet known.
     ///
-    /// # Note
+    /// ## Note
     ///
-    /// This attribute is optional.
+    /// This field is optional.
     #[builder(setter(strip_option), default)]
-    planned_duration: Option<Duration>,
-    /// You can read about this attribute here
-    /// <https://tools.ietf.org/html/rfc8216#section-4.3.2.7.1>
+    #[shorthand(enable(skip))]
+    pub planned_duration: Option<Duration>,
+    /// SCTE-35 (ANSI/SCTE 35 2013) is a joint ANSI/Society of Cable and
+    /// Telecommunications Engineers standard that describes the inline
+    /// insertion of cue tones in mpeg-ts streams.
     ///
-    /// # Note
+    /// SCTE-35 was originally used in the US to signal a local ad insertion
+    /// opportunity in the transport streams, and in Europe to insert local TV
+    /// programs (e.g. local news transmissions). It is now used to signal all
+    /// kinds of program and ad events in linear transport streams and in newer
+    /// ABR delivery formats such as HLS and DASH.
     ///
-    /// This attribute is optional.
+    /// <https://en.wikipedia.org/wiki/SCTE-35>
+    ///
+    /// ## Note
+    ///
+    /// This field is optional.
     #[builder(setter(strip_option), default)]
     scte35_cmd: Option<String>,
-    /// You can read about this attribute here
-    /// <https://tools.ietf.org/html/rfc8216#section-4.3.2.7.1>
+    /// SCTE-35 (ANSI/SCTE 35 2013) is a joint ANSI/Society of Cable and
+    /// Telecommunications Engineers standard that describes the inline
+    /// insertion of cue tones in mpeg-ts streams.
     ///
-    /// # Note
+    /// SCTE-35 was originally used in the US to signal a local ad insertion
+    /// opportunity in the transport streams, and in Europe to insert local TV
+    /// programs (e.g. local news transmissions). It is now used to signal all
+    /// kinds of program and ad events in linear transport streams and in newer
+    /// ABR delivery formats such as HLS and DASH.
     ///
-    /// This attribute is optional.
+    /// <https://en.wikipedia.org/wiki/SCTE-35>
+    ///
+    /// ## Note
+    ///
+    /// This field is optional.
     #[builder(setter(strip_option), default)]
     scte35_out: Option<String>,
-    /// You can read about this attribute here
-    /// <https://tools.ietf.org/html/rfc8216#section-4.3.2.7.1>
+    /// SCTE-35 (ANSI/SCTE 35 2013) is a joint ANSI/Society of Cable and
+    /// Telecommunications Engineers standard that describes the inline
+    /// insertion of cue tones in mpeg-ts streams.
     ///
-    /// # Note
+    /// SCTE-35 was originally used in the US to signal a local ad insertion
+    /// opportunity in the transport streams, and in Europe to insert local TV
+    /// programs (e.g. local news transmissions). It is now used to signal all
+    /// kinds of program and ad events in linear transport streams and in newer
+    /// ABR delivery formats such as HLS and DASH.
     ///
-    /// This attribute is optional.
+    /// <https://en.wikipedia.org/wiki/SCTE-35>
+    ///
+    /// ## Note
+    ///
+    /// This field is optional.
     #[builder(setter(strip_option), default)]
     scte35_in: Option<String>,
-    /// This attribute indicates that the end of the range containing it is
-    /// equal to the [`start-date`] of its following range. The following range
-    /// is the [`ExtXDateRange`] of the same class, that has the earliest
-    /// [`start-date`] after the [`start-date`] of the range in question.
+    /// This field indicates that the [`ExtXDateRange::end_date`] is equal to
+    /// the [`ExtXDateRange::start_date`] of the following range.
     ///
-    /// # Note
+    /// The following range is the [`ExtXDateRange`] with the same class, that
+    /// has the earliest start date after the start date of the range in
+    /// question.
     ///
-    /// This attribute is optional.
+    /// ## Note
+    ///
+    /// This field is optional.
     #[builder(default)]
-    end_on_next: bool,
+    #[shorthand(enable(skip))]
+    pub end_on_next: bool,
     /// The `"X-"` prefix defines a namespace reserved for client-defined
-    /// attributes. The client-attribute must be a uppercase characters.
-    /// Clients should use a reverse-DNS syntax when defining their own
-    /// attribute names to avoid collisions. An example of a client-defined
-    /// attribute is `X-COM-EXAMPLE-AD-ID="XYZ123"`.
+    /// attributes.
     ///
-    /// # Note
+    /// A client-attribute can only consist of uppercase characters (A-Z),
+    /// numbers (0-9) and `-`.
     ///
-    /// This attribute is optional.
+    /// Clients should use a reverse-dns naming scheme, when defining
+    /// their own attribute names to avoid collisions.
+    ///
+    /// An example of a client-defined attribute is
+    /// `X-COM-EXAMPLE-AD-ID="XYZ123"`.
+    ///
+    /// ## Note
+    ///
+    /// This field is optional.
     #[builder(default)]
-    #[shorthand(enable(collection_magic, get_mut))]
-    client_attributes: BTreeMap<String, Value>,
+    #[shorthand(enable(collection_magic), disable(set, get))]
+    pub client_attributes: BTreeMap<String, Value>,
 }
 
 impl ExtXDateRangeBuilder {
@@ -170,7 +224,6 @@ let date_range = ExtXDateRange::new(
         doc = r#"
 ```
 # use hls_m3u8::tags::ExtXDateRange;
-
 let date_range = ExtXDateRange::new("id", "2010-02-19T14:54:23.031+08:00");
 ```
     "#
@@ -200,7 +253,61 @@ let date_range = ExtXDateRange::new("id", "2010-02-19T14:54:23.031+08:00");
     }
 
     /// Returns a builder for [`ExtXDateRange`].
+    ///
+    /// # Example
+    #[cfg_attr(
+        feature = "chrono",
+        doc = r#"
+```
+# use hls_m3u8::tags::ExtXDateRange;
+use std::time::Duration;
+use chrono::{FixedOffset, TimeZone};
+use hls_m3u8::types::Float;
+
+let date_range = ExtXDateRange::builder()
+    .id("test_id")
+    .class("test_class")
+    .start_date(FixedOffset::east(0).ymd(2014, 3, 5).and_hms(11, 15, 0))
+    .end_date(FixedOffset::east(0).ymd(2014, 3, 5).and_hms(11, 16, 0))
+    .duration(Duration::from_secs_f64(60.1))
+    .planned_duration(Duration::from_secs_f64(59.993))
+    .insert_client_attribute("X-CUSTOM", Float::new(45.3))
+    .scte35_cmd("0xFC002F0000000000FF2")
+    .scte35_out("0xFC002F0000000000FF0")
+    .scte35_in("0xFC002F0000000000FF1")
+    .end_on_next(true)
+    .build()?;
+# Ok::<(), String>(())
+```
+"#
+    )]
+    #[cfg_attr(
+        not(feature = "chrono"),
+        doc = r#"
+```
+# use hls_m3u8::tags::ExtXDateRange;
+use std::time::Duration;
+use hls_m3u8::types::Float;
+
+let date_range = ExtXDateRange::builder()
+    .id("test_id")
+    .class("test_class")
+    .start_date("2014-03-05T11:15:00Z")
+    .end_date("2014-03-05T11:16:00Z")
+    .duration(Duration::from_secs_f64(60.1))
+    .planned_duration(Duration::from_secs_f64(59.993))
+    .insert_client_attribute("X-CUSTOM", Float::new(45.3))
+    .scte35_cmd("0xFC002F0000000000FF2")
+    .scte35_out("0xFC002F0000000000FF0")
+    .scte35_in("0xFC002F0000000000FF1")
+    .end_on_next(true)
+    .build()?;
+# Ok::<(), String>(())
+```
+"#
+    )]
     #[must_use]
+    #[inline]
     pub fn builder() -> ExtXDateRangeBuilder { ExtXDateRangeBuilder::default() }
 }
 
@@ -267,13 +374,23 @@ impl FromStr for ExtXDateRange {
                 "SCTE35-IN" => scte35_in = Some(unquote(value)),
                 "END-ON-NEXT" => {
                     if value != "YES" {
-                        return Err(Error::custom("The value of `END-ON-NEXT` has to be `YES`!"));
+                        return Err(Error::custom("`END-ON-NEXT` must be `YES`"));
                     }
                     end_on_next = true;
                 }
                 _ => {
                     if key.starts_with("X-") {
-                        client_attributes.insert(key.to_ascii_uppercase(), value.parse()?);
+                        if key.chars().any(|c| {
+                            c.is_ascii_lowercase()
+                                || !c.is_ascii()
+                                || !(c.is_alphanumeric() || c == '-')
+                        }) {
+                            return Err(Error::custom(
+                                "a client attribute can only consist of uppercase ascii characters, numbers or `-`",
+                            ));
+                        }
+
+                        client_attributes.insert(key.to_string(), value.parse()?);
                     } else {
                         // [6.3.1. General Client Responsibilities]
                         // > ignore any attribute/value pair with an
@@ -287,8 +404,28 @@ impl FromStr for ExtXDateRange {
         let start_date = start_date.ok_or_else(|| Error::missing_value("START-DATE"))?;
 
         if end_on_next && class.is_none() {
-            return Err(Error::invalid_input());
+            return Err(Error::missing_attribute("CLASS"));
+        } else if end_on_next && duration.is_some() {
+            return Err(Error::unexpected_attribute("DURATION"));
+        } else if end_on_next && end_date.is_some() {
+            return Err(Error::unexpected_attribute("END-DATE"));
         }
+
+        // TODO: verify this without chrono?
+        // https://tools.ietf.org/html/rfc8216#section-4.3.2.7
+        #[cfg(feature = "chrono")]
+        {
+            if let (Some(Ok(duration)), Some(end_date)) =
+                (duration.map(chrono::Duration::from_std), &end_date)
+            {
+                if start_date + duration != *end_date {
+                    return Err(Error::custom(
+                        "end_date must be equal to start_date + duration",
+                    ));
+                }
+            }
+        }
+
         Ok(Self {
             id,
             class,
@@ -470,11 +607,11 @@ mod test {
                 .end_date({
                     #[cfg(feature = "chrono")]
                     {
-                        FixedOffset::east(0).ymd(2014, 3, 5).and_hms(11, 16, 0)
+                        FixedOffset::east(0).ymd(2014, 3, 5).and_hms_milli(11, 16, 0, 100)
                     }
                     #[cfg(not(feature = "chrono"))]
                     {
-                        "2014-03-05T11:16:00Z"
+                        "2014-03-05T11:16:00.100Z"
                     }
                 })
                 .duration(Duration::from_secs_f64(60.1))
@@ -483,7 +620,6 @@ mod test {
                 .scte35_cmd("0xFC002F0000000000FF2")
                 .scte35_out("0xFC002F0000000000FF0")
                 .scte35_in("0xFC002F0000000000FF1")
-                .end_on_next(true)
                 .build()
                 .unwrap(),
             concat!(
@@ -491,14 +627,13 @@ mod test {
                 "ID=\"test_id\",",
                 "CLASS=\"test_class\",",
                 "START-DATE=\"2014-03-05T11:15:00Z\",",
-                "END-DATE=\"2014-03-05T11:16:00Z\",",
+                "END-DATE=\"2014-03-05T11:16:00.100Z\",",
                 "DURATION=60.1,",
                 "PLANNED-DURATION=59.993,",
                 "SCTE35-CMD=0xFC002F0000000000FF2,",
                 "SCTE35-OUT=0xFC002F0000000000FF0,",
                 "SCTE35-IN=0xFC002F0000000000FF1,",
-                "X-CUSTOM=45.3,",
-                "END-ON-NEXT=YES"
+                "X-CUSTOM=45.3",
             )
         },
     }
