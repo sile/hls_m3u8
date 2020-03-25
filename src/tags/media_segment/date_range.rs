@@ -15,7 +15,7 @@ use crate::{Error, RequiredVersion};
 
 /// The [`ExtXDateRange`] tag associates a date range (i.e., a range of time
 /// defined by a starting and ending date) with a set of attribute/value pairs.
-#[derive(ShortHand, Builder, Debug, Clone, PartialEq, PartialOrd)]
+#[derive(ShortHand, Builder, Debug, Clone, PartialEq, PartialOrd, Eq, Ord, Hash)]
 #[builder(setter(into))]
 #[shorthand(enable(must_use, into))]
 pub struct ExtXDateRange {
