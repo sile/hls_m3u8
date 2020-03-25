@@ -1,37 +1,41 @@
 //! Miscellaneous types.
-mod byte_range;
-mod channels;
-mod closed_captions;
-mod codecs;
-mod encryption_method;
-mod hdcp_level;
-mod in_stream_id;
-mod key_format;
-mod key_format_versions;
-mod media_type;
-mod protocol_version;
-mod resolution;
-mod stream_data;
-mod value;
+pub(crate) mod byte_range;
+pub(crate) mod channels;
+pub(crate) mod closed_captions;
+pub(crate) mod codecs;
+pub(crate) mod decryption_key;
+pub(crate) mod encryption_method;
+pub(crate) mod hdcp_level;
+pub(crate) mod in_stream_id;
+pub(crate) mod initialization_vector;
+pub(crate) mod key_format;
+pub(crate) mod key_format_versions;
+pub(crate) mod media_type;
 pub(crate) mod playlist_type;
+pub(crate) mod protocol_version;
+pub(crate) mod resolution;
+pub(crate) mod stream_data;
+pub(crate) mod value;
 
-mod float;
-mod ufloat;
+pub(crate) mod float;
+pub(crate) mod ufloat;
 
 pub use byte_range::*;
 pub use channels::*;
 pub use closed_captions::*;
 pub use codecs::*;
+pub use decryption_key::DecryptionKey;
 pub use encryption_method::*;
 pub use hdcp_level::*;
 pub use in_stream_id::*;
+pub use initialization_vector::*;
 pub use key_format::*;
 pub use key_format_versions::*;
 pub use media_type::*;
 pub use playlist_type::*;
 pub use protocol_version::*;
 pub use resolution::*;
-pub use stream_data::*;
+pub use stream_data::StreamData;
 pub use value::*;
 
 pub use float::Float;

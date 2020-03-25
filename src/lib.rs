@@ -62,6 +62,27 @@ pub use master_playlist::MasterPlaylist;
 pub use media_playlist::MediaPlaylist;
 pub use media_segment::MediaSegment;
 
+pub mod builder {
+    pub use crate::master_playlist::MasterPlaylistBuilder;
+    pub use crate::media_playlist::MediaPlaylistBuilder;
+    pub use crate::media_segment::MediaSegmentBuilder;
+
+    pub mod tags {
+        // master playlist
+        pub use crate::tags::master_playlist::media::ExtXMediaBuilder;
+        pub use crate::tags::master_playlist::session_data::ExtXSessionDataBuilder;
+
+        // media segment
+        pub use crate::tags::media_segment::date_range::ExtXDateRangeBuilder;
+
+        // media playlist
+    }
+
+    pub mod types {
+        pub use crate::types::decryption_key::DecryptionKeyBuilder;
+        pub use crate::types::stream_data::StreamDataBuilder;
+    }
+}
 pub mod tags;
 pub mod types;
 
