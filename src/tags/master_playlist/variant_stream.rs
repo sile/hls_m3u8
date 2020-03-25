@@ -29,19 +29,18 @@ use crate::Error;
 /// - Each [`MediaPlaylist`] in each [`VariantStream`] must have the same target
 ///   duration. The only exceptions are subtitle renditions and
 ///   [`MediaPlaylist`]s containing an [`ExtXIFramesOnly`] tag, which may have
-///   different target durations if they have [`ExtXPlaylistType::Vod`].
+///   different target durations if they have [`PlaylistType::Vod`].
 ///
 /// - Content that appears in a [`MediaPlaylist`] of one [`VariantStream`] but
 ///   not in another must appear either at the beginning or at the end of the
 ///   [`MediaPlaylist`] and must not be longer than the target duration.
 ///
-/// - If any [`MediaPlaylist`]s have an [`ExtXPlaylistType`] tag, all
-///   [`MediaPlaylist`]s must have an [`ExtXPlaylistType`] tag with the same
-///   value.
+/// - If any [`MediaPlaylist`]s have an [`PlaylistType`] tag, all
+///   [`MediaPlaylist`]s must have an [`PlaylistType`] tag with the same value.
 ///
-/// - If the Playlist contains an [`ExtXPlaylistType`] tag with the value of
-///   VOD, the first segment of every [`MediaPlaylist`] in every
-///   [`VariantStream`] must start at the same media timestamp.
+/// - If the Playlist contains an [`PlaylistType`] tag with the value of VOD,
+///   the first segment of every [`MediaPlaylist`] in every [`VariantStream`]
+///   must start at the same media timestamp.
 ///
 /// - If any [`MediaPlaylist`] in a [`MasterPlaylist`] contains an
 ///   [`ExtXProgramDateTime`] tag, then all [`MediaPlaylist`]s in that
@@ -58,12 +57,12 @@ use crate::Error;
 ///
 /// [RFC6381]: https://tools.ietf.org/html/rfc6381
 /// [`ExtXDiscontinuitySequence`]: crate::tags::ExtXDiscontinuitySequence
-/// [`ExtXPlaylistType::Vod`]: crate::tags::ExtXPlaylistType::Vod
+/// [`PlaylistType::Vod`]: crate::types::PlaylistType::Vod
 /// [`MediaPlaylist`]: crate::MediaPlaylist
 /// [`MasterPlaylist`]: crate::MasterPlaylist
 /// [`ExtXDateRange`]: crate::tags::ExtXDateRange
 /// [`ExtXProgramDateTime`]: crate::tags::ExtXProgramDateTime
-/// [`ExtXPlaylistType`]: crate::tags::ExtXPlaylistType
+/// [`PlaylistType`]: crate::types::PlaylistType
 /// [`ExtXIFramesOnly`]: crate::tags::ExtXIFramesOnly
 #[derive(Debug, Clone, PartialEq, PartialOrd, Eq, Ord, Hash)]
 pub enum VariantStream {
