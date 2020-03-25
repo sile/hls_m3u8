@@ -10,6 +10,6 @@ mod shared;
 
 pub use basic::*;
 pub use master_playlist::*;
-pub use media_playlist::*;
+pub(crate) use media_playlist::*;
 pub use media_segment::*;
 pub use shared::*;

@@ -1,7 +1,7 @@
 // https://tools.ietf.org/html/rfc8216#section-8
 use std::time::Duration;
 
-use hls_m3u8::tags::{ExtInf, ExtXKey, ExtXMedia, ExtXTargetDuration, VariantStream};
+use hls_m3u8::tags::{ExtInf, ExtXKey, ExtXMedia, VariantStream};
 use hls_m3u8::types::{DecryptionKey, EncryptionMethod, MediaType, StreamData};
 use hls_m3u8::{MasterPlaylist, MediaPlaylist, MediaSegment};
 use pretty_assertions::assert_eq;
@@ -22,7 +22,7 @@ macro_rules! generate_tests {
 generate_tests! {
     test_simple_playlist => {
         MediaPlaylist::builder()
-            .target_duration(ExtXTargetDuration::new(Duration::from_secs(10)))
+            .target_duration(Duration::from_secs(10))
             .segments(vec![
                 MediaSegment::builder()
                     .inf(ExtInf::new(Duration::from_secs_f64(9.009)))
@@ -58,7 +58,7 @@ generate_tests! {
     },
     test_live_media_playlist_using_https => {
         MediaPlaylist::builder()
-            .target_duration(ExtXTargetDuration::new(Duration::from_secs(8)))
+            .target_duration(Duration::from_secs(8))
             .media_sequence(2680)
             .segments(vec![
                 MediaSegment::builder()
@@ -94,7 +94,7 @@ generate_tests! {
     },
     test_media_playlist_with_encrypted_segments => {
         MediaPlaylist::builder()
-            .target_duration(ExtXTargetDuration::new(Duration::from_secs(15)))
+            .target_duration(Duration::from_secs(15))
             .media_sequence(7794)
             .segments(vec![
                 MediaSegment::builder()

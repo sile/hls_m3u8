@@ -5,7 +5,7 @@
 
 use std::time::Duration;
 
-use hls_m3u8::tags::{ExtInf, ExtXByteRange, ExtXTargetDuration};
+use hls_m3u8::tags::{ExtInf, ExtXByteRange};
 use hls_m3u8::types::PlaylistType;
 use hls_m3u8::{MediaPlaylist, MediaSegment};
 use pretty_assertions::assert_eq;
@@ -27,7 +27,7 @@ generate_tests! {
     test_media_playlist_with_byterange => {
         MediaPlaylist::builder()
             .media_sequence(1)
-            .target_duration(ExtXTargetDuration::new(Duration::from_secs(10)))
+            .target_duration(Duration::from_secs(10))
             .segments(vec![
                 MediaSegment::builder()
                     .inf(ExtInf::new(Duration::from_secs_f64(10.0)))
@@ -72,7 +72,7 @@ generate_tests! {
     test_absolute_uris => {
         MediaPlaylist::builder()
             .playlist_type(PlaylistType::Vod)
-            .target_duration(ExtXTargetDuration::new(Duration::from_secs(10)))
+            .target_duration(Duration::from_secs(10))
             .segments(vec![
                 MediaSegment::builder()
                     .inf(ExtInf::new(Duration::from_secs(10)))
