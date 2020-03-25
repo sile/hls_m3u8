@@ -8,7 +8,7 @@ mod program_date_time;
 
 pub use byte_range::*;
 pub use date_range::*;
-pub use discontinuity::*;
+pub(crate) use discontinuity::*;
 pub use inf::*;
 pub use key::*;
 pub use map::*;

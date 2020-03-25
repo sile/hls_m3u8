@@ -5,16 +5,10 @@ use crate::types::ProtocolVersion;
 use crate::utils::tag;
 use crate::{Error, RequiredVersion};
 
-/// # [4.4.2.3. EXT-X-DISCONTINUITY]
-///
-/// The [`ExtXDiscontinuity`] tag indicates a discontinuity between the
-/// [`Media Segment`] that follows it and the one that preceded it.
-///
-/// [`Media Segment`]: crate::MediaSegment
-/// [4.4.2.3. EXT-X-DISCONTINUITY]:
-/// https://tools.ietf.org/html/draft-pantos-hls-rfc8216bis-04#section-4.4.2.3
+/// The `ExtXDiscontinuity` tag indicates a discontinuity between the
+/// `MediaSegment` that follows it and the one that preceded it.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, PartialOrd, Ord)]
-pub struct ExtXDiscontinuity;
+pub(crate) struct ExtXDiscontinuity;
 
 impl ExtXDiscontinuity {
     pub(crate) const PREFIX: &'static str = "#EXT-X-DISCONTINUITY";
