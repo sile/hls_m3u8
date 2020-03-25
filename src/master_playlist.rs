@@ -493,7 +493,7 @@ impl FromStr for MasterPlaylist {
                         | Tag::ExtXMediaSequence(_)
                         | Tag::ExtXDiscontinuitySequence(_)
                         | Tag::ExtXEndList(_)
-                        | Tag::ExtXPlaylistType(_)
+                        | Tag::PlaylistType(_)
                         | Tag::ExtXIFramesOnly(_) => {
                             return Err(Error::unexpected_tag(tag));
                         }

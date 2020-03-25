@@ -10,9 +10,9 @@ use crate::line::{Line, Lines, Tag};
 use crate::media_segment::MediaSegment;
 use crate::tags::{
     ExtM3u, ExtXDiscontinuitySequence, ExtXEndList, ExtXIFramesOnly, ExtXIndependentSegments,
-    ExtXKey, ExtXMediaSequence, ExtXPlaylistType, ExtXStart, ExtXTargetDuration, ExtXVersion,
+    ExtXKey, ExtXMediaSequence, ExtXStart, ExtXTargetDuration, ExtXVersion,
 };
-use crate::types::{EncryptionMethod, ProtocolVersion};
+use crate::types::{EncryptionMethod, PlaylistType, ProtocolVersion};
 use crate::utils::tag;
 use crate::{Error, RequiredVersion};
 
@@ -43,13 +43,13 @@ pub struct MediaPlaylist {
     /// This field is optional.
     #[builder(default)]
     discontinuity_sequence: Option<ExtXDiscontinuitySequence>,
-    /// Sets the [`ExtXPlaylistType`] tag.
+    /// Sets the [`PlaylistType`] tag.
     ///
     /// # Note
     ///
     /// This field is optional.
     #[builder(default)]
-    playlist_type: Option<ExtXPlaylistType>,
+    playlist_type: Option<PlaylistType>,
     /// Sets the [`ExtXIFramesOnly`] tag.
     ///
     /// # Note
@@ -392,7 +392,7 @@ fn parse_media_playlist(
                     Tag::ExtXEndList(t) => {
                         builder.end_list(t);
                     }
-                    Tag::ExtXPlaylistType(t) => {
+                    Tag::PlaylistType(t) => {
                         builder.playlist_type(t);
                     }
                     Tag::ExtXIFramesOnly(t) => {

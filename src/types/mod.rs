@@ -13,6 +13,7 @@ mod protocol_version;
 mod resolution;
 mod stream_data;
 mod value;
+pub(crate) mod playlist_type;
 
 mod float;
 mod ufloat;
@@ -27,6 +28,7 @@ pub use in_stream_id::*;
 pub use key_format::*;
 pub use key_format_versions::*;
 pub use media_type::*;
+pub use playlist_type::*;
 pub use protocol_version::*;
 pub use resolution::*;
 pub use stream_data::*;

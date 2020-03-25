@@ -5,6 +5,7 @@ use core::str::FromStr;
 use derive_more::Display;
 
 use crate::tags;
+use crate::types::PlaylistType;
 use crate::Error;
 
 #[derive(Debug, Clone)]
@@ -70,7 +71,7 @@ pub(crate) enum Tag<'a> {
     ExtXMediaSequence(tags::ExtXMediaSequence),
     ExtXDiscontinuitySequence(tags::ExtXDiscontinuitySequence),
     ExtXEndList(tags::ExtXEndList),
-    ExtXPlaylistType(tags::ExtXPlaylistType),
+    PlaylistType(PlaylistType),
     ExtXIFramesOnly(tags::ExtXIFramesOnly),
     ExtXMedia(tags::ExtXMedia),
     ExtXSessionData(tags::ExtXSessionData),
@@ -109,8 +110,8 @@ impl<'a> TryFrom<&'a str> for Tag<'a> {
             input.parse().map(Self::ExtXDiscontinuitySequence)
         } else if input.starts_with(tags::ExtXEndList::PREFIX) {
             input.parse().map(Self::ExtXEndList)
-        } else if input.starts_with(tags::ExtXPlaylistType::PREFIX) {
-            input.parse().map(Self::ExtXPlaylistType)
+        } else if input.starts_with(PlaylistType::PREFIX) {
+            input.parse().map(Self::PlaylistType)
         } else if input.starts_with(tags::ExtXIFramesOnly::PREFIX) {
             input.parse().map(Self::ExtXIFramesOnly)
         } else if input.starts_with(tags::ExtXMedia::PREFIX) {

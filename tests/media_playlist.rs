@@ -5,9 +5,8 @@
 
 use std::time::Duration;
 
-use hls_m3u8::tags::{
-    ExtInf, ExtXByteRange, ExtXEndList, ExtXMediaSequence, ExtXPlaylistType, ExtXTargetDuration,
-};
+use hls_m3u8::tags::{ExtInf, ExtXByteRange, ExtXEndList, ExtXMediaSequence, ExtXTargetDuration};
+use hls_m3u8::types::PlaylistType;
 use hls_m3u8::{MediaPlaylist, MediaSegment};
 use pretty_assertions::assert_eq;
 
@@ -72,7 +71,7 @@ generate_tests! {
     },
     test_absolute_uris => {
         MediaPlaylist::builder()
-            .playlist_type(ExtXPlaylistType::Vod)
+            .playlist_type(PlaylistType::Vod)
             .target_duration(ExtXTargetDuration::new(Duration::from_secs(10)))
             .segments(vec![
                 MediaSegment::builder()
@@ -123,7 +122,7 @@ generate_tests! {
         MediaPlaylist::builder()
             .target_duration(Duration::from_secs(10))
             .media_sequence(0)
-            .playlist_type(ExtXPlaylistType::Vod)
+            .playlist_type(PlaylistType::Vod)
             .segments(vec![
                 MediaSegment::builder()
                     .inf(ExtInf::new(Duration::from_secs(10)))
@@ -137,7 +136,6 @@ generate_tests! {
                     .uri("hls_450k_video.ts")
                     .build()
                     .unwrap(),
-
                 MediaSegment::builder()
                     .inf(ExtInf::new(Duration::from_secs(10)))
                     .byte_range(1_110_328..1_823_412)
@@ -315,5 +313,4 @@ generate_tests! {
             "#EXT-X-ENDLIST\n"
         )
     },
-
 }
