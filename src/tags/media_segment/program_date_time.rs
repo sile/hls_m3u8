@@ -10,16 +10,23 @@ use crate::types::ProtocolVersion;
 use crate::utils::tag;
 use crate::{Error, RequiredVersion};
 
-/// # [4.3.2.6. EXT-X-PROGRAM-DATE-TIME]
+/// Associates the first sample of a [`MediaSegment`] with an absolute date
+/// and/or time.
 ///
-/// The [`ExtXProgramDateTime`] tag associates the first sample of a
-/// [`MediaSegment`] with an absolute date and/or time.
+/// ## Features
+///
+/// By enabling the `chrono` feature the `date_time`-field will change from
+/// `String` to `DateTime<FixedOffset>` and the traits
+/// - `Deref<Target=DateTime<FixedOffset>>`,
+/// - `DerefMut<Target=DateTime<FixedOffset>>`
+/// - and `Copy`
+///
+/// will be derived.
 ///
 /// [`MediaSegment`]: crate::MediaSegment
-/// [4.3.2.6. EXT-X-PROGRAM-DATE-TIME]:
-/// https://tools.ietf.org/html/rfc8216#section-4.3.2.6
 #[derive(Debug, Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]
 #[cfg_attr(feature = "chrono", derive(Deref, DerefMut, Copy))]
+#[non_exhaustive]
 pub struct ExtXProgramDateTime {
     /// The date-time of the first sample of the associated media segment.
     #[cfg(feature = "chrono")]
@@ -28,7 +35,6 @@ pub struct ExtXProgramDateTime {
     /// The date-time of the first sample of the associated media segment.
     #[cfg(not(feature = "chrono"))]
     pub date_time: String,
-    __non_exhaustive: (),
 }
 
 impl ExtXProgramDateTime {
@@ -52,12 +58,7 @@ impl ExtXProgramDateTime {
     /// ```
     #[must_use]
     #[cfg(feature = "chrono")]
-    pub const fn new(date_time: DateTime<FixedOffset>) -> Self {
-        Self {
-            date_time,
-            __non_exhaustive: (),
-        }
-    }
+    pub const fn new(date_time: DateTime<FixedOffset>) -> Self { Self { date_time } }
 
     /// Makes a new [`ExtXProgramDateTime`] tag.
     ///
@@ -71,7 +72,6 @@ impl ExtXProgramDateTime {
     pub fn new<T: Into<String>>(date_time: T) -> Self {
         Self {
             date_time: date_time.into(),
-            __non_exhaustive: (),
         }
     }
 }
@@ -103,7 +103,7 @@ impl FromStr for ExtXProgramDateTime {
     fn from_str(input: &str) -> Result<Self, Self::Err> {
         let input = tag(input, Self::PREFIX)?;
 
-        let date_time = {
+        Ok(Self::new({
             #[cfg(feature = "chrono")]
             {
                 DateTime::parse_from_rfc3339(input).map_err(Error::chrono)?
@@ -112,9 +112,7 @@ impl FromStr for ExtXProgramDateTime {
             {
                 input
             }
-        };
-
-        Ok(Self::new(date_time))
+        }))
     }
 }
 
