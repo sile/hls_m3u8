@@ -81,6 +81,17 @@ pub struct DecryptionKey {
 }
 
 impl DecryptionKey {
+    /// Creates a new `DecryptionKey` from an uri pointing to the key data and
+    /// an `EncryptionMethod`.
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// # use hls_m3u8::types::DecryptionKey;
+    /// use hls_m3u8::types::EncryptionMethod;
+    ///
+    /// let key = DecryptionKey::new(EncryptionMethod::Aes128, "https://www.example.uri/key");
+    /// ```
     #[must_use]
     #[inline]
     pub fn new<I: Into<String>>(method: EncryptionMethod, uri: I) -> Self {
@@ -93,6 +104,25 @@ impl DecryptionKey {
         }
     }
 
+    /// Returns a builder for a `DecryptionKey`.
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// # use hls_m3u8::types::DecryptionKey;
+    /// use hls_m3u8::types::{EncryptionMethod, KeyFormat};
+    ///
+    /// let key = DecryptionKey::builder()
+    ///     .method(EncryptionMethod::Aes128)
+    ///     .uri("https://www.example.com/")
+    ///     .iv([
+    ///         16, 239, 143, 117, 140, 165, 85, 17, 85, 132, 187, 91, 60, 104, 127, 82,
+    ///     ])
+    ///     .format(KeyFormat::Identity)
+    ///     .versions(&[1, 2, 3, 4, 5])
+    ///     .build()?;
+    /// # Ok::<(), String>(())
+    /// ```
     #[must_use]
     #[inline]
     pub fn builder() -> DecryptionKeyBuilder { DecryptionKeyBuilder::default() }

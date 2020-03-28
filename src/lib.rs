@@ -62,11 +62,13 @@ pub use master_playlist::MasterPlaylist;
 pub use media_playlist::MediaPlaylist;
 pub use media_segment::MediaSegment;
 
+/// Builder structs
 pub mod builder {
     pub use crate::master_playlist::MasterPlaylistBuilder;
     pub use crate::media_playlist::MediaPlaylistBuilder;
     pub use crate::media_segment::MediaSegmentBuilder;
 
+    /// Builder structs for tags
     pub mod tags {
         // master playlist
         pub use crate::tags::master_playlist::media::ExtXMediaBuilder;
@@ -78,6 +80,7 @@ pub mod builder {
         // media playlist
     }
 
+    /// Builder structs for types
     pub mod types {
         pub use crate::types::decryption_key::DecryptionKeyBuilder;
         pub use crate::types::stream_data::StreamDataBuilder;

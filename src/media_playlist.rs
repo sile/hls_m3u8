@@ -262,6 +262,11 @@ impl MediaPlaylistBuilder {
         self
     }
 
+    /// Builds a new `MediaPlaylist`.
+    ///
+    /// # Errors
+    ///
+    /// If a required field has not been initialized.
     pub fn build(&self) -> Result<MediaPlaylist, String> {
         // validate builder
         self.validate()?;
