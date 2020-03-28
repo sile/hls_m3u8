@@ -184,7 +184,7 @@ impl KeyFormatVersions {
     /// ```
     #[inline]
     #[must_use]
-    pub fn is_empty(&self) -> bool { self.len() == 0 }
+    pub const fn is_empty(&self) -> bool { self.len() == 0 }
 
     /// Removes the last element and returns it, or `None` if it is empty.
     ///

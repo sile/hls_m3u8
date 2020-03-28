@@ -383,6 +383,7 @@ impl MediaPlaylist {
 
     /// Computes the `Duration` of the [`MediaPlaylist`], by adding each segment
     /// duration together.
+    #[must_use]
     pub fn duration(&self) -> Duration {
         self.segments.values().map(|s| s.duration.duration()).sum()
     }
