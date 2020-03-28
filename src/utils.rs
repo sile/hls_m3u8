@@ -1,6 +1,45 @@
 use crate::Error;
 use core::iter;
 
+/// This is an extension trait that adds the below method to `bool`.
+/// Those methods are already planned for the standard library, but are not
+/// stable at the time of writing this comment.
+///
+/// The current status can be seen here:
+/// <https://github.com/rust-lang/rust/issues/64260>
+///
+/// This trait exists to allow publishing a new version (requires stable
+/// release) and the functions are prefixed with an `a` to prevent naming
+/// conflicts with the coming std functions.
+// TODO: replace this trait with std version as soon as it is stabilized
+pub(crate) trait BoolExt {
+    #[must_use]
+    fn athen_some<T>(self, t: T) -> Option<T>;
+
+    #[must_use]
+    fn athen<T, F: FnOnce() -> T>(self, f: F) -> Option<T>;
+}
+
+impl BoolExt for bool {
+    #[inline]
+    fn athen_some<T>(self, t: T) -> Option<T> {
+        if self {
+            Some(t)
+        } else {
+            None
+        }
+    }
+
+    #[inline]
+    fn athen<T, F: FnOnce() -> T>(self, f: F) -> Option<T> {
+        if self {
+            Some(f())
+        } else {
+            None
+        }
+    }
+}
+
 macro_rules! required_version {
     ( $( $tag:expr ),* ) => {
         ::core::iter::empty()

@@ -11,8 +11,10 @@ use crate::tags::{
     ExtM3u, ExtXDiscontinuitySequence, ExtXEndList, ExtXIFramesOnly, ExtXIndependentSegments,
     ExtXKey, ExtXMediaSequence, ExtXStart, ExtXTargetDuration, ExtXVersion,
 };
-use crate::types::{EncryptionMethod, PlaylistType, ProtocolVersion};
-use crate::utils::tag;
+use crate::types::{
+    DecryptionKey, EncryptionMethod, InitializationVector, KeyFormat, PlaylistType, ProtocolVersion,
+};
+use crate::utils::{tag, BoolExt};
 use crate::{Error, RequiredVersion};
 
 /// Media playlist.
@@ -274,13 +276,7 @@ impl MediaPlaylistBuilder {
         // insert all explictly numbered segments into the result
         let mut result_segments = segments
             .iter()
-            .filter_map(|(_, s)| {
-                if s.explicit_number {
-                    Some((s.number, s.clone()))
-                } else {
-                    None
-                }
-            })
+            .filter_map(|(_, s)| s.explicit_number.athen(|| (s.number, s.clone())))
             .collect::<BTreeMap<_, _>>();
 
         // no segment should exist before the sequence_number
@@ -345,45 +341,19 @@ impl RequiredVersion for MediaPlaylistBuilder {
     fn required_version(&self) -> ProtocolVersion {
         required_version![
             self.target_duration.map(ExtXTargetDuration),
-            {
-                if self.media_sequence.unwrap_or(0) != 0 {
-                    Some(ExtXMediaSequence(self.media_sequence.unwrap_or(0)))
-                } else {
-                    None
-                }
-            },
-            {
-                if self.discontinuity_sequence.unwrap_or(0) != 0 {
-                    Some(ExtXDiscontinuitySequence(
-                        self.discontinuity_sequence.unwrap_or(0),
-                    ))
-                } else {
-                    None
-                }
-            },
+            (self.media_sequence.unwrap_or(0) != 0)
+                .athen(|| ExtXMediaSequence(self.media_sequence.unwrap_or(0))),
+            (self.discontinuity_sequence.unwrap_or(0) != 0)
+                .athen(|| ExtXDiscontinuitySequence(self.discontinuity_sequence.unwrap_or(0))),
             self.playlist_type,
-            {
-                if self.has_i_frames_only.unwrap_or(false) {
-                    Some(ExtXIFramesOnly)
-                } else {
-                    None
-                }
-            },
-            {
-                if self.has_independent_segments.unwrap_or(false) {
-                    Some(ExtXIndependentSegments)
-                } else {
-                    None
-                }
-            },
+            self.has_i_frames_only
+                .unwrap_or(false)
+                .athen_some(ExtXIFramesOnly),
+            self.has_independent_segments
+                .unwrap_or(false)
+                .athen_some(ExtXIndependentSegments),
             self.start,
-            {
-                if self.has_end_list.unwrap_or(false) {
-                    Some(ExtXEndList)
-                } else {
-                    None
-                }
-            },
+            self.has_end_list.unwrap_or(false).athen_some(ExtXEndList),
             self.segments
         ]
     }
@@ -406,43 +376,15 @@ impl RequiredVersion for MediaPlaylist {
     fn required_version(&self) -> ProtocolVersion {
         required_version![
             ExtXTargetDuration(self.target_duration),
-            {
-                if self.media_sequence != 0 {
-                    Some(ExtXMediaSequence(self.media_sequence))
-                } else {
-                    None
-                }
-            },
-            {
-                if self.discontinuity_sequence != 0 {
-                    Some(ExtXDiscontinuitySequence(self.discontinuity_sequence))
-                } else {
-                    None
-                }
-            },
+            (self.media_sequence != 0).athen(|| ExtXMediaSequence(self.media_sequence)),
+            (self.discontinuity_sequence != 0)
+                .athen(|| ExtXDiscontinuitySequence(self.discontinuity_sequence)),
             self.playlist_type,
-            {
-                if self.has_i_frames_only {
-                    Some(ExtXIFramesOnly)
-                } else {
-                    None
-                }
-            },
-            {
-                if self.has_independent_segments {
-                    Some(ExtXIndependentSegments)
-                } else {
-                    None
-                }
-            },
+            self.has_i_frames_only.athen_some(ExtXIFramesOnly),
+            self.has_independent_segments
+                .athen_some(ExtXIndependentSegments),
             self.start,
-            {
-                if self.has_end_list {
-                    Some(ExtXEndList)
-                } else {
-                    None
-                }
-            },
+            self.has_end_list.athen_some(ExtXEndList),
             self.segments
         ]
     }

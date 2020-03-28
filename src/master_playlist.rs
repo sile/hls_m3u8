@@ -10,7 +10,7 @@ use crate::tags::{
     ExtXVersion, VariantStream,
 };
 use crate::types::{ClosedCaptions, MediaType, ProtocolVersion};
-use crate::utils::tag;
+use crate::utils::{tag, BoolExt};
 use crate::{Error, RequiredVersion};
 
 /// The master playlist describes all of the available variants for your
@@ -97,6 +97,7 @@ use crate::{Error, RequiredVersion};
 #[derive(Builder, Default, Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
 #[builder(build_fn(validate = "Self::validate"))]
 #[builder(setter(into, strip_option))]
+#[non_exhaustive]
 pub struct MasterPlaylist {
     /// Indicates that all media samples in a [`MediaSegment`] can be
     /// decoded without information from other segments.
@@ -167,8 +168,6 @@ pub struct MasterPlaylist {
     /// This field is optional.
     #[builder(default)]
     pub unknown_tags: Vec<String>,
-    #[builder(default, field(private))]
-    __non_exhaustive: (),
 }
 
 impl MasterPlaylist {
@@ -277,13 +276,8 @@ impl MasterPlaylist {
 impl RequiredVersion for MasterPlaylist {
     fn required_version(&self) -> ProtocolVersion {
         required_version![
-            {
-                if self.has_independent_segments {
-                    Some(ExtXIndependentSegments)
-                } else {
-                    None
-                }
-            },
+            self.has_independent_segments
+                .athen_some(ExtXIndependentSegments),
             self.start,
             self.media,
             self.variant_streams,
@@ -403,13 +397,9 @@ impl RequiredVersion for MasterPlaylistBuilder {
         //       not for Option<Option<T>>)
         // https://github.com/rust-lang/chalk/issues/12
         required_version![
-            {
-                if self.has_independent_segments.unwrap_or(false) {
-                    Some(ExtXIndependentSegments)
-                } else {
-                    None
-                }
-            },
+            self.has_independent_segments
+                .unwrap_or(false)
+                .athen_some(ExtXIndependentSegments),
             self.start.flatten(),
             self.media,
             self.variant_streams,
