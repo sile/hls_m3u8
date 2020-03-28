@@ -301,6 +301,22 @@ impl MediaPlaylistBuilder {
             let mut segment = segment.clone();
             segment.number = position;
 
+            // add the segment number as iv, if the iv is missing:
+            for key in &mut segment.keys {
+                if let ExtXKey(Some(DecryptionKey {
+                    method, iv, format, ..
+                })) = key
+                {
+                    if *method == EncryptionMethod::Aes128 && *iv == InitializationVector::Missing {
+                        if format.is_none() {
+                            *iv = InitializationVector::Number(segment.number as u128);
+                        } else if let Some(KeyFormat::Identity) = format {
+                            *iv = InitializationVector::Number(segment.number as u128);
+                        }
+                    }
+                }
+            }
+
             result_segments.insert(segment.number, segment);
             position += 1;
         }
@@ -428,26 +444,35 @@ impl fmt::Display for MediaPlaylist {
             writeln!(f, "{}", value)?;
         }
 
-        let mut available_keys = HashSet::new();
+        let mut available_keys = HashSet::<ExtXKey>::new();
 
         for segment in self.segments.values() {
             for key in &segment.keys {
-                // the key is new:
                 if let ExtXKey(Some(decryption_key)) = key {
-                    // TODO: this piece should be linted by clippy?
-
                     // next segment will be encrypted, so the segment can not have an empty key
                     available_keys.remove(&ExtXKey::empty());
 
+                    let mut decryption_key = decryption_key.clone();
+                    let key = {
+                        if let InitializationVector::Number(_) = decryption_key.iv {
+                            // set the iv from a segment number to missing
+                            // this does reduce the output size and the correct iv
+                            // is automatically set, when parsing.
+                            decryption_key.iv = InitializationVector::Missing;
+                        }
+
+                        ExtXKey(Some(decryption_key.clone()))
+                    };
+
                     // only do something if a key has been overwritten
-                    if available_keys.insert(key) {
+                    if available_keys.insert(key.clone()) {
                         let mut remove_key = None;
 
                         // an old key might be removed:
                         for k in &available_keys {
                             if let ExtXKey(Some(dk)) = k {
-                                if dk.format == decryption_key.format && &key != k {
-                                    remove_key = Some(*k);
+                                if dk.format == decryption_key.format && key != *k {
+                                    remove_key = Some(k.clone());
                                     break;
                                 }
                             } else {
@@ -457,7 +482,7 @@ impl fmt::Display for MediaPlaylist {
 
                         if let Some(k) = remove_key {
                             // this should always be true:
-                            let res = available_keys.remove(k);
+                            let res = available_keys.remove(&k);
                             debug_assert!(res);
                         }
 
@@ -466,7 +491,7 @@ impl fmt::Display for MediaPlaylist {
                 } else {
                     // the next segment is not encrypted, so remove all available keys
                     available_keys.clear();
-                    available_keys.insert(key);
+                    available_keys.insert(ExtXKey::empty());
                     writeln!(f, "{}", key)?;
                 }
             }
@@ -632,7 +657,7 @@ fn parse_media_playlist(
     }
 
     if has_partial_segment {
-        return Err(Error::invalid_input());
+        return Err(Error::custom("Missing URI for the last `MediaSegment`"));
     }
 
     builder.unknown(unknown);
