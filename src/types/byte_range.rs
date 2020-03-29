@@ -39,8 +39,8 @@ pub struct ByteRange {
     ///
     /// ```
     /// # use hls_m3u8::types::ByteRange;
-    /// assert_eq!(ByteRange::from(0..5).start(), Some(0));
-    /// assert_eq!(ByteRange::from(..5).start(), None);
+    /// assert_eq!(ByteRange::from(0..5).end(), 5);
+    /// assert_eq!(ByteRange::from(..=5).end(), 6);
     /// ```
     end: usize,
 }
@@ -90,7 +90,11 @@ impl ByteRange {
     /// [`end`](ByteRange::end).
     pub fn set_start(&mut self, new_start: Option<usize>) -> &mut Self {
         if new_start.map_or(false, |s| s > self.end) {
-            panic!("attempt to make the start larger than the end");
+            panic!(
+                "attempt to make the start ({}) larger than the end ({})",
+                new_start.unwrap(),
+                self.end
+            );
         }
 
         self.start = new_start;
@@ -288,7 +292,10 @@ macro_rules! impl_from_ranges {
             impl From<Range<$type>> for ByteRange {
                 fn from(range: Range<$type>) -> Self {
                     if range.start > range.end {
-                        panic!("the range start must be smaller than the end");
+                        panic!(
+                            "the range start ({}) must be smaller than the end ({})",
+                            range.start, range.end
+                        );
                     }
 
                     Self {
@@ -304,7 +311,10 @@ macro_rules! impl_from_ranges {
                     let (start, end) = range.into_inner();
 
                     if start > end {
-                        panic!("the range start must be smaller than the end");
+                        panic!(
+                            "the range start ({}) must be smaller than the end ({}+1)",
+                            start, end
+                        );
                     }
 
                     Self {
@@ -361,7 +371,7 @@ impl TryInto<RangeTo<usize>> for ByteRange {
 
     fn try_into(self) -> Result<RangeTo<usize>, Self::Error> {
         if self.start.is_some() {
-            return Err(Error::custom("A `RangeTo` (`..end`) does not have a start"));
+            return Err(Error::custom("a `RangeTo` (`..end`) does not have a start"));
         }
 
         Ok(RangeTo { end: self.end })
@@ -375,7 +385,7 @@ impl TryInto<Range<usize>> for ByteRange {
     fn try_into(self) -> Result<Range<usize>, Self::Error> {
         if self.start.is_none() {
             return Err(Error::custom(
-                "A `Range` (`start..end`) has to have a start.",
+                "a `Range` (`start..end`) has to have a start.",
             ));
         }
 
@@ -427,11 +437,11 @@ mod tests {
     use pretty_assertions::assert_eq;
 
     #[test]
-    #[should_panic = "the range start must be smaller than the end"]
+    #[should_panic = "the range start (6) must be smaller than the end (0)"]
     fn test_from_range_panic() { let _ = ByteRange::from(6..0); }
 
     #[test]
-    #[should_panic = "the range start must be smaller than the end"]
+    #[should_panic = "the range start (6) must be smaller than the end (0+1)"]
     fn test_from_range_inclusive_panic() { let _ = ByteRange::from(6..=0); }
 
     #[test]
@@ -493,7 +503,7 @@ mod tests {
     }
 
     #[test]
-    #[should_panic = "attempt to make the start larger than the end"]
+    #[should_panic = "attempt to make the start (11) larger than the end (10)"]
     fn test_set_start() { let _ = ByteRange::from(4..10).set_start(Some(11)); }
 
     #[test]
