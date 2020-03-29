@@ -26,6 +26,7 @@ script:
   - cargo build
   - cargo test
   - cargo test --features chrono
+  - cargo test --features backtrace
 
   # it's enough to run this once:
   - |
