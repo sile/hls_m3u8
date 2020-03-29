@@ -1,44 +1,36 @@
-name: Rust
+name: rust
 
 # Trigger the workflow on push or pull request
 on: [push, pull_request]
 
 jobs:
-    ci:
+    rustfmt:
+        name: rustfmt
         runs-on: ubuntu-latest
-
-        strategy:
-            matrix:
-                rust:
-                    - stable
-                    - beta
-                    - nightly
-
         steps:
             - uses: actions/checkout@v2
             - uses: actions-rs/toolchain@v1
               with:
                 profile: minimal
-                toolchain: ${{ matrix.rust }}
+                toolchain: nightly
                 override: true
-                components: rustfmt, clippy
-
-            - uses: actions-rs/cargo@v1
-              with:
-                command: build
-                args: --all-features
-
-            - uses: actions-rs/cargo@v1
-              with:
-                command: test
-                args: --all-features
-
-            - uses: actions-rs/cargo@v1
-              with:
-                command: doc
-                args: --all-features
-
+                components: rustfmt
             - uses: actions-rs/cargo@v1
               with:
                 command: fmt
                 args: --all -- --check
+
+    clippy:
+        name: clippy
+        runs-on: ubuntu-latest
+        steps:
+            - uses: actions/checkout@v2
+            - uses: actions-rs/toolchain@v1
+              with:
+                profile: minimal
+                toolchain: nightly
+                override: true
+                components: clippy
+            - uses: actions-rs/cargo@v1
+              with:
+                command: clippy
