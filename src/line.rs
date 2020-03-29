@@ -115,14 +115,11 @@ impl<'a> TryFrom<&'a str> for Tag<'a> {
         } else if input.starts_with(tags::ExtXIFramesOnly::PREFIX) {
             input.parse().map(Self::ExtXIFramesOnly)
         } else if input.starts_with(tags::ExtXMedia::PREFIX) {
-            input.parse().map(Self::ExtXMedia).map_err(Error::custom)
+            input.parse().map(Self::ExtXMedia)
         } else if input.starts_with(tags::VariantStream::PREFIX_EXTXIFRAME)
             || input.starts_with(tags::VariantStream::PREFIX_EXTXSTREAMINF)
         {
-            input
-                .parse()
-                .map(Self::VariantStream)
-                .map_err(Error::custom)
+            input.parse().map(Self::VariantStream)
         } else if input.starts_with(tags::ExtXSessionData::PREFIX) {
             input.parse().map(Self::ExtXSessionData)
         } else if input.starts_with(tags::ExtXSessionKey::PREFIX) {

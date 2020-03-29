@@ -33,7 +33,7 @@ use crate::{Decryptable, RequiredVersion};
 /// [`MediaPlaylist`]: crate::MediaPlaylist
 #[derive(ShortHand, Debug, Clone, Builder, PartialEq, Eq, PartialOrd, Ord, Hash)]
 #[builder(setter(strip_option))]
-#[shorthand(enable(must_use))]
+#[shorthand(enable(must_use, skip))]
 pub struct MediaSegment {
     /// Each [`MediaSegment`] has a number, which allows synchronization between
     /// different variants.
@@ -53,10 +53,9 @@ pub struct MediaSegment {
     /// [`ExtXMediaSequence`]: crate::tags::ExtXMediaSequence
     /// [`ExtXDiscontinuitySequence`]: crate::tags::ExtXDiscontinuitySequence
     #[builder(default, setter(custom))]
-    #[shorthand(disable(set))]
+    #[shorthand(disable(set, skip))]
     pub(crate) number: usize,
     #[builder(default, setter(custom))]
-    #[shorthand(enable(skip))]
     pub(crate) explicit_number: bool,
     /// This field specifies how to decrypt a [`MediaSegment`], which can only
     /// be encrypted with one [`EncryptionMethod`], using one [`DecryptionKey`]
@@ -81,7 +80,6 @@ pub struct MediaSegment {
     /// [`KeyFormat`]: crate::types::KeyFormat
     /// [`EncryptionMethod`]: crate::types::EncryptionMethod
     #[builder(default, setter(into))]
-    #[shorthand(enable(skip))]
     pub keys: Vec<ExtXKey>,
     /// This field specifies how to obtain the Media Initialization Section
     /// required to parse the applicable `MediaSegment`s.
@@ -96,7 +94,6 @@ pub struct MediaSegment {
     ///
     /// [`ExtXIFramesOnly`]: crate::tags::ExtXIFramesOnly
     #[builder(default)]
-    #[shorthand(enable(skip))]
     pub map: Option<ExtXMap>,
     /// This field indicates that a `MediaSegment` is a sub-range of the
     /// resource identified by its URI.
@@ -105,7 +102,6 @@ pub struct MediaSegment {
     ///
     /// This field is optional.
     #[builder(default, setter(into))]
-    #[shorthand(enable(skip))]
     pub byte_range: Option<ExtXByteRange>,
     /// This field associates a date-range (i.e., a range of time defined by a
     /// starting and ending date) with a set of attribute/value pairs.
@@ -114,7 +110,6 @@ pub struct MediaSegment {
     ///
     /// This field is optional.
     #[builder(default)]
-    #[shorthand(enable(skip))]
     pub date_range: Option<ExtXDateRange>,
     /// This field indicates a discontinuity between the `MediaSegment` that
     /// follows it and the one that preceded it.
@@ -131,7 +126,6 @@ pub struct MediaSegment {
     /// - encoding parameters
     /// - encoding sequence
     #[builder(default)]
-    #[shorthand(enable(skip))]
     pub has_discontinuity: bool,
     /// This field associates the first sample of a media segment with an
     /// absolute date and/or time.
@@ -140,14 +134,12 @@ pub struct MediaSegment {
     ///
     /// This field is optional.
     #[builder(default)]
-    #[shorthand(enable(skip))]
     pub program_date_time: Option<ExtXProgramDateTime>,
     /// This field indicates the duration of a media segment.
     ///
     /// ## Note
     ///
     /// This field is required.
-    #[shorthand(enable(skip))]
     #[builder(setter(into))]
     pub duration: ExtInf,
     /// The URI of a media segment.
@@ -156,7 +148,7 @@ pub struct MediaSegment {
     ///
     /// This field is required.
     #[builder(setter(into))]
-    #[shorthand(enable(into))]
+    #[shorthand(enable(into), disable(skip))]
     uri: String,
 }
 
