@@ -8,8 +8,9 @@ use derive_builder::Builder;
 use crate::line::{Line, Lines, Tag};
 use crate::media_segment::MediaSegment;
 use crate::tags::{
-    ExtM3u, ExtXDiscontinuitySequence, ExtXEndList, ExtXIFramesOnly, ExtXIndependentSegments,
-    ExtXKey, ExtXMediaSequence, ExtXStart, ExtXTargetDuration, ExtXVersion,
+    ExtM3u, ExtXByteRange, ExtXDiscontinuitySequence, ExtXEndList, ExtXIFramesOnly,
+    ExtXIndependentSegments, ExtXKey, ExtXMediaSequence, ExtXStart, ExtXTargetDuration,
+    ExtXVersion,
 };
 use crate::types::{
     DecryptionKey, EncryptionMethod, InitializationVector, KeyFormat, PlaylistType, ProtocolVersion,
@@ -295,6 +296,8 @@ impl MediaPlaylistBuilder {
         }
 
         let mut position = sequence_number;
+        let mut previous_range: Option<ExtXByteRange> = None;
+
         for segment in segments
             .iter()
             .filter_map(|(_, s)| if s.explicit_number { None } else { Some(s) })
@@ -320,6 +323,22 @@ impl MediaPlaylistBuilder {
                         }
                     }
                 }
+            }
+
+            // add the lower bound to the byterange automatically
+            if let Some(range) = &mut segment.byte_range {
+                if range.start().is_none() {
+                    if let Some(previous_range) = previous_range {
+                        // the end of the previous_range is the start of the next range
+                        *range = range.saturating_add(previous_range.end());
+                        range.set_start(Some(previous_range.end()));
+                    } else {
+                        // assume that the byte range starts at zero
+                        range.set_start(Some(0));
+                    }
+                }
+
+                previous_range = segment.byte_range;
             }
 
             result_segments.insert(segment.number, segment);

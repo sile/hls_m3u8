@@ -43,6 +43,7 @@ generate_tests! {
                     .unwrap(),
                 MediaSegment::builder()
                     .duration(ExtInf::new(Duration::from_secs_f64(10.0)))
+                    // 834433..904297
                     .byte_range(ExtXByteRange::from(..69864))
                     .uri("video.ts")
                     .build()
@@ -64,7 +65,7 @@ generate_tests! {
             "#EXTINF:10,\n",
             "video.ts\n",
 
-            "#EXT-X-BYTERANGE:69864\n",
+            "#EXT-X-BYTERANGE:69864@834433\n",
             "#EXTINF:10,\n",
             "video.ts\n"
         )
