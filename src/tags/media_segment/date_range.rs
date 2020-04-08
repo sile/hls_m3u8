@@ -38,17 +38,25 @@ pub struct ExtXDateRange {
     ///
     /// ## Note
     ///
-    /// This field is required.
+    /// This field is required by the spec wording, but optional in examples
+    /// elsewhere in the same document.  Some implementations omit it in
+    /// practise (e.g. for SCTE 'explicit-IN' markers) so it is optional
+    /// here.
     #[cfg(feature = "chrono")]
     #[shorthand(enable(copy), disable(into))]
-    start_date: DateTime<FixedOffset>,
+    #[builder(setter(strip_option), default)]
+    start_date: Option<DateTime<FixedOffset>>,
     /// The date at which the [`ExtXDateRange`] begins.
     ///
     /// ## Note
     ///
-    /// This field is required.
+    /// This field is required by the spec wording, but optional in examples
+    /// elsewhere in the same document.  Some implementations omit it in
+    /// practise (e.g. for SCTE 'explicit-IN' markers) so it is optional
+    /// here.
     #[cfg(not(feature = "chrono"))]
-    start_date: String,
+    #[builder(setter(strip_option), default)]
+    start_date: Option<String>,
     /// The date at which the [`ExtXDateRange`] ends. It must be equal to or
     /// later than the value of the [`start-date`] attribute.
     ///
@@ -238,9 +246,9 @@ let date_range = ExtXDateRange::new("id", "2010-02-19T14:54:23.031+08:00");
             id: id.into(),
             class: None,
             #[cfg(feature = "chrono")]
-            start_date,
+            start_date: Some(start_date),
             #[cfg(not(feature = "chrono"))]
-            start_date: start_date.into(),
+            start_date: Some(start_date.into()),
             end_date: None,
             duration: None,
             planned_duration: None,
@@ -401,7 +409,6 @@ impl FromStr for ExtXDateRange {
         }
 
         let id = id.ok_or_else(|| Error::missing_value("ID"))?;
-        let start_date = start_date.ok_or_else(|| Error::missing_value("START-DATE"))?;
 
         if end_on_next && class.is_none() {
             return Err(Error::missing_attribute("CLASS"));
@@ -415,9 +422,11 @@ impl FromStr for ExtXDateRange {
         // https://tools.ietf.org/html/rfc8216#section-4.3.2.7
         #[cfg(feature = "chrono")]
         {
-            if let (Some(Ok(duration)), Some(end_date)) =
-                (duration.map(chrono::Duration::from_std), &end_date)
-            {
+            if let (Some(start_date), Some(Ok(duration)), Some(end_date)) = (
+                start_date,
+                duration.map(chrono::Duration::from_std),
+                &end_date,
+            ) {
                 if start_date + duration != *end_date {
                     return Err(Error::custom(
                         "end_date must be equal to start_date + duration",
@@ -451,18 +460,20 @@ impl fmt::Display for ExtXDateRange {
             write!(f, ",CLASS={}", quote(value))?;
         }
 
-        #[cfg(feature = "chrono")]
-        {
-            write!(
-                f,
-                ",START-DATE={}",
-                quote(&self.start_date.to_rfc3339_opts(SecondsFormat::AutoSi, true))
-            )?;
-        }
+        if let Some(value) = &self.start_date {
+            #[cfg(feature = "chrono")]
+            {
+                write!(
+                    f,
+                    ",START-DATE={}",
+                    quote(&value.to_rfc3339_opts(SecondsFormat::AutoSi, true))
+                )?;
+            }
 
-        #[cfg(not(feature = "chrono"))]
-        {
-            write!(f, ",START-DATE={}", quote(&self.start_date))?;
+            #[cfg(not(feature = "chrono"))]
+            {
+                write!(f, ",START-DATE={}", quote(&value))?;
+            }
         }
 
         if let Some(value) = &self.end_date {
