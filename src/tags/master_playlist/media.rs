@@ -238,9 +238,9 @@ impl ExtXMediaBuilder {
             ).to_string());
         }
 
-        if self.is_default.unwrap_or(false) && !self.is_autoselect.unwrap_or(false) {
+        if self.is_default.unwrap_or(false) && self.is_autoselect.map_or(false, |b| !b) {
             return Err(Error::custom(format!(
-                "If `DEFAULT` is true, `AUTOSELECT` has to be true too, Default: {:?}, Autoselect: {:?}!",
+                "If `DEFAULT` is true, `AUTOSELECT` has to be true too, if present. Default: {:?}, Autoselect: {:?}!",
                 self.is_default, self.is_autoselect
             ))
             .to_string());
@@ -462,6 +462,26 @@ mod test {
     }
 
     generate_tests! {
+        {
+            ExtXMedia::builder()
+                .media_type(MediaType::Audio)
+                .group_id("audio")
+                .language("eng")
+                .name("English")
+                .is_default(true)
+                .uri("eng/prog_index.m3u8")
+                .build()
+                .unwrap(),
+            concat!(
+                "#EXT-X-MEDIA:",
+                "TYPE=AUDIO,",
+                "URI=\"eng/prog_index.m3u8\",",
+                "GROUP-ID=\"audio\",",
+                "LANGUAGE=\"eng\",",
+                "NAME=\"English\",",
+                "DEFAULT=YES",
+            )
+        },
         {
             ExtXMedia::builder()
                 .media_type(MediaType::Audio)
