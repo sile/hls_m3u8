@@ -1,6 +1,6 @@
 [package]
 name = "hls_m3u8"
-version = "0.2.1"
+version = "0.2.1" # remember to update html_root_url
 authors = ["Takeru Ohta <phjgt308@gmail.com>"]
 description = "HLS m3u8 parser/generator"
 homepage = "https://github.com/sile/hls_m3u8"
@@ -11,18 +11,24 @@ keywords = ["hls", "m3u8"]
 edition = "2018"
 categories = ["parser"]
 
+[features]
+default = []
 [badges]
-travis-ci = { repository = "sile/hls_m3u8" }
 codecov = { repository = "sile/hls_m3u8" }
+travis-ci = { repository = "sile/hls_m3u8" }
 
 [dependencies]
-failure = "0.1.5"
-derive_builder = "0.8.0"
-chrono = "0.4.9"
-strum = { version = "0.16.0", features = ["derive"] }
-derive_more = "0.15.0"
-hex = "0.4.0"
+chrono = { version = "0.4", optional = true }
+backtrace = { version = "0.3", features = ["std"], optional = true }
+
+derive_builder = "0.9"
+hex = "0.4"
+thiserror = "1.0"
+
+derive_more = "0.99"
+shorthand = "0.1"
+strum = { version = "0.17", features = ["derive"] }
 
 [dev-dependencies]
-clap = "2.33.0"
-pretty_assertions = "0.6.1"
+pretty_assertions = "0.6"
+version-sync = "0.9"

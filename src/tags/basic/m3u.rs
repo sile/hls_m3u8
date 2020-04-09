@@ -5,37 +5,15 @@ use crate::types::ProtocolVersion;
 use crate::utils::tag;
 use crate::{Error, RequiredVersion};
 
-/// # [4.3.1.1. EXTM3U]
-///
 /// The [`ExtM3u`] tag indicates that the file is an **Ext**ended **[`M3U`]**
 /// Playlist file.
-/// It is the at the start of every [`Media Playlist`] and [`Master Playlist`].
+/// It is the at the start of every [`MediaPlaylist`] and [`MasterPlaylist`].
 ///
-/// # Examples
-/// Parsing from a [`str`]:
-/// ```
-/// # use failure::Error;
-/// # use hls_m3u8::tags::ExtM3u;
-/// #
-/// # fn main() -> Result<(), Error> {
-/// assert_eq!("#EXTM3U".parse::<ExtM3u>()?, ExtM3u);
-/// #
-/// # Ok(())
-/// # }
-/// ```
-/// Converting to a [`str`]:
-/// ```
-/// # use hls_m3u8::tags::ExtM3u;
-/// #
-/// assert_eq!("#EXTM3U".to_string(), ExtM3u.to_string());
-/// ```
-///
-/// [`Media Playlist`]: crate::MediaPlaylist
-/// [`Master Playlist`]: crate::MasterPlaylist
+/// [`MediaPlaylist`]: crate::MediaPlaylist
+/// [`MasterPlaylist`]: crate::MasterPlaylist
 /// [`M3U`]: https://en.wikipedia.org/wiki/M3U
-/// [4.3.1.1. EXTM3U]: https://tools.ietf.org/html/rfc8216#section-4.3.1.1
 #[derive(Copy, Clone, Eq, PartialEq, Ord, PartialOrd, Hash, Debug, Default)]
-pub struct ExtM3u;
+pub(crate) struct ExtM3u;
 
 impl ExtM3u {
     pub(crate) const PREFIX: &'static str = "#EXTM3U";
@@ -47,7 +25,7 @@ impl RequiredVersion for ExtM3u {
 }
 
 impl fmt::Display for ExtM3u {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result { write!(f, "{}", Self::PREFIX) }
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result { write!(f, "{}", Self::PREFIX) }
 }
 
 impl FromStr for ExtM3u {
@@ -72,6 +50,7 @@ mod test {
     #[test]
     fn test_parser() {
         assert_eq!("#EXTM3U".parse::<ExtM3u>().unwrap(), ExtM3u);
+        assert!("#EXTM2U".parse::<ExtM3u>().is_err());
     }
 
     #[test]

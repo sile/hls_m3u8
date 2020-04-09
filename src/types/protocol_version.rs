@@ -3,12 +3,9 @@ use std::str::FromStr;
 
 use crate::Error;
 
-/// # [7. Protocol Version Compatibility]
-/// The [`ProtocolVersion`] specifies, which m3u8 revision is required, to parse
-/// a certain tag correctly.
-///
-/// [7. Protocol Version Compatibility]:
-/// https://tools.ietf.org/html/draft-pantos-hls-rfc8216bis-05#section-7
+/// The [`ProtocolVersion`] specifies which `m3u8` revision is required, to
+/// parse a certain tag correctly.
+#[non_exhaustive]
 #[allow(missing_docs)]
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub enum ProtocolVersion {
@@ -22,19 +19,22 @@ pub enum ProtocolVersion {
 }
 
 impl ProtocolVersion {
-    /// Returns the newest [`ProtocolVersion`], that is supported by
+    /// Returns the latest [`ProtocolVersion`] that is supported by
     /// this library.
     ///
     /// # Example
+    ///
     /// ```
     /// # use hls_m3u8::types::ProtocolVersion;
     /// assert_eq!(ProtocolVersion::latest(), ProtocolVersion::V7);
     /// ```
+    #[must_use]
+    #[inline]
     pub const fn latest() -> Self { Self::V7 }
 }
 
 impl fmt::Display for ProtocolVersion {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match &self {
             Self::V1 => write!(f, "1"),
             Self::V2 => write!(f, "2"),
@@ -66,6 +66,7 @@ impl FromStr for ProtocolVersion {
     }
 }
 
+/// The default is [`ProtocolVersion::V1`].
 impl Default for ProtocolVersion {
     fn default() -> Self { Self::V1 }
 }

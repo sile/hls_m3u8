@@ -5,32 +5,25 @@ use crate::types::ProtocolVersion;
 use crate::utils::tag;
 use crate::{Error, RequiredVersion};
 
-/// # [4.4.3.4. EXT-X-ENDLIST]
-/// The [`ExtXEndList`] tag indicates, that no more [`Media Segment`]s will be
-/// added to the [`Media Playlist`] file.
+/// Indicates that no more [`MediaSegment`]s will be added to the
+/// [`MediaPlaylist`] file.
 ///
-/// Its format is:
-/// ```text
-/// #EXT-X-ENDLIST
-/// ```
-///
-/// [`Media Segment`]: crate::MediaSegment
-/// [`Media Playlist`]: crate::MediaPlaylist
-/// [4.4.3.4. EXT-X-ENDLIST]:
-/// https://tools.ietf.org/html/draft-pantos-hls-rfc8216bis-04#section-4.4.3.4
+/// [`MediaSegment`]: crate::MediaSegment
+/// [`MediaPlaylist`]: crate::MediaPlaylist
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, PartialOrd, Ord)]
-pub struct ExtXEndList;
+pub(crate) struct ExtXEndList;
 
 impl ExtXEndList {
     pub(crate) const PREFIX: &'static str = "#EXT-X-ENDLIST";
 }
 
+/// This tag requires [`ProtocolVersion::V1`].
 impl RequiredVersion for ExtXEndList {
     fn required_version(&self) -> ProtocolVersion { ProtocolVersion::V1 }
 }
 
 impl fmt::Display for ExtXEndList {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result { Self::PREFIX.fmt(f) }
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result { Self::PREFIX.fmt(f) }
 }
 
 impl FromStr for ExtXEndList {

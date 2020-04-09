@@ -1,94 +1,64 @@
-use std::fmt;
-use std::ops::{Deref, DerefMut};
-use std::str::FromStr;
+use core::convert::TryFrom;
+use core::iter::FusedIterator;
+use core::str::FromStr;
+
+use derive_more::Display;
 
 use crate::tags;
+use crate::types::PlaylistType;
 use crate::Error;
 
-#[derive(Debug, Default)]
-pub struct Lines(Vec<Line>);
-
-impl Lines {
-    pub fn new() -> Self { Self::default() }
+#[derive(Debug, Clone)]
+pub(crate) struct Lines<'a> {
+    lines: ::core::iter::FilterMap<::core::str::Lines<'a>, fn(&'a str) -> Option<&'a str>>,
 }
 
-impl FromStr for Lines {
-    type Err = Error;
+impl<'a> Iterator for Lines<'a> {
+    type Item = crate::Result<Line<'a>>;
 
-    fn from_str(input: &str) -> Result<Self, Self::Err> {
-        let mut result = Self::new();
+    fn next(&mut self) -> Option<Self::Item> {
+        let line = self.lines.next()?;
 
-        let mut stream_inf = false;
-        let mut stream_inf_line = None;
+        if line.starts_with(tags::VariantStream::PREFIX_EXTXSTREAMINF) {
+            let uri = self.lines.next()?;
 
-        for l in input.lines() {
-            let raw_line = l.trim();
-
-            if raw_line.is_empty() {
-                continue;
-            }
-
-            let line = {
-                if raw_line.starts_with(tags::ExtXStreamInf::PREFIX) {
-                    stream_inf = true;
-                    stream_inf_line = Some(raw_line);
-
-                    continue;
-                } else if raw_line.starts_with("#EXT") {
-                    Line::Tag(raw_line.parse()?)
-                } else if raw_line.starts_with('#') {
-                    continue; // ignore comments
-                } else {
-                    // stream inf line needs special treatment
-                    if stream_inf {
-                        stream_inf = false;
-                        if let Some(first_line) = stream_inf_line {
-                            let res = Line::Tag(format!("{}\n{}", first_line, raw_line).parse()?);
-                            stream_inf_line = None;
-                            res
-                        } else {
-                            continue;
-                        }
-                    } else {
-                        Line::Uri(raw_line.to_string())
-                    }
-                }
-            };
-
-            result.push(line);
+            Some(
+                tags::VariantStream::from_str(&format!("{}\n{}", line, uri))
+                    .map(|v| Line::Tag(Tag::VariantStream(v))),
+            )
+        } else if line.starts_with("#EXT") {
+            Some(Tag::try_from(line).map(Line::Tag))
+        } else if line.starts_with('#') {
+            Some(Ok(Line::Comment(line)))
+        } else {
+            Some(Ok(Line::Uri(line)))
         }
-
-        Ok(result)
     }
 }
 
-impl IntoIterator for Lines {
-    type IntoIter = ::std::vec::IntoIter<Line>;
-    type Item = Line;
+impl<'a> FusedIterator for Lines<'a> {}
 
-    fn into_iter(self) -> Self::IntoIter { self.0.into_iter() }
-}
-
-impl Deref for Lines {
-    type Target = Vec<Line>;
-
-    fn deref(&self) -> &Self::Target { &self.0 }
-}
-
-impl DerefMut for Lines {
-    fn deref_mut(&mut self) -> &mut Self::Target { &mut self.0 }
+impl<'a> From<&'a str> for Lines<'a> {
+    fn from(buffer: &'a str) -> Self {
+        Self {
+            lines: buffer
+                .lines()
+                .filter_map(|line| Some(line.trim()).filter(|v| !v.is_empty())),
+        }
+    }
 }
 
 #[derive(Debug, Clone, PartialEq)]
-pub enum Line {
-    Tag(Tag),
-    Uri(String),
+pub(crate) enum Line<'a> {
+    Tag(Tag<'a>),
+    Comment(&'a str),
+    Uri(&'a str),
 }
 
 #[allow(clippy::large_enum_variant)]
-#[derive(Debug, Clone, PartialEq)]
-pub enum Tag {
-    ExtM3u(tags::ExtM3u),
+#[derive(Debug, Clone, PartialEq, Display)]
+#[display(fmt = "{}")]
+pub(crate) enum Tag<'a> {
     ExtXVersion(tags::ExtXVersion),
     ExtInf(tags::ExtInf),
     ExtXByteRange(tags::ExtXByteRange),
@@ -101,55 +71,22 @@ pub enum Tag {
     ExtXMediaSequence(tags::ExtXMediaSequence),
     ExtXDiscontinuitySequence(tags::ExtXDiscontinuitySequence),
     ExtXEndList(tags::ExtXEndList),
-    ExtXPlaylistType(tags::ExtXPlaylistType),
+    PlaylistType(PlaylistType),
     ExtXIFramesOnly(tags::ExtXIFramesOnly),
     ExtXMedia(tags::ExtXMedia),
-    ExtXStreamInf(tags::ExtXStreamInf),
-    ExtXIFrameStreamInf(tags::ExtXIFrameStreamInf),
     ExtXSessionData(tags::ExtXSessionData),
     ExtXSessionKey(tags::ExtXSessionKey),
     ExtXIndependentSegments(tags::ExtXIndependentSegments),
     ExtXStart(tags::ExtXStart),
-    Unknown(String),
+    VariantStream(tags::VariantStream),
+    Unknown(&'a str),
 }
 
-impl fmt::Display for Tag {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        match &self {
-            Self::ExtM3u(value) => value.fmt(f),
-            Self::ExtXVersion(value) => value.fmt(f),
-            Self::ExtInf(value) => value.fmt(f),
-            Self::ExtXByteRange(value) => value.fmt(f),
-            Self::ExtXDiscontinuity(value) => value.fmt(f),
-            Self::ExtXKey(value) => value.fmt(f),
-            Self::ExtXMap(value) => value.fmt(f),
-            Self::ExtXProgramDateTime(value) => value.fmt(f),
-            Self::ExtXDateRange(value) => value.fmt(f),
-            Self::ExtXTargetDuration(value) => value.fmt(f),
-            Self::ExtXMediaSequence(value) => value.fmt(f),
-            Self::ExtXDiscontinuitySequence(value) => value.fmt(f),
-            Self::ExtXEndList(value) => value.fmt(f),
-            Self::ExtXPlaylistType(value) => value.fmt(f),
-            Self::ExtXIFramesOnly(value) => value.fmt(f),
-            Self::ExtXMedia(value) => value.fmt(f),
-            Self::ExtXStreamInf(value) => value.fmt(f),
-            Self::ExtXIFrameStreamInf(value) => value.fmt(f),
-            Self::ExtXSessionData(value) => value.fmt(f),
-            Self::ExtXSessionKey(value) => value.fmt(f),
-            Self::ExtXIndependentSegments(value) => value.fmt(f),
-            Self::ExtXStart(value) => value.fmt(f),
-            Self::Unknown(value) => value.fmt(f),
-        }
-    }
-}
+impl<'a> TryFrom<&'a str> for Tag<'a> {
+    type Error = Error;
 
-impl FromStr for Tag {
-    type Err = Error;
-
-    fn from_str(input: &str) -> Result<Self, Self::Err> {
-        if input.starts_with(tags::ExtM3u::PREFIX) {
-            input.parse().map(Self::ExtM3u)
-        } else if input.starts_with(tags::ExtXVersion::PREFIX) {
+    fn try_from(input: &'a str) -> Result<Self, Self::Error> {
+        if input.starts_with(tags::ExtXVersion::PREFIX) {
             input.parse().map(Self::ExtXVersion)
         } else if input.starts_with(tags::ExtInf::PREFIX) {
             input.parse().map(Self::ExtInf)
@@ -173,16 +110,16 @@ impl FromStr for Tag {
             input.parse().map(Self::ExtXDiscontinuitySequence)
         } else if input.starts_with(tags::ExtXEndList::PREFIX) {
             input.parse().map(Self::ExtXEndList)
-        } else if input.starts_with(tags::ExtXPlaylistType::PREFIX) {
-            input.parse().map(Self::ExtXPlaylistType)
+        } else if input.starts_with(PlaylistType::PREFIX) {
+            input.parse().map(Self::PlaylistType)
         } else if input.starts_with(tags::ExtXIFramesOnly::PREFIX) {
             input.parse().map(Self::ExtXIFramesOnly)
         } else if input.starts_with(tags::ExtXMedia::PREFIX) {
-            input.parse().map(Self::ExtXMedia).map_err(Error::custom)
-        } else if input.starts_with(tags::ExtXStreamInf::PREFIX) {
-            input.parse().map(Self::ExtXStreamInf)
-        } else if input.starts_with(tags::ExtXIFrameStreamInf::PREFIX) {
-            input.parse().map(Self::ExtXIFrameStreamInf)
+            input.parse().map(Self::ExtXMedia)
+        } else if input.starts_with(tags::VariantStream::PREFIX_EXTXIFRAME)
+            || input.starts_with(tags::VariantStream::PREFIX_EXTXSTREAMINF)
+        {
+            input.parse().map(Self::VariantStream)
         } else if input.starts_with(tags::ExtXSessionData::PREFIX) {
             input.parse().map(Self::ExtXSessionData)
         } else if input.starts_with(tags::ExtXSessionKey::PREFIX) {
@@ -192,7 +129,7 @@ impl FromStr for Tag {
         } else if input.starts_with(tags::ExtXStart::PREFIX) {
             input.parse().map(Self::ExtXStart)
         } else {
-            Ok(Self::Unknown(input.to_string()))
+            Ok(Self::Unknown(input))
         }
     }
 }

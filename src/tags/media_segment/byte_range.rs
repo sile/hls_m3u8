@@ -1,74 +1,186 @@
 use std::fmt;
-use std::ops::{Deref, DerefMut};
 use std::str::FromStr;
+
+use core::ops::{Add, AddAssign, Sub, SubAssign};
+
+use derive_more::{AsMut, AsRef, Deref, DerefMut, From};
 
 use crate::types::{ByteRange, ProtocolVersion};
 use crate::utils::tag;
 use crate::{Error, RequiredVersion};
 
-/// # [4.4.2.2. EXT-X-BYTERANGE]
+/// Indicates that a [`MediaSegment`] is a sub-range of the resource identified
+/// by its `URI`.
 ///
-/// The [`ExtXByteRange`] tag indicates that a [`Media Segment`] is a sub-range
-/// of the resource identified by its `URI`.
+/// # Example
 ///
-/// Its format is:
-/// ```text
-/// #EXT-X-BYTERANGE:<n>[@<o>]
+/// Constructing an [`ExtXByteRange`]:
+///
+/// ```
+/// # use hls_m3u8::tags::ExtXByteRange;
+/// assert_eq!(ExtXByteRange::from(22..55), ExtXByteRange::from(22..=54));
 /// ```
 ///
-/// where `n` is a [usize] indicating the length of the sub-range in bytes.
-/// If present, `o` is a [usize] indicating the start of the sub-range,
-/// as a byte offset from the beginning of the resource.
+/// It is also possible to omit the start, in which case it assumes that the
+/// [`ExtXByteRange`] starts at the byte after the end of the previous
+/// [`ExtXByteRange`] or 0 if there is no previous one.
 ///
-/// [`Media Segment`]: crate::MediaSegment
-/// [4.4.2.2. EXT-X-BYTERANGE]:
-/// https://tools.ietf.org/html/draft-pantos-hls-rfc8216bis-04#section-4.4.2.2
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, PartialOrd, Ord)]
+/// ```
+/// # use hls_m3u8::tags::ExtXByteRange;
+/// assert_eq!(ExtXByteRange::from(..55), ExtXByteRange::from(..=54));
+/// ```
+///
+/// [`MediaSegment`]: crate::MediaSegment
+#[derive(
+    AsRef, AsMut, From, Deref, DerefMut, Debug, Clone, Copy, PartialEq, Eq, Hash, PartialOrd, Ord,
+)]
+#[from(forward)]
 pub struct ExtXByteRange(ByteRange);
 
 impl ExtXByteRange {
     pub(crate) const PREFIX: &'static str = "#EXT-X-BYTERANGE:";
 
-    /// Makes a new [`ExtXByteRange`] tag.
+    /// Adds `num` to the `start` and `end` of the range.
     ///
     /// # Example
+    ///
     /// ```
     /// # use hls_m3u8::tags::ExtXByteRange;
-    /// let byte_range = ExtXByteRange::new(20, Some(5));
+    /// let range = ExtXByteRange::from(10..22);
+    /// let nrange = range.saturating_add(5);
+    ///
+    /// assert_eq!(nrange.len(), range.len());
+    /// assert_eq!(nrange.start(), range.start().map(|c| c + 5));
     /// ```
-    pub const fn new(length: usize, start: Option<usize>) -> Self {
-        Self(ByteRange::new(length, start))
-    }
+    ///
+    /// # Overflow
+    ///
+    /// If the range is saturated it will not overflow and instead
+    /// stay at it's current value.
+    ///
+    /// ```
+    /// # use hls_m3u8::tags::ExtXByteRange;
+    /// let range = ExtXByteRange::from(5..usize::max_value());
+    ///
+    /// // this would cause the end to overflow
+    /// let nrange = range.saturating_add(1);
+    ///
+    /// // but the range remains unchanged
+    /// assert_eq!(range, nrange);
+    /// ```
+    ///
+    /// # Note
+    ///
+    /// The length of the range will remain unchanged,
+    /// if the `start` is `Some`.
+    #[inline]
+    #[must_use]
+    pub fn saturating_add(self, num: usize) -> Self { Self(self.0.saturating_add(num)) }
 
-    /// Converts the [`ExtXByteRange`] to a [`ByteRange`].
+    /// Subtracts `num` from the `start` and `end` of the range.
     ///
     /// # Example
+    ///
+    /// ```
+    /// # use hls_m3u8::tags::ExtXByteRange;
+    /// let range = ExtXByteRange::from(10..22);
+    /// let nrange = range.saturating_sub(5);
+    ///
+    /// assert_eq!(nrange.len(), range.len());
+    /// assert_eq!(nrange.start(), range.start().map(|c| c - 5));
+    /// ```
+    ///
+    /// # Underflow
+    ///
+    /// If the range is saturated it will not underflow and instead stay
+    /// at it's current value.
+    ///
+    /// ```
+    /// # use hls_m3u8::tags::ExtXByteRange;
+    /// let range = ExtXByteRange::from(0..10);
+    ///
+    /// // this would cause the start to underflow
+    /// let nrange = range.saturating_sub(1);
+    ///
+    /// // but the range remains unchanged
+    /// assert_eq!(range, nrange);
+    /// ```
+    ///
+    /// # Note
+    ///
+    /// The length of the range will remain unchanged,
+    /// if the `start` is `Some`.
+    #[inline]
+    #[must_use]
+    pub fn saturating_sub(self, num: usize) -> Self { Self(self.0.saturating_sub(num)) }
+
+    /// Returns a shared reference to the underlying [`ByteRange`].
+    ///
+    /// # Example
+    ///
     /// ```
     /// # use hls_m3u8::tags::ExtXByteRange;
     /// use hls_m3u8::types::ByteRange;
     ///
-    /// let byte_range = ExtXByteRange::new(20, Some(5));
-    /// let range: ByteRange = byte_range.to_range();
+    /// assert_eq!(
+    ///     ExtXByteRange::from(2..11).as_byte_range(),
+    ///     &ByteRange::from(2..11)
+    /// );
     /// ```
-    pub const fn to_range(&self) -> ByteRange { self.0 }
+    #[inline]
+    #[must_use]
+    pub const fn as_byte_range(&self) -> &ByteRange { &self.0 }
 }
 
+/// This tag requires [`ProtocolVersion::V4`].
 impl RequiredVersion for ExtXByteRange {
     fn required_version(&self) -> ProtocolVersion { ProtocolVersion::V4 }
 }
 
-impl Deref for ExtXByteRange {
-    type Target = ByteRange;
-
-    fn deref(&self) -> &Self::Target { &self.0 }
+impl Into<ByteRange> for ExtXByteRange {
+    fn into(self) -> ByteRange { self.0 }
 }
 
-impl DerefMut for ExtXByteRange {
-    fn deref_mut(&mut self) -> &mut Self::Target { &mut self.0 }
+impl<T> Sub<T> for ExtXByteRange
+where
+    ByteRange: Sub<T, Output = ByteRange>,
+{
+    type Output = Self;
+
+    #[must_use]
+    #[inline]
+    fn sub(self, rhs: T) -> Self::Output { Self(self.0.sub(rhs)) }
+}
+
+impl<T> SubAssign<T> for ExtXByteRange
+where
+    ByteRange: SubAssign<T>,
+{
+    #[inline]
+    fn sub_assign(&mut self, other: T) { self.0.sub_assign(other); }
+}
+
+impl<T> Add<T> for ExtXByteRange
+where
+    ByteRange: Add<T, Output = ByteRange>,
+{
+    type Output = Self;
+
+    #[must_use]
+    #[inline]
+    fn add(self, rhs: T) -> Self::Output { Self(self.0.add(rhs)) }
+}
+
+impl<T> AddAssign<T> for ExtXByteRange
+where
+    ByteRange: AddAssign<T>,
+{
+    #[inline]
+    fn add_assign(&mut self, other: T) { self.0.add_assign(other); }
 }
 
 impl fmt::Display for ExtXByteRange {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(f, "{}", Self::PREFIX)?;
         write!(f, "{}", self.0)?;
         Ok(())
@@ -81,23 +193,7 @@ impl FromStr for ExtXByteRange {
     fn from_str(input: &str) -> Result<Self, Self::Err> {
         let input = tag(input, Self::PREFIX)?;
 
-        let tokens = input.splitn(2, '@').collect::<Vec<_>>();
-
-        if tokens.is_empty() {
-            return Err(Error::invalid_input());
-        }
-
-        let length = tokens[0].parse()?;
-
-        let start = {
-            if tokens.len() == 2 {
-                Some(tokens[1].parse()?)
-            } else {
-                None
-            }
-        };
-
-        Ok(Self::new(length, start))
+        Ok(Self(ByteRange::from_str(input)?))
     }
 }
 
@@ -108,57 +204,52 @@ mod test {
 
     #[test]
     fn test_display() {
-        let byte_range = ExtXByteRange::new(0, Some(5));
-        assert_eq!(byte_range.to_string(), "#EXT-X-BYTERANGE:0@5".to_string());
-
-        let byte_range = ExtXByteRange::new(99999, Some(2));
         assert_eq!(
-            byte_range.to_string(),
-            "#EXT-X-BYTERANGE:99999@2".to_string()
+            ExtXByteRange::from(2..15).to_string(),
+            "#EXT-X-BYTERANGE:13@2".to_string()
         );
 
-        let byte_range = ExtXByteRange::new(99999, None);
-        assert_eq!(byte_range.to_string(), "#EXT-X-BYTERANGE:99999".to_string());
+        assert_eq!(
+            ExtXByteRange::from(..22).to_string(),
+            "#EXT-X-BYTERANGE:22".to_string()
+        );
     }
 
     #[test]
     fn test_parser() {
-        let byte_range = ExtXByteRange::new(99999, Some(2));
         assert_eq!(
-            byte_range,
-            "#EXT-X-BYTERANGE:99999@2".parse::<ExtXByteRange>().unwrap()
+            ExtXByteRange::from(2..15),
+            "#EXT-X-BYTERANGE:13@2".parse().unwrap()
         );
 
-        let byte_range = ExtXByteRange::new(99999, None);
         assert_eq!(
-            byte_range,
-            "#EXT-X-BYTERANGE:99999".parse::<ExtXByteRange>().unwrap()
+            ExtXByteRange::from(..22),
+            "#EXT-X-BYTERANGE:22".parse().unwrap()
         );
     }
 
     #[test]
     fn test_deref() {
-        let byte_range = ExtXByteRange::new(0, Some(22));
+        let byte_range = ExtXByteRange::from(0..22);
 
-        assert_eq!(byte_range.length(), 0);
-        assert_eq!(byte_range.start(), Some(22));
+        assert_eq!(byte_range.len(), 22);
+        assert_eq!(byte_range.start(), Some(0));
     }
 
     #[test]
     fn test_deref_mut() {
-        let mut byte_range = ExtXByteRange::new(0, Some(22));
+        let mut byte_range = ExtXByteRange::from(10..110);
 
-        byte_range.set_length(100);
         byte_range.set_start(Some(50));
 
-        assert_eq!(byte_range.length(), 100);
+        assert_eq!(byte_range.len(), 60);
         assert_eq!(byte_range.start(), Some(50));
     }
 
     #[test]
     fn test_required_version() {
         assert_eq!(
-            ExtXByteRange::new(20, Some(5)).required_version(),
+            ExtXByteRange::from(5..20).required_version(),
             ProtocolVersion::V4
         );
     }

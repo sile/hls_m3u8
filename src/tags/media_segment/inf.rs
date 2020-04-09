@@ -2,19 +2,18 @@ use std::fmt;
 use std::str::FromStr;
 use std::time::Duration;
 
+use derive_more::AsRef;
+
 use crate::types::ProtocolVersion;
 use crate::utils::tag;
 use crate::{Error, RequiredVersion};
 
-/// # [4.3.2.1. EXTINF]
-///
-/// The [`ExtInf`] tag specifies the duration of a [`Media Segment`]. It applies
-/// only to the next [`Media Segment`].
+/// Specifies the duration of a [`Media Segment`].
 ///
 /// [`Media Segment`]: crate::media_segment::MediaSegment
-/// [4.3.2.1. EXTINF]: https://tools.ietf.org/html/rfc8216#section-4.3.2.1
-#[derive(Default, Debug, Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]
+#[derive(AsRef, Default, Debug, Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]
 pub struct ExtInf {
+    #[as_ref]
     duration: Duration,
     title: Option<String>,
 }
@@ -25,12 +24,14 @@ impl ExtInf {
     /// Makes a new [`ExtInf`] tag.
     ///
     /// # Example
+    ///
     /// ```
     /// # use hls_m3u8::tags::ExtInf;
     /// use std::time::Duration;
     ///
     /// let ext_inf = ExtInf::new(Duration::from_secs(5));
     /// ```
+    #[must_use]
     pub const fn new(duration: Duration) -> Self {
         Self {
             duration,
@@ -41,22 +42,25 @@ impl ExtInf {
     /// Makes a new [`ExtInf`] tag with the given title.
     ///
     /// # Example
+    ///
     /// ```
     /// # use hls_m3u8::tags::ExtInf;
     /// use std::time::Duration;
     ///
     /// let ext_inf = ExtInf::with_title(Duration::from_secs(5), "title");
     /// ```
-    pub fn with_title<T: ToString>(duration: Duration, title: T) -> Self {
+    #[must_use]
+    pub fn with_title<T: Into<String>>(duration: Duration, title: T) -> Self {
         Self {
             duration,
-            title: Some(title.to_string()),
+            title: Some(title.into()),
         }
     }
 
     /// Returns the duration of the associated media segment.
     ///
     /// # Example
+    ///
     /// ```
     /// # use hls_m3u8::tags::ExtInf;
     /// use std::time::Duration;
@@ -65,11 +69,13 @@ impl ExtInf {
     ///
     /// assert_eq!(ext_inf.duration(), Duration::from_secs(5));
     /// ```
+    #[must_use]
     pub const fn duration(&self) -> Duration { self.duration }
 
     /// Sets the duration of the associated media segment.
     ///
     /// # Example
+    ///
     /// ```
     /// # use hls_m3u8::tags::ExtInf;
     /// use std::time::Duration;
@@ -88,6 +94,7 @@ impl ExtInf {
     /// Returns the title of the associated media segment.
     ///
     /// # Example
+    ///
     /// ```
     /// # use hls_m3u8::tags::ExtInf;
     /// use std::time::Duration;
@@ -96,11 +103,13 @@ impl ExtInf {
     ///
     /// assert_eq!(ext_inf.title(), &Some("title".to_string()));
     /// ```
+    #[must_use]
     pub const fn title(&self) -> &Option<String> { &self.title }
 
     /// Sets the title of the associated media segment.
     ///
     /// # Example
+    ///
     /// ```
     /// # use hls_m3u8::tags::ExtInf;
     /// use std::time::Duration;
@@ -117,6 +126,8 @@ impl ExtInf {
     }
 }
 
+/// This tag requires [`ProtocolVersion::V1`], if the duration does not have
+/// nanoseconds, otherwise it requires [`ProtocolVersion::V3`].
 impl RequiredVersion for ExtInf {
     fn required_version(&self) -> ProtocolVersion {
         if self.duration.subsec_nanos() == 0 {
@@ -128,7 +139,7 @@ impl RequiredVersion for ExtInf {
 }
 
 impl fmt::Display for ExtInf {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(f, "{}", Self::PREFIX)?;
         write!(f, "{},", self.duration.as_secs_f64())?;
 
@@ -143,29 +154,20 @@ impl FromStr for ExtInf {
     type Err = Error;
 
     fn from_str(input: &str) -> Result<Self, Self::Err> {
-        let input = tag(input, Self::PREFIX)?;
-        let tokens = input.splitn(2, ',').collect::<Vec<_>>();
+        let mut input = tag(input, Self::PREFIX)?.splitn(2, ',');
 
-        if tokens.is_empty() {
-            return Err(Error::custom(format!(
-                "failed to parse #EXTINF tag, couldn't split input: {:?}",
-                input
-            )));
-        }
+        let duration = input.next().unwrap();
+        let duration = Duration::from_secs_f64(
+            duration
+                .parse()
+                .map_err(|e| Error::parse_float(duration, e))?,
+        );
 
-        let duration = Duration::from_secs_f64(tokens[0].parse()?);
-
-        let title = {
-            if tokens.len() >= 2 {
-                if tokens[1].trim().is_empty() {
-                    None
-                } else {
-                    Some(tokens[1].to_string())
-                }
-            } else {
-                None
-            }
-        };
+        let title = input
+            .next()
+            .map(str::trim)
+            .filter(|value| !value.is_empty())
+            .map(ToString::to_string);
 
         Ok(Self { duration, title })
     }

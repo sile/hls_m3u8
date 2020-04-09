@@ -1,24 +1,47 @@
 use std::fmt;
 use std::str::FromStr;
 
+use shorthand::ShortHand;
+
 use crate::attribute::AttributePairs;
 use crate::tags::ExtXKey;
-use crate::types::{ByteRange, ProtocolVersion};
+use crate::types::{ByteRange, DecryptionKey, ProtocolVersion};
 use crate::utils::{quote, tag, unquote};
-use crate::{Encrypted, Error, RequiredVersion};
+use crate::{Decryptable, Error, RequiredVersion};
 
-/// # [4.3.2.5. EXT-X-MAP]
+/// The [`ExtXMap`] tag specifies how to obtain the [Media Initialization
+/// Section], required to parse the applicable [`MediaSegment`]s.
 ///
-/// The [`ExtXMap`] tag specifies how to obtain the Media Initialization
-/// Section, required to parse the applicable [`MediaSegment`]s.
+/// It applies to every [`MediaSegment`] that appears after it in the playlist
+/// until the next [`ExtXMap`] tag or until the end of the playlist.
 ///
+/// An [`ExtXMap`] tag should be supplied for [`MediaSegment`]s in playlists
+/// with the [`ExtXIFramesOnly`] tag when the first [`MediaSegment`] (i.e.,
+/// I-frame) in the playlist (or the first segment following an
+/// [`ExtXDiscontinuity`] tag) does not immediately follow the Media
+/// Initialization Section at the beginning of its resource.
+///
+/// If the Media Initialization Section declared by an [`ExtXMap`] tag is
+/// encrypted with [`EncryptionMethod::Aes128`], the IV attribute of
+/// the [`ExtXKey`] tag that applies to the [`ExtXMap`] is required.
+///
+/// [Media Initialization Section]: https://tools.ietf.org/html/rfc8216#section-3
 /// [`MediaSegment`]: crate::MediaSegment
-/// [4.3.2.5. EXT-X-MAP]: https://tools.ietf.org/html/rfc8216#section-4.3.2.5
-#[derive(Debug, Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]
+/// [`ExtXIFramesOnly`]: crate::tags::ExtXIFramesOnly
+/// [`ExtXDiscontinuity`]: crate::tags::ExtXDiscontinuity
+/// [`EncryptionMethod::Aes128`]: crate::types::EncryptionMethod::Aes128
+/// [`MediaPlaylist`]: crate::MediaPlaylist
+#[derive(ShortHand, Debug, Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]
+#[shorthand(enable(must_use, into))]
 pub struct ExtXMap {
+    /// The `URI` that identifies a resource, that contains the media
+    /// initialization section.
     uri: String,
+    /// The range of the media initialization section.
+    #[shorthand(enable(copy))]
     range: Option<ByteRange>,
-    keys: Vec<ExtXKey>,
+    #[shorthand(enable(skip))]
+    pub(crate) keys: Vec<ExtXKey>,
 }
 
 impl ExtXMap {
@@ -27,13 +50,14 @@ impl ExtXMap {
     /// Makes a new [`ExtXMap`] tag.
     ///
     /// # Example
+    ///
     /// ```
     /// # use hls_m3u8::tags::ExtXMap;
     /// let map = ExtXMap::new("https://prod.mediaspace.com/init.bin");
     /// ```
-    pub fn new<T: ToString>(uri: T) -> Self {
+    pub fn new<T: Into<String>>(uri: T) -> Self {
         Self {
-            uri: uri.to_string(),
+            uri: uri.into(),
             range: None,
             keys: vec![],
         }
@@ -42,101 +66,37 @@ impl ExtXMap {
     /// Makes a new [`ExtXMap`] tag with the given range.
     ///
     /// # Example
+    ///
     /// ```
     /// # use hls_m3u8::tags::ExtXMap;
     /// use hls_m3u8::types::ByteRange;
     ///
-    /// let map = ExtXMap::with_range(
-    ///     "https://prod.mediaspace.com/init.bin",
-    ///     ByteRange::new(9, Some(2)),
-    /// );
+    /// ExtXMap::with_range("https://prod.mediaspace.com/init.bin", 2..11);
     /// ```
-    pub fn with_range<T: ToString>(uri: T, range: ByteRange) -> Self {
+    pub fn with_range<I: Into<String>, B: Into<ByteRange>>(uri: I, range: B) -> Self {
         Self {
-            uri: uri.to_string(),
-            range: Some(range),
+            uri: uri.into(),
+            range: Some(range.into()),
             keys: vec![],
         }
     }
+}
 
-    /// Returns the `URI` that identifies a resource, that contains the media
-    /// initialization section.
-    ///
-    /// # Example
-    /// ```
-    /// # use hls_m3u8::tags::ExtXMap;
-    /// let map = ExtXMap::new("https://prod.mediaspace.com/init.bin");
-    ///
-    /// assert_eq!(
-    ///     map.uri(),
-    ///     &"https://prod.mediaspace.com/init.bin".to_string()
-    /// );
-    /// ```
-    pub const fn uri(&self) -> &String { &self.uri }
-
-    /// Sets the `URI` that identifies a resource, that contains the media
-    /// initialization section.
-    ///
-    /// # Example
-    /// ```
-    /// # use hls_m3u8::tags::ExtXMap;
-    /// let mut map = ExtXMap::new("https://prod.mediaspace.com/init.bin");
-    ///
-    /// map.set_uri("https://dev.mediaspace.com/init.bin");
-    /// assert_eq!(
-    ///     map.uri(),
-    ///     &"https://dev.mediaspace.com/init.bin".to_string()
-    /// );
-    /// ```
-    pub fn set_uri<T: ToString>(&mut self, value: T) -> &mut Self {
-        self.uri = value.to_string();
-        self
-    }
-
-    /// Returns the range of the media initialization section.
-    ///
-    /// # Example
-    /// ```
-    /// # use hls_m3u8::tags::ExtXMap;
-    /// use hls_m3u8::types::ByteRange;
-    ///
-    /// let map = ExtXMap::with_range(
-    ///     "https://prod.mediaspace.com/init.bin",
-    ///     ByteRange::new(9, Some(2)),
-    /// );
-    ///
-    /// assert_eq!(map.range(), Some(ByteRange::new(9, Some(2))));
-    /// ```
-    pub const fn range(&self) -> Option<ByteRange> { self.range }
-
-    /// Sets the range of the media initialization section.
-    ///
-    /// # Example
-    /// ```
-    /// # use hls_m3u8::tags::ExtXMap;
-    /// use hls_m3u8::types::ByteRange;
-    ///
-    /// let mut map = ExtXMap::with_range(
-    ///     "https://prod.mediaspace.com/init.bin",
-    ///     ByteRange::new(9, Some(2)),
-    /// );
-    ///
-    /// map.set_range(Some(ByteRange::new(1, None)));
-    /// assert_eq!(map.range(), Some(ByteRange::new(1, None)));
-    /// ```
-    pub fn set_range(&mut self, value: Option<ByteRange>) -> &mut Self {
-        self.range = value;
-        self
+impl Decryptable for ExtXMap {
+    fn keys(&self) -> Vec<&DecryptionKey> {
+        //
+        self.keys.iter().filter_map(ExtXKey::as_ref).collect()
     }
 }
 
-impl Encrypted for ExtXMap {
-    fn keys(&self) -> &Vec<ExtXKey> { &self.keys }
-
-    fn keys_mut(&mut self) -> &mut Vec<ExtXKey> { &mut self.keys }
-}
-
-/// This tag requires [`ProtocolVersion::V6`].
+/// Use of the [`ExtXMap`] tag in a [`MediaPlaylist`] that contains the
+/// [`ExtXIFramesOnly`] tag requires [`ProtocolVersion::V5`] or
+/// greater. Use of the [`ExtXMap`] tag in a [`MediaPlaylist`] that does not
+/// contain the [`ExtXIFramesOnly`] tag requires [`ProtocolVersion::V6`] or
+/// greater.
+///
+/// [`ExtXIFramesOnly`]: crate::tags::ExtXIFramesOnly
+/// [`MediaPlaylist`]: crate::MediaPlaylist
 impl RequiredVersion for ExtXMap {
     // this should return ProtocolVersion::V5, if it does not contain an
     // EXT-X-I-FRAMES-ONLY!
@@ -147,7 +107,7 @@ impl RequiredVersion for ExtXMap {
 }
 
 impl fmt::Display for ExtXMap {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(f, "{}", Self::PREFIX)?;
         write!(f, "URI={}", quote(&self.uri))?;
 
@@ -168,8 +128,8 @@ impl FromStr for ExtXMap {
         let mut uri = None;
         let mut range = None;
 
-        for (key, value) in input.parse::<AttributePairs>()? {
-            match key.as_str() {
+        for (key, value) in AttributePairs::new(input) {
+            match key {
                 "URI" => uri = Some(unquote(value)),
                 "BYTERANGE" => {
                     range = Some(unquote(value).parse()?);
@@ -182,7 +142,8 @@ impl FromStr for ExtXMap {
             }
         }
 
-        let uri = uri.ok_or_else(|| Error::missing_value("EXT-X-URI"))?;
+        let uri = uri.ok_or_else(|| Error::missing_value("URI"))?;
+
         Ok(Self {
             uri,
             range,
@@ -204,7 +165,7 @@ mod test {
         );
 
         assert_eq!(
-            ExtXMap::with_range("foo", ByteRange::new(9, Some(2))).to_string(),
+            ExtXMap::with_range("foo", ByteRange::from(2..11)).to_string(),
             "#EXT-X-MAP:URI=\"foo\",BYTERANGE=\"9@2\"".to_string(),
         );
     }
@@ -217,11 +178,11 @@ mod test {
         );
 
         assert_eq!(
-            ExtXMap::with_range("foo", ByteRange::new(9, Some(2))),
+            ExtXMap::with_range("foo", ByteRange::from(2..11)),
             "#EXT-X-MAP:URI=\"foo\",BYTERANGE=\"9@2\"".parse().unwrap()
         );
         assert_eq!(
-            ExtXMap::with_range("foo", ByteRange::new(9, Some(2))),
+            ExtXMap::with_range("foo", ByteRange::from(2..11)),
             "#EXT-X-MAP:URI=\"foo\",BYTERANGE=\"9@2\",UNKNOWN=IGNORED"
                 .parse()
                 .unwrap()
@@ -232,14 +193,13 @@ mod test {
     fn test_required_version() {
         assert_eq!(ExtXMap::new("foo").required_version(), ProtocolVersion::V6);
         assert_eq!(
-            ExtXMap::with_range("foo", ByteRange::new(9, Some(2))).required_version(),
+            ExtXMap::with_range("foo", ByteRange::from(2..11)).required_version(),
             ProtocolVersion::V6
         );
     }
 
     #[test]
-    fn test_encrypted() {
-        assert_eq!(ExtXMap::new("foo").keys(), &vec![]);
-        assert_eq!(ExtXMap::new("foo").keys_mut(), &mut vec![]);
+    fn test_decryptable() {
+        assert_eq!(ExtXMap::new("foo").keys(), Vec::<&DecryptionKey>::new());
     }
 }

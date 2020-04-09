@@ -1,4 +1,44 @@
 use crate::Error;
+use core::iter;
+
+/// This is an extension trait that adds the below method to `bool`.
+/// Those methods are already planned for the standard library, but are not
+/// stable at the time of writing this comment.
+///
+/// The current status can be seen here:
+/// <https://github.com/rust-lang/rust/issues/64260>
+///
+/// This trait exists to allow publishing a new version (requires stable
+/// release) and the functions are prefixed with an `a` to prevent naming
+/// conflicts with the coming std functions.
+// TODO: replace this trait with std version as soon as it is stabilized
+pub(crate) trait BoolExt {
+    #[must_use]
+    fn athen_some<T>(self, t: T) -> Option<T>;
+
+    #[must_use]
+    fn athen<T, F: FnOnce() -> T>(self, f: F) -> Option<T>;
+}
+
+impl BoolExt for bool {
+    #[inline]
+    fn athen_some<T>(self, t: T) -> Option<T> {
+        if self {
+            Some(t)
+        } else {
+            None
+        }
+    }
+
+    #[inline]
+    fn athen<T, F: FnOnce() -> T>(self, f: F) -> Option<T> {
+        if self {
+            Some(f())
+        } else {
+            None
+        }
+    }
+}
 
 macro_rules! required_version {
     ( $( $tag:expr ),* ) => {
@@ -10,27 +50,6 @@ macro_rules! required_version {
             .unwrap_or_default()
     }
 }
-
-macro_rules! impl_from {
-    ( $($( $type:tt ),* => $target:path ),* ) => {
-        use ::core::convert::From;
-
-        $( // repeat $target
-            $( // repeat $type
-                impl From<$type> for $target {
-                    fn from(value: $type) -> Self {
-                        Self::from_f64_unchecked(value.into())
-                    }
-                }
-            )*
-        )*
-    };
-}
-
-impl_from![
-    u8, u16, u32 => crate::types::DecimalFloatingPoint,
-    u8, i8, u16, i16, u32, i32, f32, f64 => crate::types::SignedDecimalFloatingPoint
-];
 
 pub(crate) fn parse_yes_or_no<T: AsRef<str>>(s: T) -> crate::Result<bool> {
     match s.as_ref() {
@@ -48,25 +67,30 @@ pub(crate) fn parse_yes_or_no<T: AsRef<str>>(s: T) -> crate::Result<bool> {
 ///
 /// Therefore it is safe to simply remove any occurence of those characters.
 /// [rfc8216#section-4.2](https://tools.ietf.org/html/rfc8216#section-4.2)
-pub(crate) fn unquote<T: ToString>(value: T) -> String {
+pub(crate) fn unquote<T: AsRef<str>>(value: T) -> String {
     value
-        .to_string()
-        .replace("\"", "")
-        .replace("\n", "")
-        .replace("\r", "")
+        .as_ref()
+        .chars()
+        .filter(|c| *c != '"' && *c != '\n' && *c != '\r')
+        .collect()
 }
 
 /// Puts a string inside quotes.
+#[allow(clippy::needless_pass_by_value)]
 pub(crate) fn quote<T: ToString>(value: T) -> String {
     // the replace is for the case, that quote is called on an already quoted
     // string, which could cause problems!
-    format!("\"{}\"", value.to_string().replace("\"", ""))
+    iter::once('"')
+        .chain(value.to_string().chars().filter(|c| *c != '"'))
+        .chain(iter::once('"'))
+        .collect()
 }
 
 /// Checks, if the given tag is at the start of the input. If this is the case,
 /// it will remove it and return the rest of the input.
 ///
 /// # Error
+///
 /// This function will return `Error::MissingTag`, if the input doesn't start
 /// with the tag, that has been passed to this function.
 pub(crate) fn tag<T>(input: &str, tag: T) -> crate::Result<&str>
@@ -76,8 +100,8 @@ where
     if !input.trim().starts_with(tag.as_ref()) {
         return Err(Error::missing_tag(tag.as_ref(), input));
     }
-    let result = input.split_at(tag.as_ref().len()).1;
-    Ok(result)
+
+    Ok(input.trim().split_at(tag.as_ref().len()).1)
 }
 
 #[cfg(test)]
@@ -122,5 +146,30 @@ mod tests {
         assert_eq!(input, "SampleString");
 
         assert!(tag(input, "B").is_err());
+
+        assert_eq!(
+            tag(
+                concat!(
+                    "\n    #EXTM3U\n",
+                    "    #EXT-X-TARGETDURATION:5220\n",
+                    "    #EXTINF:0,\n",
+                    "    http://media.example.com/entire1.ts\n",
+                    "    #EXTINF:5220,\n",
+                    "    http://media.example.com/entire2.ts\n",
+                    "    #EXT-X-ENDLIST"
+                ),
+                "#EXTM3U"
+            )
+            .unwrap(),
+            concat!(
+                "\n",
+                "    #EXT-X-TARGETDURATION:5220\n",
+                "    #EXTINF:0,\n",
+                "    http://media.example.com/entire1.ts\n",
+                "    #EXTINF:5220,\n",
+                "    http://media.example.com/entire2.ts\n",
+                "    #EXT-X-ENDLIST"
+            )
+        );
     }
 }

@@ -1,97 +1,107 @@
-use std::collections::HashMap;
-use std::ops::{Deref, DerefMut};
-use std::str::FromStr;
+use core::iter::FusedIterator;
 
-use crate::Error;
-
-#[derive(Clone, Debug, Default, Eq, PartialEq)]
-pub struct AttributePairs(HashMap<String, String>);
-
-impl AttributePairs {
-    pub fn new() -> Self { Self::default() }
+#[derive(Clone, Debug)]
+pub(crate) struct AttributePairs<'a> {
+    string: &'a str,
+    index: usize,
 }
 
-impl Deref for AttributePairs {
-    type Target = HashMap<String, String>;
-
-    fn deref(&self) -> &Self::Target { &self.0 }
+impl<'a> AttributePairs<'a> {
+    pub const fn new(string: &'a str) -> Self { Self { string, index: 0 } }
 }
 
-impl DerefMut for AttributePairs {
-    fn deref_mut(&mut self) -> &mut Self::Target { &mut self.0 }
-}
+impl<'a> Iterator for AttributePairs<'a> {
+    type Item = (&'a str, &'a str);
 
-impl IntoIterator for AttributePairs {
-    type IntoIter = ::std::collections::hash_map::IntoIter<String, String>;
-    type Item = (String, String);
+    fn next(&mut self) -> Option<Self::Item> {
+        // return `None`, if there are no more bytes
+        self.string.as_bytes().get(self.index + 1)?;
 
-    fn into_iter(self) -> Self::IntoIter { self.0.into_iter() }
-}
+        let key = {
+            // the position in the string:
+            let start = self.index;
+            // the key ends at an `=`:
+            let end = self
+                .string
+                .char_indices()
+                .skip_while(|(i, _)| *i < self.index)
+                .find_map(|(i, c)| if c == '=' { Some(i) } else { None })?;
 
-impl<'a> IntoIterator for &'a AttributePairs {
-    type IntoIter = ::std::collections::hash_map::Iter<'a, String, String>;
-    type Item = (&'a String, &'a String);
+            // advance the index to the char after the end of the key (to skip the `=`)
+            // NOTE: it is okay to add 1 to the index, because an `=` is exactly 1 byte.
+            self.index = end + 1;
 
-    fn into_iter(self) -> Self::IntoIter { self.0.iter() }
-}
+            ::core::str::from_utf8(&self.string.as_bytes()[start..end]).unwrap()
+        };
 
-impl FromStr for AttributePairs {
-    type Err = Error;
+        let value = {
+            let start = self.index;
 
-    fn from_str(input: &str) -> Result<Self, Self::Err> {
-        let mut result = Self::new();
+            // find the end of the value by searching for `,`.
+            // it should ignore `,` that are inside double quotes.
+            let mut inside_quotes = false;
 
-        for line in split(input, ',') {
-            let pair = split(line.trim(), '=');
+            let end = {
+                let mut result = self.string.len();
 
-            if pair.len() < 2 {
-                continue;
-            }
-
-            let key = pair[0].trim().to_uppercase();
-            let value = pair[1].trim().to_string();
-            if value.is_empty() {
-                continue;
-            }
-
-            result.insert(key.trim().to_string(), value.trim().to_string());
-        }
-
-        #[cfg(test)] // this is very useful, when a test fails!
-        dbg!(&result);
-        Ok(result)
-    }
-}
-
-fn split(value: &str, terminator: char) -> Vec<String> {
-    let mut result = vec![];
-
-    let mut inside_quotes = false;
-    let mut temp_string = String::with_capacity(1024);
-
-    for c in value.chars() {
-        match c {
-            '"' => {
-                inside_quotes = !inside_quotes;
-                temp_string.push(c);
-            }
-            k if (k == terminator) => {
-                if inside_quotes {
-                    temp_string.push(c);
-                } else {
-                    result.push(temp_string);
-                    temp_string = String::with_capacity(1024);
+                for (i, c) in self
+                    .string
+                    .char_indices()
+                    .skip_while(|(i, _)| *i < self.index)
+                {
+                    // if a quote is encountered
+                    if c == '"' {
+                        // update variable
+                        inside_quotes = !inside_quotes;
+                    // terminate if a comma is encountered, which is not in a
+                    // quote
+                    } else if c == ',' && !inside_quotes {
+                        // move the index past the comma
+                        self.index += 1;
+                        // the result is the index of the comma (comma is not included in the
+                        // resulting string)
+                        result = i;
+                        break;
+                    }
                 }
-            }
-            _ => {
-                temp_string.push(c);
+
+                result
+            };
+
+            self.index += end;
+            self.index -= start;
+
+            ::core::str::from_utf8(&self.string.as_bytes()[start..end]).unwrap()
+        };
+
+        Some((key.trim(), value.trim()))
+    }
+
+    fn size_hint(&self) -> (usize, Option<usize>) {
+        let mut remaining = 0;
+
+        // each `=` in the remaining str is an iteration
+        // this also ignores `=` inside quotes!
+        let mut inside_quotes = false;
+
+        for (_, c) in self
+            .string
+            .char_indices()
+            .skip_while(|(i, _)| *i < self.index)
+        {
+            if c == '=' && !inside_quotes {
+                remaining += 1;
+            } else if c == '"' {
+                inside_quotes = !inside_quotes;
             }
         }
-    }
-    result.push(temp_string);
 
-    result
+        (remaining, Some(remaining))
+    }
 }
+
+impl<'a> ExactSizeIterator for AttributePairs<'a> {}
+impl<'a> FusedIterator for AttributePairs<'a> {}
 
 #[cfg(test)]
 mod test {
@@ -99,50 +109,100 @@ mod test {
     use pretty_assertions::assert_eq;
 
     #[test]
+    fn test_attributes() {
+        let mut attributes = AttributePairs::new("KEY=VALUE,PAIR=YES");
+
+        assert_eq!((2, Some(2)), attributes.size_hint());
+        assert_eq!(attributes.next(), Some(("KEY", "VALUE")));
+
+        assert_eq!((1, Some(1)), attributes.size_hint());
+        assert_eq!(attributes.next(), Some(("PAIR", "YES")));
+
+        assert_eq!((0, Some(0)), attributes.size_hint());
+        assert_eq!(attributes.next(), None);
+
+        let mut attributes = AttributePairs::new("garbage");
+        assert_eq!((0, Some(0)), attributes.size_hint());
+        assert_eq!(attributes.next(), None);
+
+        let mut attributes = AttributePairs::new("KEY=,=VALUE,=,");
+
+        assert_eq!((3, Some(3)), attributes.size_hint());
+        assert_eq!(attributes.next(), Some(("KEY", "")));
+
+        assert_eq!((2, Some(2)), attributes.size_hint());
+        assert_eq!(attributes.next(), Some(("", "VALUE")));
+
+        assert_eq!((1, Some(1)), attributes.size_hint());
+        assert_eq!(attributes.next(), Some(("", "")));
+
+        assert_eq!((0, Some(0)), attributes.size_hint());
+        assert_eq!(attributes.next(), None);
+
+        // test quotes:
+        let mut attributes = AttributePairs::new("KEY=\"VALUE,\",");
+
+        assert_eq!((1, Some(1)), attributes.size_hint());
+        assert_eq!(attributes.next(), Some(("KEY", "\"VALUE,\"")));
+
+        assert_eq!((0, Some(0)), attributes.size_hint());
+        assert_eq!(attributes.next(), None);
+
+        // test with chars, that are larger, than 1 byte
+        let mut attributes = AttributePairs::new(concat!(
+            "LANGUAGE=\"fre\",",
+            "NAME=\"Français\",",
+            "AUTOSELECT=YES"
+        ));
+
+        assert_eq!(attributes.next(), Some(("LANGUAGE", "\"fre\"")));
+        assert_eq!(attributes.next(), Some(("NAME", "\"Français\"")));
+        assert_eq!(attributes.next(), Some(("AUTOSELECT", "YES")));
+    }
+
+    #[test]
     fn test_parser() {
-        let pairs = "FOO=BAR,BAR=\"baz,qux\",ABC=12.3"
-            .parse::<AttributePairs>()
-            .unwrap();
+        let mut pairs = AttributePairs::new("FOO=BAR,BAR=\"baz,qux\",ABC=12.3");
 
-        let mut iterator = pairs.iter();
-        assert!(iterator.any(|(k, v)| k == "FOO" && "BAR" == v));
+        assert_eq!(pairs.next(), Some(("FOO", "BAR")));
+        assert_eq!(pairs.next(), Some(("BAR", "\"baz,qux\"")));
+        assert_eq!(pairs.next(), Some(("ABC", "12.3")));
+        assert_eq!(pairs.next(), None);
 
-        let mut iterator = pairs.iter();
-        assert!(iterator.any(|(k, v)| k == "BAR" && v == "\"baz,qux\""));
+        // stress test with foreign input
+        // got it from https://generator.lorem-ipsum.info/_chinese
 
-        let mut iterator = pairs.iter();
-        assert!(iterator.any(|(k, v)| k == "ABC" && v == "12.3"));
+        let mut pairs = AttributePairs::new(concat!(
+            "載抗留囲軽来実基供全必式覧領意度振。=著地内方満職控努作期投綱研本模,",
+            "後文図様改表宮能本園半参裁報作神掲索=\"針支年得率新賞現報発援白少動面。矢拉年世掲注索政平定他込\",",
+            "ध्वनि स्थिति और्४५० नीचे =देखने लाभो द्वारा करके(विशेष"
+        ));
 
-        let mut pairs = AttributePairs::new();
-        pairs.insert("FOO".to_string(), "BAR".to_string());
-
-        assert_eq!("FOO=BAR,VAL".parse::<AttributePairs>().unwrap(), pairs);
-    }
-
-    #[test]
-    fn test_iterator() {
-        let mut attrs = AttributePairs::new();
-        attrs.insert("key_01".to_string(), "value_01".to_string());
-        attrs.insert("key_02".to_string(), "value_02".to_string());
-
-        let mut iterator = attrs.iter();
-        assert!(iterator.any(|(k, v)| k == "key_01" && v == "value_01"));
-
-        let mut iterator = attrs.iter();
-        assert!(iterator.any(|(k, v)| k == "key_02" && v == "value_02"));
-    }
-
-    #[test]
-    fn test_into_iter() {
-        let mut map = HashMap::new();
-        map.insert("k".to_string(), "v".to_string());
-
-        let mut attrs = AttributePairs::new();
-        attrs.insert("k".to_string(), "v".to_string());
-
+        assert_eq!((3, Some(3)), pairs.size_hint());
         assert_eq!(
-            attrs.into_iter().collect::<Vec<_>>(),
-            map.into_iter().collect::<Vec<_>>()
+            pairs.next(),
+            Some((
+                "載抗留囲軽来実基供全必式覧領意度振。",
+                "著地内方満職控努作期投綱研本模"
+            ))
         );
+
+        assert_eq!((2, Some(2)), pairs.size_hint());
+        assert_eq!(
+            pairs.next(),
+            Some((
+                "後文図様改表宮能本園半参裁報作神掲索",
+                "\"針支年得率新賞現報発援白少動面。矢拉年世掲注索政平定他込\""
+            ))
+        );
+
+        assert_eq!((1, Some(1)), pairs.size_hint());
+        assert_eq!(
+            pairs.next(),
+            Some(("ध्वनि स्थिति और्४५० नीचे", "देखने लाभो द्वारा करके(विशेष"))
+        );
+
+        assert_eq!((0, Some(0)), pairs.size_hint());
+        assert_eq!(pairs.next(), None);
     }
 }

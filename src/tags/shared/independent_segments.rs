@@ -5,22 +5,24 @@ use crate::types::ProtocolVersion;
 use crate::utils::tag;
 use crate::{Error, RequiredVersion};
 
-/// [4.3.5.1. EXT-X-INDEPENDENT-SEGMENTS]
+/// Signals that all media samples in a [`MediaSegment`] can be decoded without
+/// information from other segments.
 ///
-/// [4.3.5.1. EXT-X-INDEPENDENT-SEGMENTS]: https://tools.ietf.org/html/rfc8216#section-4.3.5.1
+/// [`MediaSegment`]: crate::MediaSegment
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Ord, PartialOrd)]
-pub struct ExtXIndependentSegments;
+pub(crate) struct ExtXIndependentSegments;
 
 impl ExtXIndependentSegments {
     pub(crate) const PREFIX: &'static str = "#EXT-X-INDEPENDENT-SEGMENTS";
 }
 
+/// This tag requires [`ProtocolVersion::V1`].
 impl RequiredVersion for ExtXIndependentSegments {
     fn required_version(&self) -> ProtocolVersion { ProtocolVersion::V1 }
 }
 
 impl fmt::Display for ExtXIndependentSegments {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result { Self::PREFIX.fmt(f) }
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result { Self::PREFIX.fmt(f) }
 }
 
 impl FromStr for ExtXIndependentSegments {

@@ -2,14 +2,14 @@
 //!
 //! [4.3. Playlist Tags]: https://tools.ietf.org/html/rfc8216#section-4.3
 
-mod basic;
-mod master_playlist;
-mod media_playlist;
-mod media_segment;
-mod shared;
+pub(crate) mod basic;
+pub(crate) mod master_playlist;
+pub(crate) mod media_playlist;
+pub(crate) mod media_segment;
+pub(crate) mod shared;
 
 pub use basic::*;
 pub use master_playlist::*;
-pub use media_playlist::*;
+pub(crate) use media_playlist::*;
 pub use media_segment::*;
 pub use shared::*;

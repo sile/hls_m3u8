@@ -2,107 +2,216 @@ use std::fmt;
 use std::str::FromStr;
 
 use derive_builder::Builder;
+use shorthand::ShortHand;
 
 use crate::attribute::AttributePairs;
 use crate::types::{Channels, InStreamId, MediaType, ProtocolVersion};
 use crate::utils::{parse_yes_or_no, quote, tag, unquote};
 use crate::{Error, RequiredVersion};
 
-/// # [4.4.5.1. EXT-X-MEDIA]
+/// An [`ExtXMedia`] tag is an alternative rendition of a [`VariantStream`].
 ///
-/// The [`ExtXMedia`] tag is used to relate [`Media Playlist`]s,
-/// that contain alternative Renditions of the same content.
+/// For example an [`ExtXMedia`] tag can be used to specify different audio
+/// languages (e.g. english is the default and there also exists an
+/// [`ExtXMedia`] stream with a german audio).
 ///
-/// For
-/// example, three [`ExtXMedia`] tags can be used to identify audio-only
-/// [`Media Playlist`]s, that contain English, French, and Spanish Renditions
-/// of the same presentation. Or, two [`ExtXMedia`] tags can be used to
-/// identify video-only [`Media Playlist`]s that show two different camera
-/// angles.
-///
-/// [`Media Playlist`]: crate::MediaPlaylist
-/// [4.4.5.1. EXT-X-MEDIA]:
-/// https://tools.ietf.org/html/draft-pantos-hls-rfc8216bis-05#section-4.4.5.1
-#[derive(Builder, Debug, Clone, PartialEq, Eq, Hash)]
+/// [`MediaPlaylist`]: crate::MediaPlaylist
+/// [`VariantStream`]: crate::tags::VariantStream
+#[derive(ShortHand, Builder, Debug, Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]
+#[shorthand(enable(must_use, into))]
 #[builder(setter(into))]
 #[builder(build_fn(validate = "Self::validate"))]
 pub struct ExtXMedia {
-    /// Sets the [`MediaType`] of the rendition.
+    /// The [`MediaType`] associated with this tag.
+    ///
+    /// ### Note
+    ///
+    /// This field is required.
+    #[shorthand(enable(skip))]
+    pub media_type: MediaType,
+    /// An `URI` to a [`MediaPlaylist`].
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// # use hls_m3u8::tags::ExtXMedia;
+    /// use hls_m3u8::types::MediaType;
+    ///
+    /// let mut media = ExtXMedia::new(MediaType::Audio, "ag1", "english audio channel");
+    /// # assert_eq!(media.uri(), None);
+    ///
+    /// media.set_uri(Some("https://www.example.com/stream1.m3u8"));
+    ///
+    /// assert_eq!(
+    ///     media.uri(),
+    ///     Some(&"https://www.example.com/stream1.m3u8".to_string())
+    /// );
+    /// ```
     ///
     /// # Note
-    /// This attribute is **required**.
-    media_type: MediaType,
-    #[builder(setter(strip_option), default)]
-    /// Sets the `URI` that identifies the [`Media Playlist`].
     ///
-    /// # Note
-    /// - This attribute is **required**, if the [`MediaType`] is
+    /// - This field is required, if the [`ExtXMedia::media_type`] is
     ///   [`MediaType::Subtitles`].
-    /// - This attribute is **not allowed**, if the [`MediaType`] is
+    /// - This field is not allowed, if the [`ExtXMedia::media_type`] is
     /// [`MediaType::ClosedCaptions`].
     ///
-    /// [`Media Playlist`]: crate::MediaPlaylist
+    /// An absent value indicates that the media data for this rendition is
+    /// included in the [`MediaPlaylist`] of any
+    /// [`VariantStream::ExtXStreamInf`] tag with the same `group_id` of
+    /// this [`ExtXMedia`] instance.
+    ///
+    /// [`MediaPlaylist`]: crate::MediaPlaylist
+    /// [`VariantStream::ExtXStreamInf`]:
+    /// crate::tags::VariantStream::ExtXStreamInf
+    #[builder(setter(strip_option), default)]
     uri: Option<String>,
-    /// Sets the identifier, that specifies the group to which the rendition
+    /// The identifier that specifies the group to which the rendition
     /// belongs.
     ///
+    /// # Example
+    ///
+    /// ```
+    /// # use hls_m3u8::tags::ExtXMedia;
+    /// use hls_m3u8::types::MediaType;
+    ///
+    /// let mut media = ExtXMedia::new(MediaType::Audio, "ag1", "english audio channel");
+    ///
+    /// media.set_group_id("ag2");
+    ///
+    /// assert_eq!(media.group_id(), &"ag2".to_string());
+    /// ```
+    ///
     /// # Note
-    /// This attribute is **required**.
+    ///
+    /// This field is required.
     group_id: String,
-    #[builder(setter(strip_option), default)]
-    /// Sets the name of the primary language used in the rendition.
+    /// The name of the primary language used in the rendition.
     /// The value has to conform to [`RFC5646`].
     ///
+    /// # Example
+    ///
+    /// ```
+    /// # use hls_m3u8::tags::ExtXMedia;
+    /// use hls_m3u8::types::MediaType;
+    ///
+    /// let mut media = ExtXMedia::new(MediaType::Audio, "ag1", "english audio channel");
+    ///
+    /// media.set_language(Some("en"));
+    ///
+    /// assert_eq!(media.language(), Some(&"en".to_string()));
+    /// ```
+    ///
     /// # Note
-    /// This attribute is **optional**.
+    ///
+    /// This field is optional.
     ///
     /// [`RFC5646`]: https://tools.ietf.org/html/rfc5646
-    language: Option<String>,
     #[builder(setter(strip_option), default)]
-    /// Sets the name of a language associated with the rendition.
+    language: Option<String>,
+    /// The name of a language associated with the rendition.
+    /// An associated language is often used in a different role, than the
+    /// language specified by the [`language`] field (e.g., written versus
+    /// spoken, or a fallback dialect).
     ///
     /// # Note
-    /// This attribute is **optional**.
+    ///
+    /// This field is optional.
     ///
     /// [`language`]: #method.language
+    #[builder(setter(strip_option), default)]
     assoc_language: Option<String>,
-    /// Sets a human-readable description of the rendition.
+    /// A human-readable description of the rendition.
     ///
     /// # Note
-    /// This attribute is **required**.
     ///
-    /// If the [`language`] attribute is present, this attribute should be in
+    /// This field is required.
+    ///
+    /// If the [`language`] field is present, this field should be in
     /// that language.
     ///
     /// [`language`]: #method.language
     name: String,
+    /// The value of the `default` flag.
+    /// A value of `true` indicates, that the client should play
+    /// this rendition of the content in the absence of information
+    /// from the user indicating a different choice.
+    ///
+    /// ### Note
+    ///
+    /// This field is optional, its absence indicates an implicit value
+    /// of `false`.
     #[builder(default)]
-    /// Sets the value of the `default` flag.
+    #[shorthand(enable(skip))]
+    pub is_default: bool,
+    /// Whether the client may choose to play this rendition in the absence of
+    /// explicit user preference.
+    ///
+    /// ### Note
+    ///
+    /// This field is optional, its absence indicates an implicit value
+    /// of `false`.
+    #[builder(default)]
+    #[shorthand(enable(skip))]
+    pub is_autoselect: bool,
+    /// Whether the rendition contains content that is considered
+    /// essential to play.
+    #[builder(default)]
+    #[shorthand(enable(skip))]
+    pub is_forced: bool,
+    /// An [`InStreamId`] identifies a rendition within the
+    /// [`MediaSegment`]s in a [`MediaPlaylist`].
+    ///
+    /// ### Note
+    ///
+    /// This field is required, if the media type is
+    /// [`MediaType::ClosedCaptions`]. For all other media types the
+    /// [`InStreamId`] must not be specified!
+    ///
+    /// [`MediaPlaylist`]: crate::MediaPlaylist
+    /// [`MediaSegment`]: crate::MediaSegment
+    #[builder(setter(strip_option), default)]
+    #[shorthand(enable(skip))]
+    pub instream_id: Option<InStreamId>,
+    /// The characteristics field contains one or more Uniform Type
+    /// Identifiers ([`UTI`]) separated by a comma.
+    /// Each [`UTI`] indicates an individual characteristic of the Rendition.
+    ///
+    /// An `ExtXMedia` instance with [`MediaType::Subtitles`] may include the
+    /// following characteristics:
+    /// - `"public.accessibility.transcribes-spoken-dialog"`,
+    /// - `"public.accessibility.describes-music-and-sound"`, and
+    /// - `"public.easy-to-read"` (which indicates that the subtitles have
+    /// been edited for ease of reading).
+    ///
+    /// An `ExtXMedia` instance with [`MediaType::Audio`] may include the
+    /// following characteristic:
+    /// - `"public.accessibility.describes-video"`
+    ///
+    /// The characteristics field may include private UTIs.
     ///
     /// # Note
-    /// This attribute is **optional**, its absence indicates an implicit value
-    /// of `false`.
-    is_default: bool,
-    #[builder(default)]
-    /// Sets the value of the `autoselect` flag.
     ///
-    /// # Note
-    /// This attribute is **optional**, its absence indicates an implicit value
-    /// of `false`.
-    is_autoselect: bool,
-    #[builder(default)]
-    /// Sets the value of the `forced` flag.
-    is_forced: bool,
+    /// This field is optional.
+    ///
+    /// [`UTI`]: https://tools.ietf.org/html/draft-pantos-hls-rfc8216bis-05#ref-UTI
     #[builder(setter(strip_option), default)]
-    /// Sets the identifier that specifies a rendition within the segments in
-    /// the media playlist.
-    instream_id: Option<InStreamId>,
-    #[builder(setter(strip_option), default)]
-    /// Sets the string that represents uniform type identifiers (UTI).
     characteristics: Option<String>,
+    /// A count of audio channels indicating the maximum number of independent,
+    /// simultaneous audio channels present in any [`MediaSegment`] in the
+    /// rendition.
+    ///
+    /// ### Note
+    ///
+    /// This field is optional, but every instance of [`ExtXMedia`] with
+    /// [`MediaType::Audio`] should have this field. If the [`MasterPlaylist`]
+    /// contains two renditions with the same codec, but a different number of
+    /// channels, then the channels field is required.
+    ///
+    /// [`MediaSegment`]: crate::MediaSegment
+    /// [`MasterPlaylist`]: crate::MasterPlaylist
     #[builder(setter(strip_option), default)]
-    /// Sets the parameters of the rendition.
-    channels: Option<Channels>,
+    #[shorthand(enable(skip))]
+    pub channels: Option<Channels>,
 }
 
 impl ExtXMediaBuilder {
@@ -124,14 +233,17 @@ impl ExtXMediaBuilder {
                 return Err(Error::missing_attribute("INSTREAM-ID").to_string());
             }
         } else if self.instream_id.is_some() {
-            return Err(Error::unexpected_attribute("INSTREAM-ID").to_string());
+            return Err(Error::custom(
+                "InStreamId should only be specified for an ExtXMedia tag with `MediaType::ClosedCaptions`"
+            ).to_string());
         }
 
-        if self.is_default.unwrap_or(false) && !self.is_autoselect.unwrap_or(true) {
-            return Err(
-                Error::custom("If `DEFAULT` is true and `AUTOSELECT` is present, \
-                               `AUTOSELECT` has to be true too!").to_string(),
-            );
+        if self.is_default.unwrap_or(false) && self.is_autoselect.map_or(false, |b| !b) {
+            return Err(Error::custom(format!(
+                "If `DEFAULT` is true, `AUTOSELECT` has to be true too, if present. Default: {:?}, Autoselect: {:?}!",
+                self.is_default, self.is_autoselect
+            ))
+            .to_string());
         }
 
         if media_type != MediaType::Subtitles && self.is_forced.is_some() {
@@ -145,15 +257,34 @@ impl ExtXMediaBuilder {
 impl ExtXMedia {
     pub(crate) const PREFIX: &'static str = "#EXT-X-MEDIA:";
 
-    /// Makes a new [`ExtXMedia`] tag.
-    pub fn new<T: ToString>(media_type: MediaType, group_id: T, name: T) -> Self {
+    /// Makes a new [`ExtXMedia`] tag with the associated [`MediaType`], the
+    /// identifier that specifies the group to which the rendition belongs
+    /// (group id) and a human-readable description of the rendition. If the
+    /// [`language`] is specified it should be in that language.
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// # use hls_m3u8::tags::ExtXMedia;
+    /// use hls_m3u8::types::MediaType;
+    ///
+    /// let media = ExtXMedia::new(MediaType::Video, "vg1", "1080p video stream");
+    /// ```
+    ///
+    /// [`language`]: #method.language
+    #[must_use]
+    pub fn new<T, K>(media_type: MediaType, group_id: T, name: K) -> Self
+    where
+        T: Into<String>,
+        K: Into<String>,
+    {
         Self {
             media_type,
             uri: None,
-            group_id: group_id.to_string(),
+            group_id: group_id.into(),
             language: None,
             assoc_language: None,
-            name: name.to_string(),
+            name: name.into(),
             is_default: false,
             is_autoselect: false,
             is_forced: false,
@@ -164,515 +295,84 @@ impl ExtXMedia {
     }
 
     /// Returns a builder for [`ExtXMedia`].
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// # use hls_m3u8::tags::ExtXMedia;
+    /// use hls_m3u8::types::MediaType;
+    ///
+    /// let media = ExtXMedia::builder()
+    ///     .media_type(MediaType::Subtitles)
+    ///     .uri("french/ed.ttml")
+    ///     .group_id("subs")
+    ///     .language("fra")
+    ///     .assoc_language("fra")
+    ///     .name("French")
+    ///     .is_autoselect(true)
+    ///     .is_forced(true)
+    ///     // concat! joins multiple `&'static str`
+    ///     .characteristics(concat!(
+    ///         "public.accessibility.transcribes-spoken-dialog,",
+    ///         "public.accessibility.describes-music-and-sound"
+    ///     ))
+    ///     .build()?;
+    /// # Ok::<(), Box<dyn ::std::error::Error>>(())
+    /// ```
+    #[must_use]
     pub fn builder() -> ExtXMediaBuilder { ExtXMediaBuilder::default() }
-
-    /// Returns the type of the media, associated with this tag.
-    ///
-    /// # Example
-    /// ```
-    /// # use hls_m3u8::tags::ExtXMedia;
-    /// use hls_m3u8::types::MediaType;
-    ///
-    /// assert_eq!(
-    ///     ExtXMedia::new(MediaType::Audio, "audio", "name").media_type(),
-    ///     MediaType::Audio
-    /// );
-    /// ```
-    pub const fn media_type(&self) -> MediaType { self.media_type }
-
-    /// Sets the type of the media, associated with this tag.
-    ///
-    /// # Example
-    /// ```
-    /// # use hls_m3u8::tags::ExtXMedia;
-    /// use hls_m3u8::types::MediaType;
-    ///
-    /// let mut media = ExtXMedia::new(MediaType::Audio, "audio", "name");
-    ///
-    /// media.set_media_type(MediaType::Video);
-    ///
-    /// assert_eq!(media.media_type(), MediaType::Video);
-    /// ```
-    pub fn set_media_type(&mut self, value: MediaType) -> &mut Self {
-        self.media_type = value;
-        self
-    }
-
-    /// Returns the identifier that specifies the group to which the rendition
-    /// belongs.
-    ///
-    /// # Example
-    /// ```
-    /// # use hls_m3u8::tags::ExtXMedia;
-    /// use hls_m3u8::types::MediaType;
-    ///
-    /// assert_eq!(
-    ///     ExtXMedia::new(MediaType::Audio, "audio", "name").group_id(),
-    ///     &"audio".to_string()
-    /// );
-    /// ```
-    pub const fn group_id(&self) -> &String { &self.group_id }
-
-    /// Sets the identifier that specifies the group, to which the rendition
-    /// belongs.
-    ///
-    /// # Example
-    /// ```
-    /// # use hls_m3u8::tags::ExtXMedia;
-    /// use hls_m3u8::types::MediaType;
-    ///
-    /// let mut media = ExtXMedia::new(MediaType::Audio, "audio", "name");
-    ///
-    /// media.set_group_id("video");
-    ///
-    /// assert_eq!(media.group_id(), &"video".to_string());
-    /// ```
-    pub fn set_group_id<T: Into<String>>(&mut self, value: T) -> &mut Self {
-        self.group_id = value.into();
-        self
-    }
-
-    /// Returns a human-readable description of the rendition.
-    ///
-    /// # Example
-    /// ```
-    /// # use hls_m3u8::tags::ExtXMedia;
-    /// use hls_m3u8::types::MediaType;
-    ///
-    /// assert_eq!(
-    ///     ExtXMedia::new(MediaType::Audio, "audio", "name").name(),
-    ///     &"name".to_string()
-    /// );
-    /// ```
-    pub const fn name(&self) -> &String { &self.name }
-
-    /// Sets a human-readable description of the rendition.
-    ///
-    /// # Note
-    /// If the [`language`] attribute is present, this attribute should be in
-    /// that language.
-    ///
-    /// # Example
-    /// ```
-    /// # use hls_m3u8::tags::ExtXMedia;
-    /// use hls_m3u8::types::MediaType;
-    ///
-    /// let mut media = ExtXMedia::new(MediaType::Audio, "audio", "name");
-    ///
-    /// media.set_name("new_name");
-    ///
-    /// assert_eq!(media.name(), &"new_name".to_string());
-    /// ```
-    ///
-    /// [`language`]: #method.language
-    pub fn set_name<T: Into<String>>(&mut self, value: T) -> &mut Self {
-        self.name = value.into();
-        self
-    }
-
-    /// Returns the `URI`, that identifies the [`Media Playlist`].
-    ///
-    /// # Example
-    /// ```
-    /// # use hls_m3u8::tags::ExtXMedia;
-    /// use hls_m3u8::types::MediaType;
-    ///
-    /// let mut media = ExtXMedia::new(MediaType::Audio, "audio", "name");
-    /// # assert_eq!(media.uri(), &None);
-    ///
-    /// media.set_uri(Some("https://www.example.com/"));
-    ///
-    /// assert_eq!(media.uri(), &Some("https://www.example.com/".into()));
-    /// ```
-    ///
-    /// [`Media Playlist`]: crate::MediaPlaylist
-    pub const fn uri(&self) -> &Option<String> { &self.uri }
-
-    /// Sets the `URI`, that identifies the [`Media Playlist`].
-    ///
-    /// # Note
-    /// This attribute is **required**, if the [`MediaType`] is
-    /// [`MediaType::Subtitles`]. This attribute is **not allowed**, if the
-    /// [`MediaType`] is [`MediaType::ClosedCaptions`].
-    ///
-    /// # Example
-    /// ```
-    /// # use hls_m3u8::tags::ExtXMedia;
-    /// use hls_m3u8::types::MediaType;
-    ///
-    /// let mut media = ExtXMedia::new(MediaType::Audio, "audio", "name");
-    /// # assert_eq!(media.uri(), &None);
-    ///
-    /// media.set_uri(Some("https://www.example.com/"));
-    ///
-    /// assert_eq!(media.uri(), &Some("https://www.example.com/".into()));
-    /// ```
-    ///
-    /// [`Media Playlist`]: crate::MediaPlaylist
-    pub fn set_uri<T: Into<String>>(&mut self, value: Option<T>) -> &mut Self {
-        self.uri = value.map(Into::into);
-        self
-    }
-
-    /// Returns the name of the primary language used in the rendition.
-    ///
-    /// # Example
-    /// ```
-    /// # use hls_m3u8::tags::ExtXMedia;
-    /// use hls_m3u8::types::MediaType;
-    ///
-    /// let mut media = ExtXMedia::new(MediaType::Audio, "audio", "name");
-    /// # assert_eq!(media.language(), &None);
-    ///
-    /// media.set_language(Some("english"));
-    ///
-    /// assert_eq!(media.language(), &Some("english".into()));
-    /// ```
-    pub const fn language(&self) -> &Option<String> { &self.language }
-
-    /// Sets the name of the primary language used in the rendition.
-    /// The value has to conform to [`RFC5646`].
-    ///
-    /// # Example
-    /// ```
-    /// # use hls_m3u8::tags::ExtXMedia;
-    /// use hls_m3u8::types::MediaType;
-    ///
-    /// let mut media = ExtXMedia::new(MediaType::Audio, "audio", "name");
-    /// # assert_eq!(media.language(), &None);
-    ///
-    /// media.set_language(Some("english"));
-    ///
-    /// assert_eq!(media.language(), &Some("english".into()));
-    /// ```
-    ///
-    /// [`RFC5646`]: https://tools.ietf.org/html/rfc5646
-    pub fn set_language<T: Into<String>>(&mut self, value: Option<T>) -> &mut Self {
-        self.language = value.map(Into::into);
-        self
-    }
-
-    /// Returns the name of a language associated with the rendition.
-    ///
-    /// # Example
-    /// ```
-    /// # use hls_m3u8::tags::ExtXMedia;
-    /// use hls_m3u8::types::MediaType;
-    ///
-    /// let mut media = ExtXMedia::new(MediaType::Audio, "audio", "name");
-    /// # assert_eq!(media.assoc_language(), &None);
-    ///
-    /// media.set_assoc_language(Some("spanish"));
-    ///
-    /// assert_eq!(media.assoc_language(), &Some("spanish".into()));
-    /// ```
-    pub const fn assoc_language(&self) -> &Option<String> { &self.assoc_language }
-
-    /// Sets the name of a language associated with the rendition.
-    /// An associated language is often used in a different role, than the
-    /// language specified by the [`language`] attribute (e.g., written versus
-    /// spoken, or a fallback dialect).
-    ///
-    /// # Example
-    /// ```
-    /// # use hls_m3u8::tags::ExtXMedia;
-    /// use hls_m3u8::types::MediaType;
-    ///
-    /// let mut media = ExtXMedia::new(MediaType::Audio, "audio", "name");
-    /// # assert_eq!(media.assoc_language(), &None);
-    ///
-    /// media.set_assoc_language(Some("spanish"));
-    ///
-    /// assert_eq!(media.assoc_language(), &Some("spanish".into()));
-    /// ```
-    ///
-    /// [`language`]: #method.language
-    pub fn set_assoc_language<T: Into<String>>(&mut self, value: Option<T>) -> &mut Self {
-        self.assoc_language = value.map(Into::into);
-        self
-    }
-
-    /// Returns whether this is the `default` rendition.
-    ///
-    /// # Example
-    /// ```
-    /// # use hls_m3u8::tags::ExtXMedia;
-    /// use hls_m3u8::types::MediaType;
-    ///
-    /// let mut media = ExtXMedia::new(MediaType::Audio, "audio", "name");
-    /// # assert_eq!(media.is_default(), false);
-    ///
-    /// media.set_default(true);
-    ///
-    /// assert_eq!(media.is_default(), true);
-    /// ```
-    pub const fn is_default(&self) -> bool { self.is_default }
-
-    /// Sets the `default` flag.
-    /// A value of `true` indicates, that the client should play
-    /// this rendition of the content in the absence of information
-    /// from the user indicating a different choice.
-    ///
-    /// # Example
-    /// ```
-    /// # use hls_m3u8::tags::ExtXMedia;
-    /// use hls_m3u8::types::MediaType;
-    ///
-    /// let mut media = ExtXMedia::new(MediaType::Audio, "audio", "name");
-    /// # assert_eq!(media.is_default(), false);
-    ///
-    /// media.set_default(true);
-    ///
-    /// assert_eq!(media.is_default(), true);
-    /// ```
-    pub fn set_default(&mut self, value: bool) -> &mut Self {
-        self.is_default = value;
-        self
-    }
-
-    /// Returns whether the client may choose to
-    /// play this rendition in the absence of explicit user preference.
-    ///
-    /// # Example
-    /// ```
-    /// # use hls_m3u8::tags::ExtXMedia;
-    /// use hls_m3u8::types::MediaType;
-    ///
-    /// let mut media = ExtXMedia::new(MediaType::Audio, "audio", "name");
-    /// # assert_eq!(media.is_autoselect(), false);
-    ///
-    /// media.set_autoselect(true);
-    ///
-    /// assert_eq!(media.is_autoselect(), true);
-    /// ```
-    pub const fn is_autoselect(&self) -> bool { self.is_autoselect }
-
-    /// Sets the `autoselect` flag.
-    ///
-    /// # Example
-    /// ```
-    /// # use hls_m3u8::tags::ExtXMedia;
-    /// use hls_m3u8::types::MediaType;
-    ///
-    /// let mut media = ExtXMedia::new(MediaType::Audio, "audio", "name");
-    /// # assert_eq!(media.is_autoselect(), false);
-    ///
-    /// media.set_autoselect(true);
-    ///
-    /// assert_eq!(media.is_autoselect(), true);
-    /// ```
-    pub fn set_autoselect(&mut self, value: bool) -> &mut Self {
-        self.is_autoselect = value;
-        self
-    }
-
-    /// Returns whether the rendition contains content that is considered
-    /// essential to play.
-    ///
-    /// # Example
-    /// ```
-    /// # use hls_m3u8::tags::ExtXMedia;
-    /// use hls_m3u8::types::MediaType;
-    ///
-    /// let mut media = ExtXMedia::new(MediaType::Audio, "audio", "name");
-    /// # assert_eq!(media.is_forced(), false);
-    ///
-    /// media.set_forced(true);
-    ///
-    /// assert_eq!(media.is_forced(), true);
-    /// ```
-    pub const fn is_forced(&self) -> bool { self.is_forced }
-
-    /// Sets the `forced` flag.
-    ///
-    /// # Example
-    /// ```
-    /// # use hls_m3u8::tags::ExtXMedia;
-    /// use hls_m3u8::types::MediaType;
-    ///
-    /// let mut media = ExtXMedia::new(MediaType::Audio, "audio", "name");
-    /// # assert_eq!(media.is_forced(), false);
-    ///
-    /// media.set_forced(true);
-    ///
-    /// assert_eq!(media.is_forced(), true);
-    /// ```
-    pub fn set_forced(&mut self, value: bool) -> &mut Self {
-        self.is_forced = value;
-        self
-    }
-
-    /// Returns the identifier that specifies a rendition within the segments in
-    /// the [`Media Playlist`].
-    ///
-    /// # Example
-    /// ```
-    /// # use hls_m3u8::tags::ExtXMedia;
-    /// use hls_m3u8::types::{InStreamId, MediaType};
-    ///
-    /// let mut media = ExtXMedia::new(MediaType::Audio, "audio", "name");
-    /// # assert_eq!(media.instream_id(), None);
-    ///
-    /// media.set_instream_id(Some(InStreamId::Cc1));
-    ///
-    /// assert_eq!(media.instream_id(), Some(InStreamId::Cc1));
-    /// ```
-    ///
-    /// [`Media Playlist`]: crate::MediaPlaylist
-    pub const fn instream_id(&self) -> Option<InStreamId> { self.instream_id }
-
-    /// Sets the [`InStreamId`], that specifies a rendition within the
-    /// segments in the [`Media Playlist`].
-    ///
-    /// # Example
-    /// ```
-    /// # use hls_m3u8::tags::ExtXMedia;
-    /// use hls_m3u8::types::{InStreamId, MediaType};
-    ///
-    /// let mut media = ExtXMedia::new(MediaType::Audio, "audio", "name");
-    /// # assert_eq!(media.instream_id(), None);
-    ///
-    /// media.set_instream_id(Some(InStreamId::Cc1));
-    ///
-    /// assert_eq!(media.instream_id(), Some(InStreamId::Cc1));
-    /// ```
-    pub fn set_instream_id(&mut self, value: Option<InStreamId>) -> &mut Self {
-        self.instream_id = value;
-        self
-    }
-
-    /// Returns a string that represents uniform type identifiers (UTI).
-    ///
-    /// Each UTI indicates an individual characteristic of the rendition.
-    ///
-    /// # Example
-    /// ```
-    /// # use hls_m3u8::tags::ExtXMedia;
-    /// use hls_m3u8::types::MediaType;
-    ///
-    /// let mut media = ExtXMedia::new(MediaType::Audio, "audio", "name");
-    /// # assert_eq!(media.characteristics(), &None);
-    ///
-    /// media.set_characteristics(Some("characteristic"));
-    ///
-    /// assert_eq!(media.characteristics(), &Some("characteristic".into()));
-    /// ```
-    pub const fn characteristics(&self) -> &Option<String> { &self.characteristics }
-
-    /// Sets the characteristics attribute, containing one or more Uniform Type
-    /// Identifiers separated by comma.
-    /// Each [`UTI`] indicates an individual characteristic of the Rendition.
-    ///
-    /// A [`subtitles`] Rendition may include the following characteristics:
-    /// "public.accessibility.transcribes-spoken-dialog",
-    /// "public.accessibility.describes-music-and-sound", and
-    /// "public.easy-to-read" (which indicates that the subtitles have
-    /// been edited for ease of reading).
-    ///
-    /// An AUDIO Rendition MAY include the following characteristic:
-    /// "public.accessibility.describes-video".
-    ///
-    /// The characteristics attribute may include private UTIs.
-    ///
-    /// # Example
-    /// ```
-    /// # use hls_m3u8::tags::ExtXMedia;
-    /// use hls_m3u8::types::MediaType;
-    ///
-    /// let mut media = ExtXMedia::new(MediaType::Audio, "audio", "name");
-    /// # assert_eq!(media.characteristics(), &None);
-    ///
-    /// media.set_characteristics(Some("characteristic"));
-    ///
-    /// assert_eq!(media.characteristics(), &Some("characteristic".into()));
-    /// ```
-    ///
-    /// [`UTI`]: https://tools.ietf.org/html/draft-pantos-hls-rfc8216bis-05#ref-UTI
-    /// [`subtitles`]: crate::types::MediaType::Subtitles
-    pub fn set_characteristics<T: Into<String>>(&mut self, value: Option<T>) -> &mut Self {
-        self.characteristics = value.map(Into::into);
-        self
-    }
-
-    /// Returns the channels.
-    ///
-    /// # Example
-    /// ```
-    /// # use hls_m3u8::tags::ExtXMedia;
-    /// use hls_m3u8::types::{Channels, MediaType};
-    ///
-    /// let mut media = ExtXMedia::new(MediaType::Audio, "audio", "name");
-    /// # assert_eq!(media.channels(), &None);
-    ///
-    /// media.set_channels(Some(Channels::new(6)));
-    ///
-    /// assert_eq!(media.channels(), &Some(Channels::new(6)));
-    /// ```
-    pub const fn channels(&self) -> &Option<Channels> { &self.channels }
-
-    /// Sets the channels.
-    ///
-    /// # Example
-    /// ```
-    /// # use hls_m3u8::tags::ExtXMedia;
-    /// use hls_m3u8::types::{Channels, MediaType};
-    ///
-    /// let mut media = ExtXMedia::new(MediaType::Audio, "audio", "name");
-    /// # assert_eq!(media.channels(), &None);
-    ///
-    /// media.set_channels(Some(Channels::new(6)));
-    ///
-    /// assert_eq!(media.channels(), &Some(Channels::new(6)));
-    /// ```
-    pub fn set_channels<T: Into<Channels>>(&mut self, value: Option<T>) -> &mut Self {
-        self.channels = value.map(Into::into);
-        self
-    }
 }
 
+/// This tag requires either `ProtocolVersion::V1` or if there is an
+/// `instream_id` it requires it's version.
 impl RequiredVersion for ExtXMedia {
     fn required_version(&self) -> ProtocolVersion {
-        match self.instream_id {
-            None
-            | Some(InStreamId::Cc1)
-            | Some(InStreamId::Cc2)
-            | Some(InStreamId::Cc3)
-            | Some(InStreamId::Cc4) => ProtocolVersion::V1,
-            _ => ProtocolVersion::V7,
-        }
+        self.instream_id
+            .map_or(ProtocolVersion::V1, |i| i.required_version())
     }
 }
 
 impl fmt::Display for ExtXMedia {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(f, "{}", Self::PREFIX)?;
         write!(f, "TYPE={}", self.media_type)?;
+
         if let Some(value) = &self.uri {
             write!(f, ",URI={}", quote(value))?;
         }
+
         write!(f, ",GROUP-ID={}", quote(&self.group_id))?;
+
         if let Some(value) = &self.language {
             write!(f, ",LANGUAGE={}", quote(value))?;
         }
+
         if let Some(value) = &self.assoc_language {
             write!(f, ",ASSOC-LANGUAGE={}", quote(value))?;
         }
+
         write!(f, ",NAME={}", quote(&self.name))?;
+
         if self.is_default {
             write!(f, ",DEFAULT=YES")?;
         }
+
         if self.is_autoselect {
             write!(f, ",AUTOSELECT=YES")?;
         }
+
         if self.is_forced {
             write!(f, ",FORCED=YES")?;
         }
+
         if let Some(value) = &self.instream_id {
             write!(f, ",INSTREAM-ID={}", quote(value))?;
         }
+
         if let Some(value) = &self.characteristics {
             write!(f, ",CHARACTERISTICS={}", quote(value))?;
         }
+
         if let Some(value) = &self.channels {
             write!(f, ",CHANNELS={}", quote(value))?;
         }
@@ -688,8 +388,8 @@ impl FromStr for ExtXMedia {
 
         let mut builder = Self::builder();
 
-        for (key, value) in input.parse::<AttributePairs>()? {
-            match key.as_str() {
+        for (key, value) in AttributePairs::new(input) {
+            match key {
                 "TYPE" => {
                     builder.media_type(value.parse::<MediaType>()?);
                 }
@@ -734,7 +434,7 @@ impl FromStr for ExtXMedia {
             }
         }
 
-        builder.build().map_err(Error::builder_error)
+        builder.build().map_err(Error::builder)
     }
 }
 
@@ -743,10 +443,46 @@ mod test {
     use super::*;
     use pretty_assertions::assert_eq;
 
-    #[test]
-    fn test_display() {
-        // TODO: https://developer.apple.com/documentation/http_live_streaming/example_playlists_for_http_live_streaming/adding_alternate_media_to_a_playlist
-        assert_eq!(
+    macro_rules! generate_tests {
+        ( $( { $struct:expr, $str:expr } ),+ $(,)* ) => {
+            #[test]
+            fn test_display() {
+                $(
+                    assert_eq!($struct.to_string(), $str.to_string());
+                )+
+            }
+
+            #[test]
+            fn test_parser() {
+                $(
+                    assert_eq!($struct, $str.parse().unwrap());
+                )+
+            }
+        }
+    }
+
+    generate_tests! {
+        {
+            ExtXMedia::builder()
+                .media_type(MediaType::Audio)
+                .group_id("audio")
+                .language("eng")
+                .name("English")
+                .is_default(true)
+                .uri("eng/prog_index.m3u8")
+                .build()
+                .unwrap(),
+            concat!(
+                "#EXT-X-MEDIA:",
+                "TYPE=AUDIO,",
+                "URI=\"eng/prog_index.m3u8\",",
+                "GROUP-ID=\"audio\",",
+                "LANGUAGE=\"eng\",",
+                "NAME=\"English\",",
+                "DEFAULT=YES",
+            )
+        },
+        {
             ExtXMedia::builder()
                 .media_type(MediaType::Audio)
                 .group_id("audio")
@@ -756,42 +492,40 @@ mod test {
                 .is_default(true)
                 .uri("eng/prog_index.m3u8")
                 .build()
-                .unwrap()
-                .to_string(),
-            "#EXT-X-MEDIA:\
-             TYPE=AUDIO,\
-             URI=\"eng/prog_index.m3u8\",\
-             GROUP-ID=\"audio\",\
-             LANGUAGE=\"eng\",\
-             NAME=\"English\",\
-             DEFAULT=YES,\
-             AUTOSELECT=YES"
-                .to_string()
-        );
-
-        assert_eq!(
+                .unwrap(),
+            concat!(
+                "#EXT-X-MEDIA:",
+                "TYPE=AUDIO,",
+                "URI=\"eng/prog_index.m3u8\",",
+                "GROUP-ID=\"audio\",",
+                "LANGUAGE=\"eng\",",
+                "NAME=\"English\",",
+                "DEFAULT=YES,",
+                "AUTOSELECT=YES"
+            )
+        },
+        {
             ExtXMedia::builder()
                 .media_type(MediaType::Audio)
+                .uri("fre/prog_index.m3u8")
                 .group_id("audio")
                 .language("fre")
                 .name("Français")
-                .is_autoselect(true)
                 .is_default(false)
-                .uri("fre/prog_index.m3u8")
+                .is_autoselect(true)
                 .build()
-                .unwrap()
-                .to_string(),
-            "#EXT-X-MEDIA:\
-             TYPE=AUDIO,\
-             URI=\"fre/prog_index.m3u8\",\
-             GROUP-ID=\"audio\",\
-             LANGUAGE=\"fre\",\
-             NAME=\"Français\",\
-             AUTOSELECT=YES"
-                .to_string()
-        );
-
-        assert_eq!(
+                .unwrap(),
+            concat!(
+                "#EXT-X-MEDIA:",
+                "TYPE=AUDIO,",
+                "URI=\"fre/prog_index.m3u8\",",
+                "GROUP-ID=\"audio\",",
+                "LANGUAGE=\"fre\",",
+                "NAME=\"Français\",",
+                "AUTOSELECT=YES"
+            )
+        },
+        {
             ExtXMedia::builder()
                 .media_type(MediaType::Audio)
                 .group_id("audio")
@@ -801,19 +535,18 @@ mod test {
                 .is_default(false)
                 .uri("sp/prog_index.m3u8")
                 .build()
-                .unwrap()
-                .to_string(),
-            "#EXT-X-MEDIA:\
-             TYPE=AUDIO,\
-             URI=\"sp/prog_index.m3u8\",\
-             GROUP-ID=\"audio\",\
-             LANGUAGE=\"sp\",\
-             NAME=\"Espanol\",\
-             AUTOSELECT=YES"
-                .to_string()
-        );
-        // ----
-        assert_eq!(
+                .unwrap(),
+            concat!(
+                "#EXT-X-MEDIA:",
+                "TYPE=AUDIO,",
+                "URI=\"sp/prog_index.m3u8\",",
+                "GROUP-ID=\"audio\",",
+                "LANGUAGE=\"sp\",",
+                "NAME=\"Espanol\",",
+                "AUTOSELECT=YES"
+            )
+        },
+        {
             ExtXMedia::builder()
                 .media_type(MediaType::Audio)
                 .group_id("audio-lo")
@@ -823,20 +556,19 @@ mod test {
                 .is_default(true)
                 .uri("englo/prog_index.m3u8")
                 .build()
-                .unwrap()
-                .to_string(),
-            "#EXT-X-MEDIA:\
-             TYPE=AUDIO,\
-             URI=\"englo/prog_index.m3u8\",\
-             GROUP-ID=\"audio-lo\",\
-             LANGUAGE=\"eng\",\
-             NAME=\"English\",\
-             DEFAULT=YES,\
-             AUTOSELECT=YES"
-                .to_string()
-        );
-
-        assert_eq!(
+                .unwrap(),
+            concat!(
+                "#EXT-X-MEDIA:",
+                "TYPE=AUDIO,",
+                "URI=\"englo/prog_index.m3u8\",",
+                "GROUP-ID=\"audio-lo\",",
+                "LANGUAGE=\"eng\",",
+                "NAME=\"English\",",
+                "DEFAULT=YES,",
+                "AUTOSELECT=YES"
+            )
+        },
+        {
             ExtXMedia::builder()
                 .media_type(MediaType::Audio)
                 .group_id("audio-lo")
@@ -846,19 +578,18 @@ mod test {
                 .is_default(false)
                 .uri("frelo/prog_index.m3u8")
                 .build()
-                .unwrap()
-                .to_string(),
-            "#EXT-X-MEDIA:\
-             TYPE=AUDIO,\
-             URI=\"frelo/prog_index.m3u8\",\
-             GROUP-ID=\"audio-lo\",\
-             LANGUAGE=\"fre\",\
-             NAME=\"Français\",\
-             AUTOSELECT=YES"
-                .to_string()
-        );
-
-        assert_eq!(
+                .unwrap(),
+            concat!(
+                "#EXT-X-MEDIA:",
+                "TYPE=AUDIO,",
+                "URI=\"frelo/prog_index.m3u8\",",
+                "GROUP-ID=\"audio-lo\",",
+                "LANGUAGE=\"fre\",",
+                "NAME=\"Français\",",
+                "AUTOSELECT=YES"
+            )
+        },
+        {
             ExtXMedia::builder()
                 .media_type(MediaType::Audio)
                 .group_id("audio-lo")
@@ -868,19 +599,18 @@ mod test {
                 .is_default(false)
                 .uri("splo/prog_index.m3u8")
                 .build()
-                .unwrap()
-                .to_string(),
-            "#EXT-X-MEDIA:\
-             TYPE=AUDIO,\
-             URI=\"splo/prog_index.m3u8\",\
-             GROUP-ID=\"audio-lo\",\
-             LANGUAGE=\"es\",\
-             NAME=\"Espanol\",\
-             AUTOSELECT=YES"
-                .to_string()
-        );
-
-        assert_eq!(
+                .unwrap(),
+            concat!(
+                "#EXT-X-MEDIA:",
+                "TYPE=AUDIO,",
+                "URI=\"splo/prog_index.m3u8\",",
+                "GROUP-ID=\"audio-lo\",",
+                "LANGUAGE=\"es\",",
+                "NAME=\"Espanol\",",
+                "AUTOSELECT=YES"
+            )
+        },
+        {
             ExtXMedia::builder()
                 .media_type(MediaType::Audio)
                 .group_id("audio-hi")
@@ -890,20 +620,19 @@ mod test {
                 .is_default(true)
                 .uri("eng/prog_index.m3u8")
                 .build()
-                .unwrap()
-                .to_string(),
-            "#EXT-X-MEDIA:\
-             TYPE=AUDIO,\
-             URI=\"eng/prog_index.m3u8\",\
-             GROUP-ID=\"audio-hi\",\
-             LANGUAGE=\"eng\",\
-             NAME=\"English\",\
-             DEFAULT=YES,\
-             AUTOSELECT=YES"
-                .to_string()
-        );
-
-        assert_eq!(
+                .unwrap(),
+            concat!(
+                "#EXT-X-MEDIA:",
+                "TYPE=AUDIO,",
+                "URI=\"eng/prog_index.m3u8\",",
+                "GROUP-ID=\"audio-hi\",",
+                "LANGUAGE=\"eng\",",
+                "NAME=\"English\",",
+                "DEFAULT=YES,",
+                "AUTOSELECT=YES"
+            )
+        },
+        {
             ExtXMedia::builder()
                 .media_type(MediaType::Audio)
                 .group_id("audio-hi")
@@ -913,19 +642,18 @@ mod test {
                 .is_default(false)
                 .uri("fre/prog_index.m3u8")
                 .build()
-                .unwrap()
-                .to_string(),
-            "#EXT-X-MEDIA:\
-             TYPE=AUDIO,\
-             URI=\"fre/prog_index.m3u8\",\
-             GROUP-ID=\"audio-hi\",\
-             LANGUAGE=\"fre\",\
-             NAME=\"Français\",\
-             AUTOSELECT=YES"
-                .to_string()
-        );
-
-        assert_eq!(
+                .unwrap(),
+            concat!(
+                "#EXT-X-MEDIA:",
+                "TYPE=AUDIO,",
+                "URI=\"fre/prog_index.m3u8\",",
+                "GROUP-ID=\"audio-hi\",",
+                "LANGUAGE=\"fre\",",
+                "NAME=\"Français\",",
+                "AUTOSELECT=YES"
+            )
+        },
+        {
             ExtXMedia::builder()
                 .media_type(MediaType::Audio)
                 .group_id("audio-hi")
@@ -935,19 +663,18 @@ mod test {
                 .is_default(false)
                 .uri("sp/prog_index.m3u8")
                 .build()
-                .unwrap()
-                .to_string(),
-            "#EXT-X-MEDIA:\
-             TYPE=AUDIO,\
-             URI=\"sp/prog_index.m3u8\",\
-             GROUP-ID=\"audio-hi\",\
-             LANGUAGE=\"es\",\
-             NAME=\"Espanol\",\
-             AUTOSELECT=YES"
-                .to_string()
-        );
-
-        assert_eq!(
+                .unwrap(),
+            concat!(
+                "#EXT-X-MEDIA:",
+                "TYPE=AUDIO,",
+                "URI=\"sp/prog_index.m3u8\",",
+                "GROUP-ID=\"audio-hi\",",
+                "LANGUAGE=\"es\",",
+                "NAME=\"Espanol\",",
+                "AUTOSELECT=YES"
+            )
+        },
+        {
             ExtXMedia::builder()
                 .media_type(MediaType::Audio)
                 .group_id("audio-aacl-312")
@@ -957,20 +684,19 @@ mod test {
                 .is_default(true)
                 .channels(Channels::new(2))
                 .build()
-                .unwrap()
-                .to_string(),
-            "#EXT-X-MEDIA:\
-             TYPE=AUDIO,\
-             GROUP-ID=\"audio-aacl-312\",\
-             LANGUAGE=\"en\",\
-             NAME=\"English\",\
-             DEFAULT=YES,\
-             AUTOSELECT=YES,\
-             CHANNELS=\"2\""
-                .to_string()
-        );
-
-        assert_eq!(
+                .unwrap(),
+            concat!(
+                "#EXT-X-MEDIA:",
+                "TYPE=AUDIO,",
+                "GROUP-ID=\"audio-aacl-312\",",
+                "LANGUAGE=\"en\",",
+                "NAME=\"English\",",
+                "DEFAULT=YES,",
+                "AUTOSELECT=YES,",
+                "CHANNELS=\"2\""
+            )
+        },
+        {
             ExtXMedia::builder()
                 .media_type(MediaType::Subtitles)
                 .uri("french/ed.ttml")
@@ -980,302 +706,27 @@ mod test {
                 .name("French")
                 .is_autoselect(true)
                 .is_forced(true)
-                .characteristics("public.accessibility.transcribes-spoken-dialog,public.accessibility.describes-music-and-sound")
-                .build()
-                .unwrap()
-                .to_string(),
-            "#EXT-X-MEDIA:\
-            TYPE=SUBTITLES,\
-            URI=\"french/ed.ttml\",\
-            GROUP-ID=\"subs\",\
-            LANGUAGE=\"fra\",\
-            ASSOC-LANGUAGE=\"fra\",\
-            NAME=\"French\",\
-            AUTOSELECT=YES,\
-            FORCED=YES,\
-            CHARACTERISTICS=\"public.accessibility.transcribes-spoken-dialog,public.accessibility.describes-music-and-sound\"".to_string()
-        );
-
-        assert_eq!(
-            ExtXMedia::builder()
-                .media_type(MediaType::ClosedCaptions)
-                .group_id("cc")
-                .language("sp")
-                .name("CC2")
-                .instream_id(InStreamId::Cc2)
-                .is_autoselect(true)
-                .build()
-                .unwrap()
-                .to_string(),
-            "#EXT-X-MEDIA:\
-             TYPE=CLOSED-CAPTIONS,\
-             GROUP-ID=\"cc\",\
-             LANGUAGE=\"sp\",\
-             NAME=\"CC2\",\
-             AUTOSELECT=YES,\
-             INSTREAM-ID=\"CC2\""
-                .to_string()
-        );
-
-        // ----
-        assert_eq!(
-            ExtXMedia::new(MediaType::Audio, "foo", "bar").to_string(),
-            "#EXT-X-MEDIA:TYPE=AUDIO,GROUP-ID=\"foo\",NAME=\"bar\"".to_string()
-        )
-    }
-
-    #[test]
-    fn test_parser() {
-        // TODO: https://developer.apple.com/documentation/http_live_streaming/example_playlists_for_http_live_streaming/adding_alternate_media_to_a_playlist
-        assert_eq!(
-            ExtXMedia::builder()
-                .media_type(MediaType::Audio)
-                .group_id("audio")
-                .language("eng")
-                .name("English")
-                .is_autoselect(true)
-                .is_default(true)
-                .uri("eng/prog_index.m3u8")
+                .characteristics("public.accessibility.transcribes-spoken\
+                -dialog,public.accessibility.describes-music-and-sound")
                 .build()
                 .unwrap(),
-            "#EXT-X-MEDIA:\
-             TYPE=AUDIO,\
-             URI=\"eng/prog_index.m3u8\",\
-             GROUP-ID=\"audio\",\
-             LANGUAGE=\"eng\",\
-             NAME=\"English\",\
-             DEFAULT=YES,\
-             AUTOSELECT=YES"
-                .parse()
-                .unwrap()
-        );
-
-        assert_eq!(
-            ExtXMedia::builder()
-                .media_type(MediaType::Audio)
-                .group_id("audio")
-                .language("fre")
-                .name("Français")
-                .is_autoselect(true)
-                .is_default(false)
-                .uri("fre/prog_index.m3u8")
-                .build()
-                .unwrap(),
-            "#EXT-X-MEDIA:\
-             TYPE=AUDIO,\
-             URI=\"fre/prog_index.m3u8\",\
-             GROUP-ID=\"audio\",\
-             LANGUAGE=\"fre\",\
-             NAME=\"Français\",\
-             AUTOSELECT=YES"
-                .parse()
-                .unwrap()
-        );
-
-        assert_eq!(
-            ExtXMedia::builder()
-                .media_type(MediaType::Audio)
-                .group_id("audio")
-                .language("sp")
-                .name("Espanol")
-                .is_autoselect(true)
-                .is_default(false)
-                .uri("sp/prog_index.m3u8")
-                .build()
-                .unwrap(),
-            "#EXT-X-MEDIA:\
-             TYPE=AUDIO,\
-             URI=\"sp/prog_index.m3u8\",\
-             GROUP-ID=\"audio\",\
-             LANGUAGE=\"sp\",\
-             NAME=\"Espanol\",\
-             AUTOSELECT=YES"
-                .parse()
-                .unwrap()
-        );
-        // ----
-        assert_eq!(
-            ExtXMedia::builder()
-                .media_type(MediaType::Audio)
-                .group_id("audio-lo")
-                .language("eng")
-                .name("English")
-                .is_autoselect(true)
-                .is_default(true)
-                .uri("englo/prog_index.m3u8")
-                .build()
-                .unwrap(),
-            "#EXT-X-MEDIA:\
-             TYPE=AUDIO,\
-             URI=\"englo/prog_index.m3u8\",\
-             GROUP-ID=\"audio-lo\",\
-             LANGUAGE=\"eng\",\
-             NAME=\"English\",\
-             DEFAULT=YES,\
-             AUTOSELECT=YES"
-                .parse()
-                .unwrap()
-        );
-
-        assert_eq!(
-            ExtXMedia::builder()
-                .media_type(MediaType::Audio)
-                .group_id("audio-lo")
-                .language("fre")
-                .name("Français")
-                .is_autoselect(true)
-                .is_default(false)
-                .uri("frelo/prog_index.m3u8")
-                .build()
-                .unwrap(),
-            "#EXT-X-MEDIA:\
-             TYPE=AUDIO,\
-             URI=\"frelo/prog_index.m3u8\",\
-             GROUP-ID=\"audio-lo\",\
-             LANGUAGE=\"fre\",\
-             NAME=\"Français\",\
-             AUTOSELECT=YES"
-                .parse()
-                .unwrap()
-        );
-
-        assert_eq!(
-            ExtXMedia::builder()
-                .media_type(MediaType::Audio)
-                .group_id("audio-lo")
-                .language("es")
-                .name("Espanol")
-                .is_autoselect(true)
-                .is_default(false)
-                .uri("splo/prog_index.m3u8")
-                .build()
-                .unwrap(),
-            "#EXT-X-MEDIA:\
-             TYPE=AUDIO,\
-             URI=\"splo/prog_index.m3u8\",\
-             GROUP-ID=\"audio-lo\",\
-             LANGUAGE=\"es\",\
-             NAME=\"Espanol\",\
-             AUTOSELECT=YES"
-                .parse()
-                .unwrap()
-        );
-
-        assert_eq!(
-            ExtXMedia::builder()
-                .media_type(MediaType::Audio)
-                .group_id("audio-hi")
-                .language("eng")
-                .name("English")
-                .is_autoselect(true)
-                .is_default(true)
-                .uri("eng/prog_index.m3u8")
-                .build()
-                .unwrap(),
-            "#EXT-X-MEDIA:\
-             TYPE=AUDIO,\
-             URI=\"eng/prog_index.m3u8\",\
-             GROUP-ID=\"audio-hi\",\
-             LANGUAGE=\"eng\",\
-             NAME=\"English\",\
-             DEFAULT=YES,\
-             AUTOSELECT=YES"
-                .parse()
-                .unwrap()
-        );
-
-        assert_eq!(
-            ExtXMedia::builder()
-                .media_type(MediaType::Audio)
-                .group_id("audio-hi")
-                .language("fre")
-                .name("Français")
-                .is_autoselect(true)
-                .is_default(false)
-                .uri("fre/prog_index.m3u8")
-                .build()
-                .unwrap(),
-            "#EXT-X-MEDIA:\
-             TYPE=AUDIO,\
-             URI=\"fre/prog_index.m3u8\",\
-             GROUP-ID=\"audio-hi\",\
-             LANGUAGE=\"fre\",\
-             NAME=\"Français\",\
-             AUTOSELECT=YES"
-                .parse()
-                .unwrap()
-        );
-
-        assert_eq!(
-            ExtXMedia::builder()
-                .media_type(MediaType::Audio)
-                .group_id("audio-hi")
-                .language("es")
-                .name("Espanol")
-                .is_autoselect(true)
-                .is_default(false)
-                .uri("sp/prog_index.m3u8")
-                .build()
-                .unwrap(),
-            "#EXT-X-MEDIA:\
-             TYPE=AUDIO,\
-             URI=\"sp/prog_index.m3u8\",\
-             GROUP-ID=\"audio-hi\",\
-             LANGUAGE=\"es\",\
-             NAME=\"Espanol\",\
-             AUTOSELECT=YES"
-                .parse()
-                .unwrap()
-        );
-
-        assert_eq!(
-            ExtXMedia::builder()
-                .media_type(MediaType::Audio)
-                .group_id("audio-aacl-312")
-                .language("en")
-                .name("English")
-                .is_autoselect(true)
-                .is_default(true)
-                .channels(Channels::new(2))
-                .build()
-                .unwrap(),
-            "#EXT-X-MEDIA:\
-             TYPE=AUDIO,\
-             GROUP-ID=\"audio-aacl-312\",\
-             LANGUAGE=\"en\",\
-             NAME=\"English\",\
-             DEFAULT=YES,\
-             AUTOSELECT=YES,\
-             CHANNELS=\"2\""
-                .parse()
-                .unwrap()
-        );
-
-        assert_eq!(
-            ExtXMedia::builder()
-                .media_type(MediaType::Subtitles)
-                .uri("french/ed.ttml")
-                .group_id("subs")
-                .language("fra")
-                .assoc_language("fra")
-                .name("French")
-                .is_autoselect(true)
-                .characteristics("public.accessibility.transcribes-spoken-dialog,public.accessibility.describes-music-and-sound")
-                .build()
-                .unwrap(),
-            "#EXT-X-MEDIA:\
-            URI=\"french/ed.ttml\",\
-            TYPE=SUBTITLES,\
-            GROUP-ID=\"subs\",\
-            LANGUAGE=\"fra\",\
-            ASSOC-LANGUAGE=\"fra\",\
-            NAME=\"French\",\
-            AUTOSELECT=YES,\
-            FORCED=NO,\
-            CHARACTERISTICS=\"public.accessibility.transcribes-spoken-dialog,public.accessibility.describes-music-and-sound\"".parse().unwrap()
-        );
-
-        assert_eq!(
+            concat!(
+                "#EXT-X-MEDIA:",
+                "TYPE=SUBTITLES,",
+                "URI=\"french/ed.ttml\",",
+                "GROUP-ID=\"subs\",",
+                "LANGUAGE=\"fra\",",
+                "ASSOC-LANGUAGE=\"fra\",",
+                "NAME=\"French\",",
+                "AUTOSELECT=YES,",
+                "FORCED=YES,",
+                "CHARACTERISTICS=\"",
+                "public.accessibility.transcribes-spoken-dialog,",
+                "public.accessibility.describes-music-and-sound",
+                "\""
+            )
+        },
+        {
             ExtXMedia::builder()
                 .media_type(MediaType::ClosedCaptions)
                 .group_id("cc")
@@ -1285,24 +736,20 @@ mod test {
                 .is_autoselect(true)
                 .build()
                 .unwrap(),
-            "#EXT-X-MEDIA:\
-             TYPE=CLOSED-CAPTIONS,\
-             GROUP-ID=\"cc\",\
-             LANGUAGE=\"sp\",\
-             NAME=\"CC2\",\
-             AUTOSELECT=YES,\
-             INSTREAM-ID=\"CC2\",\
-             UNKNOWN=TAG"
-                .parse()
-                .unwrap()
-        );
-        // ----
-        assert_eq!(
+            concat!(
+                "#EXT-X-MEDIA:",
+                "TYPE=CLOSED-CAPTIONS,",
+                "GROUP-ID=\"cc\",",
+                "LANGUAGE=\"sp\",",
+                "NAME=\"CC2\",",
+                "AUTOSELECT=YES,",
+                "INSTREAM-ID=\"CC2\""
+            )
+        },
+        {
             ExtXMedia::new(MediaType::Audio, "foo", "bar"),
             "#EXT-X-MEDIA:TYPE=AUDIO,GROUP-ID=\"foo\",NAME=\"bar\""
-                .parse()
-                .unwrap()
-        );
+        },
     }
 
     #[test]

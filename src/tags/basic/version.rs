@@ -5,44 +5,12 @@ use crate::types::ProtocolVersion;
 use crate::utils::tag;
 use crate::{Error, RequiredVersion};
 
-/// # [4.3.1.2. EXT-X-VERSION]
+/// The compatibility version of a playlist.
 ///
-/// The [`ExtXVersion`] tag indicates the compatibility version of the
-/// [`Master Playlist`] or [`Media Playlist`] file.
-/// It applies to the entire Playlist.
+/// It applies to the entire [`MasterPlaylist`] or [`MediaPlaylist`].
 ///
-/// # Examples
-/// Parsing from a [`str`]:
-/// ```
-/// # use failure::Error;
-/// # use hls_m3u8::tags::ExtXVersion;
-/// #
-/// # fn main() -> Result<(), Error> {
-/// use hls_m3u8::types::ProtocolVersion;
-///
-/// assert_eq!(
-///     "#EXT-X-VERSION:5".parse::<ExtXVersion>()?,
-///     ExtXVersion::new(ProtocolVersion::V5)
-/// );
-/// #
-/// # Ok(())
-/// # }
-/// ```
-/// Converting to a [`str`]:
-/// ```
-/// # use hls_m3u8::tags::ExtXVersion;
-/// #
-/// use hls_m3u8::types::ProtocolVersion;
-///
-/// assert_eq!(
-///     "#EXT-X-VERSION:5".to_string(),
-///     ExtXVersion::new(ProtocolVersion::V5).to_string()
-/// );
-/// ```
-///
-/// [`Media Playlist`]: crate::MediaPlaylist
-/// [`Master Playlist`]: crate::MasterPlaylist
-/// [4.3.1.2. EXT-X-VERSION]: https://tools.ietf.org/html/rfc8216#section-4.3.1.2
+/// [`MediaPlaylist`]: crate::MediaPlaylist
+/// [`MasterPlaylist`]: crate::MasterPlaylist
 #[derive(Copy, Clone, Eq, PartialEq, Ord, PartialOrd, Hash, Debug)]
 pub struct ExtXVersion(ProtocolVersion);
 
@@ -52,17 +20,20 @@ impl ExtXVersion {
     /// Makes a new [`ExtXVersion`] tag.
     ///
     /// # Example
+    ///
     /// ```
     /// # use hls_m3u8::tags::ExtXVersion;
     /// use hls_m3u8::types::ProtocolVersion;
     ///
     /// let version = ExtXVersion::new(ProtocolVersion::V2);
     /// ```
+    #[must_use]
     pub const fn new(version: ProtocolVersion) -> Self { Self(version) }
 
-    /// Returns the [`ProtocolVersion`] of the playlist, containing this tag.
+    /// Returns the underlying [`ProtocolVersion`].
     ///
     /// # Example
+    ///
     /// ```
     /// # use hls_m3u8::tags::ExtXVersion;
     /// use hls_m3u8::types::ProtocolVersion;
@@ -72,6 +43,7 @@ impl ExtXVersion {
     ///     ProtocolVersion::V6
     /// );
     /// ```
+    #[must_use]
     pub const fn version(self) -> ProtocolVersion { self.0 }
 }
 
@@ -81,11 +53,14 @@ impl RequiredVersion for ExtXVersion {
 }
 
 impl fmt::Display for ExtXVersion {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result { write!(f, "{}{}", Self::PREFIX, self.0) }
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        //
+        write!(f, "{}{}", Self::PREFIX, self.0)
+    }
 }
 
 impl Default for ExtXVersion {
-    fn default() -> Self { Self(ProtocolVersion::V1) }
+    fn default() -> Self { Self(ProtocolVersion::default()) }
 }
 
 impl From<ProtocolVersion> for ExtXVersion {
