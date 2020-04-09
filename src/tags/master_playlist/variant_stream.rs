@@ -10,7 +10,9 @@ use crate::utils::{quote, tag, unquote};
 use crate::Error;
 
 /// A server may offer multiple [`MediaPlaylist`] files to provide different
-/// encodings of the same presentation. If it does so, it should provide
+/// encodings of the same presentation.
+///
+/// If it does so, it should provide
 /// a [`MasterPlaylist`] that lists each [`VariantStream`] to allow
 /// clients to switch between encodings dynamically.
 ///
