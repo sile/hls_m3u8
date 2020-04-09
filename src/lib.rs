@@ -57,6 +57,40 @@
 //! assert!(m3u8.parse::<MediaPlaylist>().is_ok());
 //! ```
 //!
+//! ## Crate Feature Flags
+//!
+//! The following crate feature flags are available:
+//!
+//! - [`backtrace`] (optional)
+//!   - Enables the backtrace feature for the `Error` type.
+//!   - This feature depends on the following dependencies:
+//!     - [`backtrace`]
+//! - [`chrono`] (optional)
+//!   - Enables parsing dates and verifying them.
+//!   - This feature depends on the following dependencies:
+//!     - [`chrono`]
+//!   - The following things will change:
+//!     - [`ExtXProgramDateTime::date_time`] will change from [`String`] to
+//!       `DateTime<FixedOffset>`
+//!     - [`ExtXDateRange::start_date`] will change from [`String`] to
+//!       `DateTime<FixedOffset>`
+//!     - [`ExtXDateRange::end_date`] will change from [`String`] to
+//!       `DateTime<FixedOffset>`
+//!
+//! They are configured in your `Cargo.toml` and can be enabled like this
+//!
+//! ```toml
+//! hls_m3u8 = { version = "0.3", features = ["chrono", "backtrace"] }
+//! ```
+//!
+//! [`ExtXProgramDateTime::date_time`]:
+//! crate::tags::ExtXProgramDateTime::date_time
+//! [`ExtXDateRange::start_date`]:
+//! crate::tags::ExtXDateRange::start_date
+//! [`ExtXDateRange::end_date`]:
+//! crate::tags::ExtXDateRange::end_date
+//! [`chrono`]: https://github.com/chronotope/chrono
+//! [`backtrace`]: https://github.com/rust-lang/backtrace-rs
 //! [HLS]: https://tools.ietf.org/html/rfc8216
 
 pub use error::Error;
