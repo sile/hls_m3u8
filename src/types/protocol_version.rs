@@ -34,7 +34,7 @@ impl ProtocolVersion {
 }
 
 impl fmt::Display for ProtocolVersion {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match &self {
             Self::V1 => write!(f, "1"),
             Self::V2 => write!(f, "2"),

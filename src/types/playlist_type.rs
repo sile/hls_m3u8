@@ -35,7 +35,7 @@ impl RequiredVersion for PlaylistType {
 }
 
 impl fmt::Display for PlaylistType {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match &self {
             Self::Event => write!(f, "{}EVENT", Self::PREFIX),
             Self::Vod => write!(f, "{}VOD", Self::PREFIX),

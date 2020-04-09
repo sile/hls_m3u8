@@ -20,7 +20,7 @@ impl RequiredVersion for ExtXDiscontinuity {
 }
 
 impl fmt::Display for ExtXDiscontinuity {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result { Self::PREFIX.fmt(f) }
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result { Self::PREFIX.fmt(f) }
 }
 
 impl FromStr for ExtXDiscontinuity {

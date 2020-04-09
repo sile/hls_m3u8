@@ -5,8 +5,6 @@ use crate::types::ProtocolVersion;
 use crate::utils::tag;
 use crate::{Error, RequiredVersion};
 
-/// # [4.3.1.1. EXTM3U]
-///
 /// The [`ExtM3u`] tag indicates that the file is an **Ext**ended **[`M3U`]**
 /// Playlist file.
 /// It is the at the start of every [`MediaPlaylist`] and [`MasterPlaylist`].
@@ -14,7 +12,6 @@ use crate::{Error, RequiredVersion};
 /// [`MediaPlaylist`]: crate::MediaPlaylist
 /// [`MasterPlaylist`]: crate::MasterPlaylist
 /// [`M3U`]: https://en.wikipedia.org/wiki/M3U
-/// [4.3.1.1. EXTM3U]: https://tools.ietf.org/html/rfc8216#section-4.3.1.1
 #[derive(Copy, Clone, Eq, PartialEq, Ord, PartialOrd, Hash, Debug, Default)]
 pub(crate) struct ExtM3u;
 
@@ -28,7 +25,7 @@ impl RequiredVersion for ExtM3u {
 }
 
 impl fmt::Display for ExtM3u {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result { write!(f, "{}", Self::PREFIX) }
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result { write!(f, "{}", Self::PREFIX) }
 }
 
 impl FromStr for ExtM3u {

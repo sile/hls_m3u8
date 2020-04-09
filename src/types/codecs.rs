@@ -44,7 +44,7 @@ impl Codecs {
 }
 
 impl fmt::Display for Codecs {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         if let Some(codec) = self.list.iter().next() {
             write!(f, "{}", codec)?;
 

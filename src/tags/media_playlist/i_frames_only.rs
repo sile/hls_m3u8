@@ -18,7 +18,7 @@ impl RequiredVersion for ExtXIFramesOnly {
 }
 
 impl fmt::Display for ExtXIFramesOnly {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result { Self::PREFIX.fmt(f) }
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result { Self::PREFIX.fmt(f) }
 }
 
 impl FromStr for ExtXIFramesOnly {

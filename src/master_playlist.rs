@@ -410,7 +410,7 @@ impl RequiredVersion for MasterPlaylistBuilder {
 }
 
 impl fmt::Display for MasterPlaylist {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         writeln!(f, "{}", ExtM3u)?;
 
         if self.required_version() != ProtocolVersion::V1 {

@@ -395,7 +395,7 @@ impl FromStr for KeyFormatVersions {
 }
 
 impl fmt::Display for KeyFormatVersions {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         if self.is_default() || self.is_empty() {
             return write!(f, "{}", quote("1"));
         }

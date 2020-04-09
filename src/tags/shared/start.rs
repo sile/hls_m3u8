@@ -99,7 +99,7 @@ impl RequiredVersion for ExtXStart {
 }
 
 impl fmt::Display for ExtXStart {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(f, "{}", Self::PREFIX)?;
         write!(f, "TIME-OFFSET={}", self.time_offset)?;
 

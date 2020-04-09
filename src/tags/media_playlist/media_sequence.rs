@@ -20,7 +20,7 @@ impl RequiredVersion for ExtXMediaSequence {
 }
 
 impl fmt::Display for ExtXMediaSequence {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         //
         write!(f, "{}{}", Self::PREFIX, self.0)
     }

@@ -201,7 +201,7 @@ impl RequiredVersion for ExtXSessionData {
 }
 
 impl fmt::Display for ExtXSessionData {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(f, "{}", Self::PREFIX)?;
         write!(f, "DATA-ID={}", quote(&self.data_id))?;
 

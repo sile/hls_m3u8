@@ -33,7 +33,7 @@ impl FromStr for KeyFormat {
 }
 
 impl fmt::Display for KeyFormat {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result { write!(f, "{}", quote(&"identity")) }
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result { write!(f, "{}", quote(&"identity")) }
 }
 
 /// This tag requires [`ProtocolVersion::V5`].

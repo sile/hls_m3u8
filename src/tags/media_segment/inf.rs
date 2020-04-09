@@ -139,7 +139,7 @@ impl RequiredVersion for ExtInf {
 }
 
 impl fmt::Display for ExtInf {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(f, "{}", Self::PREFIX)?;
         write!(f, "{},", self.duration.as_secs_f64())?;
 

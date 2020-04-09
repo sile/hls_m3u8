@@ -203,7 +203,7 @@ impl From<crate::tags::ExtXSessionKey> for ExtXKey {
 }
 
 impl fmt::Display for ExtXKey {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(f, "{}", Self::PREFIX)?;
 
         if let Some(value) = &self.0 {

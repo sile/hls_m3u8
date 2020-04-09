@@ -202,7 +202,7 @@ impl MediaSegmentBuilder {
 }
 
 impl fmt::Display for MediaSegment {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         // NOTE: self.keys will be printed by the `MediaPlaylist` to prevent redundance.
 
         if let Some(value) = &self.map {

@@ -166,7 +166,7 @@ impl From<Option<[u8; 0x10]>> for InitializationVector {
 }
 
 impl fmt::Display for InitializationVector {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match &self {
             Self::Aes128(buffer) => {
                 let mut result = [0; 0x10 * 2];

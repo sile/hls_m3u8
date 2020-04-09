@@ -1,5 +1,6 @@
 #![doc(html_root_url = "https://docs.rs/hls_m3u8/0.2.1")]
 #![forbid(unsafe_code)]
+#![warn(rust_2018_idioms)]
 #![warn(
     clippy::pedantic, //
     clippy::nursery,

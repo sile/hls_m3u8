@@ -82,7 +82,7 @@ impl RequiredVersion for ExtXProgramDateTime {
 }
 
 impl fmt::Display for ExtXProgramDateTime {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         let date_time = {
             #[cfg(feature = "chrono")]
             {

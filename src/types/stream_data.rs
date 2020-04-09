@@ -257,7 +257,7 @@ impl StreamData {
 }
 
 impl fmt::Display for StreamData {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(f, "BANDWIDTH={}", self.bandwidth)?;
 
         if let Some(value) = &self.average_bandwidth {

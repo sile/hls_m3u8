@@ -264,7 +264,7 @@ impl RequiredVersion for VariantStream {
 }
 
 impl fmt::Display for VariantStream {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match &self {
             Self::ExtXIFrame { uri, stream_data } => {
                 write!(f, "{}", Self::PREFIX_EXTXIFRAME)?;

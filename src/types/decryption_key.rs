@@ -191,7 +191,7 @@ impl FromStr for DecryptionKey {
 }
 
 impl fmt::Display for DecryptionKey {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(f, "METHOD={},URI={}", self.method, quote(&self.uri))?;
 
         if let InitializationVector::Aes128(_) = &self.iv {

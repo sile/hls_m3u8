@@ -333,7 +333,7 @@ impl RequiredVersion for ExtXMedia {
 }
 
 impl fmt::Display for ExtXMedia {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(f, "{}", Self::PREFIX)?;
         write!(f, "TYPE={}", self.media_type)?;
 

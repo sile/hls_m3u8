@@ -397,7 +397,7 @@ impl TryInto<Range<usize>> for ByteRange {
 }
 
 impl fmt::Display for ByteRange {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(f, "{}", self.len())?;
 
         if let Some(value) = self.start {
