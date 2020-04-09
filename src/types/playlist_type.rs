@@ -5,13 +5,11 @@ use crate::types::ProtocolVersion;
 use crate::utils::tag;
 use crate::{Error, RequiredVersion};
 
-/// # [4.3.3.5. EXT-X-PLAYLIST-TYPE]
+/// Provides mutability information about the [`MediaPlaylist`].
 ///
-/// The [`PlaylistType`] tag provides mutability information about the
-/// [`MediaPlaylist`]. It applies to the entire [`MediaPlaylist`].
+/// It applies to the entire [`MediaPlaylist`].
 ///
 /// [`MediaPlaylist`]: crate::MediaPlaylist
-/// [4.3.3.5. EXT-X-PLAYLIST-TYPE]: https://tools.ietf.org/html/rfc8216#section-4.3.3.5
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, PartialOrd, Ord)]
 pub enum PlaylistType {
     /// If the [`PlaylistType`] is Event, [`MediaSegment`]s
