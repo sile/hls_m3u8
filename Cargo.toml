@@ -11,6 +11,8 @@ keywords = ["hls", "m3u8"]
 edition = "2018"
 categories = ["parser"]
 
+[features]
+default = []
 [badges]
 codecov = { repository = "sile/hls_m3u8" }
 travis-ci = { repository = "sile/hls_m3u8" }
