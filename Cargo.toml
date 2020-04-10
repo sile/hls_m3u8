@@ -9,7 +9,7 @@ readme = "README.md"
 license = "MIT OR Apache-2.0"
 keywords = ["hls", "m3u8"]
 edition = "2018"
-categories = ["parser"]
+categories = ["parser-implementations"]
 
 [features]
 default = []
