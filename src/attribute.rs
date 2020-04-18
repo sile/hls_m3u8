@@ -21,11 +21,10 @@ impl<'a> Iterator for AttributePairs<'a> {
             // the position in the string:
             let start = self.index;
             // the key ends at an `=`:
-            let end = self
-                .string
+            let end = self.string[self.index..]
                 .char_indices()
-                .skip_while(|(i, _)| *i < self.index)
-                .find_map(|(i, c)| if c == '=' { Some(i) } else { None })?;
+                .find_map(|(i, c)| if c == '=' { Some(i) } else { None })?
+                + self.index;
 
             // advance the index to the char after the end of the key (to skip the `=`)
             // NOTE: it is okay to add 1 to the index, because an `=` is exactly 1 byte.
@@ -44,11 +43,7 @@ impl<'a> Iterator for AttributePairs<'a> {
             let end = {
                 let mut result = self.string.len();
 
-                for (i, c) in self
-                    .string
-                    .char_indices()
-                    .skip_while(|(i, _)| *i < self.index)
-                {
+                for (i, c) in self.string[self.index..].char_indices() {
                     // if a quote is encountered
                     if c == '"' {
                         // update variable
@@ -60,7 +55,7 @@ impl<'a> Iterator for AttributePairs<'a> {
                         self.index += 1;
                         // the result is the index of the comma (comma is not included in the
                         // resulting string)
-                        result = i;
+                        result = i + self.index - 1;
                         break;
                     }
                 }
@@ -74,7 +69,7 @@ impl<'a> Iterator for AttributePairs<'a> {
             ::core::str::from_utf8(&self.string.as_bytes()[start..end]).unwrap()
         };
 
-        Some((key.trim(), value.trim()))
+        Some((key, value))
     }
 
     fn size_hint(&self) -> (usize, Option<usize>) {
@@ -84,11 +79,7 @@ impl<'a> Iterator for AttributePairs<'a> {
         // this also ignores `=` inside quotes!
         let mut inside_quotes = false;
 
-        for (_, c) in self
-            .string
-            .char_indices()
-            .skip_while(|(i, _)| *i < self.index)
-        {
+        for (_, c) in self.string[self.index..].char_indices() {
             if c == '=' && !inside_quotes {
                 remaining += 1;
             } else if c == '"' {
@@ -199,7 +190,7 @@ mod test {
         assert_eq!((1, Some(1)), pairs.size_hint());
         assert_eq!(
             pairs.next(),
-            Some(("ध्वनि स्थिति और्४५० नीचे", "देखने लाभो द्वारा करके(विशेष"))
+            Some(("ध्वनि स्थिति और्४५० नीचे ", "देखने लाभो द्वारा करके(विशेष"))
         );
 
         assert_eq!((0, Some(0)), pairs.size_hint());
