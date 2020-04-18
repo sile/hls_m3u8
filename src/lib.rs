@@ -136,4 +136,5 @@ mod media_segment;
 mod traits;
 
 pub use error::Result;
+pub use stable_vec;
 pub use traits::*;

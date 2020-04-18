@@ -1,5 +1,7 @@
 use std::collections::{BTreeMap, HashMap};
 
+use stable_vec::StableVec;
+
 use crate::types::{DecryptionKey, ProtocolVersion};
 
 mod private {
@@ -104,6 +106,16 @@ impl<K, V: RequiredVersion, S> RequiredVersion for HashMap<K, V, S> {
         self.values()
             .map(RequiredVersion::required_version)
             .max()
+            .unwrap_or_default()
+    }
+}
+
+impl<T: RequiredVersion> RequiredVersion for StableVec<T> {
+    fn required_version(&self) -> ProtocolVersion {
+        self.values()
+            .map(RequiredVersion::required_version)
+            .max()
+            // return ProtocolVersion::V1, if the iterator is empty:
             .unwrap_or_default()
     }
 }

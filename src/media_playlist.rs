@@ -1,9 +1,10 @@
-use std::collections::{BTreeMap, HashSet};
+use std::collections::HashSet;
 use std::fmt;
 use std::str::FromStr;
 use std::time::Duration;
 
 use derive_builder::Builder;
+use stable_vec::StableVec;
 
 use crate::line::{Line, Lines, Tag};
 use crate::media_segment::MediaSegment;
@@ -19,7 +20,7 @@ use crate::utils::{tag, BoolExt};
 use crate::{Error, RequiredVersion};
 
 /// Media playlist.
-#[derive(Builder, Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
+#[derive(Builder, Debug, Clone, PartialEq, Eq)]
 #[builder(build_fn(skip), setter(strip_option))]
 #[non_exhaustive]
 pub struct MediaPlaylist {
@@ -105,7 +106,7 @@ pub struct MediaPlaylist {
     ///
     /// This field is required.
     #[builder(setter(custom))]
-    pub segments: BTreeMap<usize, MediaSegment>,
+    pub segments: StableVec<MediaSegment>,
     /// The allowable excess duration of each media segment in the
     /// associated playlist.
     ///
@@ -225,17 +226,15 @@ impl MediaPlaylistBuilder {
     /// Adds a media segment to the resulting playlist and assigns the next free
     /// [`MediaSegment::number`] to the segment.
     pub fn push_segment(&mut self, segment: MediaSegment) -> &mut Self {
-        let segments = self.segments.get_or_insert_with(BTreeMap::new);
+        let segments = self.segments.get_or_insert_with(StableVec::new);
 
-        let number = {
-            if segment.explicit_number {
-                segment.number
-            } else {
-                segments.keys().last().copied().unwrap_or(0) + 1
-            }
-        };
+        if segment.explicit_number {
+            segments.reserve_for(segment.number);
+            segments.insert(segment.number, segment);
+        } else {
+            segments.push(segment);
+        }
 
-        segments.insert(number, segment);
         self
     }
 
@@ -255,11 +254,22 @@ impl MediaPlaylistBuilder {
     /// will be present in the final media playlist and the following is only
     /// possible if the segment is marked with `ExtXDiscontinuity`.
     pub fn segments(&mut self, segments: Vec<MediaSegment>) -> &mut Self {
-        // media segments are numbered starting at either 0 or the discontinuity
-        // sequence, but it might not be available at the moment.
-        //
-        // -> final numbering will be applied in the build function
-        self.segments = Some(segments.into_iter().enumerate().collect());
+        let mut vec = StableVec::<MediaSegment>::with_capacity(segments.len());
+        let mut remaining = Vec::with_capacity(segments.len());
+
+        for segment in segments {
+            if segment.explicit_number {
+                vec.insert(segment.number, segment);
+            } else {
+                remaining.push(segment);
+            }
+        }
+
+        for segment in remaining {
+            vec.push(segment);
+        }
+
+        self.segments = Some(vec);
         self
     }
 
@@ -274,20 +284,14 @@ impl MediaPlaylistBuilder {
 
         let sequence_number = self.media_sequence.unwrap_or(0);
 
-        let segments = self
+        let mut segments = self
             .segments
-            .as_ref()
+            .clone()
             .ok_or_else(|| "missing field `segments`".to_string())?;
 
-        // insert all explictly numbered segments into the result
-        let mut result_segments = segments
-            .iter()
-            .filter_map(|(_, s)| s.explicit_number.athen(|| (s.number, s.clone())))
-            .collect::<BTreeMap<_, _>>();
-
         // no segment should exist before the sequence_number
-        if let Some(first_segment) = result_segments.keys().min() {
-            if sequence_number > *first_segment {
+        if let Some(first_segment) = segments.find_first() {
+            if sequence_number > first_segment.number && first_segment.explicit_number {
                 return Err(format!(
                     "there should be no segment ({}) before the sequence_number ({})",
                     first_segment, sequence_number,
@@ -295,19 +299,13 @@ impl MediaPlaylistBuilder {
             }
         }
 
-        let mut position = sequence_number;
         let mut previous_range: Option<ExtXByteRange> = None;
 
-        for segment in segments
-            .iter()
-            .filter_map(|(_, s)| if s.explicit_number { None } else { Some(s) })
-        {
-            while result_segments.contains_key(&position) {
-                position += 1;
+        for (i, segment) in segments.iter_mut() {
+            // assign the correct number to all implcitly numbered segments:
+            if !segment.explicit_number {
+                segment.number = i + sequence_number;
             }
-
-            let mut segment = segment.clone();
-            segment.number = position;
 
             // add the segment number as iv, if the iv is missing:
             for key in &mut segment.keys {
@@ -340,21 +338,17 @@ impl MediaPlaylistBuilder {
 
                 previous_range = segment.byte_range;
             }
-
-            result_segments.insert(segment.number, segment);
-            position += 1;
         }
 
-        let mut previous_n = None;
-
-        for n in result_segments.keys() {
-            if let Some(previous_n) = previous_n {
-                if previous_n + 1 != *n {
-                    return Err(format!("missing segment ({})", previous_n + 1));
-                }
-            }
-
-            previous_n = Some(n);
+        // TODO: can segments be missing?
+        if !segments.is_compact() {
+            // find the missing segment by iterating through all segments:
+            // let missing = segments
+            //     .iter()
+            //     .enumerate()
+            //     .find_map(|(i, e)| e.is_none().athen(i))
+            //     .unwrap();
+            return Err(format!("a segment is missing"));
         }
 
         Ok(MediaPlaylist {
@@ -368,7 +362,7 @@ impl MediaPlaylistBuilder {
             has_independent_segments: self.has_independent_segments.unwrap_or(false),
             start: self.start.unwrap_or(None),
             has_end_list: self.has_end_list.unwrap_or(false),
-            segments: result_segments,
+            segments,
             allowable_excess_duration: self
                 .allowable_excess_duration
                 .unwrap_or_else(|| Duration::from_secs(0)),
@@ -816,9 +810,9 @@ mod tests {
             .build()
             .unwrap();
         let mut segments = playlist.segments.into_iter().map(|(k, v)| (k, v.number));
-        assert_eq!(segments.next(), Some((2680, 2680)));
-        assert_eq!(segments.next(), Some((2681, 2681)));
-        assert_eq!(segments.next(), Some((2682, 2682)));
+        assert_eq!(segments.next(), Some((0, 2680)));
+        assert_eq!(segments.next(), Some((1, 2681)));
+        assert_eq!(segments.next(), Some((2, 2682)));
         assert_eq!(segments.next(), None);
     }
 
