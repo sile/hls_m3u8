@@ -13,6 +13,8 @@ categories = ["parser-implementations"]
 
 [features]
 default = []
+perf = []
+
 [badges]
 codecov = { repository = "sile/hls_m3u8" }
 travis-ci = { repository = "sile/hls_m3u8" }
