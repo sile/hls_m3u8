@@ -1,5 +1,5 @@
+use std::convert::TryFrom;
 use std::fmt;
-use std::str::FromStr;
 
 use crate::types::{DecryptionKey, ProtocolVersion};
 use crate::utils::tag;
@@ -9,9 +9,9 @@ use crate::{Error, RequiredVersion};
 ///
 /// An unencrypted segment should be marked with [`ExtXKey::empty`].
 #[derive(Debug, PartialEq, Eq, PartialOrd, Ord, Hash, Clone)]
-pub struct ExtXKey(pub Option<DecryptionKey>);
+pub struct ExtXKey<'a>(pub Option<DecryptionKey<'a>>);
 
-impl ExtXKey {
+impl<'a> ExtXKey<'a> {
     pub(crate) const PREFIX: &'static str = "#EXT-X-KEY:";
 
     /// Constructs an [`ExtXKey`] tag.
@@ -37,7 +37,7 @@ impl ExtXKey {
     /// ```
     #[must_use]
     #[inline]
-    pub const fn new(inner: DecryptionKey) -> Self { Self(Some(inner)) }
+    pub const fn new(inner: DecryptionKey<'a>) -> Self { Self(Some(inner)) }
 
     /// Constructs an empty [`ExtXKey`], which signals that a segment is
     /// unencrypted.
@@ -124,7 +124,7 @@ impl ExtXKey {
     /// let decryption_key: DecryptionKey = ExtXKey::empty().unwrap(); // panics
     /// ```
     #[must_use]
-    pub fn unwrap(self) -> DecryptionKey {
+    pub fn unwrap(self) -> DecryptionKey<'a> {
         match self.0 {
             Some(v) => v,
             None => panic!("called `ExtXKey::unwrap()` on an empty key"),
@@ -134,7 +134,7 @@ impl ExtXKey {
     /// Returns a reference to the underlying [`DecryptionKey`].
     #[must_use]
     #[inline]
-    pub fn as_ref(&self) -> Option<&DecryptionKey> { self.0.as_ref() }
+    pub fn as_ref(&self) -> Option<&DecryptionKey<'a>> { self.0.as_ref() }
 
     /// Converts an [`ExtXKey`] into an `Option<DecryptionKey>`.
     ///
@@ -160,7 +160,19 @@ impl ExtXKey {
     /// ```
     #[must_use]
     #[inline]
-    pub fn into_option(self) -> Option<DecryptionKey> { self.0 }
+    pub fn into_option(self) -> Option<DecryptionKey<'a>> { self.0 }
+
+    /// Makes the struct independent of its lifetime, by taking ownership of all
+    /// internal [`Cow`]s.
+    ///
+    /// # Note
+    ///
+    /// This is a relatively expensive operation.
+    ///
+    /// [`Cow`]: std::borrow::Cow
+    #[must_use]
+    #[inline]
+    pub fn into_owned(self) -> ExtXKey<'static> { ExtXKey(self.0.map(|v| v.into_owned())) }
 }
 
 /// This tag requires [`ProtocolVersion::V5`], if [`KeyFormat`] or
@@ -168,7 +180,7 @@ impl ExtXKey {
 /// specified.
 ///
 /// Otherwise [`ProtocolVersion::V1`] is required.
-impl RequiredVersion for ExtXKey {
+impl<'a> RequiredVersion for ExtXKey<'a> {
     fn required_version(&self) -> ProtocolVersion {
         self.0
             .as_ref()
@@ -176,33 +188,33 @@ impl RequiredVersion for ExtXKey {
     }
 }
 
-impl FromStr for ExtXKey {
-    type Err = Error;
+impl<'a> TryFrom<&'a str> for ExtXKey<'a> {
+    type Error = Error;
 
-    fn from_str(input: &str) -> Result<Self, Self::Err> {
+    fn try_from(input: &'a str) -> Result<Self, Self::Error> {
         let input = tag(input, Self::PREFIX)?;
 
         if input.trim() == "METHOD=NONE" {
             Ok(Self(None))
         } else {
-            Ok(DecryptionKey::from_str(input)?.into())
+            Ok(DecryptionKey::try_from(input)?.into())
         }
     }
 }
 
-impl From<Option<DecryptionKey>> for ExtXKey {
-    fn from(value: Option<DecryptionKey>) -> Self { Self(value) }
+impl<'a> From<Option<DecryptionKey<'a>>> for ExtXKey<'a> {
+    fn from(value: Option<DecryptionKey<'a>>) -> Self { Self(value) }
 }
 
-impl From<DecryptionKey> for ExtXKey {
-    fn from(value: DecryptionKey) -> Self { Self(Some(value)) }
+impl<'a> From<DecryptionKey<'a>> for ExtXKey<'a> {
+    fn from(value: DecryptionKey<'a>) -> Self { Self(Some(value)) }
 }
 
-impl From<crate::tags::ExtXSessionKey> for ExtXKey {
-    fn from(value: crate::tags::ExtXSessionKey) -> Self { Self(Some(value.0)) }
+impl<'a> From<crate::tags::ExtXSessionKey<'a>> for ExtXKey<'a> {
+    fn from(value: crate::tags::ExtXSessionKey<'a>) -> Self { Self(Some(value.0)) }
 }
 
-impl fmt::Display for ExtXKey {
+impl<'a> fmt::Display for ExtXKey<'a> {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(f, "{}", Self::PREFIX)?;
 
@@ -232,7 +244,7 @@ mod test {
             #[test]
             fn test_parser() {
                 $(
-                    assert_eq!($struct, $str.parse().unwrap());
+                    assert_eq!($struct, TryFrom::try_from($str).unwrap());
                 )+
 
                 assert_eq!(
@@ -242,15 +254,15 @@ mod test {
                             "http://www.example.com"
                         )
                     ),
-                    concat!(
+                    ExtXKey::try_from(concat!(
                         "#EXT-X-KEY:",
                         "METHOD=AES-128,",
                         "URI=\"http://www.example.com\",",
                         "UNKNOWNTAG=abcd"
-                    ).parse().unwrap(),
+                    )).unwrap(),
                 );
-                assert!("#EXT-X-KEY:METHOD=AES-128,URI=".parse::<ExtXKey>().is_err());
-                assert!("garbage".parse::<ExtXKey>().is_err());
+                assert!(ExtXKey::try_from("#EXT-X-KEY:METHOD=AES-128,URI=").is_err());
+                assert!(ExtXKey::try_from("garbage").is_err());
             }
         }
     }

@@ -1,3 +1,4 @@
+use std::convert::TryFrom;
 use std::str::FromStr;
 use std::time::Duration;
 
@@ -58,7 +59,7 @@ fn create_manifest_data() -> Vec<u8> {
     builder.build().unwrap().to_string().into_bytes()
 }
 
-fn criterion_benchmark(c: &mut Criterion) {
+fn media_playlist_from_str(c: &mut Criterion) {
     let data = String::from_utf8(create_manifest_data()).unwrap();
 
     let mut group = c.benchmark_group("MediaPlaylist::from_str");
@@ -72,4 +73,18 @@ fn criterion_benchmark(c: &mut Criterion) {
     group.finish();
 }
 
-criterion_group!(benches, criterion_benchmark);
+fn media_playlist_try_from(c: &mut Criterion) {
+    let data = String::from_utf8(create_manifest_data()).unwrap();
+
+    let mut group = c.benchmark_group("MediaPlaylist::try_from");
+
+    group.throughput(Throughput::Bytes(data.len() as u64));
+
+    group.bench_function("MediaPlaylist::try_from", |b| {
+        b.iter(|| MediaPlaylist::try_from(black_box(data.as_str())).unwrap());
+    });
+
+    group.finish();
+}
+
+criterion_group!(benches, media_playlist_from_str, media_playlist_try_from);

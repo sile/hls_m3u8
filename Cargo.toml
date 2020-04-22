@@ -30,6 +30,7 @@ thiserror = "1.0"
 derive_more = "0.99"
 shorthand = "0.1"
 strum = { version = "0.17", features = ["derive"] }
+
 stable-vec = { version = "0.4" }
 
 [dev-dependencies]

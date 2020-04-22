@@ -1,5 +1,6 @@
+use std::borrow::Cow;
+use std::convert::{TryFrom, TryInto};
 use std::fmt;
-use std::str::FromStr;
 
 use shorthand::ShortHand;
 
@@ -33,18 +34,18 @@ use crate::{Decryptable, Error, RequiredVersion};
 /// [`MediaPlaylist`]: crate::MediaPlaylist
 #[derive(ShortHand, Debug, Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]
 #[shorthand(enable(must_use, into))]
-pub struct ExtXMap {
+pub struct ExtXMap<'a> {
     /// The `URI` that identifies a resource, that contains the media
     /// initialization section.
-    uri: String,
+    uri: Cow<'a, str>,
     /// The range of the media initialization section.
     #[shorthand(enable(copy))]
     range: Option<ByteRange>,
     #[shorthand(enable(skip))]
-    pub(crate) keys: Vec<ExtXKey>,
+    pub(crate) keys: Vec<ExtXKey<'a>>,
 }
 
-impl ExtXMap {
+impl<'a> ExtXMap<'a> {
     pub(crate) const PREFIX: &'static str = "#EXT-X-MAP:";
 
     /// Makes a new [`ExtXMap`] tag.
@@ -55,7 +56,8 @@ impl ExtXMap {
     /// # use hls_m3u8::tags::ExtXMap;
     /// let map = ExtXMap::new("https://prod.mediaspace.com/init.bin");
     /// ```
-    pub fn new<T: Into<String>>(uri: T) -> Self {
+    #[must_use]
+    pub fn new<T: Into<Cow<'a, str>>>(uri: T) -> Self {
         Self {
             uri: uri.into(),
             range: None,
@@ -71,19 +73,35 @@ impl ExtXMap {
     /// # use hls_m3u8::tags::ExtXMap;
     /// use hls_m3u8::types::ByteRange;
     ///
-    /// ExtXMap::with_range("https://prod.mediaspace.com/init.bin", 2..11);
+    /// let map = ExtXMap::with_range("https://prod.mediaspace.com/init.bin", 2..11);
     /// ```
-    pub fn with_range<I: Into<String>, B: Into<ByteRange>>(uri: I, range: B) -> Self {
+    #[must_use]
+    pub fn with_range<I: Into<Cow<'a, str>>, B: Into<ByteRange>>(uri: I, range: B) -> Self {
         Self {
             uri: uri.into(),
             range: Some(range.into()),
             keys: vec![],
         }
     }
+
+    /// Makes the struct independent of its lifetime, by taking ownership of all
+    /// internal [`Cow`]s.
+    ///
+    /// # Note
+    ///
+    /// This is a relatively expensive operation.
+    #[must_use]
+    pub fn into_owned(self) -> ExtXMap<'static> {
+        ExtXMap {
+            uri: Cow::Owned(self.uri.into_owned()),
+            range: self.range,
+            keys: self.keys.into_iter().map(|v| v.into_owned()).collect(),
+        }
+    }
 }
 
-impl Decryptable for ExtXMap {
-    fn keys(&self) -> Vec<&DecryptionKey> {
+impl<'a> Decryptable<'a> for ExtXMap<'a> {
+    fn keys(&self) -> Vec<&DecryptionKey<'a>> {
         //
         self.keys.iter().filter_map(ExtXKey::as_ref).collect()
     }
@@ -97,7 +115,7 @@ impl Decryptable for ExtXMap {
 ///
 /// [`ExtXIFramesOnly`]: crate::tags::ExtXIFramesOnly
 /// [`MediaPlaylist`]: crate::MediaPlaylist
-impl RequiredVersion for ExtXMap {
+impl<'a> RequiredVersion for ExtXMap<'a> {
     // this should return ProtocolVersion::V5, if it does not contain an
     // EXT-X-I-FRAMES-ONLY!
     // http://alexzambelli.com/blog/2016/05/04/understanding-hls-versions-and-client-compatibility/
@@ -106,7 +124,7 @@ impl RequiredVersion for ExtXMap {
     fn introduced_version(&self) -> ProtocolVersion { ProtocolVersion::V5 }
 }
 
-impl fmt::Display for ExtXMap {
+impl<'a> fmt::Display for ExtXMap<'a> {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(f, "{}", Self::PREFIX)?;
         write!(f, "URI={}", quote(&self.uri))?;
@@ -119,10 +137,10 @@ impl fmt::Display for ExtXMap {
     }
 }
 
-impl FromStr for ExtXMap {
-    type Err = Error;
+impl<'a> TryFrom<&'a str> for ExtXMap<'a> {
+    type Error = Error;
 
-    fn from_str(input: &str) -> Result<Self, Self::Err> {
+    fn try_from(input: &'a str) -> Result<Self, Self::Error> {
         let input = tag(input, Self::PREFIX)?;
 
         let mut uri = None;
@@ -132,7 +150,7 @@ impl FromStr for ExtXMap {
             match key {
                 "URI" => uri = Some(unquote(value)),
                 "BYTERANGE" => {
-                    range = Some(unquote(value).parse()?);
+                    range = Some(unquote(value).try_into()?);
                 }
                 _ => {
                     // [6.3.1. General Client Responsibilities]
@@ -174,18 +192,17 @@ mod test {
     fn test_parser() {
         assert_eq!(
             ExtXMap::new("foo"),
-            "#EXT-X-MAP:URI=\"foo\"".parse().unwrap()
+            ExtXMap::try_from("#EXT-X-MAP:URI=\"foo\"").unwrap()
         );
 
         assert_eq!(
             ExtXMap::with_range("foo", ByteRange::from(2..11)),
-            "#EXT-X-MAP:URI=\"foo\",BYTERANGE=\"9@2\"".parse().unwrap()
+            ExtXMap::try_from("#EXT-X-MAP:URI=\"foo\",BYTERANGE=\"9@2\"").unwrap()
         );
+
         assert_eq!(
             ExtXMap::with_range("foo", ByteRange::from(2..11)),
-            "#EXT-X-MAP:URI=\"foo\",BYTERANGE=\"9@2\",UNKNOWN=IGNORED"
-                .parse()
-                .unwrap()
+            ExtXMap::try_from("#EXT-X-MAP:URI=\"foo\",BYTERANGE=\"9@2\",UNKNOWN=IGNORED").unwrap()
         );
     }
 
@@ -200,6 +217,6 @@ mod test {
 
     #[test]
     fn test_decryptable() {
-        assert_eq!(ExtXMap::new("foo").keys(), Vec::<&DecryptionKey>::new());
+        assert_eq!(ExtXMap::new("foo").keys(), Vec::<&DecryptionKey<'_>>::new());
     }
 }

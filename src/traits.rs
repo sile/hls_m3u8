@@ -6,8 +6,8 @@ use crate::types::{DecryptionKey, ProtocolVersion};
 
 mod private {
     pub trait Sealed {}
-    impl Sealed for crate::MediaSegment {}
-    impl Sealed for crate::tags::ExtXMap {}
+    impl<'a> Sealed for crate::MediaSegment<'a> {}
+    impl<'a> Sealed for crate::tags::ExtXMap<'a> {}
 }
 
 /// Signals that a type or some of the asssociated data might need to be
@@ -16,7 +16,7 @@ mod private {
 /// # Note
 ///
 /// You are not supposed to implement this trait, therefore it is "sealed".
-pub trait Decryptable: private::Sealed {
+pub trait Decryptable<'a>: private::Sealed {
     /// Returns all keys, associated with the type.
     ///
     /// # Example
@@ -36,13 +36,13 @@ pub trait Decryptable: private::Sealed {
     /// }
     /// ```
     #[must_use]
-    fn keys(&self) -> Vec<&DecryptionKey>;
+    fn keys(&self) -> Vec<&DecryptionKey<'a>>;
 
     /// Most of the time only a single key is provided, so instead of iterating
     /// through all keys, one might as well just get the first key.
     #[must_use]
     #[inline]
-    fn first_key(&self) -> Option<&DecryptionKey> {
+    fn first_key(&self) -> Option<&DecryptionKey<'a>> {
         <Self as Decryptable>::keys(self).first().copied()
     }
 

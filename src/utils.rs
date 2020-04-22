@@ -1,5 +1,7 @@
-use crate::Error;
 use core::iter;
+use std::borrow::Cow;
+
+use crate::Error;
 
 /// This is an extension trait that adds the below method to `bool`.
 /// Those methods are already planned for the standard library, but are not
@@ -67,12 +69,25 @@ pub(crate) fn parse_yes_or_no<T: AsRef<str>>(s: T) -> crate::Result<bool> {
 ///
 /// Therefore it is safe to simply remove any occurence of those characters.
 /// [rfc8216#section-4.2](https://tools.ietf.org/html/rfc8216#section-4.2)
-pub(crate) fn unquote<T: AsRef<str>>(value: T) -> String {
-    value
-        .as_ref()
-        .chars()
-        .filter(|c| *c != '"' && *c != '\n' && *c != '\r')
-        .collect()
+pub(crate) fn unquote(value: &str) -> Cow<'_, str> {
+    if value.starts_with('"') && value.ends_with('"') {
+        let result = Cow::Borrowed(&value[1..value.len() - 1]);
+
+        if result
+            .chars()
+            .find(|c| *c == '"' || *c == '\n' || *c == '\r')
+            .is_none()
+        {
+            return result;
+        }
+    }
+
+    Cow::Owned(
+        value
+            .chars()
+            .filter(|c| *c != '"' && *c != '\n' && *c != '\r')
+            .collect(),
+    )
 }
 
 /// Puts a string inside quotes.

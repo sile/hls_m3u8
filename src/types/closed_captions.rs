@@ -1,13 +1,13 @@
-use core::convert::Infallible;
+use core::convert::{Infallible, TryFrom};
+use std::borrow::Cow;
 use std::fmt;
-use std::str::FromStr;
 
 use crate::utils::{quote, unquote};
 
 /// The identifier of a closed captions group or its absence.
 #[non_exhaustive]
 #[derive(Clone, Eq, PartialEq, Ord, PartialOrd, Hash, Debug)]
-pub enum ClosedCaptions {
+pub enum ClosedCaptions<'a> {
     /// It indicates the set of closed-caption renditions that can be used when
     /// playing the presentation.
     ///
@@ -18,7 +18,7 @@ pub enum ClosedCaptions {
     /// [`ExtXMedia::group_id`]: crate::tags::ExtXMedia::group_id
     /// [`ExtXMedia::media_type`]: crate::tags::ExtXMedia::media_type
     /// [`MediaType::ClosedCaptions`]: crate::types::MediaType::ClosedCaptions
-    GroupId(String),
+    GroupId(Cow<'a, str>),
     /// This variant indicates that there are no closed captions in
     /// any [`VariantStream`] in the [`MasterPlaylist`], therefore all
     /// [`VariantStream::ExtXStreamInf`] tags must have this attribute with a
@@ -34,7 +34,7 @@ pub enum ClosedCaptions {
     None,
 }
 
-impl ClosedCaptions {
+impl<'a> ClosedCaptions<'a> {
     /// Creates a [`ClosedCaptions::GroupId`] with the provided [`String`].
     ///
     /// # Example
@@ -47,13 +47,29 @@ impl ClosedCaptions {
     ///     ClosedCaptions::GroupId("vg1".into())
     /// );
     /// ```
-    pub fn group_id<I: Into<String>>(value: I) -> Self {
+    #[inline]
+    #[must_use]
+    pub fn group_id<I: Into<Cow<'a, str>>>(value: I) -> Self {
         //
         Self::GroupId(value.into())
     }
+
+    /// Makes the struct independent of its lifetime, by taking ownership of all
+    /// internal [`Cow`]s.
+    ///
+    /// # Note
+    ///
+    /// This is a relatively expensive operation.
+    #[must_use]
+    pub fn into_owned(self) -> ClosedCaptions<'static> {
+        match self {
+            Self::GroupId(id) => ClosedCaptions::GroupId(Cow::Owned(id.into_owned())),
+            Self::None => ClosedCaptions::None,
+        }
+    }
 }
 
-impl<T: PartialEq<str>> PartialEq<T> for ClosedCaptions {
+impl<'a, T: PartialEq<str>> PartialEq<T> for ClosedCaptions<'a> {
     fn eq(&self, other: &T) -> bool {
         match &self {
             Self::GroupId(value) => other.eq(value),
@@ -62,7 +78,7 @@ impl<T: PartialEq<str>> PartialEq<T> for ClosedCaptions {
     }
 }
 
-impl fmt::Display for ClosedCaptions {
+impl<'a> fmt::Display for ClosedCaptions<'a> {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match &self {
             Self::GroupId(value) => write!(f, "{}", quote(value)),
@@ -71,10 +87,10 @@ impl fmt::Display for ClosedCaptions {
     }
 }
 
-impl FromStr for ClosedCaptions {
-    type Err = Infallible;
+impl<'a> TryFrom<&'a str> for ClosedCaptions<'a> {
+    type Error = Infallible;
 
-    fn from_str(input: &str) -> Result<Self, Self::Err> {
+    fn try_from(input: &'a str) -> Result<Self, Self::Error> {
         if input.trim() == "NONE" {
             Ok(Self::None)
         } else {
@@ -102,12 +118,12 @@ mod tests {
     fn test_parser() {
         assert_eq!(
             ClosedCaptions::None,
-            "NONE".parse::<ClosedCaptions>().unwrap()
+            ClosedCaptions::try_from("NONE").unwrap()
         );
 
         assert_eq!(
             ClosedCaptions::GroupId("value".into()),
-            "\"value\"".parse::<ClosedCaptions>().unwrap()
+            ClosedCaptions::try_from("\"value\"").unwrap()
         );
     }
 }

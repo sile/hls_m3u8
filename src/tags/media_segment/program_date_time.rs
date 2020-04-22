@@ -1,5 +1,8 @@
+#[cfg(not(feature = "chrono"))]
+use std::borrow::Cow;
+use std::convert::TryFrom;
 use std::fmt;
-use std::str::FromStr;
+use std::marker::PhantomData;
 
 #[cfg(feature = "chrono")]
 use chrono::{DateTime, FixedOffset, SecondsFormat};
@@ -27,17 +30,18 @@ use crate::{Error, RequiredVersion};
 #[derive(Debug, Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]
 #[cfg_attr(feature = "chrono", derive(Deref, DerefMut, Copy))]
 #[non_exhaustive]
-pub struct ExtXProgramDateTime {
+pub struct ExtXProgramDateTime<'a> {
     /// The date-time of the first sample of the associated media segment.
     #[cfg(feature = "chrono")]
     #[cfg_attr(feature = "chrono", deref_mut, deref)]
     pub date_time: DateTime<FixedOffset>,
     /// The date-time of the first sample of the associated media segment.
     #[cfg(not(feature = "chrono"))]
-    pub date_time: String,
+    pub date_time: Cow<'a, str>,
+    _p: PhantomData<&'a str>,
 }
 
-impl ExtXProgramDateTime {
+impl<'a> ExtXProgramDateTime<'a> {
     pub(crate) const PREFIX: &'static str = "#EXT-X-PROGRAM-DATE-TIME:";
 
     /// Makes a new [`ExtXProgramDateTime`] tag.
@@ -58,7 +62,12 @@ impl ExtXProgramDateTime {
     /// ```
     #[must_use]
     #[cfg(feature = "chrono")]
-    pub const fn new(date_time: DateTime<FixedOffset>) -> Self { Self { date_time } }
+    pub const fn new(date_time: DateTime<FixedOffset>) -> Self {
+        Self {
+            date_time,
+            _p: PhantomData,
+        }
+    }
 
     /// Makes a new [`ExtXProgramDateTime`] tag.
     ///
@@ -69,19 +78,37 @@ impl ExtXProgramDateTime {
     /// let program_date_time = ExtXProgramDateTime::new("2010-02-19T14:54:23.031+08:00");
     /// ```
     #[cfg(not(feature = "chrono"))]
-    pub fn new<T: Into<String>>(date_time: T) -> Self {
+    pub fn new<T: Into<Cow<'a, str>>>(date_time: T) -> Self {
         Self {
             date_time: date_time.into(),
+            _p: PhantomData,
+        }
+    }
+
+    /// Makes the struct independent of its lifetime, by taking ownership of all
+    /// internal [`Cow`]s.
+    ///
+    /// # Note
+    ///
+    /// This is a relatively expensive operation.
+    #[must_use]
+    pub fn into_owned(self) -> ExtXProgramDateTime<'static> {
+        ExtXProgramDateTime {
+            #[cfg(not(feature = "chrono"))]
+            date_time: Cow::Owned(self.date_time.into_owned()),
+            #[cfg(feature = "chrono")]
+            date_time: self.date_time,
+            _p: PhantomData,
         }
     }
 }
 
 /// This tag requires [`ProtocolVersion::V1`].
-impl RequiredVersion for ExtXProgramDateTime {
+impl<'a> RequiredVersion for ExtXProgramDateTime<'a> {
     fn required_version(&self) -> ProtocolVersion { ProtocolVersion::V1 }
 }
 
-impl fmt::Display for ExtXProgramDateTime {
+impl<'a> fmt::Display for ExtXProgramDateTime<'a> {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         let date_time = {
             #[cfg(feature = "chrono")]
@@ -97,10 +124,10 @@ impl fmt::Display for ExtXProgramDateTime {
     }
 }
 
-impl FromStr for ExtXProgramDateTime {
-    type Err = Error;
+impl<'a> TryFrom<&'a str> for ExtXProgramDateTime<'a> {
+    type Error = Error;
 
-    fn from_str(input: &str) -> Result<Self, Self::Err> {
+    fn try_from(input: &'a str) -> Result<Self, Self::Error> {
         let input = tag(input, Self::PREFIX)?;
 
         Ok(Self::new({
@@ -163,8 +190,7 @@ mod test {
                     "2010-02-19T14:54:23.031+08:00"
                 }
             }),
-            "#EXT-X-PROGRAM-DATE-TIME:2010-02-19T14:54:23.031+08:00"
-                .parse::<ExtXProgramDateTime>()
+            ExtXProgramDateTime::try_from("#EXT-X-PROGRAM-DATE-TIME:2010-02-19T14:54:23.031+08:00")
                 .unwrap()
         );
     }

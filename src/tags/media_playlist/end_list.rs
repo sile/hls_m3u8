@@ -1,5 +1,5 @@
+use std::convert::TryFrom;
 use std::fmt;
-use std::str::FromStr;
 
 use crate::types::ProtocolVersion;
 use crate::utils::tag;
@@ -26,10 +26,10 @@ impl fmt::Display for ExtXEndList {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result { Self::PREFIX.fmt(f) }
 }
 
-impl FromStr for ExtXEndList {
-    type Err = Error;
+impl TryFrom<&str> for ExtXEndList {
+    type Error = Error;
 
-    fn from_str(input: &str) -> Result<Self, Self::Err> {
+    fn try_from(input: &str) -> Result<Self, Self::Error> {
         tag(input, Self::PREFIX)?;
         Ok(Self)
     }
@@ -47,7 +47,10 @@ mod test {
 
     #[test]
     fn test_parser() {
-        assert_eq!(ExtXEndList, "#EXT-X-ENDLIST".parse().unwrap());
+        assert_eq!(
+            ExtXEndList,
+            ExtXEndList::try_from("#EXT-X-ENDLIST").unwrap()
+        );
     }
 
     #[test]

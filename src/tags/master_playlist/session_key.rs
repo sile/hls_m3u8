@@ -1,6 +1,5 @@
 use core::convert::TryFrom;
 use std::fmt;
-use std::str::FromStr;
 
 use derive_more::{AsMut, AsRef, From};
 
@@ -22,9 +21,9 @@ use crate::{Error, RequiredVersion};
 /// [`MasterPlaylist`]: crate::MasterPlaylist
 /// [`ExtXKey`]: crate::tags::ExtXKey
 #[derive(AsRef, AsMut, From, Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
-pub struct ExtXSessionKey(pub DecryptionKey);
+pub struct ExtXSessionKey<'a>(pub DecryptionKey<'a>);
 
-impl ExtXSessionKey {
+impl<'a> ExtXSessionKey<'a> {
     pub(crate) const PREFIX: &'static str = "#EXT-X-SESSION-KEY:";
 
     /// Makes a new [`ExtXSessionKey`] tag.
@@ -42,13 +41,24 @@ impl ExtXSessionKey {
     /// ```
     #[must_use]
     #[inline]
-    pub const fn new(inner: DecryptionKey) -> Self { Self(inner) }
+    pub const fn new(inner: DecryptionKey<'a>) -> Self { Self(inner) }
+
+    /// Makes the struct independent of its lifetime, by taking ownership of all
+    /// internal [`Cow`]s.
+    ///
+    /// # Note
+    ///
+    /// This is a relatively expensive operation.
+    ///
+    /// [`Cow`]: std::borrow::Cow
+    #[must_use]
+    pub fn into_owned(self) -> ExtXSessionKey<'static> { ExtXSessionKey(self.0.into_owned()) }
 }
 
-impl TryFrom<ExtXKey> for ExtXSessionKey {
+impl<'a> TryFrom<ExtXKey<'a>> for ExtXSessionKey<'a> {
     type Error = Error;
 
-    fn try_from(value: ExtXKey) -> Result<Self, Self::Error> {
+    fn try_from(value: ExtXKey<'a>) -> Result<Self, Self::Error> {
         if let ExtXKey(Some(inner)) = value {
             Ok(Self(inner))
         } else {
@@ -59,21 +69,21 @@ impl TryFrom<ExtXKey> for ExtXSessionKey {
 
 /// This tag requires the same [`ProtocolVersion`] that is returned by
 /// `DecryptionKey::required_version`.
-impl RequiredVersion for ExtXSessionKey {
+impl<'a> RequiredVersion for ExtXSessionKey<'a> {
     fn required_version(&self) -> ProtocolVersion { self.0.required_version() }
 }
 
-impl fmt::Display for ExtXSessionKey {
+impl<'a> fmt::Display for ExtXSessionKey<'a> {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(f, "{}{}", Self::PREFIX, self.0.to_string())
     }
 }
 
-impl FromStr for ExtXSessionKey {
-    type Err = Error;
+impl<'a> TryFrom<&'a str> for ExtXSessionKey<'a> {
+    type Error = Error;
 
-    fn from_str(input: &str) -> Result<Self, Self::Err> {
-        Ok(Self(DecryptionKey::from_str(tag(input, Self::PREFIX)?)?))
+    fn try_from(input: &'a str) -> Result<Self, Self::Error> {
+        Ok(Self(DecryptionKey::try_from(tag(input, Self::PREFIX)?)?))
     }
 }
 
@@ -95,7 +105,7 @@ mod test {
             #[test]
             fn test_parser() {
                 $(
-                    assert_eq!($struct, $str.parse().unwrap());
+                    assert_eq!($struct, TryFrom::try_from($str).unwrap());
                 )+
             }
         }

@@ -1,6 +1,7 @@
+use std::borrow::Cow;
 use std::collections::HashSet;
+use std::convert::TryFrom;
 use std::fmt;
-use std::str::FromStr;
 
 use derive_builder::Builder;
 
@@ -24,11 +25,11 @@ use crate::{Error, RequiredVersion};
 /// A [`MasterPlaylist`] can be parsed from a `str`:
 ///
 /// ```
-/// use core::str::FromStr;
+/// use core::convert::TryFrom;
 /// use hls_m3u8::MasterPlaylist;
 ///
 /// // the concat! macro joins multiple `&'static str`.
-/// let master_playlist = concat!(
+/// let master_playlist = MasterPlaylist::try_from(concat!(
 ///     "#EXTM3U\n",
 ///     "#EXT-X-STREAM-INF:",
 ///     "BANDWIDTH=150000,CODECS=\"avc1.42e00a,mp4a.40.2\",RESOLUTION=416x234\n",
@@ -44,8 +45,7 @@ use crate::{Error, RequiredVersion};
 ///     "http://example.com/high/index.m3u8\n",
 ///     "#EXT-X-STREAM-INF:BANDWIDTH=64000,CODECS=\"mp4a.40.5\"\n",
 ///     "http://example.com/audio/index.m3u8\n"
-/// )
-/// .parse::<MasterPlaylist>()?;
+/// ))?;
 ///
 /// println!("{}", master_playlist.has_independent_segments);
 /// # Ok::<(), hls_m3u8::Error>(())
@@ -98,7 +98,7 @@ use crate::{Error, RequiredVersion};
 #[builder(build_fn(validate = "Self::validate"))]
 #[builder(setter(into, strip_option))]
 #[non_exhaustive]
-pub struct MasterPlaylist {
+pub struct MasterPlaylist<'a> {
     /// Indicates that all media samples in a [`MediaSegment`] can be
     /// decoded without information from other segments.
     ///
@@ -135,14 +135,14 @@ pub struct MasterPlaylist {
     ///
     /// [`MediaPlaylist`]: crate::MediaPlaylist
     #[builder(default)]
-    pub media: Vec<ExtXMedia>,
+    pub media: Vec<ExtXMedia<'a>>,
     /// A list of all streams of this [`MasterPlaylist`].
     ///
     /// ### Note
     ///
     /// This field is optional.
     #[builder(default)]
-    pub variant_streams: Vec<VariantStream>,
+    pub variant_streams: Vec<VariantStream<'a>>,
     /// The [`ExtXSessionData`] tag allows arbitrary session data to be
     /// carried in a [`MasterPlaylist`].
     ///
@@ -150,7 +150,7 @@ pub struct MasterPlaylist {
     ///
     /// This field is optional.
     #[builder(default)]
-    pub session_data: Vec<ExtXSessionData>,
+    pub session_data: Vec<ExtXSessionData<'a>>,
     /// A list of [`ExtXSessionKey`]s, that allows the client to preload
     /// these keys without having to read the [`MediaPlaylist`]s first.
     ///
@@ -160,17 +160,17 @@ pub struct MasterPlaylist {
     ///
     /// [`MediaPlaylist`]: crate::MediaPlaylist
     #[builder(default)]
-    pub session_keys: Vec<ExtXSessionKey>,
+    pub session_keys: Vec<ExtXSessionKey<'a>>,
     /// A list of all tags that could not be identified while parsing the input.
     ///
     /// ### Note
     ///
     /// This field is optional.
     #[builder(default)]
-    pub unknown_tags: Vec<String>,
+    pub unknown_tags: Vec<Cow<'a, str>>,
 }
 
-impl MasterPlaylist {
+impl<'a> MasterPlaylist<'a> {
     /// Returns a builder for a [`MasterPlaylist`].
     ///
     /// # Example
@@ -216,10 +216,10 @@ impl MasterPlaylist {
     /// ```
     #[must_use]
     #[inline]
-    pub fn builder() -> MasterPlaylistBuilder { MasterPlaylistBuilder::default() }
+    pub fn builder() -> MasterPlaylistBuilder<'a> { MasterPlaylistBuilder::default() }
 
     /// Returns all streams, which have an audio group id.
-    pub fn audio_streams(&self) -> impl Iterator<Item = &VariantStream> {
+    pub fn audio_streams(&self) -> impl Iterator<Item = &VariantStream<'a>> {
         self.variant_streams.iter().filter(|stream| {
             if let VariantStream::ExtXStreamInf { audio: Some(_), .. } = stream {
                 true
@@ -230,7 +230,7 @@ impl MasterPlaylist {
     }
 
     /// Returns all streams, which have a video group id.
-    pub fn video_streams(&self) -> impl Iterator<Item = &VariantStream> {
+    pub fn video_streams(&self) -> impl Iterator<Item = &VariantStream<'a>> {
         self.variant_streams.iter().filter(|stream| {
             if let VariantStream::ExtXStreamInf { stream_data, .. } = stream {
                 stream_data.video().is_some()
@@ -243,7 +243,7 @@ impl MasterPlaylist {
     }
 
     /// Returns all streams, which have no group id.
-    pub fn unassociated_streams(&self) -> impl Iterator<Item = &VariantStream> {
+    pub fn unassociated_streams(&self) -> impl Iterator<Item = &VariantStream<'a>> {
         self.variant_streams.iter().filter(|stream| {
             if let VariantStream::ExtXStreamInf {
                 stream_data,
@@ -263,17 +263,52 @@ impl MasterPlaylist {
     }
 
     /// Returns all `ExtXMedia` tags, associated with the provided stream.
-    pub fn associated_with<'a>(
-        &'a self,
-        stream: &'a VariantStream,
-    ) -> impl Iterator<Item = &ExtXMedia> + 'a {
+    pub fn associated_with<'b>(
+        &'b self,
+        stream: &'b VariantStream<'_>,
+    ) -> impl Iterator<Item = &ExtXMedia<'a>> + 'b {
         self.media
             .iter()
             .filter(move |media| stream.is_associated(media))
     }
+
+    /// Makes the struct independent of its lifetime, by taking ownership of all
+    /// internal [`Cow`]s.
+    ///
+    /// # Note
+    ///
+    /// This is a relatively expensive operation.
+    #[must_use]
+    pub fn into_owned(self) -> MasterPlaylist<'static> {
+        MasterPlaylist {
+            has_independent_segments: self.has_independent_segments,
+            start: self.start,
+            media: self.media.into_iter().map(|v| v.into_owned()).collect(),
+            variant_streams: self
+                .variant_streams
+                .into_iter()
+                .map(|v| v.into_owned())
+                .collect(),
+            session_data: self
+                .session_data
+                .into_iter()
+                .map(|v| v.into_owned())
+                .collect(),
+            session_keys: self
+                .session_keys
+                .into_iter()
+                .map(|v| v.into_owned())
+                .collect(),
+            unknown_tags: self
+                .unknown_tags
+                .into_iter()
+                .map(|v| Cow::Owned(v.into_owned()))
+                .collect(),
+        }
+    }
 }
 
-impl RequiredVersion for MasterPlaylist {
+impl<'a> RequiredVersion for MasterPlaylist<'a> {
     fn required_version(&self) -> ProtocolVersion {
         required_version![
             self.has_independent_segments
@@ -287,7 +322,7 @@ impl RequiredVersion for MasterPlaylist {
     }
 }
 
-impl MasterPlaylistBuilder {
+impl<'a> MasterPlaylistBuilder<'a> {
     fn validate(&self) -> Result<(), String> {
         if let Some(variant_streams) = &self.variant_streams {
             self.validate_variants(variant_streams)
@@ -300,7 +335,7 @@ impl MasterPlaylistBuilder {
         Ok(())
     }
 
-    fn validate_variants(&self, variant_streams: &[VariantStream]) -> crate::Result<()> {
+    fn validate_variants(&self, variant_streams: &[VariantStream<'_>]) -> crate::Result<()> {
         let mut closed_captions_none = false;
 
         for variant in variant_streams {
@@ -382,7 +417,7 @@ impl MasterPlaylistBuilder {
     fn check_media_group<T: AsRef<str>>(&self, media_type: MediaType, group_id: T) -> bool {
         if let Some(value) = &self.media {
             value.iter().any(|media| {
-                media.media_type == media_type && media.group_id().as_str() == group_id.as_ref()
+                media.media_type == media_type && media.group_id().as_ref() == group_id.as_ref()
             })
         } else {
             false
@@ -390,7 +425,7 @@ impl MasterPlaylistBuilder {
     }
 }
 
-impl RequiredVersion for MasterPlaylistBuilder {
+impl<'a> RequiredVersion for MasterPlaylistBuilder<'a> {
     fn required_version(&self) -> ProtocolVersion {
         // TODO: the .flatten() can be removed as soon as `recursive traits` are
         //       supported. (RequiredVersion is implemented for Option<T>, but
@@ -409,7 +444,7 @@ impl RequiredVersion for MasterPlaylistBuilder {
     }
 }
 
-impl fmt::Display for MasterPlaylist {
+impl<'a> fmt::Display for MasterPlaylist<'a> {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         writeln!(f, "{}", ExtM3u)?;
 
@@ -449,10 +484,10 @@ impl fmt::Display for MasterPlaylist {
     }
 }
 
-impl FromStr for MasterPlaylist {
-    type Err = Error;
+impl<'a> TryFrom<&'a str> for MasterPlaylist<'a> {
+    type Error = Error;
 
-    fn from_str(input: &str) -> Result<Self, Self::Err> {
+    fn try_from(input: &'a str) -> Result<Self, Self::Error> {
         let input = tag(input, ExtM3u::PREFIX)?;
         let mut builder = Self::builder();
 
@@ -505,10 +540,10 @@ impl FromStr for MasterPlaylist {
                         Tag::ExtXStart(t) => {
                             builder.start(t);
                         }
-                        _ => {
+                        Tag::Unknown(value) => {
                             // [6.3.1. General Client Responsibilities]
                             // > ignore any unrecognized tags.
-                            unknown_tags.push(tag.to_string());
+                            unknown_tags.push(Cow::Borrowed(value));
                         }
                     }
                 }
@@ -604,7 +639,7 @@ mod tests {
     #[test]
     fn test_parser() {
         assert_eq!(
-            concat!(
+            MasterPlaylist::try_from(concat!(
                 "#EXTM3U\n",
                 "#EXT-X-STREAM-INF:",
                 "BANDWIDTH=150000,CODECS=\"avc1.42e00a,mp4a.40.2\",RESOLUTION=416x234\n",
@@ -620,8 +655,7 @@ mod tests {
                 "http://example.com/high/index.m3u8\n",
                 "#EXT-X-STREAM-INF:BANDWIDTH=64000,CODECS=\"mp4a.40.5\"\n",
                 "http://example.com/audio/index.m3u8\n"
-            )
-            .parse::<MasterPlaylist>()
+            ))
             .unwrap(),
             MasterPlaylist::builder()
                 .variant_streams(vec![

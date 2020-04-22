@@ -1,5 +1,5 @@
+use std::convert::TryFrom;
 use std::fmt;
-use std::str::FromStr;
 use std::time::Duration;
 
 use crate::types::ProtocolVersion;
@@ -25,10 +25,10 @@ impl fmt::Display for ExtXTargetDuration {
     }
 }
 
-impl FromStr for ExtXTargetDuration {
-    type Err = Error;
+impl TryFrom<&str> for ExtXTargetDuration {
+    type Error = Error;
 
-    fn from_str(input: &str) -> Result<Self, Self::Err> {
+    fn try_from(input: &str) -> Result<Self, Self::Error> {
         let input = tag(input, Self::PREFIX)?
             .parse()
             .map_err(|e| Error::parse_int(input, e))?;
@@ -62,7 +62,7 @@ mod test {
     fn test_parser() {
         assert_eq!(
             ExtXTargetDuration(Duration::from_secs(5)),
-            "#EXT-X-TARGETDURATION:5".parse().unwrap()
+            ExtXTargetDuration::try_from("#EXT-X-TARGETDURATION:5").unwrap()
         );
     }
 }

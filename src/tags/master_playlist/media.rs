@@ -1,5 +1,6 @@
+use std::borrow::Cow;
+use std::convert::TryFrom;
 use std::fmt;
-use std::str::FromStr;
 
 use derive_builder::Builder;
 use shorthand::ShortHand;
@@ -21,7 +22,7 @@ use crate::{Error, RequiredVersion};
 #[shorthand(enable(must_use, into))]
 #[builder(setter(into))]
 #[builder(build_fn(validate = "Self::validate"))]
-pub struct ExtXMedia {
+pub struct ExtXMedia<'a> {
     /// The [`MediaType`] associated with this tag.
     ///
     /// ### Note
@@ -31,24 +32,7 @@ pub struct ExtXMedia {
     pub media_type: MediaType,
     /// An `URI` to a [`MediaPlaylist`].
     ///
-    /// # Example
-    ///
-    /// ```
-    /// # use hls_m3u8::tags::ExtXMedia;
-    /// use hls_m3u8::types::MediaType;
-    ///
-    /// let mut media = ExtXMedia::new(MediaType::Audio, "ag1", "english audio channel");
-    /// # assert_eq!(media.uri(), None);
-    ///
-    /// media.set_uri(Some("https://www.example.com/stream1.m3u8"));
-    ///
-    /// assert_eq!(
-    ///     media.uri(),
-    ///     Some(&"https://www.example.com/stream1.m3u8".to_string())
-    /// );
-    /// ```
-    ///
-    /// # Note
+    /// ### Note
     ///
     /// - This field is required, if the [`ExtXMedia::media_type`] is
     ///   [`MediaType::Subtitles`].
@@ -64,65 +48,39 @@ pub struct ExtXMedia {
     /// [`VariantStream::ExtXStreamInf`]:
     /// crate::tags::VariantStream::ExtXStreamInf
     #[builder(setter(strip_option), default)]
-    uri: Option<String>,
+    uri: Option<Cow<'a, str>>,
     /// The identifier that specifies the group to which the rendition
     /// belongs.
     ///
-    /// # Example
-    ///
-    /// ```
-    /// # use hls_m3u8::tags::ExtXMedia;
-    /// use hls_m3u8::types::MediaType;
-    ///
-    /// let mut media = ExtXMedia::new(MediaType::Audio, "ag1", "english audio channel");
-    ///
-    /// media.set_group_id("ag2");
-    ///
-    /// assert_eq!(media.group_id(), &"ag2".to_string());
-    /// ```
-    ///
-    /// # Note
+    /// ### Note
     ///
     /// This field is required.
-    group_id: String,
+    group_id: Cow<'a, str>,
     /// The name of the primary language used in the rendition.
     /// The value has to conform to [`RFC5646`].
     ///
-    /// # Example
-    ///
-    /// ```
-    /// # use hls_m3u8::tags::ExtXMedia;
-    /// use hls_m3u8::types::MediaType;
-    ///
-    /// let mut media = ExtXMedia::new(MediaType::Audio, "ag1", "english audio channel");
-    ///
-    /// media.set_language(Some("en"));
-    ///
-    /// assert_eq!(media.language(), Some(&"en".to_string()));
-    /// ```
-    ///
-    /// # Note
+    /// ### Note
     ///
     /// This field is optional.
     ///
     /// [`RFC5646`]: https://tools.ietf.org/html/rfc5646
     #[builder(setter(strip_option), default)]
-    language: Option<String>,
+    language: Option<Cow<'a, str>>,
     /// The name of a language associated with the rendition.
     /// An associated language is often used in a different role, than the
     /// language specified by the [`language`] field (e.g., written versus
     /// spoken, or a fallback dialect).
     ///
-    /// # Note
+    /// ### Note
     ///
     /// This field is optional.
     ///
     /// [`language`]: #method.language
     #[builder(setter(strip_option), default)]
-    assoc_language: Option<String>,
+    assoc_language: Option<Cow<'a, str>>,
     /// A human-readable description of the rendition.
     ///
-    /// # Note
+    /// ### Note
     ///
     /// This field is required.
     ///
@@ -130,7 +88,7 @@ pub struct ExtXMedia {
     /// that language.
     ///
     /// [`language`]: #method.language
-    name: String,
+    name: Cow<'a, str>,
     /// The value of the `default` flag.
     /// A value of `true` indicates, that the client should play
     /// this rendition of the content in the absence of information
@@ -189,13 +147,13 @@ pub struct ExtXMedia {
     ///
     /// The characteristics field may include private UTIs.
     ///
-    /// # Note
+    /// ### Note
     ///
     /// This field is optional.
     ///
     /// [`UTI`]: https://tools.ietf.org/html/draft-pantos-hls-rfc8216bis-05#ref-UTI
     #[builder(setter(strip_option), default)]
-    characteristics: Option<String>,
+    characteristics: Option<Cow<'a, str>>,
     /// A count of audio channels indicating the maximum number of independent,
     /// simultaneous audio channels present in any [`MediaSegment`] in the
     /// rendition.
@@ -214,7 +172,7 @@ pub struct ExtXMedia {
     pub channels: Option<Channels>,
 }
 
-impl ExtXMediaBuilder {
+impl<'a> ExtXMediaBuilder<'a> {
     fn validate(&self) -> Result<(), String> {
         // A MediaType is always required!
         let media_type = self
@@ -254,7 +212,7 @@ impl ExtXMediaBuilder {
     }
 }
 
-impl ExtXMedia {
+impl<'a> ExtXMedia<'a> {
     pub(crate) const PREFIX: &'static str = "#EXT-X-MEDIA:";
 
     /// Makes a new [`ExtXMedia`] tag with the associated [`MediaType`], the
@@ -275,8 +233,8 @@ impl ExtXMedia {
     #[must_use]
     pub fn new<T, K>(media_type: MediaType, group_id: T, name: K) -> Self
     where
-        T: Into<String>,
-        K: Into<String>,
+        T: Into<Cow<'a, str>>,
+        K: Into<Cow<'a, str>>,
     {
         Self {
             media_type,
@@ -317,22 +275,47 @@ impl ExtXMedia {
     ///         "public.accessibility.describes-music-and-sound"
     ///     ))
     ///     .build()?;
-    /// # Ok::<(), Box<dyn ::std::error::Error>>(())
+    /// # Ok::<(), String>(())
     /// ```
     #[must_use]
-    pub fn builder() -> ExtXMediaBuilder { ExtXMediaBuilder::default() }
+    #[inline]
+    pub fn builder() -> ExtXMediaBuilder<'a> { ExtXMediaBuilder::default() }
+
+    /// Makes the struct independent of its lifetime, by taking ownership of all
+    /// internal [`Cow`]s.
+    ///
+    /// # Note
+    ///
+    /// This is a relatively expensive operation.
+    #[must_use]
+    pub fn into_owned(self) -> ExtXMedia<'static> {
+        ExtXMedia {
+            media_type: self.media_type,
+            uri: self.uri.map(|v| Cow::Owned(v.into_owned())),
+            group_id: Cow::Owned(self.group_id.into_owned()),
+            language: self.language.map(|v| Cow::Owned(v.into_owned())),
+            assoc_language: self.assoc_language.map(|v| Cow::Owned(v.into_owned())),
+            name: Cow::Owned(self.name.into_owned()),
+            is_default: self.is_default,
+            is_autoselect: self.is_autoselect,
+            is_forced: self.is_forced,
+            instream_id: self.instream_id,
+            characteristics: self.characteristics.map(|v| Cow::Owned(v.into_owned())),
+            channels: self.channels,
+        }
+    }
 }
 
 /// This tag requires either `ProtocolVersion::V1` or if there is an
 /// `instream_id` it requires it's version.
-impl RequiredVersion for ExtXMedia {
+impl<'a> RequiredVersion for ExtXMedia<'a> {
     fn required_version(&self) -> ProtocolVersion {
         self.instream_id
             .map_or(ProtocolVersion::V1, |i| i.required_version())
     }
 }
 
-impl fmt::Display for ExtXMedia {
+impl<'a> fmt::Display for ExtXMedia<'a> {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(f, "{}", Self::PREFIX)?;
         write!(f, "TYPE={}", self.media_type)?;
@@ -380,10 +363,10 @@ impl fmt::Display for ExtXMedia {
     }
 }
 
-impl FromStr for ExtXMedia {
-    type Err = Error;
+impl<'a> TryFrom<&'a str> for ExtXMedia<'a> {
+    type Error = Error;
 
-    fn from_str(input: &str) -> Result<Self, Self::Err> {
+    fn try_from(input: &'a str) -> Result<Self, Self::Error> {
         let input = tag(input, Self::PREFIX)?;
 
         let mut builder = Self::builder();
@@ -455,7 +438,7 @@ mod test {
             #[test]
             fn test_parser() {
                 $(
-                    assert_eq!($struct, $str.parse().unwrap());
+                    assert_eq!($struct, TryFrom::try_from($str).unwrap());
                 )+
             }
         }
@@ -754,25 +737,28 @@ mod test {
 
     #[test]
     fn test_parser_error() {
-        assert!("".parse::<ExtXMedia>().is_err());
-        assert!("garbage".parse::<ExtXMedia>().is_err());
+        assert_eq!(ExtXMedia::try_from("").is_err(), true);
+        assert_eq!(ExtXMedia::try_from("garbage").is_err(), true);
 
-        assert!(
-            "#EXT-X-MEDIA:TYPE=CLOSED-CAPTIONS,URI=\"http://www.example.com\""
-                .parse::<ExtXMedia>()
-                .is_err()
+        assert_eq!(
+            ExtXMedia::try_from("#EXT-X-MEDIA:TYPE=CLOSED-CAPTIONS,URI=\"http://www.example.com\"")
+                .is_err(),
+            true
         );
-        assert!("#EXT-X-MEDIA:TYPE=AUDIO,INSTREAM-ID=CC1"
-            .parse::<ExtXMedia>()
-            .is_err());
+        assert_eq!(
+            ExtXMedia::try_from("#EXT-X-MEDIA:TYPE=AUDIO,INSTREAM-ID=CC1").is_err(),
+            true
+        );
 
-        assert!("#EXT-X-MEDIA:TYPE=AUDIO,DEFAULT=YES,AUTOSELECT=NO"
-            .parse::<ExtXMedia>()
-            .is_err());
+        assert_eq!(
+            ExtXMedia::try_from("#EXT-X-MEDIA:TYPE=AUDIO,DEFAULT=YES,AUTOSELECT=NO").is_err(),
+            true
+        );
 
-        assert!("#EXT-X-MEDIA:TYPE=AUDIO,FORCED=YES"
-            .parse::<ExtXMedia>()
-            .is_err());
+        assert_eq!(
+            ExtXMedia::try_from("#EXT-X-MEDIA:TYPE=AUDIO,FORCED=YES").is_err(),
+            true
+        );
     }
 
     #[test]

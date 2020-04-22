@@ -1,5 +1,5 @@
+use std::convert::TryFrom;
 use std::fmt;
-use std::str::FromStr;
 
 use shorthand::ShortHand;
 
@@ -111,10 +111,10 @@ impl fmt::Display for ExtXStart {
     }
 }
 
-impl FromStr for ExtXStart {
-    type Err = Error;
+impl TryFrom<&str> for ExtXStart {
+    type Error = Error;
 
-    fn from_str(input: &str) -> Result<Self, Self::Err> {
+    fn try_from(input: &str) -> Result<Self, Self::Error> {
         let input = tag(input, Self::PREFIX)?;
 
         let mut time_offset = None;
@@ -176,19 +176,17 @@ mod test {
     fn test_parser() {
         assert_eq!(
             ExtXStart::new(Float::new(-1.23)),
-            "#EXT-X-START:TIME-OFFSET=-1.23".parse().unwrap(),
+            ExtXStart::try_from("#EXT-X-START:TIME-OFFSET=-1.23").unwrap(),
         );
 
         assert_eq!(
             ExtXStart::with_precise(Float::new(1.23), true),
-            "#EXT-X-START:TIME-OFFSET=1.23,PRECISE=YES".parse().unwrap(),
+            ExtXStart::try_from("#EXT-X-START:TIME-OFFSET=1.23,PRECISE=YES").unwrap(),
         );
 
         assert_eq!(
             ExtXStart::with_precise(Float::new(1.23), true),
-            "#EXT-X-START:TIME-OFFSET=1.23,PRECISE=YES,UNKNOWN=TAG"
-                .parse()
-                .unwrap(),
+            ExtXStart::try_from("#EXT-X-START:TIME-OFFSET=1.23,PRECISE=YES,UNKNOWN=TAG").unwrap(),
         );
     }
 }
