@@ -1,5 +1,5 @@
+use std::convert::TryFrom;
 use std::fmt;
-use std::str::FromStr;
 
 use crate::types::ProtocolVersion;
 use crate::utils::tag;
@@ -28,10 +28,10 @@ impl fmt::Display for ExtXDiscontinuitySequence {
     }
 }
 
-impl FromStr for ExtXDiscontinuitySequence {
-    type Err = Error;
+impl TryFrom<&str> for ExtXDiscontinuitySequence {
+    type Error = Error;
 
-    fn from_str(input: &str) -> Result<Self, Self::Err> {
+    fn try_from(input: &str) -> Result<Self, Self::Error> {
         let input = tag(input, Self::PREFIX)?;
         let seq_num = input.parse().map_err(|e| Error::parse_int(input, e))?;
 
@@ -64,11 +64,11 @@ mod test {
     fn test_parser() {
         assert_eq!(
             ExtXDiscontinuitySequence(123),
-            "#EXT-X-DISCONTINUITY-SEQUENCE:123".parse().unwrap()
+            ExtXDiscontinuitySequence::try_from("#EXT-X-DISCONTINUITY-SEQUENCE:123").unwrap()
         );
 
         assert_eq!(
-            ExtXDiscontinuitySequence::from_str("#EXT-X-DISCONTINUITY-SEQUENCE:12A"),
+            ExtXDiscontinuitySequence::try_from("#EXT-X-DISCONTINUITY-SEQUENCE:12A"),
             Err(Error::parse_int("12A", "12A".parse::<u64>().expect_err("")))
         );
     }

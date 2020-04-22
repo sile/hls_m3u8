@@ -1,4 +1,6 @@
+use std::borrow::Cow;
 use std::collections::HashSet;
+use std::convert::TryFrom;
 use std::fmt;
 use std::str::FromStr;
 use std::time::Duration;
@@ -23,7 +25,7 @@ use crate::{Error, RequiredVersion};
 #[derive(Builder, Debug, Clone, PartialEq, Eq)]
 #[builder(build_fn(skip), setter(strip_option))]
 #[non_exhaustive]
-pub struct MediaPlaylist {
+pub struct MediaPlaylist<'a> {
     /// Specifies the maximum [`MediaSegment::duration`]. A typical target
     /// duration is 10 seconds.
     ///
@@ -106,7 +108,7 @@ pub struct MediaPlaylist {
     ///
     /// This field is required.
     #[builder(setter(custom))]
-    pub segments: StableVec<MediaSegment>,
+    pub segments: StableVec<MediaSegment<'a>>,
     /// The allowable excess duration of each media segment in the
     /// associated playlist.
     ///
@@ -129,10 +131,10 @@ pub struct MediaPlaylist {
     ///
     /// This field is optional.
     #[builder(default, setter(into))]
-    pub unknown: Vec<String>,
+    pub unknown: Vec<Cow<'a, str>>,
 }
 
-impl MediaPlaylistBuilder {
+impl<'a> MediaPlaylistBuilder<'a> {
     fn validate(&self) -> Result<(), String> {
         if let Some(target_duration) = &self.target_duration {
             self.validate_media_segments(*target_duration)
@@ -225,7 +227,7 @@ impl MediaPlaylistBuilder {
 
     /// Adds a media segment to the resulting playlist and assigns the next free
     /// [`MediaSegment::number`] to the segment.
-    pub fn push_segment(&mut self, segment: MediaSegment) -> &mut Self {
+    pub fn push_segment(&mut self, segment: MediaSegment<'a>) -> &mut Self {
         let segments = self.segments.get_or_insert_with(StableVec::new);
 
         if segment.explicit_number {
@@ -239,7 +241,7 @@ impl MediaPlaylistBuilder {
     }
 
     /// Parse the rest of the [`MediaPlaylist`] from an m3u8 file.
-    pub fn parse(&mut self, input: &str) -> crate::Result<MediaPlaylist> {
+    pub fn parse(&mut self, input: &'a str) -> crate::Result<MediaPlaylist<'a>> {
         parse_media_playlist(input, self)
     }
 
@@ -253,8 +255,8 @@ impl MediaPlaylistBuilder {
     /// number has been set explicitly. This function assumes, that all segments
     /// will be present in the final media playlist and the following is only
     /// possible if the segment is marked with `ExtXDiscontinuity`.
-    pub fn segments(&mut self, segments: Vec<MediaSegment>) -> &mut Self {
-        let mut vec = StableVec::<MediaSegment>::with_capacity(segments.len());
+    pub fn segments(&mut self, segments: Vec<MediaSegment<'a>>) -> &mut Self {
+        let mut vec = StableVec::<MediaSegment<'a>>::with_capacity(segments.len());
         let mut remaining = Vec::with_capacity(segments.len());
 
         for segment in segments {
@@ -278,7 +280,7 @@ impl MediaPlaylistBuilder {
     /// # Errors
     ///
     /// If a required field has not been initialized.
-    pub fn build(&self) -> Result<MediaPlaylist, String> {
+    pub fn build(&self) -> Result<MediaPlaylist<'a>, String> {
         // validate builder
         self.validate()?;
 
@@ -371,7 +373,7 @@ impl MediaPlaylistBuilder {
     }
 }
 
-impl RequiredVersion for MediaPlaylistBuilder {
+impl<'a> RequiredVersion for MediaPlaylistBuilder<'a> {
     fn required_version(&self) -> ProtocolVersion {
         required_version![
             self.target_duration.map(ExtXTargetDuration),
@@ -393,11 +395,11 @@ impl RequiredVersion for MediaPlaylistBuilder {
     }
 }
 
-impl MediaPlaylist {
+impl<'a> MediaPlaylist<'a> {
     /// Returns a builder for [`MediaPlaylist`].
     #[must_use]
     #[inline]
-    pub fn builder() -> MediaPlaylistBuilder { MediaPlaylistBuilder::default() }
+    pub fn builder() -> MediaPlaylistBuilder<'a> { MediaPlaylistBuilder::default() }
 
     /// Computes the `Duration` of the [`MediaPlaylist`], by adding each segment
     /// duration together.
@@ -405,9 +407,42 @@ impl MediaPlaylist {
     pub fn duration(&self) -> Duration {
         self.segments.values().map(|s| s.duration.duration()).sum()
     }
+
+    /// Makes the struct independent of its lifetime, by taking ownership of all
+    /// internal [`Cow`]s.
+    ///
+    /// # Note
+    ///
+    /// This is a relatively expensive operation.
+    #[must_use]
+    pub fn into_owned(self) -> MediaPlaylist<'static> {
+        MediaPlaylist {
+            target_duration: self.target_duration,
+            media_sequence: self.media_sequence,
+            discontinuity_sequence: self.discontinuity_sequence,
+            playlist_type: self.playlist_type,
+            has_i_frames_only: self.has_i_frames_only,
+            has_independent_segments: self.has_independent_segments,
+            start: self.start,
+            has_end_list: self.has_end_list,
+            segments: {
+                self.segments
+                    .into_iter()
+                    .map(|(_, s)| s.into_owned())
+                    .collect()
+            },
+            allowable_excess_duration: self.allowable_excess_duration,
+            unknown: {
+                self.unknown
+                    .into_iter()
+                    .map(|v| Cow::Owned(v.into_owned()))
+                    .collect()
+            },
+        }
+    }
 }
 
-impl RequiredVersion for MediaPlaylist {
+impl<'a> RequiredVersion for MediaPlaylist<'a> {
     fn required_version(&self) -> ProtocolVersion {
         required_version![
             ExtXTargetDuration(self.target_duration),
@@ -425,7 +460,7 @@ impl RequiredVersion for MediaPlaylist {
     }
 }
 
-impl fmt::Display for MediaPlaylist {
+impl<'a> fmt::Display for MediaPlaylist<'a> {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         writeln!(f, "{}", ExtM3u)?;
 
@@ -463,7 +498,7 @@ impl fmt::Display for MediaPlaylist {
             writeln!(f, "{}", value)?;
         }
 
-        let mut available_keys = HashSet::<ExtXKey>::new();
+        let mut available_keys = HashSet::<ExtXKey<'_>>::new();
 
         for segment in self.segments.values() {
             for key in &segment.keys {
@@ -530,10 +565,10 @@ impl fmt::Display for MediaPlaylist {
     }
 }
 
-fn parse_media_playlist(
-    input: &str,
-    builder: &mut MediaPlaylistBuilder,
-) -> crate::Result<MediaPlaylist> {
+fn parse_media_playlist<'a>(
+    input: &'a str,
+    builder: &mut MediaPlaylistBuilder<'a>,
+) -> crate::Result<MediaPlaylist<'a>> {
     let input = tag(input, "#EXTM3U")?;
 
     let mut segment = MediaSegment::builder();
@@ -656,10 +691,10 @@ fn parse_media_playlist(
                         builder.start(t);
                     }
                     Tag::ExtXVersion(_) => {}
-                    Tag::Unknown(_) => {
+                    Tag::Unknown(s) => {
                         // [6.3.1. General Client Responsibilities]
                         // > ignore any unrecognized tags.
-                        unknown.push(tag.to_string());
+                        unknown.push(Cow::Borrowed(s));
                     }
                 }
             }
@@ -684,10 +719,18 @@ fn parse_media_playlist(
     builder.build().map_err(Error::builder)
 }
 
-impl FromStr for MediaPlaylist {
+impl FromStr for MediaPlaylist<'static> {
     type Err = Error;
 
     fn from_str(input: &str) -> Result<Self, Self::Err> {
+        Ok(parse_media_playlist(input, &mut Self::builder())?.into_owned())
+    }
+}
+
+impl<'a> TryFrom<&'a str> for MediaPlaylist<'a> {
+    type Error = Error;
+
+    fn try_from(input: &'a str) -> Result<Self, Self::Error> {
         parse_media_playlist(input, &mut Self::builder())
     }
 }
@@ -713,7 +756,7 @@ mod tests {
         );
 
         // Error (allowable segment duration = target duration = 8)
-        assert!(playlist.parse::<MediaPlaylist>().is_err());
+        assert!(MediaPlaylist::try_from(playlist).is_err());
 
         // Error (allowable segment duration = 9)
         assert!(MediaPlaylist::builder()
@@ -819,6 +862,6 @@ mod tests {
     #[test]
     fn test_empty_playlist() {
         let playlist = "";
-        assert!(playlist.parse::<MediaPlaylist>().is_err());
+        assert!(MediaPlaylist::try_from(playlist).is_err());
     }
 }

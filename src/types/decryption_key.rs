@@ -1,5 +1,6 @@
+use std::borrow::Cow;
+use std::convert::TryFrom;
 use std::fmt;
-use std::str::FromStr;
 
 use derive_builder::Builder;
 use shorthand::ShortHand;
@@ -16,7 +17,7 @@ use crate::{Error, RequiredVersion};
 #[builder(setter(into), build_fn(validate = "Self::validate"))]
 #[shorthand(enable(skip, must_use, into))]
 #[non_exhaustive]
-pub struct DecryptionKey {
+pub struct DecryptionKey<'a> {
     /// The encryption method, which has been used to encrypt the data.
     ///
     /// An [`EncryptionMethod::Aes128`] signals that the data is encrypted using
@@ -45,7 +46,7 @@ pub struct DecryptionKey {
     /// This field is required.
     #[builder(setter(into, strip_option), default)]
     #[shorthand(disable(skip))]
-    pub(crate) uri: String,
+    pub(crate) uri: Cow<'a, str>,
     /// An initialization vector (IV) is a fixed size input that can be used
     /// along with a secret key for data encryption.
     ///
@@ -80,7 +81,7 @@ pub struct DecryptionKey {
     pub versions: Option<KeyFormatVersions>,
 }
 
-impl DecryptionKey {
+impl<'a> DecryptionKey<'a> {
     /// Creates a new `DecryptionKey` from an uri pointing to the key data and
     /// an `EncryptionMethod`.
     ///
@@ -94,7 +95,7 @@ impl DecryptionKey {
     /// ```
     #[must_use]
     #[inline]
-    pub fn new<I: Into<String>>(method: EncryptionMethod, uri: I) -> Self {
+    pub fn new<I: Into<Cow<'a, str>>>(method: EncryptionMethod, uri: I) -> Self {
         Self {
             method,
             uri: uri.into(),
@@ -125,7 +126,24 @@ impl DecryptionKey {
     /// ```
     #[must_use]
     #[inline]
-    pub fn builder() -> DecryptionKeyBuilder { DecryptionKeyBuilder::default() }
+    pub fn builder() -> DecryptionKeyBuilder<'a> { DecryptionKeyBuilder::default() }
+
+    /// Makes the struct independent of its lifetime, by taking ownership of all
+    /// internal [`Cow`]s.
+    ///
+    /// # Note
+    ///
+    /// This is a relatively expensive operation.
+    #[must_use]
+    pub fn into_owned(self) -> DecryptionKey<'static> {
+        DecryptionKey {
+            method: self.method,
+            uri: Cow::Owned(self.uri.into_owned()),
+            iv: self.iv,
+            format: self.format,
+            versions: self.versions,
+        }
+    }
 }
 
 /// This tag requires [`ProtocolVersion::V5`], if [`KeyFormat`] or
@@ -133,7 +151,7 @@ impl DecryptionKey {
 /// specified.
 ///
 /// Otherwise [`ProtocolVersion::V1`] is required.
-impl RequiredVersion for DecryptionKey {
+impl<'a> RequiredVersion for DecryptionKey<'a> {
     fn required_version(&self) -> ProtocolVersion {
         if self.format.is_some() || self.versions.is_some() {
             ProtocolVersion::V5
@@ -145,10 +163,10 @@ impl RequiredVersion for DecryptionKey {
     }
 }
 
-impl FromStr for DecryptionKey {
-    type Err = Error;
+impl<'a> TryFrom<&'a str> for DecryptionKey<'a> {
+    type Error = Error;
 
-    fn from_str(input: &str) -> Result<Self, Self::Err> {
+    fn try_from(input: &'a str) -> Result<Self, Self::Error> {
         let mut method = None;
         let mut uri = None;
         let mut iv = None;
@@ -190,7 +208,7 @@ impl FromStr for DecryptionKey {
     }
 }
 
-impl fmt::Display for DecryptionKey {
+impl<'a> fmt::Display for DecryptionKey<'a> {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(f, "METHOD={},URI={}", self.method, quote(&self.uri))?;
 
@@ -212,7 +230,7 @@ impl fmt::Display for DecryptionKey {
     }
 }
 
-impl DecryptionKeyBuilder {
+impl<'a> DecryptionKeyBuilder<'a> {
     fn validate(&self) -> Result<(), String> {
         // a decryption key must contain a uri and a method
         if self.method.is_none() {
@@ -243,19 +261,19 @@ mod test {
             #[test]
             fn test_parser() {
                 $(
-                    assert_eq!($struct, $str.parse().unwrap());
+                    assert_eq!($struct, TryFrom::try_from($str).unwrap());
                 )+
 
                 assert_eq!(
                     DecryptionKey::new(EncryptionMethod::Aes128, "http://www.example.com"),
-                    concat!(
+                    DecryptionKey::try_from(concat!(
                         "METHOD=AES-128,",
                         "URI=\"http://www.example.com\",",
                         "UNKNOWNTAG=abcd"
-                    ).parse().unwrap(),
+                    )).unwrap(),
                 );
-                assert!("METHOD=AES-128,URI=".parse::<DecryptionKey>().is_err());
-                assert!("garbage".parse::<DecryptionKey>().is_err());
+                assert!(DecryptionKey::try_from("METHOD=AES-128,URI=").is_err());
+                assert!(DecryptionKey::try_from("garbage").is_err());
             }
         }
     }

@@ -1,5 +1,5 @@
+use std::convert::TryFrom;
 use std::fmt;
-use std::str::FromStr;
 
 use crate::types::ProtocolVersion;
 use crate::utils::tag;
@@ -43,10 +43,10 @@ impl fmt::Display for PlaylistType {
     }
 }
 
-impl FromStr for PlaylistType {
-    type Err = Error;
+impl TryFrom<&str> for PlaylistType {
+    type Error = Error;
 
-    fn from_str(input: &str) -> Result<Self, Self::Err> {
+    fn try_from(input: &str) -> Result<Self, Self::Error> {
         let input = tag(input, Self::PREFIX)?;
         match input {
             "EVENT" => Ok(Self::Event),
@@ -64,20 +64,18 @@ mod test {
     #[test]
     fn test_parser() {
         assert_eq!(
-            "#EXT-X-PLAYLIST-TYPE:VOD".parse::<PlaylistType>().unwrap(),
+            PlaylistType::try_from("#EXT-X-PLAYLIST-TYPE:VOD").unwrap(),
             PlaylistType::Vod,
         );
 
         assert_eq!(
-            "#EXT-X-PLAYLIST-TYPE:EVENT"
-                .parse::<PlaylistType>()
-                .unwrap(),
+            PlaylistType::try_from("#EXT-X-PLAYLIST-TYPE:EVENT").unwrap(),
             PlaylistType::Event,
         );
 
-        assert!("#EXT-X-PLAYLIST-TYPE:H".parse::<PlaylistType>().is_err());
+        assert!(PlaylistType::try_from("#EXT-X-PLAYLIST-TYPE:H").is_err());
 
-        assert!("garbage".parse::<PlaylistType>().is_err());
+        assert!(PlaylistType::try_from("garbage").is_err());
     }
 
     #[test]

@@ -1,5 +1,6 @@
+use std::borrow::Cow;
+use std::convert::TryFrom;
 use std::fmt;
-use std::str::FromStr;
 use std::time::Duration;
 
 use derive_more::AsRef;
@@ -12,13 +13,13 @@ use crate::{Error, RequiredVersion};
 ///
 /// [`Media Segment`]: crate::media_segment::MediaSegment
 #[derive(AsRef, Default, Debug, Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]
-pub struct ExtInf {
+pub struct ExtInf<'a> {
     #[as_ref]
     duration: Duration,
-    title: Option<String>,
+    title: Option<Cow<'a, str>>,
 }
 
-impl ExtInf {
+impl<'a> ExtInf<'a> {
     pub(crate) const PREFIX: &'static str = "#EXTINF:";
 
     /// Makes a new [`ExtInf`] tag.
@@ -50,7 +51,7 @@ impl ExtInf {
     /// let ext_inf = ExtInf::with_title(Duration::from_secs(5), "title");
     /// ```
     #[must_use]
-    pub fn with_title<T: Into<String>>(duration: Duration, title: T) -> Self {
+    pub fn with_title<T: Into<Cow<'a, str>>>(duration: Duration, title: T) -> Self {
         Self {
             duration,
             title: Some(title.into()),
@@ -101,10 +102,10 @@ impl ExtInf {
     ///
     /// let ext_inf = ExtInf::with_title(Duration::from_secs(5), "title");
     ///
-    /// assert_eq!(ext_inf.title(), &Some("title".to_string()));
+    /// assert_eq!(ext_inf.title(), &Some("title".into()));
     /// ```
     #[must_use]
-    pub const fn title(&self) -> &Option<String> { &self.title }
+    pub const fn title(&self) -> &Option<Cow<'a, str>> { &self.title }
 
     /// Sets the title of the associated media segment.
     ///
@@ -118,17 +119,31 @@ impl ExtInf {
     ///
     /// ext_inf.set_title(Some("better title"));
     ///
-    /// assert_eq!(ext_inf.title(), &Some("better title".to_string()));
+    /// assert_eq!(ext_inf.title(), &Some("better title".into()));
     /// ```
-    pub fn set_title<T: ToString>(&mut self, value: Option<T>) -> &mut Self {
-        self.title = value.map(|v| v.to_string());
+    pub fn set_title<T: Into<Cow<'a, str>>>(&mut self, value: Option<T>) -> &mut Self {
+        self.title = value.map(|v| v.into());
         self
+    }
+
+    /// Makes the struct independent of its lifetime, by taking ownership of all
+    /// internal [`Cow`]s.
+    ///
+    /// # Note
+    ///
+    /// This is a relatively expensive operation.
+    #[must_use]
+    pub fn into_owned(self) -> ExtInf<'static> {
+        ExtInf {
+            duration: self.duration,
+            title: self.title.map(|v| Cow::Owned(v.into_owned())),
+        }
     }
 }
 
 /// This tag requires [`ProtocolVersion::V1`], if the duration does not have
 /// nanoseconds, otherwise it requires [`ProtocolVersion::V3`].
-impl RequiredVersion for ExtInf {
+impl<'a> RequiredVersion for ExtInf<'a> {
     fn required_version(&self) -> ProtocolVersion {
         if self.duration.subsec_nanos() == 0 {
             ProtocolVersion::V1
@@ -138,7 +153,7 @@ impl RequiredVersion for ExtInf {
     }
 }
 
-impl fmt::Display for ExtInf {
+impl<'a> fmt::Display for ExtInf<'a> {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(f, "{}", Self::PREFIX)?;
         write!(f, "{},", self.duration.as_secs_f64())?;
@@ -150,10 +165,10 @@ impl fmt::Display for ExtInf {
     }
 }
 
-impl FromStr for ExtInf {
-    type Err = Error;
+impl<'a> TryFrom<&'a str> for ExtInf<'a> {
+    type Error = Error;
 
-    fn from_str(input: &str) -> Result<Self, Self::Err> {
+    fn try_from(input: &'a str) -> Result<Self, Self::Error> {
         let mut input = tag(input, Self::PREFIX)?.splitn(2, ',');
 
         let duration = input.next().unwrap();
@@ -167,13 +182,13 @@ impl FromStr for ExtInf {
             .next()
             .map(str::trim)
             .filter(|value| !value.is_empty())
-            .map(ToString::to_string);
+            .map(|v| Cow::Borrowed(v));
 
         Ok(Self { duration, title })
     }
 }
 
-impl From<Duration> for ExtInf {
+impl<'a> From<Duration> for ExtInf<'a> {
     fn from(value: Duration) -> Self { Self::new(value) }
 }
 
@@ -206,32 +221,32 @@ mod test {
     fn test_parser() {
         // #EXTINF:<duration>,[<title>]
         assert_eq!(
-            "#EXTINF:5".parse::<ExtInf>().unwrap(),
+            ExtInf::try_from("#EXTINF:5").unwrap(),
             ExtInf::new(Duration::from_secs(5))
         );
         assert_eq!(
-            "#EXTINF:5,".parse::<ExtInf>().unwrap(),
+            ExtInf::try_from("#EXTINF:5,").unwrap(),
             ExtInf::new(Duration::from_secs(5))
         );
         assert_eq!(
-            "#EXTINF:5.5".parse::<ExtInf>().unwrap(),
+            ExtInf::try_from("#EXTINF:5.5").unwrap(),
             ExtInf::new(Duration::from_millis(5500))
         );
         assert_eq!(
-            "#EXTINF:5.5,".parse::<ExtInf>().unwrap(),
+            ExtInf::try_from("#EXTINF:5.5,").unwrap(),
             ExtInf::new(Duration::from_millis(5500))
         );
         assert_eq!(
-            "#EXTINF:5.5,title".parse::<ExtInf>().unwrap(),
+            ExtInf::try_from("#EXTINF:5.5,title").unwrap(),
             ExtInf::with_title(Duration::from_millis(5500), "title")
         );
         assert_eq!(
-            "#EXTINF:5,title".parse::<ExtInf>().unwrap(),
+            ExtInf::try_from("#EXTINF:5,title").unwrap(),
             ExtInf::with_title(Duration::from_secs(5), "title")
         );
 
-        assert!("#EXTINF:".parse::<ExtInf>().is_err());
-        assert!("#EXTINF:garbage".parse::<ExtInf>().is_err());
+        assert!(ExtInf::try_from("#EXTINF:").is_err());
+        assert!(ExtInf::try_from("#EXTINF:garbage").is_err());
     }
 
     #[test]
@@ -239,7 +254,7 @@ mod test {
         assert_eq!(ExtInf::new(Duration::from_secs(5)).title(), &None);
         assert_eq!(
             ExtInf::with_title(Duration::from_secs(5), "title").title(),
-            &Some("title".to_string())
+            &Some("title".into())
         );
     }
 

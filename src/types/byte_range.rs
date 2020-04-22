@@ -1,10 +1,10 @@
-use core::convert::TryInto;
+use core::convert::{TryFrom, TryInto};
 use core::fmt;
 use core::ops::{
     Add, AddAssign, Bound, Range, RangeBounds, RangeInclusive, RangeTo, RangeToInclusive, Sub,
     SubAssign,
 };
-use core::str::FromStr;
+use std::borrow::Cow;
 
 use shorthand::ShortHand;
 
@@ -408,10 +408,10 @@ impl fmt::Display for ByteRange {
     }
 }
 
-impl FromStr for ByteRange {
-    type Err = Error;
+impl TryFrom<&str> for ByteRange {
+    type Error = Error;
 
-    fn from_str(input: &str) -> Result<Self, Self::Err> {
+    fn try_from(input: &str) -> Result<Self, Self::Error> {
         let mut input = input.splitn(2, '@');
 
         let length = input.next().unwrap();
@@ -428,6 +428,15 @@ impl FromStr for ByteRange {
             start,
             end: start.unwrap_or(0) + length,
         })
+    }
+}
+
+impl<'a> TryFrom<Cow<'a, str>> for ByteRange {
+    type Error = Error;
+
+    fn try_from(input: Cow<'a, str>) -> Result<Self, Self::Error> {
+        //
+        Self::try_from(input.as_ref())
     }
 }
 
@@ -658,20 +667,20 @@ mod tests {
 
     #[test]
     fn test_parser() {
-        assert_eq!(ByteRange::from(2..22), "20@2".parse().unwrap());
+        assert_eq!(ByteRange::from(2..22), ByteRange::try_from("20@2").unwrap());
 
-        assert_eq!(ByteRange::from(..300), "300".parse().unwrap());
+        assert_eq!(ByteRange::from(..300), ByteRange::try_from("300").unwrap());
 
         assert_eq!(
-            ByteRange::from_str("a"),
+            ByteRange::try_from("a"),
             Err(Error::parse_int("a", "a".parse::<usize>().unwrap_err()))
         );
 
         assert_eq!(
-            ByteRange::from_str("1@a"),
+            ByteRange::try_from("1@a"),
             Err(Error::parse_int("a", "a".parse::<usize>().unwrap_err()))
         );
 
-        assert!("".parse::<ByteRange>().is_err());
+        assert!(ByteRange::try_from("").is_err());
     }
 }

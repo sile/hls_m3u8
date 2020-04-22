@@ -1,3 +1,5 @@
+use std::convert::TryFrom;
+
 use hls_m3u8::tags::{ExtXMedia, VariantStream};
 use hls_m3u8::types::{MediaType, StreamData};
 use hls_m3u8::MasterPlaylist;
@@ -9,7 +11,7 @@ macro_rules! generate_tests {
         $(
             #[test]
             fn $fnname() {
-                assert_eq!($struct, $str.parse().unwrap());
+                assert_eq!($struct, TryFrom::try_from($str).unwrap());
 
                 assert_eq!($struct.to_string(), $str.to_string());
             }

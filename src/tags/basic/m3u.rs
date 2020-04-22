@@ -1,5 +1,5 @@
+use std::convert::TryFrom;
 use std::fmt;
-use std::str::FromStr;
 
 use crate::types::ProtocolVersion;
 use crate::utils::tag;
@@ -28,10 +28,10 @@ impl fmt::Display for ExtM3u {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result { write!(f, "{}", Self::PREFIX) }
 }
 
-impl FromStr for ExtM3u {
-    type Err = Error;
+impl TryFrom<&str> for ExtM3u {
+    type Error = Error;
 
-    fn from_str(input: &str) -> Result<Self, Self::Err> {
+    fn try_from(input: &str) -> Result<Self, Self::Error> {
         tag(input, Self::PREFIX)?;
         Ok(Self)
     }
@@ -49,8 +49,8 @@ mod test {
 
     #[test]
     fn test_parser() {
-        assert_eq!("#EXTM3U".parse::<ExtM3u>().unwrap(), ExtM3u);
-        assert!("#EXTM2U".parse::<ExtM3u>().is_err());
+        assert_eq!(ExtM3u::try_from("#EXTM3U").unwrap(), ExtM3u);
+        assert!(ExtM3u::try_from("#EXTM2U").is_err());
     }
 
     #[test]

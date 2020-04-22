@@ -1,5 +1,5 @@
+use std::convert::TryFrom;
 use std::fmt;
-use std::str::FromStr;
 
 use crate::types::ProtocolVersion;
 use crate::utils::tag;
@@ -23,10 +23,10 @@ impl fmt::Display for ExtXDiscontinuity {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result { Self::PREFIX.fmt(f) }
 }
 
-impl FromStr for ExtXDiscontinuity {
-    type Err = Error;
+impl TryFrom<&str> for ExtXDiscontinuity {
+    type Error = Error;
 
-    fn from_str(input: &str) -> Result<Self, Self::Err> {
+    fn try_from(input: &str) -> Result<Self, Self::Error> {
         tag(input, Self::PREFIX)?;
         Ok(Self)
     }
@@ -46,7 +46,12 @@ mod test {
     }
 
     #[test]
-    fn test_parser() { assert_eq!(ExtXDiscontinuity, "#EXT-X-DISCONTINUITY".parse().unwrap()) }
+    fn test_parser() {
+        assert_eq!(
+            ExtXDiscontinuity,
+            ExtXDiscontinuity::try_from("#EXT-X-DISCONTINUITY").unwrap()
+        )
+    }
 
     #[test]
     fn test_required_version() {

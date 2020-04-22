@@ -30,7 +30,7 @@ impl<'a> Iterator for AttributePairs<'a> {
             // NOTE: it is okay to add 1 to the index, because an `=` is exactly 1 byte.
             self.index = end + 1;
 
-            ::core::str::from_utf8(&self.string.as_bytes()[start..end]).unwrap()
+            &self.string[start..end]
         };
 
         let value = {
@@ -66,7 +66,7 @@ impl<'a> Iterator for AttributePairs<'a> {
             self.index += end;
             self.index -= start;
 
-            ::core::str::from_utf8(&self.string.as_bytes()[start..end]).unwrap()
+            &self.string[start..end]
         };
 
         Some((key, value))

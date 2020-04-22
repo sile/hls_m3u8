@@ -1,5 +1,5 @@
+use std::convert::TryFrom;
 use std::fmt;
-use std::str::FromStr;
 
 use core::ops::{Add, AddAssign, Sub, SubAssign};
 
@@ -187,13 +187,13 @@ impl fmt::Display for ExtXByteRange {
     }
 }
 
-impl FromStr for ExtXByteRange {
-    type Err = Error;
+impl TryFrom<&str> for ExtXByteRange {
+    type Error = Error;
 
-    fn from_str(input: &str) -> Result<Self, Self::Err> {
+    fn try_from(input: &str) -> Result<Self, Self::Error> {
         let input = tag(input, Self::PREFIX)?;
 
-        Ok(Self(ByteRange::from_str(input)?))
+        Ok(Self(ByteRange::try_from(input)?))
     }
 }
 
@@ -219,12 +219,12 @@ mod test {
     fn test_parser() {
         assert_eq!(
             ExtXByteRange::from(2..15),
-            "#EXT-X-BYTERANGE:13@2".parse().unwrap()
+            ExtXByteRange::try_from("#EXT-X-BYTERANGE:13@2").unwrap()
         );
 
         assert_eq!(
             ExtXByteRange::from(..22),
-            "#EXT-X-BYTERANGE:22".parse().unwrap()
+            ExtXByteRange::try_from("#EXT-X-BYTERANGE:22").unwrap()
         );
     }
 

@@ -1,5 +1,5 @@
+use std::convert::TryFrom;
 use std::fmt;
-use std::str::FromStr;
 
 use crate::types::ProtocolVersion;
 use crate::utils::tag;
@@ -26,10 +26,10 @@ impl fmt::Display for ExtXMediaSequence {
     }
 }
 
-impl FromStr for ExtXMediaSequence {
-    type Err = Error;
+impl TryFrom<&str> for ExtXMediaSequence {
+    type Error = Error;
 
-    fn from_str(input: &str) -> Result<Self, Self::Err> {
+    fn try_from(input: &str) -> Result<Self, Self::Error> {
         let input = tag(input, Self::PREFIX)?;
         let seq_num = input.parse().map_err(|e| Error::parse_int(input, e))?;
 
@@ -62,7 +62,7 @@ mod test {
     fn test_parser() {
         assert_eq!(
             ExtXMediaSequence(123),
-            "#EXT-X-MEDIA-SEQUENCE:123".parse().unwrap()
+            ExtXMediaSequence::try_from("#EXT-X-MEDIA-SEQUENCE:123").unwrap()
         );
     }
 }
