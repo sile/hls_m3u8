@@ -1,5 +1,5 @@
+use std::convert::TryFrom;
 use std::fmt;
-use std::str::FromStr;
 
 use crate::types::ProtocolVersion;
 use crate::utils::tag;
@@ -67,10 +67,10 @@ impl From<ProtocolVersion> for ExtXVersion {
     fn from(value: ProtocolVersion) -> Self { Self(value) }
 }
 
-impl FromStr for ExtXVersion {
-    type Err = Error;
+impl TryFrom<&str> for ExtXVersion {
+    type Error = Error;
 
-    fn from_str(input: &str) -> Result<Self, Self::Err> {
+    fn try_from(input: &str) -> Result<Self, Self::Error> {
         let version = tag(input, Self::PREFIX)?.parse()?;
         Ok(Self::new(version))
     }
@@ -92,7 +92,7 @@ mod test {
     #[test]
     fn test_parser() {
         assert_eq!(
-            "#EXT-X-VERSION:6".parse::<ExtXVersion>().unwrap(),
+            ExtXVersion::try_from("#EXT-X-VERSION:6").unwrap(),
             ExtXVersion::new(ProtocolVersion::V6)
         );
     }

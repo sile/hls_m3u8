@@ -1,5 +1,5 @@
+use std::convert::TryFrom;
 use std::fmt;
-use std::str::FromStr;
 
 use crate::types::ProtocolVersion;
 use crate::utils::tag;
@@ -25,10 +25,10 @@ impl fmt::Display for ExtXIndependentSegments {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result { Self::PREFIX.fmt(f) }
 }
 
-impl FromStr for ExtXIndependentSegments {
-    type Err = Error;
+impl TryFrom<&str> for ExtXIndependentSegments {
+    type Error = Error;
 
-    fn from_str(input: &str) -> Result<Self, Self::Err> {
+    fn try_from(input: &str) -> Result<Self, Self::Error> {
         tag(input, Self::PREFIX)?;
         Ok(Self)
     }
@@ -51,7 +51,7 @@ mod test {
     fn test_parser() {
         assert_eq!(
             ExtXIndependentSegments,
-            "#EXT-X-INDEPENDENT-SEGMENTS".parse().unwrap(),
+            ExtXIndependentSegments::try_from("#EXT-X-INDEPENDENT-SEGMENTS").unwrap(),
         )
     }
 

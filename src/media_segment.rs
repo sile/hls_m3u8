@@ -1,3 +1,4 @@
+use std::borrow::Cow;
 use std::fmt;
 
 use derive_builder::Builder;
@@ -34,7 +35,7 @@ use crate::{Decryptable, RequiredVersion};
 #[derive(ShortHand, Debug, Clone, Builder, PartialEq, Eq, PartialOrd, Ord, Hash)]
 #[builder(setter(strip_option))]
 #[shorthand(enable(must_use, skip))]
-pub struct MediaSegment {
+pub struct MediaSegment<'a> {
     /// Each [`MediaSegment`] has a number, which allows synchronization between
     /// different variants.
     ///
@@ -80,7 +81,7 @@ pub struct MediaSegment {
     /// [`KeyFormat`]: crate::types::KeyFormat
     /// [`EncryptionMethod`]: crate::types::EncryptionMethod
     #[builder(default, setter(into))]
-    pub keys: Vec<ExtXKey>,
+    pub keys: Vec<ExtXKey<'a>>,
     /// This field specifies how to obtain the Media Initialization Section
     /// required to parse the applicable `MediaSegment`s.
     ///
@@ -94,7 +95,7 @@ pub struct MediaSegment {
     ///
     /// [`ExtXIFramesOnly`]: crate::tags::ExtXIFramesOnly
     #[builder(default)]
-    pub map: Option<ExtXMap>,
+    pub map: Option<ExtXMap<'a>>,
     /// This field indicates that a `MediaSegment` is a sub-range of the
     /// resource identified by its URI.
     ///
@@ -110,7 +111,7 @@ pub struct MediaSegment {
     ///
     /// This field is optional.
     #[builder(default)]
-    pub date_range: Option<ExtXDateRange>,
+    pub date_range: Option<ExtXDateRange<'a>>,
     /// This field indicates a discontinuity between the `MediaSegment` that
     /// follows it and the one that preceded it.
     ///
@@ -134,14 +135,14 @@ pub struct MediaSegment {
     ///
     /// This field is optional.
     #[builder(default)]
-    pub program_date_time: Option<ExtXProgramDateTime>,
+    pub program_date_time: Option<ExtXProgramDateTime<'a>>,
     /// This field indicates the duration of a media segment.
     ///
     /// ## Note
     ///
     /// This field is required.
     #[builder(setter(into))]
-    pub duration: ExtInf,
+    pub duration: ExtInf<'a>,
     /// The URI of a media segment.
     ///
     /// ## Note
@@ -149,10 +150,10 @@ pub struct MediaSegment {
     /// This field is required.
     #[builder(setter(into))]
     #[shorthand(enable(into), disable(skip))]
-    uri: String,
+    uri: Cow<'a, str>,
 }
 
-impl MediaSegment {
+impl<'a> MediaSegment<'a> {
     /// Returns a builder for a [`MediaSegment`].
     ///
     /// # Example
@@ -173,12 +174,34 @@ impl MediaSegment {
     /// ```
     #[must_use]
     #[inline]
-    pub fn builder() -> MediaSegmentBuilder { MediaSegmentBuilder::default() }
+    pub fn builder() -> MediaSegmentBuilder<'static> { MediaSegmentBuilder::default() }
+
+    /// Makes the struct independent of its lifetime, by taking ownership of all
+    /// internal [`Cow`]s.
+    ///
+    /// # Note
+    ///
+    /// This is a relatively expensive operation.
+    #[must_use]
+    pub fn into_owned(self) -> MediaSegment<'static> {
+        MediaSegment {
+            number: self.number,
+            explicit_number: self.explicit_number,
+            keys: self.keys.into_iter().map(|k| k.into_owned()).collect(),
+            map: self.map.map(|v| v.into_owned()),
+            byte_range: self.byte_range,
+            date_range: self.date_range.map(|v| v.into_owned()),
+            has_discontinuity: self.has_discontinuity,
+            program_date_time: self.program_date_time.map(|v| v.into_owned()),
+            duration: self.duration.into_owned(),
+            uri: Cow::Owned(self.uri.into_owned()),
+        }
+    }
 }
 
-impl MediaSegmentBuilder {
+impl<'a> MediaSegmentBuilder<'a> {
     /// Pushes an [`ExtXKey`] tag.
-    pub fn push_key<VALUE: Into<ExtXKey>>(&mut self, value: VALUE) -> &mut Self {
+    pub fn push_key<VALUE: Into<ExtXKey<'a>>>(&mut self, value: VALUE) -> &mut Self {
         if let Some(keys) = &mut self.keys {
             keys.push(value.into());
         } else {
@@ -201,7 +224,7 @@ impl MediaSegmentBuilder {
     }
 }
 
-impl fmt::Display for MediaSegment {
+impl<'a> fmt::Display for MediaSegment<'a> {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         // NOTE: self.keys will be printed by the `MediaPlaylist` to prevent redundance.
 
@@ -231,7 +254,7 @@ impl fmt::Display for MediaSegment {
     }
 }
 
-impl RequiredVersion for MediaSegment {
+impl<'a> RequiredVersion for MediaSegment<'a> {
     fn required_version(&self) -> ProtocolVersion {
         required_version![
             self.keys,
@@ -251,8 +274,8 @@ impl RequiredVersion for MediaSegment {
     }
 }
 
-impl Decryptable for MediaSegment {
-    fn keys(&self) -> Vec<&DecryptionKey> {
+impl<'a> Decryptable<'a> for MediaSegment<'a> {
+    fn keys(&self) -> Vec<&DecryptionKey<'a>> {
         //
         self.keys.iter().filter_map(ExtXKey::as_ref).collect()
     }

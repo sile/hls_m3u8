@@ -1,6 +1,7 @@
+use core::convert::TryFrom;
 use core::fmt;
 use core::ops::Deref;
-use core::str::FromStr;
+use std::borrow::Cow;
 
 use crate::attribute::AttributePairs;
 use crate::tags::ExtXMedia;
@@ -67,7 +68,7 @@ use crate::Error;
 /// [`PlaylistType`]: crate::types::PlaylistType
 /// [`ExtXIFramesOnly`]: crate::tags::ExtXIFramesOnly
 #[derive(Debug, Clone, PartialEq, PartialOrd, Eq, Ord, Hash)]
-pub enum VariantStream {
+pub enum VariantStream<'a> {
     /// The [`VariantStream::ExtXIFrame`] variant identifies a [`MediaPlaylist`]
     /// file containing the I-frames of a multimedia presentation.
     /// It stands alone, in that it does not apply to a particular URI in the
@@ -85,14 +86,14 @@ pub enum VariantStream {
         ///
         /// [`MediaPlaylist`]: crate::MediaPlaylist
         /// [`ExtXIFramesOnly`]: crate::tags::ExtXIFramesOnly
-        uri: String,
+        uri: Cow<'a, str>,
         /// Some fields are shared between [`VariantStream::ExtXStreamInf`] and
         /// [`VariantStream::ExtXIFrame`].
         ///
         /// # Note
         ///
         /// This field is optional.
-        stream_data: StreamData,
+        stream_data: StreamData<'a>,
     },
     /// [`VariantStream::ExtXStreamInf`] specifies a [`VariantStream`], which is
     /// a set of renditions that can be combined to play the presentation.
@@ -106,7 +107,7 @@ pub enum VariantStream {
         /// This field is required.
         ///
         /// [`MediaPlaylist`]: crate::MediaPlaylist
-        uri: String,
+        uri: Cow<'a, str>,
         /// The value is an unsigned float describing the maximum frame
         /// rate for all the video in the [`VariantStream`].
         ///
@@ -132,7 +133,7 @@ pub enum VariantStream {
         /// [`MasterPlaylist`]: crate::MasterPlaylist
         /// [`ExtXMedia::media_type`]: crate::tags::ExtXMedia::media_type
         /// [`MediaType::Audio`]: crate::types::MediaType::Audio
-        audio: Option<String>,
+        audio: Option<Cow<'a, str>>,
         /// It indicates the set of subtitle renditions that can be used when
         /// playing the presentation.
         ///
@@ -149,25 +150,25 @@ pub enum VariantStream {
         /// [`MasterPlaylist`]: crate::MasterPlaylist
         /// [`ExtXMedia::media_type`]: crate::tags::ExtXMedia::media_type
         /// [`MediaType::Subtitles`]: crate::types::MediaType::Subtitles
-        subtitles: Option<String>,
+        subtitles: Option<Cow<'a, str>>,
         /// It indicates the set of closed-caption renditions that can be used
         /// when playing the presentation.
         ///
         /// # Note
         ///
         /// This field is optional.
-        closed_captions: Option<ClosedCaptions>,
+        closed_captions: Option<ClosedCaptions<'a>>,
         /// Some fields are shared between [`VariantStream::ExtXStreamInf`] and
         /// [`VariantStream::ExtXIFrame`].
         ///
         /// # Note
         ///
         /// This field is optional.
-        stream_data: StreamData,
+        stream_data: StreamData<'a>,
     },
 }
 
-impl VariantStream {
+impl<'a> VariantStream<'a> {
     pub(crate) const PREFIX_EXTXIFRAME: &'static str = "#EXT-X-I-FRAME-STREAM-INF:";
     pub(crate) const PREFIX_EXTXSTREAMINF: &'static str = "#EXT-X-STREAM-INF:";
 
@@ -203,7 +204,7 @@ impl VariantStream {
     /// ));
     /// ```
     #[must_use]
-    pub fn is_associated(&self, media: &ExtXMedia) -> bool {
+    pub fn is_associated(&self, media: &ExtXMedia<'_>) -> bool {
         match &self {
             Self::ExtXIFrame { stream_data, .. } => {
                 if let MediaType::Video = media.media_type {
@@ -238,10 +239,45 @@ impl VariantStream {
             }
         }
     }
+
+    /// Makes the struct independent of its lifetime, by taking ownership of all
+    /// internal [`Cow`]s.
+    ///
+    /// # Note
+    ///
+    /// This is a relatively expensive operation.
+    #[must_use]
+    pub fn into_owned(self) -> VariantStream<'static> {
+        match self {
+            VariantStream::ExtXIFrame { uri, stream_data } => {
+                VariantStream::ExtXIFrame {
+                    uri: Cow::Owned(uri.into_owned()),
+                    stream_data: stream_data.into_owned(),
+                }
+            }
+            VariantStream::ExtXStreamInf {
+                uri,
+                frame_rate,
+                audio,
+                subtitles,
+                closed_captions,
+                stream_data,
+            } => {
+                VariantStream::ExtXStreamInf {
+                    uri: Cow::Owned(uri.into_owned()),
+                    frame_rate,
+                    audio: audio.map(|v| Cow::Owned(v.into_owned())),
+                    subtitles: subtitles.map(|v| Cow::Owned(v.into_owned())),
+                    closed_captions: closed_captions.map(|v| v.into_owned()),
+                    stream_data: stream_data.into_owned(),
+                }
+            }
+        }
+    }
 }
 
 /// This tag requires [`ProtocolVersion::V1`].
-impl RequiredVersion for VariantStream {
+impl<'a> RequiredVersion for VariantStream<'a> {
     fn required_version(&self) -> ProtocolVersion { ProtocolVersion::V1 }
 
     fn introduced_version(&self) -> ProtocolVersion {
@@ -265,7 +301,7 @@ impl RequiredVersion for VariantStream {
     }
 }
 
-impl fmt::Display for VariantStream {
+impl<'a> fmt::Display for VariantStream<'a> {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match &self {
             Self::ExtXIFrame { uri, stream_data } => {
@@ -306,10 +342,10 @@ impl fmt::Display for VariantStream {
     }
 }
 
-impl FromStr for VariantStream {
-    type Err = Error;
+impl<'a> TryFrom<&'a str> for VariantStream<'a> {
+    type Error = Error;
 
-    fn from_str(input: &str) -> Result<Self, Self::Err> {
+    fn try_from(input: &'a str) -> Result<Self, Self::Error> {
         if let Ok(input) = tag(input, Self::PREFIX_EXTXIFRAME) {
             let uri = AttributePairs::new(input)
                 .find_map(|(key, value)| {
@@ -323,7 +359,7 @@ impl FromStr for VariantStream {
 
             Ok(Self::ExtXIFrame {
                 uri,
-                stream_data: input.parse()?,
+                stream_data: StreamData::try_from(input)?,
             })
         } else if let Ok(input) = tag(input, Self::PREFIX_EXTXSTREAMINF) {
             let mut lines = input.lines();
@@ -342,18 +378,20 @@ impl FromStr for VariantStream {
                     "FRAME-RATE" => frame_rate = Some(value.parse()?),
                     "AUDIO" => audio = Some(unquote(value)),
                     "SUBTITLES" => subtitles = Some(unquote(value)),
-                    "CLOSED-CAPTIONS" => closed_captions = Some(value.parse().unwrap()),
+                    "CLOSED-CAPTIONS" => {
+                        closed_captions = Some(ClosedCaptions::try_from(value).unwrap())
+                    }
                     _ => {}
                 }
             }
 
             Ok(Self::ExtXStreamInf {
-                uri: uri.to_string(),
+                uri: Cow::Borrowed(uri),
                 frame_rate,
                 audio,
                 subtitles,
                 closed_captions,
-                stream_data: first_line.parse()?,
+                stream_data: StreamData::try_from(first_line)?,
             })
         } else {
             // TODO: custom error type? + attach input data
@@ -366,8 +404,8 @@ impl FromStr for VariantStream {
     }
 }
 
-impl Deref for VariantStream {
-    type Target = StreamData;
+impl<'a> Deref for VariantStream<'a> {
+    type Target = StreamData<'a>;
 
     fn deref(&self) -> &Self::Target {
         match &self {
@@ -378,7 +416,7 @@ impl Deref for VariantStream {
     }
 }
 
-impl PartialEq<&VariantStream> for VariantStream {
+impl<'a> PartialEq<&VariantStream<'a>> for VariantStream<'a> {
     fn eq(&self, other: &&Self) -> bool { self.eq(*other) }
 }
 
@@ -386,7 +424,7 @@ impl PartialEq<&VariantStream> for VariantStream {
 mod tests {
     use super::*;
     use crate::types::InStreamId;
-    //use pretty_assertions::assert_eq;
+    use pretty_assertions::assert_eq;
 
     #[test]
     fn test_required_version() {

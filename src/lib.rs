@@ -42,19 +42,22 @@
 //!
 //! ```
 //! use hls_m3u8::MediaPlaylist;
+//! use std::convert::TryFrom;
 //!
-//! let m3u8 = "#EXTM3U
-//! #EXT-X-TARGETDURATION:10
-//! #EXT-X-VERSION:3
-//! #EXTINF:9.009,
-//! http://media.example.com/first.ts
-//! #EXTINF:9.009,
-//! http://media.example.com/second.ts
-//! #EXTINF:3.003,
-//! http://media.example.com/third.ts
-//! #EXT-X-ENDLIST";
+//! let m3u8 = MediaPlaylist::try_from(concat!(
+//!     "#EXTM3U\n",
+//!     "#EXT-X-TARGETDURATION:10\n",
+//!     "#EXT-X-VERSION:3\n",
+//!     "#EXTINF:9.009,\n",
+//!     "http://media.example.com/first.ts\n",
+//!     "#EXTINF:9.009,\n",
+//!     "http://media.example.com/second.ts\n",
+//!     "#EXTINF:3.003,\n",
+//!     "http://media.example.com/third.ts\n",
+//!     "#EXT-X-ENDLIST",
+//! ));
 //!
-//! assert!(m3u8.parse::<MediaPlaylist>().is_ok());
+//! assert!(m3u8.is_ok());
 //! ```
 //!
 //! ## Crate Feature Flags
@@ -136,4 +139,5 @@ mod media_segment;
 mod traits;
 
 pub use error::Result;
+pub use stable_vec;
 pub use traits::*;

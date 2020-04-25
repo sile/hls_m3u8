@@ -1,5 +1,6 @@
+use std::borrow::Cow;
+use std::convert::TryFrom;
 use std::fmt;
-use std::str::FromStr;
 
 use derive_builder::Builder;
 use shorthand::ShortHand;
@@ -11,7 +12,7 @@ use crate::{Error, RequiredVersion};
 
 /// The data of [`ExtXSessionData`].
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
-pub enum SessionData {
+pub enum SessionData<'a> {
     /// Contains the data identified by the [`ExtXSessionData::data_id`].
     ///
     /// If a [`language`] is specified, this variant should contain a
@@ -19,12 +20,28 @@ pub enum SessionData {
     ///
     /// [`data_id`]: ExtXSessionData::data_id
     /// [`language`]: ExtXSessionData::language
-    Value(String),
+    Value(Cow<'a, str>),
     /// An [`URI`], which points to a [`json`] file.
     ///
     /// [`json`]: https://tools.ietf.org/html/rfc8259
     /// [`URI`]: https://tools.ietf.org/html/rfc3986
-    Uri(String),
+    Uri(Cow<'a, str>),
+}
+
+impl<'a> SessionData<'a> {
+    /// Makes the struct independent of its lifetime, by taking ownership of all
+    /// internal [`Cow`]s.
+    ///
+    /// # Note
+    ///
+    /// This is a relatively expensive operation.
+    #[must_use]
+    pub fn into_owned(self) -> SessionData<'static> {
+        match self {
+            Self::Value(v) => SessionData::Value(Cow::Owned(v.into_owned())),
+            Self::Uri(v) => SessionData::Uri(Cow::Owned(v.into_owned())),
+        }
+    }
 }
 
 /// Allows arbitrary session data to be carried in a [`MasterPlaylist`].
@@ -33,7 +50,7 @@ pub enum SessionData {
 #[derive(ShortHand, Builder, Hash, Eq, Ord, Debug, PartialEq, Clone, PartialOrd)]
 #[builder(setter(into))]
 #[shorthand(enable(must_use, into))]
-pub struct ExtXSessionData {
+pub struct ExtXSessionData<'a> {
     /// This should conform to a [reverse DNS] naming convention, such as
     /// `com.example.movie.title`.
     ///
@@ -45,7 +62,7 @@ pub struct ExtXSessionData {
     /// This field is required.
     ///
     /// [reverse DNS]: https://en.wikipedia.org/wiki/Reverse_domain_name_notation
-    data_id: String,
+    data_id: Cow<'a, str>,
     /// The [`SessionData`] associated with the
     /// [`data_id`](ExtXSessionData::data_id).
     ///
@@ -53,7 +70,7 @@ pub struct ExtXSessionData {
     ///
     /// This field is required.
     #[shorthand(enable(skip))]
-    pub data: SessionData,
+    pub data: SessionData<'a>,
     /// The `language` attribute identifies the language of the [`SessionData`].
     ///
     /// # Note
@@ -62,11 +79,11 @@ pub struct ExtXSessionData {
     /// [RFC5646].
     ///
     /// [RFC5646]: https://tools.ietf.org/html/rfc5646
-    #[builder(setter(into, strip_option), default)]
-    language: Option<String>,
+    #[builder(setter(strip_option), default)]
+    language: Option<Cow<'a, str>>,
 }
 
-impl ExtXSessionData {
+impl<'a> ExtXSessionData<'a> {
     pub(crate) const PREFIX: &'static str = "#EXT-X-SESSION-DATA:";
 
     /// Makes a new [`ExtXSessionData`] tag.
@@ -83,7 +100,7 @@ impl ExtXSessionData {
     /// );
     /// ```
     #[must_use]
-    pub fn new<T: Into<String>>(data_id: T, data: SessionData) -> Self {
+    pub fn new<T: Into<Cow<'a, str>>>(data_id: T, data: SessionData<'a>) -> Self {
         Self {
             data_id: data_id.into(),
             data,
@@ -107,7 +124,7 @@ impl ExtXSessionData {
     /// # Ok::<(), String>(())
     /// ```
     #[must_use]
-    pub fn builder() -> ExtXSessionDataBuilder { ExtXSessionDataBuilder::default() }
+    pub fn builder() -> ExtXSessionDataBuilder<'a> { ExtXSessionDataBuilder::default() }
 
     /// Makes a new [`ExtXSessionData`] tag, with the given language.
     ///
@@ -124,10 +141,10 @@ impl ExtXSessionData {
     /// );
     /// ```
     #[must_use]
-    pub fn with_language<T, K>(data_id: T, data: SessionData, language: K) -> Self
+    pub fn with_language<T, K>(data_id: T, data: SessionData<'a>, language: K) -> Self
     where
-        T: Into<String>,
-        K: Into<String>,
+        T: Into<Cow<'a, str>>,
+        K: Into<Cow<'a, str>>,
     {
         Self {
             data_id: data_id.into(),
@@ -135,14 +152,29 @@ impl ExtXSessionData {
             language: Some(language.into()),
         }
     }
+
+    /// Makes the struct independent of its lifetime, by taking ownership of all
+    /// internal [`Cow`]s.
+    ///
+    /// # Note
+    ///
+    /// This is a relatively expensive operation.
+    #[must_use]
+    pub fn into_owned(self) -> ExtXSessionData<'static> {
+        ExtXSessionData {
+            data_id: Cow::Owned(self.data_id.into_owned()),
+            data: self.data.into_owned(),
+            language: self.language.map(|v| Cow::Owned(v.into_owned())),
+        }
+    }
 }
 
 /// This tag requires [`ProtocolVersion::V1`].
-impl RequiredVersion for ExtXSessionData {
+impl<'a> RequiredVersion for ExtXSessionData<'a> {
     fn required_version(&self) -> ProtocolVersion { ProtocolVersion::V1 }
 }
 
-impl fmt::Display for ExtXSessionData {
+impl<'a> fmt::Display for ExtXSessionData<'a> {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(f, "{}", Self::PREFIX)?;
         write!(f, "DATA-ID={}", quote(&self.data_id))?;
@@ -160,10 +192,10 @@ impl fmt::Display for ExtXSessionData {
     }
 }
 
-impl FromStr for ExtXSessionData {
-    type Err = Error;
+impl<'a> TryFrom<&'a str> for ExtXSessionData<'a> {
+    type Error = Error;
 
-    fn from_str(input: &str) -> Result<Self, Self::Err> {
+    fn try_from(input: &'a str) -> Result<Self, Self::Error> {
         let input = tag(input, Self::PREFIX)?;
 
         let mut data_id = None;
@@ -228,28 +260,26 @@ mod test {
             #[test]
             fn test_parser() {
                 $(
-                    assert_eq!($struct, $str.parse().unwrap());
+                    assert_eq!($struct, TryFrom::try_from($str).unwrap());
                 )+
 
                 assert!(
-                    concat!(
+                    ExtXSessionData::try_from(concat!(
                         "#EXT-X-SESSION-DATA:",
                         "DATA-ID=\"foo\",",
                         "LANGUAGE=\"baz\""
-                    )
-                    .parse::<ExtXSessionData>()
+                    ))
                     .is_err()
                 );
 
                 assert!(
-                    concat!(
+                    ExtXSessionData::try_from(concat!(
                         "#EXT-X-SESSION-DATA:",
                         "DATA-ID=\"foo\",",
                         "LANGUAGE=\"baz\",",
                         "VALUE=\"VALUE\",",
                         "URI=\"https://www.example.com/\""
-                    )
-                    .parse::<ExtXSessionData>()
+                    ))
                     .is_err()
                 );
             }
@@ -300,11 +330,8 @@ mod test {
     #[test]
     fn test_required_version() {
         assert_eq!(
-            ExtXSessionData::new(
-                "com.example.lyrics",
-                SessionData::Uri("lyrics.json".to_string())
-            )
-            .required_version(),
+            ExtXSessionData::new("com.example.lyrics", SessionData::Uri("lyrics.json".into()))
+                .required_version(),
             ProtocolVersion::V1
         );
     }

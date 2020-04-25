@@ -1,4 +1,5 @@
 // https://tools.ietf.org/html/rfc8216#section-8
+use std::convert::TryFrom;
 use std::time::Duration;
 
 use hls_m3u8::tags::{ExtInf, ExtXKey, ExtXMedia, VariantStream};
@@ -11,7 +12,7 @@ macro_rules! generate_tests {
         $(
             #[test]
             fn $fnname() {
-                assert_eq!($struct, $str.parse().unwrap());
+                assert_eq!($struct, TryFrom::try_from($str).unwrap());
 
                 assert_eq!($struct.to_string(), $str.to_string());
             }

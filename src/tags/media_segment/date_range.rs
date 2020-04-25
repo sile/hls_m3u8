@@ -1,6 +1,7 @@
+use std::borrow::Cow;
 use std::collections::BTreeMap;
+use std::convert::TryFrom;
 use std::fmt;
-use std::str::FromStr;
 use std::time::Duration;
 
 #[cfg(feature = "chrono")]
@@ -18,13 +19,13 @@ use crate::{Error, RequiredVersion};
 #[derive(ShortHand, Builder, Debug, Clone, PartialEq, PartialOrd, Eq, Ord, Hash)]
 #[builder(setter(into))]
 #[shorthand(enable(must_use, into))]
-pub struct ExtXDateRange {
+pub struct ExtXDateRange<'a> {
     /// A string that uniquely identifies an [`ExtXDateRange`] in the playlist.
     ///
     /// ## Note
     ///
     /// This field is required.
-    id: String,
+    id: Cow<'a, str>,
     /// A client-defined string that specifies some set of attributes and their
     /// associated value semantics. All [`ExtXDateRange`]s with the same class
     /// attribute value must adhere to these semantics.
@@ -33,7 +34,7 @@ pub struct ExtXDateRange {
     ///
     /// This field is optional.
     #[builder(setter(strip_option), default)]
-    class: Option<String>,
+    class: Option<Cow<'a, str>>,
     /// The date at which the [`ExtXDateRange`] begins.
     ///
     /// ## Note
@@ -56,7 +57,7 @@ pub struct ExtXDateRange {
     /// here.
     #[cfg(not(feature = "chrono"))]
     #[builder(setter(strip_option), default)]
-    start_date: Option<String>,
+    start_date: Option<Cow<'a, str>>,
     /// The date at which the [`ExtXDateRange`] ends. It must be equal to or
     /// later than the value of the [`start-date`] attribute.
     ///
@@ -79,7 +80,7 @@ pub struct ExtXDateRange {
     /// [`start-date`]: #method.start_date
     #[cfg(not(feature = "chrono"))]
     #[builder(setter(strip_option), default)]
-    end_date: Option<String>,
+    end_date: Option<Cow<'a, str>>,
     /// The duration of the [`ExtXDateRange`]. A single instant in time (e.g.,
     /// crossing a finish line) should be represented with a duration of 0.
     ///
@@ -114,7 +115,7 @@ pub struct ExtXDateRange {
     ///
     /// This field is optional.
     #[builder(setter(strip_option), default)]
-    scte35_cmd: Option<String>,
+    scte35_cmd: Option<Cow<'a, str>>,
     /// SCTE-35 (ANSI/SCTE 35 2013) is a joint ANSI/Society of Cable and
     /// Telecommunications Engineers standard that describes the inline
     /// insertion of cue tones in mpeg-ts streams.
@@ -131,7 +132,7 @@ pub struct ExtXDateRange {
     ///
     /// This field is optional.
     #[builder(setter(strip_option), default)]
-    scte35_out: Option<String>,
+    scte35_out: Option<Cow<'a, str>>,
     /// SCTE-35 (ANSI/SCTE 35 2013) is a joint ANSI/Society of Cable and
     /// Telecommunications Engineers standard that describes the inline
     /// insertion of cue tones in mpeg-ts streams.
@@ -148,7 +149,7 @@ pub struct ExtXDateRange {
     ///
     /// This field is optional.
     #[builder(setter(strip_option), default)]
-    scte35_in: Option<String>,
+    scte35_in: Option<Cow<'a, str>>,
     /// This field indicates that the [`ExtXDateRange::end_date`] is equal to
     /// the [`ExtXDateRange::start_date`] of the following range.
     ///
@@ -179,30 +180,25 @@ pub struct ExtXDateRange {
     /// This field is optional.
     #[builder(default)]
     #[shorthand(enable(collection_magic), disable(set, get))]
-    pub client_attributes: BTreeMap<String, Value>,
+    pub client_attributes: BTreeMap<Cow<'a, str>, Value<'a>>,
 }
 
-impl ExtXDateRangeBuilder {
+impl<'a> ExtXDateRangeBuilder<'a> {
     /// Inserts a key value pair.
-    pub fn insert_client_attribute<K: Into<String>, V: Into<Value>>(
+    pub fn insert_client_attribute<K: Into<Cow<'a, str>>, V: Into<Value<'a>>>(
         &mut self,
         key: K,
         value: V,
     ) -> &mut Self {
-        if self.client_attributes.is_none() {
-            self.client_attributes = Some(BTreeMap::new());
-        }
+        let attrs = self.client_attributes.get_or_insert_with(BTreeMap::new);
 
-        if let Some(client_attributes) = &mut self.client_attributes {
-            client_attributes.insert(key.into(), value.into());
-        } else {
-            unreachable!();
-        }
+        attrs.insert(key.into(), value.into());
+
         self
     }
 }
 
-impl ExtXDateRange {
+impl<'a> ExtXDateRange<'a> {
     pub(crate) const PREFIX: &'static str = "#EXT-X-DATERANGE:";
 
     /// Makes a new [`ExtXDateRange`] tag.
@@ -237,7 +233,7 @@ let date_range = ExtXDateRange::new("id", "2010-02-19T14:54:23.031+08:00");
     "#
     )]
     #[must_use]
-    pub fn new<T: Into<String>, #[cfg(not(feature = "chrono"))] I: Into<String>>(
+    pub fn new<T: Into<Cow<'a, str>>, #[cfg(not(feature = "chrono"))] I: Into<Cow<'a, str>>>(
         id: T,
         #[cfg(feature = "chrono")] start_date: DateTime<FixedOffset>,
         #[cfg(not(feature = "chrono"))] start_date: I,
@@ -316,18 +312,52 @@ let date_range = ExtXDateRange::builder()
     )]
     #[must_use]
     #[inline]
-    pub fn builder() -> ExtXDateRangeBuilder { ExtXDateRangeBuilder::default() }
+    pub fn builder() -> ExtXDateRangeBuilder<'a> { ExtXDateRangeBuilder::default() }
+
+    /// Makes the struct independent of its lifetime, by taking ownership of all
+    /// internal [`Cow`]s.
+    ///
+    /// # Note
+    ///
+    /// This is a relatively expensive operation.
+    #[must_use]
+    pub fn into_owned(self) -> ExtXDateRange<'static> {
+        ExtXDateRange {
+            id: Cow::Owned(self.id.into_owned()),
+            class: self.class.map(|v| Cow::Owned(v.into_owned())),
+            #[cfg(not(feature = "chrono"))]
+            start_date: self.start_date.map(|v| Cow::Owned(v.into_owned())),
+            #[cfg(feature = "chrono")]
+            start_date: self.start_date,
+            #[cfg(not(feature = "chrono"))]
+            end_date: self.end_date.map(|v| Cow::Owned(v.into_owned())),
+            #[cfg(feature = "chrono")]
+            end_date: self.end_date,
+            scte35_cmd: self.scte35_cmd.map(|v| Cow::Owned(v.into_owned())),
+            scte35_out: self.scte35_out.map(|v| Cow::Owned(v.into_owned())),
+            scte35_in: self.scte35_in.map(|v| Cow::Owned(v.into_owned())),
+            client_attributes: {
+                self.client_attributes
+                    .into_iter()
+                    .map(|(k, v)| (Cow::Owned(k.into_owned()), v.into_owned()))
+                    .collect()
+            },
+            duration: self.duration,
+            end_on_next: self.end_on_next,
+            planned_duration: self.planned_duration,
+        }
+    }
 }
 
 /// This tag requires [`ProtocolVersion::V1`].
-impl RequiredVersion for ExtXDateRange {
+impl<'a> RequiredVersion for ExtXDateRange<'a> {
     fn required_version(&self) -> ProtocolVersion { ProtocolVersion::V1 }
 }
 
-impl FromStr for ExtXDateRange {
-    type Err = Error;
+impl<'a> TryFrom<&'a str> for ExtXDateRange<'a> {
+    type Error = Error;
 
-    fn from_str(input: &str) -> Result<Self, Self::Err> {
+    fn try_from(input: &'a str) -> Result<Self, Self::Error> {
         let input = tag(input, Self::PREFIX)?;
 
         let mut id = None;
@@ -398,7 +428,7 @@ impl FromStr for ExtXDateRange {
                             ));
                         }
 
-                        client_attributes.insert(key.to_string(), value.parse()?);
+                        client_attributes.insert(Cow::Borrowed(key), Value::try_from(value)?);
                     } else {
                         // [6.3.1. General Client Responsibilities]
                         // > ignore any attribute/value pair with an
@@ -451,7 +481,7 @@ impl FromStr for ExtXDateRange {
     }
 }
 
-impl fmt::Display for ExtXDateRange {
+impl<'a> fmt::Display for ExtXDateRange<'a> {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(f, "{}", Self::PREFIX)?;
         write!(f, "ID={}", quote(&self.id))?;
@@ -547,22 +577,20 @@ mod test {
             #[test]
             fn test_parser() {
                 $(
-                    assert_eq!($left, $right.parse().unwrap());
+                    assert_eq!($left, TryFrom::try_from($right).unwrap());
                 )*
-                assert!("#EXT-X-DATERANGE:END-ON-NEXT=NO"
-                    .parse::<ExtXDateRange>()
+                assert!(ExtXDateRange::try_from("#EXT-X-DATERANGE:END-ON-NEXT=NO")
                     .is_err());
 
-                assert!("garbage".parse::<ExtXDateRange>().is_err());
-                assert!("".parse::<ExtXDateRange>().is_err());
+                assert!(ExtXDateRange::try_from("garbage").is_err());
+                assert!(ExtXDateRange::try_from("").is_err());
 
-                assert!(concat!(
+                assert!(ExtXDateRange::try_from(concat!(
                     "#EXT-X-DATERANGE:",
                     "ID=\"test_id\",",
                     "START-DATE=\"2014-03-05T11:15:00Z\",",
                     "END-ON-NEXT=YES"
-                )
-                .parse::<ExtXDateRange>()
+                ))
                 .is_err());
             }
         }

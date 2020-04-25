@@ -1,5 +1,6 @@
+use core::convert::TryFrom;
 use core::fmt;
-use core::str::FromStr;
+use std::borrow::Cow;
 
 use derive_builder::Builder;
 use shorthand::ShortHand;
@@ -17,7 +18,7 @@ use crate::{Error, RequiredVersion};
 #[builder(setter(strip_option))]
 #[builder(derive(Debug, PartialEq, PartialOrd, Ord, Eq, Hash))]
 #[shorthand(enable(must_use, into))]
-pub struct StreamData {
+pub struct StreamData<'a> {
     /// The peak segment bitrate of the [`VariantStream`] in bits per second.
     ///
     /// If all the [`MediaSegment`]s in a [`VariantStream`] have already been
@@ -133,7 +134,7 @@ pub struct StreamData {
     /// crate::tags::VariantStream::ExtXStreamInf
     /// [RFC6381]: https://tools.ietf.org/html/rfc6381
     #[builder(default, setter(into))]
-    codecs: Option<Codecs>,
+    codecs: Option<Codecs<'a>>,
     /// The resolution of the stream.
     ///
     /// # Example
@@ -198,7 +199,7 @@ pub struct StreamData {
     /// let mut stream = StreamData::new(20);
     ///
     /// stream.set_video(Some("video_01"));
-    /// assert_eq!(stream.video(), Some(&"video_01".to_string()));
+    /// assert_eq!(stream.video(), Some(&"video_01".into()));
     /// ```
     ///
     /// # Note
@@ -210,10 +211,10 @@ pub struct StreamData {
     /// [`MasterPlaylist`]: crate::MasterPlaylist
     /// [`ExtXMedia::media_type`]: crate::tags::ExtXMedia::media_type
     #[builder(default, setter(into))]
-    video: Option<String>,
+    video: Option<Cow<'a, str>>,
 }
 
-impl StreamData {
+impl<'a> StreamData<'a> {
     /// Creates a new [`StreamData`].
     ///
     /// # Example
@@ -253,10 +254,28 @@ impl StreamData {
     /// # Ok::<(), Box<dyn ::std::error::Error>>(())
     /// ```
     #[must_use]
-    pub fn builder() -> StreamDataBuilder { StreamDataBuilder::default() }
+    pub fn builder() -> StreamDataBuilder<'a> { StreamDataBuilder::default() }
+
+    /// Makes the struct independent of its lifetime, by taking ownership of all
+    /// internal [`Cow`]s.
+    ///
+    /// # Note
+    ///
+    /// This is a relatively expensive operation.
+    #[must_use]
+    pub fn into_owned(self) -> StreamData<'static> {
+        StreamData {
+            bandwidth: self.bandwidth,
+            average_bandwidth: self.average_bandwidth,
+            codecs: self.codecs.map(|v| v.into_owned()),
+            resolution: self.resolution,
+            hdcp_level: self.hdcp_level,
+            video: self.video.map(|v| Cow::Owned(v.into_owned())),
+        }
+    }
 }
 
-impl fmt::Display for StreamData {
+impl<'a> fmt::Display for StreamData<'a> {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(f, "BANDWIDTH={}", self.bandwidth)?;
 
@@ -279,10 +298,10 @@ impl fmt::Display for StreamData {
     }
 }
 
-impl FromStr for StreamData {
-    type Err = Error;
+impl<'a> TryFrom<&'a str> for StreamData<'a> {
+    type Error = Error;
 
-    fn from_str(input: &str) -> Result<Self, Self::Err> {
+    fn try_from(input: &'a str) -> Result<Self, Self::Error> {
         let mut bandwidth = None;
         let mut average_bandwidth = None;
         let mut codecs = None;
@@ -306,7 +325,7 @@ impl FromStr for StreamData {
                             .map_err(|e| Error::parse_int(value, e))?,
                     )
                 }
-                "CODECS" => codecs = Some(unquote(value).parse()?),
+                "CODECS" => codecs = Some(TryFrom::try_from(unquote(value))?),
                 "RESOLUTION" => resolution = Some(value.parse()?),
                 "HDCP-LEVEL" => {
                     hdcp_level = Some(value.parse::<HdcpLevel>().map_err(Error::strum)?)
@@ -334,7 +353,7 @@ impl FromStr for StreamData {
 }
 
 /// This struct requires [`ProtocolVersion::V1`].
-impl RequiredVersion for StreamData {
+impl<'a> RequiredVersion for StreamData<'a> {
     fn required_version(&self) -> ProtocolVersion { ProtocolVersion::V1 }
 
     fn introduced_version(&self) -> ProtocolVersion {
@@ -385,18 +404,17 @@ mod tests {
 
         assert_eq!(
             stream_data,
-            concat!(
+            StreamData::try_from(concat!(
                 "BANDWIDTH=200,",
                 "AVERAGE-BANDWIDTH=15,",
                 "CODECS=\"mp4a.40.2,avc1.4d401e\",",
                 "RESOLUTION=1920x1080,",
                 "HDCP-LEVEL=TYPE-0,",
                 "VIDEO=\"video\""
-            )
-            .parse()
+            ))
             .unwrap()
         );
 
-        assert!("garbage".parse::<StreamData>().is_err());
+        assert!(StreamData::try_from("garbage").is_err());
     }
 }
