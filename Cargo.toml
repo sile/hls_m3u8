@@ -32,3 +32,4 @@ strum = { version = "0.17", features = ["derive"] }
 [dev-dependencies]
 pretty_assertions = "0.6"
 version-sync = "0.9"
+automod = "0.2"
