@@ -204,8 +204,16 @@ impl<'a> ExtXMediaBuilder<'a> {
             .to_string());
         }
 
-        if media_type != MediaType::Subtitles && self.is_forced.is_some() {
-            return Err(Error::invalid_input().to_string());
+        if media_type != MediaType::Subtitles && self.is_forced.unwrap_or(false) {
+            return Err(Error::custom(format!(
+                concat!(
+                    "the forced attribute must not be present, ",
+                    "unless the media_type is `MediaType::Subtitles`: ",
+                    "media_type: {:?}, is_forced: {:?}"
+                ),
+                media_type, self.is_forced
+            ))
+            .to_string());
         }
 
         Ok(())
