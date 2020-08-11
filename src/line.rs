@@ -92,6 +92,8 @@ impl<'a> TryFrom<&'a str> for Tag<'a> {
             TryFrom::try_from(input).map(Self::ExtInf)
         } else if input.starts_with(tags::ExtXByteRange::PREFIX) {
             TryFrom::try_from(input).map(Self::ExtXByteRange)
+        } else if input.starts_with(tags::ExtXDiscontinuitySequence::PREFIX) {
+            TryFrom::try_from(input).map(Self::ExtXDiscontinuitySequence)
         } else if input.starts_with(tags::ExtXDiscontinuity::PREFIX) {
             TryFrom::try_from(input).map(Self::ExtXDiscontinuity)
         } else if input.starts_with(tags::ExtXKey::PREFIX) {
@@ -106,8 +108,6 @@ impl<'a> TryFrom<&'a str> for Tag<'a> {
             TryFrom::try_from(input).map(Self::ExtXDateRange)
         } else if input.starts_with(tags::ExtXMediaSequence::PREFIX) {
             TryFrom::try_from(input).map(Self::ExtXMediaSequence)
-        } else if input.starts_with(tags::ExtXDiscontinuitySequence::PREFIX) {
-            TryFrom::try_from(input).map(Self::ExtXDiscontinuitySequence)
         } else if input.starts_with(tags::ExtXEndList::PREFIX) {
             TryFrom::try_from(input).map(Self::ExtXEndList)
         } else if input.starts_with(PlaylistType::PREFIX) {

@@ -2,7 +2,6 @@ use std::convert::TryFrom;
 use std::fmt;
 
 use crate::types::ProtocolVersion;
-use crate::utils::tag;
 use crate::{Error, RequiredVersion};
 
 /// The `ExtXDiscontinuity` tag indicates a discontinuity between the
@@ -27,8 +26,13 @@ impl TryFrom<&str> for ExtXDiscontinuity {
     type Error = Error;
 
     fn try_from(input: &str) -> Result<Self, Self::Error> {
-        tag(input, Self::PREFIX)?;
-        Ok(Self)
+        // the parser assumes that only a single line is passed as input,
+        // which should be "#EXT-X-DISCONTINUITY"
+        if input == Self::PREFIX {
+            Ok(Self)
+        } else {
+            Err(Error::unexpected_data(input))
+        }
     }
 }
 
@@ -50,7 +54,9 @@ mod test {
         assert_eq!(
             ExtXDiscontinuity,
             ExtXDiscontinuity::try_from("#EXT-X-DISCONTINUITY").unwrap()
-        )
+        );
+
+        assert!(ExtXDiscontinuity::try_from("#EXT-X-DISCONTINUITY:0").is_err());
     }
 
     #[test]

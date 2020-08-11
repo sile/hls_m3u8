@@ -176,6 +176,10 @@ impl Error {
         })
     }
 
+    pub(crate) fn unexpected_data(value: &str) -> Self {
+        Self::custom(format!("Unexpected data in the line: {:?}", value))
+    }
+
     // third party crates:
     #[cfg(feature = "chrono")]
     pub(crate) fn chrono(source: chrono::format::ParseError) -> Self {
