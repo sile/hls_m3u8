@@ -172,7 +172,7 @@ impl<'a> ExtXKey<'a> {
     /// [`Cow`]: std::borrow::Cow
     #[must_use]
     #[inline]
-    pub fn into_owned(self) -> ExtXKey<'static> { ExtXKey(self.0.map(|v| v.into_owned())) }
+    pub fn into_owned(self) -> ExtXKey<'static> { ExtXKey(self.0.map(DecryptionKey::into_owned)) }
 }
 
 /// This tag requires [`ProtocolVersion::V5`], if [`KeyFormat`] or

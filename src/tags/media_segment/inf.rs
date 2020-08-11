@@ -122,7 +122,7 @@ impl<'a> ExtInf<'a> {
     /// assert_eq!(ext_inf.title(), &Some("better title".into()));
     /// ```
     pub fn set_title<T: Into<Cow<'a, str>>>(&mut self, value: Option<T>) -> &mut Self {
-        self.title = value.map(|v| v.into());
+        self.title = value.map(Into::into);
         self
     }
 

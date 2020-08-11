@@ -279,6 +279,7 @@ impl<'a> MasterPlaylist<'a> {
     ///
     /// This is a relatively expensive operation.
     #[must_use]
+    #[allow(clippy::redundant_closure_for_method_calls)]
     pub fn into_owned(self) -> MasterPlaylist<'static> {
         MasterPlaylist {
             has_independent_segments: self.has_independent_segments,
@@ -550,7 +551,7 @@ impl<'a> TryFrom<&'a str> for MasterPlaylist<'a> {
                 Line::Uri(uri) => {
                     return Err(Error::custom(format!("unexpected uri: {:?}", uri)));
                 }
-                _ => {}
+                Line::Comment(_) => {}
             }
         }
 
@@ -580,7 +581,7 @@ mod tests {
                 subtitles: None,
                 closed_captions: None,
                 stream_data: StreamData::builder()
-                    .bandwidth(150000)
+                    .bandwidth(150_000)
                     .codecs(&["avc1.42e00a", "mp4a.40.2"])
                     .resolution((416, 234))
                     .build()
@@ -593,7 +594,7 @@ mod tests {
                 subtitles: None,
                 closed_captions: None,
                 stream_data: StreamData::builder()
-                    .bandwidth(240000)
+                    .bandwidth(240_000)
                     .codecs(&["avc1.42e00a", "mp4a.40.2"])
                     .resolution((416, 234))
                     .build()
@@ -666,7 +667,7 @@ mod tests {
                         subtitles: None,
                         closed_captions: None,
                         stream_data: StreamData::builder()
-                            .bandwidth(150000)
+                            .bandwidth(150_000)
                             .codecs(&["avc1.42e00a", "mp4a.40.2"])
                             .resolution((416, 234))
                             .build()
@@ -679,7 +680,7 @@ mod tests {
                         subtitles: None,
                         closed_captions: None,
                         stream_data: StreamData::builder()
-                            .bandwidth(240000)
+                            .bandwidth(240_000)
                             .codecs(&["avc1.42e00a", "mp4a.40.2"])
                             .resolution((416, 234))
                             .build()
@@ -692,7 +693,7 @@ mod tests {
                         subtitles: None,
                         closed_captions: None,
                         stream_data: StreamData::builder()
-                            .bandwidth(440000)
+                            .bandwidth(440_000)
                             .codecs(&["avc1.42e00a", "mp4a.40.2"])
                             .resolution((416, 234))
                             .build()
@@ -705,7 +706,7 @@ mod tests {
                         subtitles: None,
                         closed_captions: None,
                         stream_data: StreamData::builder()
-                            .bandwidth(640000)
+                            .bandwidth(640_000)
                             .codecs(&["avc1.42e00a", "mp4a.40.2"])
                             .resolution((640, 360))
                             .build()
@@ -741,7 +742,7 @@ mod tests {
                         subtitles: None,
                         closed_captions: None,
                         stream_data: StreamData::builder()
-                            .bandwidth(150000)
+                            .bandwidth(150_000)
                             .codecs(&["avc1.42e00a", "mp4a.40.2"])
                             .resolution((416, 234))
                             .build()
@@ -754,7 +755,7 @@ mod tests {
                         subtitles: None,
                         closed_captions: None,
                         stream_data: StreamData::builder()
-                            .bandwidth(240000)
+                            .bandwidth(240_000)
                             .codecs(&["avc1.42e00a", "mp4a.40.2"])
                             .resolution((416, 234))
                             .build()
@@ -767,7 +768,7 @@ mod tests {
                         subtitles: None,
                         closed_captions: None,
                         stream_data: StreamData::builder()
-                            .bandwidth(440000)
+                            .bandwidth(440_000)
                             .codecs(&["avc1.42e00a", "mp4a.40.2"])
                             .resolution((416, 234))
                             .build()
@@ -780,7 +781,7 @@ mod tests {
                         subtitles: None,
                         closed_captions: None,
                         stream_data: StreamData::builder()
-                            .bandwidth(640000)
+                            .bandwidth(640_000)
                             .codecs(&["avc1.42e00a", "mp4a.40.2"])
                             .resolution((640, 360))
                             .build()

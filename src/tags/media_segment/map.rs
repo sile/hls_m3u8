@@ -95,7 +95,7 @@ impl<'a> ExtXMap<'a> {
         ExtXMap {
             uri: Cow::Owned(self.uri.into_owned()),
             range: self.range,
-            keys: self.keys.into_iter().map(|v| v.into_owned()).collect(),
+            keys: self.keys.into_iter().map(ExtXKey::into_owned).collect(),
         }
     }
 }

@@ -183,6 +183,7 @@ impl<'a> MediaSegment<'a> {
     ///
     /// This is a relatively expensive operation.
     #[must_use]
+    #[allow(clippy::redundant_closure_for_method_calls)]
     pub fn into_owned(self) -> MediaSegment<'static> {
         MediaSegment {
             number: self.number,

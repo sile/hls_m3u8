@@ -8,6 +8,8 @@
     clippy::inline_always,
 )]
 #![allow(
+    clippy::non_ascii_literal,
+    clippy::redundant_pub_crate,
     clippy::multiple_crate_versions,
     clippy::module_name_repetitions,
     clippy::default_trait_access,
@@ -17,7 +19,7 @@
     clippy::clone_on_ref_ptr,
     clippy::decimal_literal_representation,
     clippy::get_unwrap,
-    clippy::option_expect_used,
+    clippy::expect_used,
     clippy::unneeded_field_pattern,
     clippy::wrong_pub_self_convention
 )]

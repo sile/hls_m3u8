@@ -267,7 +267,7 @@ impl<'a> StreamData<'a> {
         StreamData {
             bandwidth: self.bandwidth,
             average_bandwidth: self.average_bandwidth,
-            codecs: self.codecs.map(|v| v.into_owned()),
+            codecs: self.codecs.map(Codecs::into_owned),
             resolution: self.resolution,
             hdcp_level: self.hdcp_level,
             video: self.video.map(|v| Cow::Owned(v.into_owned())),

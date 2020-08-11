@@ -23,7 +23,7 @@ impl<'a> Iterator for Lines<'a> {
 
             Some(
                 tags::VariantStream::try_from(format!("{}\n{}", line, uri).as_str())
-                    .map(|v| v.into_owned())
+                    .map(tags::VariantStream::into_owned)
                     .map(|v| Line::Tag(Tag::VariantStream(v))),
             )
         } else if line.starts_with("#EXT") {
