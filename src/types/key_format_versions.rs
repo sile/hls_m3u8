@@ -144,7 +144,7 @@ impl KeyFormatVersions {
     /// the future this number might increase.
     #[inline]
     #[must_use]
-    pub fn capacity(&self) -> usize { self.buffer.len() }
+    pub const fn capacity(&self) -> usize { self.buffer.len() }
 
     /// Shortens the internal array to the provided length.
     ///

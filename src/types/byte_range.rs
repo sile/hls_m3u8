@@ -447,10 +447,12 @@ mod tests {
 
     #[test]
     #[should_panic = "the range start (6) must be smaller than the end (0)"]
+    #[allow(clippy::reversed_empty_ranges)]
     fn test_from_range_panic() { let _ = ByteRange::from(6..0); }
 
     #[test]
     #[should_panic = "the range start (6) must be smaller than the end (0+1)"]
+    #[allow(clippy::reversed_empty_ranges)]
     fn test_from_range_inclusive_panic() { let _ = ByteRange::from(6..=0); }
 
     #[test]
@@ -516,6 +518,7 @@ mod tests {
     fn test_set_start() { let _ = ByteRange::from(4..10).set_start(Some(11)); }
 
     #[test]
+    #[allow(clippy::identity_op)]
     fn test_add() {
         // normal addition
         assert_eq!(ByteRange::from(5..10) + 5, ByteRange::from(10..15));
@@ -531,6 +534,7 @@ mod tests {
     fn test_add_panic() { let _ = ByteRange::from(usize::max_value()..usize::max_value()) + 1; }
 
     #[test]
+    #[allow(clippy::identity_op)]
     fn test_sub() {
         // normal subtraction
         assert_eq!(ByteRange::from(5..10) - 4, ByteRange::from(1..6));
@@ -658,7 +662,7 @@ mod tests {
         assert_eq!(ByteRange::from(0..5).to_string(), "5@0".to_string());
 
         assert_eq!(
-            ByteRange::from(2..100001).to_string(),
+            ByteRange::from(2..100_001).to_string(),
             "99999@2".to_string()
         );
 

@@ -198,22 +198,19 @@ mod tests {
     use core::hash::{Hash, Hasher};
     use pretty_assertions::assert_eq;
 
+    #[allow(clippy::all, clippy::unreadable_literal)]
+    const PI: f32 = 3.14159265359;
+
     #[test]
     fn test_display() {
         assert_eq!(UFloat::new(22.0).to_string(), "22".to_string());
-        assert_eq!(
-            UFloat::new(3.14159265359).to_string(),
-            "3.1415927".to_string()
-        );
+        assert_eq!(UFloat::new(PI).to_string(), "3.1415927".to_string());
     }
 
     #[test]
     fn test_parser() {
         assert_eq!(UFloat::new(22.0), UFloat::from_str("22").unwrap());
-        assert_eq!(
-            UFloat::new(3.14159265359),
-            UFloat::from_str("3.14159265359").unwrap()
-        );
+        assert_eq!(UFloat::new(PI), UFloat::from_str("3.14159265359").unwrap());
         assert!(UFloat::from_str("1#").is_err());
         assert!(UFloat::from_str("-1.0").is_err());
         assert!(UFloat::from_str("NaN").is_err());
@@ -309,7 +306,7 @@ mod tests {
     }
 
     #[test]
-    fn test_eq() {
+    const fn test_eq() {
         struct _AssertEq
         where
             UFloat: Eq;

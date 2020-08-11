@@ -268,7 +268,7 @@ impl<'a> VariantStream<'a> {
                     frame_rate,
                     audio: audio.map(|v| Cow::Owned(v.into_owned())),
                     subtitles: subtitles.map(|v| Cow::Owned(v.into_owned())),
-                    closed_captions: closed_captions.map(|v| v.into_owned()),
+                    closed_captions: closed_captions.map(ClosedCaptions::into_owned),
                     stream_data: stream_data.into_owned(),
                 }
             }

@@ -67,7 +67,7 @@ where
 {
     fn from(value: Vec<T>) -> Self {
         Self {
-            list: value.into_iter().map(|v| v.into()).collect(),
+            list: value.into_iter().map(Into::into).collect(),
         }
     }
 }
@@ -76,6 +76,7 @@ where
 macro_rules! implement_from {
     ($($size:expr),*) => {
         $(
+            #[allow(clippy::reversed_empty_ranges)]
             impl<'a> From<[&'a str; $size]> for Codecs<'a> {
                 fn from(value: [&'a str; $size]) -> Self {
                     Self {
@@ -92,6 +93,7 @@ macro_rules! implement_from {
                 }
             }
 
+            #[allow(clippy::reversed_empty_ranges)]
             impl<'a> From<&[&'a str; $size]> for Codecs<'a> {
                 fn from(value: &[&'a str; $size]) -> Self {
                     Self {
@@ -119,7 +121,7 @@ implement_from!(
 
 impl<'a> fmt::Display for Codecs<'a> {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        if let Some(codec) = self.list.iter().next() {
+        if let Some(codec) = self.list.first() {
             write!(f, "{}", codec)?;
 
             for codec in self.list.iter().skip(1) {

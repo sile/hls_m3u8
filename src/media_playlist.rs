@@ -350,7 +350,7 @@ impl<'a> MediaPlaylistBuilder<'a> {
             //     .enumerate()
             //     .find_map(|(i, e)| e.is_none().athen(i))
             //     .unwrap();
-            return Err(format!("a segment is missing"));
+            return Err("a segment is missing".to_string());
         }
 
         Ok(MediaPlaylist {
@@ -710,7 +710,7 @@ fn parse_media_playlist<'a>(
                 segment = MediaSegment::builder();
                 has_partial_segment = false;
             }
-            _ => {}
+            Line::Comment(_) => {}
         }
     }
 
