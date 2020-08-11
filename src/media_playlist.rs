@@ -659,12 +659,16 @@ fn parse_media_playlist<'a>(
                         builder.media_sequence(t.0);
                     }
                     Tag::ExtXDiscontinuitySequence(t) => {
-                        if segments.is_empty() {
-                            return Err(Error::invalid_input());
+                        // this tag must appear before the first MediaSegment in the playlist
+                        // https://tools.ietf.org/html/rfc8216#section-4.3.3.3
+                        if !segments.is_empty() {
+                            return Err(Error::custom("discontinuity sequence tag must appear before the first media segment in the playlist"));
                         }
 
+                        // this tag must appear before any ExtXDiscontinuity tag
+                        // https://tools.ietf.org/html/rfc8216#section-4.3.3.3
                         if has_discontinuity_tag {
-                            return Err(Error::invalid_input());
+                            return Err(Error::custom("discontinuity sequence tag must appear before any `ExtXDiscontinuity` tag"));
                         }
 
                         builder.discontinuity_sequence(t.0);
