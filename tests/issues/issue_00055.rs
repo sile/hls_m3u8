@@ -1,6 +1,6 @@
 // The relevant issue:
 // https://github.com/sile/hls_m3u8/issues/55
-use std::str::FromStr;
+use std::convert::TryFrom;
 
 use hls_m3u8::tags::{ExtXMedia, VariantStream};
 use hls_m3u8::types::{MediaType, StreamData, UFloat};
@@ -13,7 +13,7 @@ fn parse() {
     let file = include_str!("assets/issue_00055.m3u8");
 
     assert_eq!(
-        MasterPlaylist::from_str(file).unwrap(),
+        MasterPlaylist::try_from(file).unwrap(),
         MasterPlaylist::builder()
             .has_independent_segments(true)
             .media(vec![
