@@ -1,6 +1,6 @@
 [package]
 name = "hls_m3u8"
-version = "0.3.0" # remember to update html_root_url
+version = "0.3.1" # remember to update html_root_url
 authors = ["Takeru Ohta <phjgt308@gmail.com>", "Luro02 <24826124+Luro02@users.noreply.github.com>"]
 description = "HLS m3u8 parser/generator"
 homepage = "https://github.com/sile/hls_m3u8"
