@@ -52,7 +52,7 @@ impl InitializationVector {
     /// assert_eq!(InitializationVector::Missing.to_u128(), None);
     /// ```
     #[must_use]
-    pub const fn to_u128(&self) -> Option<u128> {
+    pub fn to_u128(&self) -> Option<u128> {
         match *self {
             Self::Aes128(v) => Some(u128::from_be_bytes(v)),
             Self::Number(n) => Some(n),
@@ -93,7 +93,7 @@ impl InitializationVector {
     ///
     /// [`MediaSegment`]: crate::MediaSegment
     #[must_use]
-    pub const fn to_slice(&self) -> Option<[u8; 0x10]> {
+    pub fn to_slice(&self) -> Option<[u8; 0x10]> {
         match &self {
             Self::Aes128(v) => Some(*v),
             Self::Number(v) => Some(v.to_be_bytes()),
