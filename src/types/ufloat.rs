@@ -13,7 +13,7 @@ use crate::Error;
 /// [`NaN`]: core::f32::NAN
 /// [`INFINITY`]: core::f32::INFINITY
 /// [`NEG_INFINITY`]: core::f32::NEG_INFINITY
-#[derive(AsRef, Deref, Default, Debug, Copy, Clone, PartialOrd, Display)]
+#[derive(AsRef, Deref, Default, Debug, Copy, Clone, Display)]
 pub struct UFloat(f32);
 
 impl UFloat {
@@ -140,6 +140,11 @@ impl PartialEq<f32> for UFloat {
 // with NaN so all of the above requirements are satisfied and therefore Eq can
 // be soundly implemented.
 impl Eq for UFloat {}
+
+impl PartialOrd for UFloat {
+    #[inline]
+    fn partial_cmp(&self, other: &Self) -> Option<Ordering> { Some(self.cmp(other)) }
+}
 
 impl Ord for UFloat {
     #[inline]

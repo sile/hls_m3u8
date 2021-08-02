@@ -12,7 +12,7 @@ use crate::Error;
 /// [`NaN`]: core::f32::NAN
 /// [`INFINITY`]: core::f32::INFINITY
 /// [`NEG_INFINITY`]: core::f32::NEG_INFINITY
-#[derive(AsRef, Deref, Default, Debug, Copy, Clone, Display, PartialOrd)]
+#[derive(AsRef, Deref, Default, Debug, Copy, Clone, Display)]
 pub struct Float(f32);
 
 impl Float {
@@ -128,6 +128,11 @@ impl PartialEq<f32> for Float {
 // with NaN so all of the above requirements are satisfied and therefore Eq can
 // be soundly implemented.
 impl Eq for Float {}
+
+impl PartialOrd for Float {
+    #[inline]
+    fn partial_cmp(&self, other: &Self) -> Option<Ordering> { Some(self.cmp(other)) }
+}
 
 impl Ord for Float {
     #[inline]
