@@ -19,8 +19,8 @@ use crate::types::ProtocolVersion;
 /// [`MediaPlaylist`]: crate::MediaPlaylist
 #[non_exhaustive]
 #[allow(missing_docs)]
-#[strum(serialize_all = "UPPERCASE")]
 #[derive(Ord, PartialOrd, Debug, Clone, Copy, PartialEq, Eq, Hash, Display, EnumString)]
+#[strum(serialize_all = "UPPERCASE")]
 pub enum InStreamId {
     Cc1,
     Cc2,

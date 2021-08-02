@@ -727,7 +727,7 @@ impl FromStr for MediaPlaylist<'static> {
     type Err = Error;
 
     fn from_str(input: &str) -> Result<Self, Self::Err> {
-        Ok(parse_media_playlist(input, &mut Self::builder())?.into_owned())
+        Ok(parse_media_playlist(input, &mut MediaPlaylist::builder())?.into_owned())
     }
 }
 
