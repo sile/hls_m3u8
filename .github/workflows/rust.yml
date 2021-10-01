@@ -41,7 +41,8 @@ jobs:
       - uses: actions-rs/toolchain@v1
         with:
           profile: minimal
-          toolchain: stable
+          # rustfmt uses unstable features
+          toolchain: nightly
           override: true
       - run: rustup component add rustfmt
       - uses: Swatinem/rust-cache@v1
