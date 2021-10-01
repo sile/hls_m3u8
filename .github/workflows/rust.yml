@@ -1,36 +1,67 @@
-name: rust
-
-# Trigger the workflow on push or pull request
 on: [push, pull_request]
 
-jobs:
-    rustfmt:
-        name: rustfmt
-        runs-on: ubuntu-latest
-        steps:
-            - uses: actions/checkout@v2
-            - uses: actions-rs/toolchain@v1
-              with:
-                profile: minimal
-                toolchain: nightly
-                override: true
-                components: rustfmt
-            - uses: actions-rs/cargo@v1
-              with:
-                command: fmt
-                args: --all -- --check
+name: Continuous integration
 
-    clippy:
-        name: clippy
-        runs-on: ubuntu-latest
-        steps:
-            - uses: actions/checkout@v2
-            - uses: actions-rs/toolchain@v1
-              with:
-                profile: minimal
-                toolchain: nightly
-                override: true
-                components: clippy
-            - uses: actions-rs/cargo@v1
-              with:
-                command: clippy
+jobs:
+  check:
+    name: check
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions-rs/toolchain@v1
+        with:
+          profile: minimal
+          toolchain: stable
+          override: true
+      - uses: Swatinem/rust-cache@v1
+      - uses: actions-rs/cargo@v1
+        with:
+          command: check
+
+  test:
+    name: test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions-rs/toolchain@v1
+        with:
+          profile: minimal
+          toolchain: stable
+          override: true
+      - uses: Swatinem/rust-cache@v1
+      - uses: actions-rs/cargo@v1
+        with:
+          command: test
+
+  fmt:
+    name: rustfmt
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions-rs/toolchain@v1
+        with:
+          profile: minimal
+          toolchain: stable
+          override: true
+      - run: rustup component add rustfmt
+      - uses: Swatinem/rust-cache@v1
+      - uses: actions-rs/cargo@v1
+        with:
+          command: fmt
+          args: --all -- --check
+
+  miri:
+    name: miri
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: Install Miri
+        run: |
+          MIRI_NIGHTLY=nightly-$(curl -s https://rust-lang.github.io/rustup-components-history/x86_64-unknown-linux-gnu/miri)
+          echo "Installing latest nightly with Miri: $MIRI_NIGHTLY"
+          rustup set profile minimal
+          rustup default "$MIRI_NIGHTLY"
+          rustup component add miri
+      - uses: Swatinem/rust-cache@v1
+      - name: Run Tests
+        run: cargo miri test
