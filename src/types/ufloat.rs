@@ -271,7 +271,7 @@ mod tests {
     fn test_new_negative() { let _ = UFloat::new(-1.1); }
 
     #[test]
-    #[should_panic = "float must be positive: `0`"]
+    #[should_panic = "float must be positive: `-0`"]
     fn test_new_negative_zero() { let _ = UFloat::new(-0.0); }
 
     #[test]
