@@ -220,13 +220,9 @@ impl<'a> MasterPlaylist<'a> {
 
     /// Returns all streams, which have an audio group id.
     pub fn audio_streams(&self) -> impl Iterator<Item = &VariantStream<'a>> {
-        self.variant_streams.iter().filter(|stream| {
-            if let VariantStream::ExtXStreamInf { audio: Some(_), .. } = stream {
-                true
-            } else {
-                false
-            }
-        })
+        self.variant_streams
+            .iter()
+            .filter(|stream| matches!(stream, VariantStream::ExtXStreamInf { audio: Some(_), .. }))
     }
 
     /// Returns all streams, which have a video group id.
@@ -416,13 +412,11 @@ impl<'a> MasterPlaylistBuilder<'a> {
     }
 
     fn check_media_group<T: AsRef<str>>(&self, media_type: MediaType, group_id: T) -> bool {
-        if let Some(value) = &self.media {
+        self.media.as_ref().map_or(false, |value| {
             value.iter().any(|media| {
                 media.media_type == media_type && media.group_id().as_ref() == group_id.as_ref()
             })
-        } else {
-            false
-        }
+        })
     }
 }
 

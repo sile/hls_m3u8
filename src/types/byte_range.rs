@@ -354,11 +354,9 @@ impl_from_ranges![u64, u32, u16, u8, usize, i32];
 #[must_use]
 impl RangeBounds<usize> for ByteRange {
     fn start_bound(&self) -> Bound<&usize> {
-        if let Some(start) = &self.start {
-            Bound::Included(start)
-        } else {
-            Bound::Unbounded
-        }
+        self.start
+            .as_ref()
+            .map_or(Bound::Unbounded, Bound::Included)
     }
 
     #[inline]

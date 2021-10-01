@@ -315,12 +315,11 @@ impl<'a> MediaPlaylistBuilder<'a> {
                     method, iv, format, ..
                 })) = key
                 {
-                    if *method == EncryptionMethod::Aes128 && *iv == InitializationVector::Missing {
-                        if format.is_none() {
-                            *iv = InitializationVector::Number(segment.number as u128);
-                        } else if let Some(KeyFormat::Identity) = format {
-                            *iv = InitializationVector::Number(segment.number as u128);
-                        }
+                    if *method == EncryptionMethod::Aes128
+                        && *iv == InitializationVector::Missing
+                        && (format.is_none() || &mut Some(KeyFormat::Identity) == format)
+                    {
+                        *iv = InitializationVector::Number(segment.number as u128);
                     }
                 }
             }

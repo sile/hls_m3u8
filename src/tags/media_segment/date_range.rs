@@ -380,21 +380,21 @@ impl<'a> TryFrom<&'a str> for ExtXDateRange<'a> {
                 "START-DATE" => {
                     #[cfg(feature = "chrono")]
                     {
-                        start_date = Some(unquote(value).parse().map_err(Error::chrono)?)
+                        start_date = Some(unquote(value).parse().map_err(Error::chrono)?);
                     }
                     #[cfg(not(feature = "chrono"))]
                     {
-                        start_date = Some(unquote(value))
+                        start_date = Some(unquote(value));
                     }
                 }
                 "END-DATE" => {
                     #[cfg(feature = "chrono")]
                     {
-                        end_date = Some(unquote(value).parse().map_err(Error::chrono)?)
+                        end_date = Some(unquote(value).parse().map_err(Error::chrono)?);
                     }
                     #[cfg(not(feature = "chrono"))]
                     {
-                        end_date = Some(unquote(value))
+                        end_date = Some(unquote(value));
                     }
                 }
                 "DURATION" => {

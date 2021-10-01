@@ -379,7 +379,7 @@ impl<'a> TryFrom<&'a str> for VariantStream<'a> {
                     "AUDIO" => audio = Some(unquote(value)),
                     "SUBTITLES" => subtitles = Some(unquote(value)),
                     "CLOSED-CAPTIONS" => {
-                        closed_captions = Some(ClosedCaptions::try_from(value).unwrap())
+                        closed_captions = Some(ClosedCaptions::try_from(value).unwrap());
                     }
                     _ => {}
                 }
