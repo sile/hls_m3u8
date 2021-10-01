@@ -223,9 +223,9 @@ impl<'a> TryFrom<&'a str> for ExtXSessionData<'a> {
             if let Some(value) = session_value {
                 if uri.is_some() {
                     return Err(Error::custom("unexpected URI"));
-                } else {
-                    SessionData::Value(value)
                 }
+
+                SessionData::Value(value)
             } else if let Some(uri) = uri {
                 SessionData::Uri(uri)
             } else {

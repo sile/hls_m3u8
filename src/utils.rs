@@ -73,11 +73,7 @@ pub(crate) fn unquote(value: &str) -> Cow<'_, str> {
     if value.starts_with('"') && value.ends_with('"') {
         let result = Cow::Borrowed(&value[1..value.len() - 1]);
 
-        if result
-            .chars()
-            .find(|c| *c == '"' || *c == '\n' || *c == '\r')
-            .is_none()
-        {
+        if !result.chars().any(|c| c == '"' || c == '\n' || c == '\r') {
             return result;
         }
     }

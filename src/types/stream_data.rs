@@ -323,12 +323,12 @@ impl<'a> TryFrom<&'a str> for StreamData<'a> {
                         value
                             .parse::<u64>()
                             .map_err(|e| Error::parse_int(value, e))?,
-                    )
+                    );
                 }
                 "CODECS" => codecs = Some(TryFrom::try_from(unquote(value))?),
                 "RESOLUTION" => resolution = Some(value.parse()?),
                 "HDCP-LEVEL" => {
-                    hdcp_level = Some(value.parse::<HdcpLevel>().map_err(Error::strum)?)
+                    hdcp_level = Some(value.parse::<HdcpLevel>().map_err(Error::strum)?);
                 }
                 "VIDEO" => video = Some(unquote(value)),
                 _ => {

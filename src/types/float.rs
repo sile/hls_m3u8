@@ -182,7 +182,7 @@ impl ::core::hash::Hash for Float {
         } else {
             // I do not think it matters to differentiate between architectures, that use
             // big endian by default and those, that use little endian.
-            state.write(&self.to_be_bytes())
+            state.write(&self.to_be_bytes());
         }
     }
 }

@@ -36,7 +36,7 @@ use crate::RequiredVersion;
 /// ```
 ///
 /// [`KeyFormat`]: crate::types::KeyFormat
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone, Copy, Default)]
 pub struct KeyFormatVersions {
     // NOTE(Luro02): if the current array is not big enough one can easily increase
     //               the number of elements or change the type to something bigger,
@@ -295,7 +295,7 @@ impl Extend<u8> for KeyFormatVersions {
 
 impl<'a> Extend<&'a u8> for KeyFormatVersions {
     fn extend<I: IntoIterator<Item = &'a u8>>(&mut self, iter: I) {
-        <Self as Extend<u8>>::extend(self, iter.into_iter().copied())
+        <Self as Extend<u8>>::extend(self, iter.into_iter().copied());
     }
 }
 
@@ -346,17 +346,7 @@ impl FromIterator<u8> for KeyFormatVersions {
 
 impl<'a> FromIterator<&'a u8> for KeyFormatVersions {
     fn from_iter<I: IntoIterator<Item = &'a u8>>(iter: I) -> Self {
-        <Self as FromIterator<u8>>::from_iter(iter.into_iter().copied())
-    }
-}
-
-impl Default for KeyFormatVersions {
-    #[inline]
-    fn default() -> Self {
-        Self {
-            buffer: [0; 9],
-            len: 0,
-        }
+        iter.into_iter().copied().collect()
     }
 }
 
@@ -413,7 +403,7 @@ impl fmt::Display for KeyFormatVersions {
 }
 
 impl<T: AsRef<[usize]>> From<T> for KeyFormatVersions {
-    fn from(value: T) -> Self { Self::from_iter(value.as_ref().iter().map(|i| *i as u8)) }
+    fn from(value: T) -> Self { value.as_ref().iter().map(|i| *i as u8).collect() }
 }
 
 /// `Iterator` for [`KeyFormatVersions`].
