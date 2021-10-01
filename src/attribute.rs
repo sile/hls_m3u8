@@ -30,7 +30,8 @@ impl<'a> Iterator for AttributePairs<'a> {
             // NOTE: it is okay to add 1 to the index, because an `=` is exactly 1 byte.
             self.index = end + 1;
 
-            &self.string[start..end]
+            // NOTE: See https://github.com/sile/hls_m3u8/issues/64
+            self.string[start..end].trim()
         };
 
         let value = {
@@ -66,7 +67,8 @@ impl<'a> Iterator for AttributePairs<'a> {
             self.index += end;
             self.index -= start;
 
-            &self.string[start..end]
+            // NOTE: See https://github.com/sile/hls_m3u8/issues/64
+            self.string[start..end].trim()
         };
 
         Some((key, value))
@@ -190,7 +192,7 @@ mod test {
         assert_eq!((1, Some(1)), pairs.size_hint());
         assert_eq!(
             pairs.next(),
-            Some(("ध्वनि स्थिति और्४५० नीचे ", "देखने लाभो द्वारा करके(विशेष"))
+            Some(("ध्वनि स्थिति और्४५० नीचे", "देखने लाभो द्वारा करके(विशेष"))
         );
 
         assert_eq!((0, Some(0)), pairs.size_hint());

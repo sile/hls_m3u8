@@ -348,13 +348,7 @@ impl<'a> TryFrom<&'a str> for VariantStream<'a> {
     fn try_from(input: &'a str) -> Result<Self, Self::Error> {
         if let Ok(input) = tag(input, Self::PREFIX_EXTXIFRAME) {
             let uri = AttributePairs::new(input)
-                .find_map(|(key, value)| {
-                    if key == "URI" {
-                        Some(unquote(value))
-                    } else {
-                        None
-                    }
-                })
+                .find_map(|(key, value)| (key == "URI").then(|| unquote(value)))
                 .ok_or_else(|| Error::missing_value("URI"))?;
 
             Ok(Self::ExtXIFrame {
