@@ -82,7 +82,7 @@ impl KeyFormatVersions {
     ///
     /// This will panic, because it exceeded the maximum number of elements:
     ///
-    /// ```{.should_panic}
+    /// ```should_panic
     /// # use hls_m3u8::types::KeyFormatVersions;
     /// let mut versions = KeyFormatVersions::new();
     ///

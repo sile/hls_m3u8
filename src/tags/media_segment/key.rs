@@ -117,7 +117,7 @@ impl<'a> ExtXKey<'a> {
     /// );
     /// ```
     ///
-    /// ```{.should_panic}
+    /// ```should_panic
     /// # use hls_m3u8::tags::ExtXKey;
     /// use hls_m3u8::types::DecryptionKey;
     ///
