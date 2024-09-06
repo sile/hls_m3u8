@@ -75,7 +75,7 @@ impl<'a> RequiredVersion for ExtXSessionKey<'a> {
 
 impl<'a> fmt::Display for ExtXSessionKey<'a> {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "{}{}", Self::PREFIX, self.0.to_string())
+        write!(f, "{}{}", Self::PREFIX, self.0)
     }
 }
 

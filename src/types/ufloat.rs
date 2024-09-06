@@ -224,6 +224,7 @@ mod tests {
     }
 
     #[test]
+    #[allow(clippy::unit_cmp)] // fucked test
     fn test_hash() {
         let mut hasher_left = std::collections::hash_map::DefaultHasher::new();
         let mut hasher_right = std::collections::hash_map::DefaultHasher::new();
@@ -261,8 +262,8 @@ mod tests {
 
     #[test]
     fn test_partial_eq() {
-        assert_eq!(UFloat::new(1.0).eq(&UFloat::new(1.0)), true);
-        assert_eq!(UFloat::new(1.0).eq(&UFloat::new(33.3)), false);
+        assert_eq!(UFloat::new(1.0), UFloat::new(1.0));
+        assert_ne!(UFloat::new(1.0), UFloat::new(33.3));
         assert_eq!(UFloat::new(1.1), 1.1);
     }
 
@@ -276,15 +277,15 @@ mod tests {
 
     #[test]
     #[should_panic = "float must be finite: `inf`"]
-    fn test_new_infinite() { let _ = UFloat::new(::core::f32::INFINITY); }
+    fn test_new_infinite() { let _ = UFloat::new(f32::INFINITY); }
 
     #[test]
     #[should_panic = "float must be finite: `-inf`"]
-    fn test_new_neg_infinite() { let _ = UFloat::new(::core::f32::NEG_INFINITY); }
+    fn test_new_neg_infinite() { let _ = UFloat::new(f32::NEG_INFINITY); }
 
     #[test]
     #[should_panic = "float must not be `NaN`"]
-    fn test_new_nan() { let _ = UFloat::new(::core::f32::NAN); }
+    fn test_new_nan() { let _ = UFloat::new(f32::NAN); }
 
     #[test]
     fn test_as_f32() {
@@ -305,9 +306,9 @@ mod tests {
             UFloat::try_from(-1.1_f32),
             Err(Error::custom("float must be positive: `-1.1`"))
         );
-        assert!(UFloat::try_from(::core::f32::INFINITY).is_err());
-        assert!(UFloat::try_from(::core::f32::NAN).is_err());
-        assert!(UFloat::try_from(::core::f32::NEG_INFINITY).is_err());
+        assert!(UFloat::try_from(f32::INFINITY).is_err());
+        assert!(UFloat::try_from(f32::NAN).is_err());
+        assert!(UFloat::try_from(f32::NEG_INFINITY).is_err());
     }
 
     #[test]

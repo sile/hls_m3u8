@@ -63,7 +63,7 @@ generate_tests! {
                     closed_captions: None,
                     stream_data: StreamData::builder()
                         .bandwidth(195023)
-                        .codecs(&["avc1.42e00a", "mp4a.40.2"])
+                        .codecs(["avc1.42e00a", "mp4a.40.2"])
                         .build()
                         .unwrap()
                 },
@@ -75,7 +75,7 @@ generate_tests! {
                     closed_captions: None,
                     stream_data: StreamData::builder()
                         .bandwidth(591680)
-                        .codecs(&["avc1.42e01e", "mp4a.40.2"])
+                        .codecs(["avc1.42e01e", "mp4a.40.2"])
                         .build()
                         .unwrap()
                 }

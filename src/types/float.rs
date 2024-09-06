@@ -220,6 +220,7 @@ mod tests {
     }
 
     #[test]
+    #[allow(clippy::unit_cmp)] // fucked test
     fn test_hash() {
         let mut hasher_left = std::collections::hash_map::DefaultHasher::new();
         let mut hasher_right = std::collections::hash_map::DefaultHasher::new();
@@ -251,8 +252,8 @@ mod tests {
 
     #[test]
     fn test_partial_eq() {
-        assert_eq!(Float::new(1.0).eq(&Float::new(1.0)), true);
-        assert_eq!(Float::new(1.0).eq(&Float::new(33.3)), false);
+        assert_eq!(Float::new(1.0), Float::new(1.0));
+        assert_ne!(Float::new(1.0), Float::new(33.3));
         assert_eq!(Float::new(1.1), 1.1);
     }
 
@@ -276,15 +277,15 @@ mod tests {
 
     #[test]
     #[should_panic = "float must be finite: `inf`"]
-    fn test_new_infinite() { let _ = Float::new(::core::f32::INFINITY); }
+    fn test_new_infinite() { let _ = Float::new(f32::INFINITY); }
 
     #[test]
     #[should_panic = "float must be finite: `-inf`"]
-    fn test_new_neg_infinite() { let _ = Float::new(::core::f32::NEG_INFINITY); }
+    fn test_new_neg_infinite() { let _ = Float::new(f32::NEG_INFINITY); }
 
     #[test]
     #[should_panic = "float must not be `NaN`"]
-    fn test_new_nan() { let _ = Float::new(::core::f32::NAN); }
+    fn test_new_nan() { let _ = Float::new(f32::NAN); }
 
     #[test]
     fn test_as_f32() {
@@ -304,8 +305,8 @@ mod tests {
         assert_eq!(Float::try_from(1.1_f32).unwrap(), Float::new(1.1));
         assert_eq!(Float::try_from(-1.1_f32).unwrap(), Float::new(-1.1));
 
-        assert!(Float::try_from(::core::f32::INFINITY).is_err());
-        assert!(Float::try_from(::core::f32::NAN).is_err());
-        assert!(Float::try_from(::core::f32::NEG_INFINITY).is_err());
+        assert!(Float::try_from(f32::INFINITY).is_err());
+        assert!(Float::try_from(f32::NAN).is_err());
+        assert!(Float::try_from(f32::NEG_INFINITY).is_err());
     }
 }

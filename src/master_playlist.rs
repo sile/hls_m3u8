@@ -68,7 +68,7 @@ use crate::{Error, RequiredVersion};
 ///             closed_captions: None,
 ///             stream_data: StreamData::builder()
 ///                 .bandwidth(150000)
-///                 .codecs(&["avc1.42e00a", "mp4a.40.2"])
+///                 .codecs(["avc1.42e00a", "mp4a.40.2"])
 ///                 .resolution((416, 234))
 ///                 .build()
 ///                 .unwrap(),
@@ -81,7 +81,7 @@ use crate::{Error, RequiredVersion};
 ///             closed_captions: None,
 ///             stream_data: StreamData::builder()
 ///                 .bandwidth(240000)
-///                 .codecs(&["avc1.42e00a", "mp4a.40.2"])
+///                 .codecs(["avc1.42e00a", "mp4a.40.2"])
 ///                 .resolution((416, 234))
 ///                 .build()
 ///                 .unwrap(),
@@ -190,7 +190,7 @@ impl<'a> MasterPlaylist<'a> {
     ///             closed_captions: None,
     ///             stream_data: StreamData::builder()
     ///                 .bandwidth(150000)
-    ///                 .codecs(&["avc1.42e00a", "mp4a.40.2"])
+    ///                 .codecs(["avc1.42e00a", "mp4a.40.2"])
     ///                 .resolution((416, 234))
     ///                 .build()
     ///                 .unwrap(),
@@ -203,7 +203,7 @@ impl<'a> MasterPlaylist<'a> {
     ///             closed_captions: None,
     ///             stream_data: StreamData::builder()
     ///                 .bandwidth(240000)
-    ///                 .codecs(&["avc1.42e00a", "mp4a.40.2"])
+    ///                 .codecs(["avc1.42e00a", "mp4a.40.2"])
     ///                 .resolution((416, 234))
     ///                 .build()
     ///                 .unwrap(),
@@ -262,7 +262,7 @@ impl<'a> MasterPlaylist<'a> {
     pub fn associated_with<'b>(
         &'b self,
         stream: &'b VariantStream<'_>,
-    ) -> impl Iterator<Item = &ExtXMedia<'a>> + 'b {
+    ) -> impl Iterator<Item = &'b ExtXMedia<'a>> + 'b {
         self.media
             .iter()
             .filter(move |media| stream.is_associated(media))
@@ -576,7 +576,7 @@ mod tests {
                 closed_captions: None,
                 stream_data: StreamData::builder()
                     .bandwidth(150_000)
-                    .codecs(&["avc1.42e00a", "mp4a.40.2"])
+                    .codecs(["avc1.42e00a", "mp4a.40.2"])
                     .resolution((416, 234))
                     .build()
                     .unwrap(),
@@ -589,7 +589,7 @@ mod tests {
                 closed_captions: None,
                 stream_data: StreamData::builder()
                     .bandwidth(240_000)
-                    .codecs(&["avc1.42e00a", "mp4a.40.2"])
+                    .codecs(["avc1.42e00a", "mp4a.40.2"])
                     .resolution((416, 234))
                     .build()
                     .unwrap(),
@@ -662,7 +662,7 @@ mod tests {
                         closed_captions: None,
                         stream_data: StreamData::builder()
                             .bandwidth(150_000)
-                            .codecs(&["avc1.42e00a", "mp4a.40.2"])
+                            .codecs(["avc1.42e00a", "mp4a.40.2"])
                             .resolution((416, 234))
                             .build()
                             .unwrap()
@@ -675,7 +675,7 @@ mod tests {
                         closed_captions: None,
                         stream_data: StreamData::builder()
                             .bandwidth(240_000)
-                            .codecs(&["avc1.42e00a", "mp4a.40.2"])
+                            .codecs(["avc1.42e00a", "mp4a.40.2"])
                             .resolution((416, 234))
                             .build()
                             .unwrap()
@@ -688,7 +688,7 @@ mod tests {
                         closed_captions: None,
                         stream_data: StreamData::builder()
                             .bandwidth(440_000)
-                            .codecs(&["avc1.42e00a", "mp4a.40.2"])
+                            .codecs(["avc1.42e00a", "mp4a.40.2"])
                             .resolution((416, 234))
                             .build()
                             .unwrap()
@@ -701,7 +701,7 @@ mod tests {
                         closed_captions: None,
                         stream_data: StreamData::builder()
                             .bandwidth(640_000)
-                            .codecs(&["avc1.42e00a", "mp4a.40.2"])
+                            .codecs(["avc1.42e00a", "mp4a.40.2"])
                             .resolution((640, 360))
                             .build()
                             .unwrap()
@@ -714,7 +714,7 @@ mod tests {
                         closed_captions: None,
                         stream_data: StreamData::builder()
                             .bandwidth(64000)
-                            .codecs(&["mp4a.40.5"])
+                            .codecs(["mp4a.40.5"])
                             .build()
                             .unwrap()
                     },
@@ -737,7 +737,7 @@ mod tests {
                         closed_captions: None,
                         stream_data: StreamData::builder()
                             .bandwidth(150_000)
-                            .codecs(&["avc1.42e00a", "mp4a.40.2"])
+                            .codecs(["avc1.42e00a", "mp4a.40.2"])
                             .resolution((416, 234))
                             .build()
                             .unwrap()
@@ -750,7 +750,7 @@ mod tests {
                         closed_captions: None,
                         stream_data: StreamData::builder()
                             .bandwidth(240_000)
-                            .codecs(&["avc1.42e00a", "mp4a.40.2"])
+                            .codecs(["avc1.42e00a", "mp4a.40.2"])
                             .resolution((416, 234))
                             .build()
                             .unwrap()
@@ -763,7 +763,7 @@ mod tests {
                         closed_captions: None,
                         stream_data: StreamData::builder()
                             .bandwidth(440_000)
-                            .codecs(&["avc1.42e00a", "mp4a.40.2"])
+                            .codecs(["avc1.42e00a", "mp4a.40.2"])
                             .resolution((416, 234))
                             .build()
                             .unwrap()
@@ -776,7 +776,7 @@ mod tests {
                         closed_captions: None,
                         stream_data: StreamData::builder()
                             .bandwidth(640_000)
-                            .codecs(&["avc1.42e00a", "mp4a.40.2"])
+                            .codecs(["avc1.42e00a", "mp4a.40.2"])
                             .resolution((640, 360))
                             .build()
                             .unwrap()
@@ -789,7 +789,7 @@ mod tests {
                         closed_captions: None,
                         stream_data: StreamData::builder()
                             .bandwidth(64000)
-                            .codecs(&["mp4a.40.5"])
+                            .codecs(["mp4a.40.5"])
                             .build()
                             .unwrap()
                     },

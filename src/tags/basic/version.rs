@@ -11,7 +11,7 @@ use crate::{Error, RequiredVersion};
 ///
 /// [`MediaPlaylist`]: crate::MediaPlaylist
 /// [`MasterPlaylist`]: crate::MasterPlaylist
-#[derive(Copy, Clone, Eq, PartialEq, Ord, PartialOrd, Hash, Debug)]
+#[derive(Copy, Clone, Eq, PartialEq, Ord, PartialOrd, Hash, Debug, Default)]
 pub struct ExtXVersion(ProtocolVersion);
 
 impl ExtXVersion {
@@ -57,10 +57,6 @@ impl fmt::Display for ExtXVersion {
         //
         write!(f, "{}{}", Self::PREFIX, self.0)
     }
-}
-
-impl Default for ExtXVersion {
-    fn default() -> Self { Self(ProtocolVersion::default()) }
 }
 
 impl From<ProtocolVersion> for ExtXVersion {

@@ -137,6 +137,7 @@ impl RequiredVersion for ExtXByteRange {
     fn required_version(&self) -> ProtocolVersion { ProtocolVersion::V4 }
 }
 
+#[allow(clippy::from_over_into)] // Some magic `From` blanket impl is going on that means this can't be done.
 impl Into<ByteRange> for ExtXByteRange {
     fn into(self) -> ByteRange { self.0 }
 }

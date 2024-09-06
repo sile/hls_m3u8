@@ -122,7 +122,7 @@ impl ByteRange {
     ///
     /// ```
     /// # use hls_m3u8::types::ByteRange;
-    /// let range = ByteRange::from(5..usize::max_value());
+    /// let range = ByteRange::from(5..usize::MAX);
     ///
     /// // this would cause the end to overflow
     /// let nrange = range.saturating_add(1);
@@ -145,10 +145,10 @@ impl ByteRange {
             } else {
                 // it is ensured at construction that the start will never be larger than the
                 // end. This clause can therefore be only reached if the end overflowed.
-                // -> It is only possible to add `usize::max_value() - end` to the start.
-                if let Some(start) = start.checked_add(usize::max_value() - self.end) {
+                // -> It is only possible to add `usize::MAX - end` to the start.
+                if let Some(start) = start.checked_add(usize::MAX - self.end) {
                     self.start = Some(start);
-                    self.end = usize::max_value();
+                    self.end = usize::MAX;
                 } else {
                     // both end + start overflowed -> do not change anything
                 }
@@ -351,7 +351,6 @@ macro_rules! impl_from_ranges {
 // stable (`Into<i64> for usize` is reserved for upstream crates ._.)
 impl_from_ranges![u64, u32, u16, u8, usize, i32];
 
-#[must_use]
 impl RangeBounds<usize> for ByteRange {
     fn start_bound(&self) -> Bound<&usize> {
         self.start
@@ -488,7 +487,7 @@ mod tests {
     #[test]
     #[should_panic = "attempt to add with overflow"]
     fn test_add_assign_panic() {
-        let mut range = ByteRange::from(4..usize::max_value());
+        let mut range = ByteRange::from(4..usize::MAX);
         range += 5;
 
         unreachable!();
@@ -529,7 +528,7 @@ mod tests {
 
     #[test]
     #[should_panic = "attempt to add with overflow"]
-    fn test_add_panic() { let _ = ByteRange::from(usize::max_value()..usize::max_value()) + 1; }
+    fn test_add_panic() { let _ = ByteRange::from(usize::MAX..usize::MAX) + 1; }
 
     #[test]
     #[allow(clippy::identity_op)]
@@ -580,28 +579,28 @@ mod tests {
 
         // overflow
         assert_eq!(
-            ByteRange::from(usize::max_value()..usize::max_value()).saturating_add(1),
-            ByteRange::from(usize::max_value()..usize::max_value())
+            ByteRange::from(usize::MAX..usize::MAX).saturating_add(1),
+            ByteRange::from(usize::MAX..usize::MAX)
         );
         assert_eq!(
-            ByteRange::from(..usize::max_value()).saturating_add(1),
-            ByteRange::from(..usize::max_value())
+            ByteRange::from(..usize::MAX).saturating_add(1),
+            ByteRange::from(..usize::MAX)
         );
 
         assert_eq!(
-            ByteRange::from(usize::max_value() - 5..usize::max_value()).saturating_add(1),
-            ByteRange::from(usize::max_value() - 5..usize::max_value())
+            ByteRange::from(usize::MAX - 5..usize::MAX).saturating_add(1),
+            ByteRange::from(usize::MAX - 5..usize::MAX)
         );
 
         // overflow, but something can be added to the range:
         assert_eq!(
-            ByteRange::from(usize::max_value() - 5..usize::max_value() - 3).saturating_add(4),
-            ByteRange::from(usize::max_value() - 2..usize::max_value())
+            ByteRange::from(usize::MAX - 5..usize::MAX - 3).saturating_add(4),
+            ByteRange::from(usize::MAX - 2..usize::MAX)
         );
 
         assert_eq!(
-            ByteRange::from(..usize::max_value() - 3).saturating_add(4),
-            ByteRange::from(..usize::max_value())
+            ByteRange::from(..usize::MAX - 3).saturating_add(4),
+            ByteRange::from(..usize::MAX)
         );
     }
 
