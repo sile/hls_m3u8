@@ -57,7 +57,7 @@ pub(crate) enum Line<'a> {
 
 #[allow(clippy::large_enum_variant)]
 #[derive(Debug, Clone, PartialEq, Display)]
-#[display(fmt = "{}")]
+#[display("{_variant}")]
 pub(crate) enum Tag<'a> {
     ExtXVersion(tags::ExtXVersion),
     ExtInf(tags::ExtInf<'a>),

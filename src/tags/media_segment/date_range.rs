@@ -281,7 +281,7 @@ let date_range = ExtXDateRange::builder()
     .scte35_in("0xFC002F0000000000FF1")
     .end_on_next(true)
     .build()?;
-# Ok::<(), String>(())
+# Ok::<(), Box<dyn std::error::Error>>(())
 ```
 "#
     )]
@@ -306,7 +306,7 @@ let date_range = ExtXDateRange::builder()
     .scte35_in("0xFC002F0000000000FF1")
     .end_on_next(true)
     .build()?;
-# Ok::<(), String>(())
+# Ok::<(), Box<dyn std::error::Error>>(())
 ```
 "#
     )]

@@ -170,7 +170,7 @@ impl<'a> MediaSegment<'a> {
     ///     .duration(Duration::from_secs(4))
     ///     .uri("http://www.uri.com/")
     ///     .build()?;
-    /// # Ok::<(), String>(())
+    /// # Ok::<(), Box<dyn std::error::Error>>(())
     /// ```
     #[must_use]
     #[inline]
