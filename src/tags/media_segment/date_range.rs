@@ -502,7 +502,7 @@ impl<'a> fmt::Display for ExtXDateRange<'a> {
 
             #[cfg(not(feature = "chrono"))]
             {
-                write!(f, ",START-DATE={}", quote(&value))?;
+                write!(f, ",START-DATE={}", quote(value))?;
             }
         }
 
@@ -518,7 +518,7 @@ impl<'a> fmt::Display for ExtXDateRange<'a> {
 
             #[cfg(not(feature = "chrono"))]
             {
-                write!(f, ",END-DATE={}", quote(&value))?;
+                write!(f, ",END-DATE={}", quote(value))?;
             }
         }
 

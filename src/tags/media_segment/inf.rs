@@ -182,7 +182,7 @@ impl<'a> TryFrom<&'a str> for ExtInf<'a> {
             .next()
             .map(str::trim)
             .filter(|value| !value.is_empty())
-            .map(|v| Cow::Borrowed(v));
+            .map(Cow::Borrowed);
 
         Ok(Self { duration, title })
     }

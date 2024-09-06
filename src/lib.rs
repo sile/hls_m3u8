@@ -1,12 +1,7 @@
 #![doc(html_root_url = "https://docs.rs/hls_m3u8/0.4.1")]
 #![forbid(unsafe_code)]
 #![warn(rust_2018_idioms)]
-#![warn(
-    clippy::pedantic, //
-    clippy::nursery,
-    clippy::cargo,
-    clippy::inline_always,
-)]
+#![warn(clippy::cargo, clippy::inline_always)]
 #![allow(
     clippy::non_ascii_literal,
     clippy::redundant_pub_crate,
@@ -19,10 +14,10 @@
     clippy::clone_on_ref_ptr,
     clippy::decimal_literal_representation,
     clippy::get_unwrap,
-    clippy::expect_used,
     clippy::unneeded_field_pattern,
-    clippy::wrong_pub_self_convention
+    clippy::wrong_self_convention
 )]
+#![cfg_attr(not(test), warn(clippy::expect_used))]
 // those should not be present in production code:
 #![deny(
     clippy::print_stdout,

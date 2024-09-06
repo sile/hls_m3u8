@@ -56,8 +56,8 @@ impl From<(usize, usize)> for Resolution {
     fn from(value: (usize, usize)) -> Self { Self::new(value.0, value.1) }
 }
 
-impl Into<(usize, usize)> for Resolution {
-    fn into(self) -> (usize, usize) { (self.width, self.height) }
+impl From<Resolution> for (usize, usize) {
+    fn from(val: Resolution) -> Self { (val.width, val.height) }
 }
 
 impl FromStr for Resolution {

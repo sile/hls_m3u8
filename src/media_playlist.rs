@@ -56,7 +56,7 @@ pub struct MediaPlaylist<'a> {
     /// - [`PlaylistType::Vod`] indicates that the playlist must not change.
     ///
     /// - [`PlaylistType::Event`] indicates that the server does not change or
-    /// delete any part of the playlist, but may append new lines to it.
+    ///   delete any part of the playlist, but may append new lines to it.
     ///
     /// ### Note
     ///
@@ -367,7 +367,7 @@ impl<'a> MediaPlaylistBuilder<'a> {
             allowable_excess_duration: self
                 .allowable_excess_duration
                 .unwrap_or_else(|| Duration::from_secs(0)),
-            unknown: self.unknown.clone().unwrap_or_else(Vec::new),
+            unknown: self.unknown.clone().unwrap_or_default(),
         })
     }
 }

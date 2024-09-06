@@ -459,6 +459,7 @@ mod tests {
     use pretty_assertions::assert_eq;
 
     #[test]
+    #[allow(clippy::unit_cmp)] // fucked test
     fn test_hash() {
         let mut hasher_left = std::collections::hash_map::DefaultHasher::new();
         let mut hasher_right = std::collections::hash_map::DefaultHasher::new();
@@ -665,13 +666,13 @@ mod tests {
 
     #[test]
     fn test_is_default() {
-        assert_eq!(KeyFormatVersions::new().is_default(), true);
-        assert_eq!(KeyFormatVersions::default().is_default(), true);
+        assert!(KeyFormatVersions::new().is_default());
+        assert!(KeyFormatVersions::default().is_default());
 
-        assert_eq!(KeyFormatVersions::from([]).is_default(), true);
-        assert_eq!(KeyFormatVersions::from([1]).is_default(), true);
+        assert!(KeyFormatVersions::from([]).is_default());
+        assert!(KeyFormatVersions::from([1]).is_default());
 
-        assert_eq!(KeyFormatVersions::from([1, 2, 3]).is_default(), false);
+        assert!(!KeyFormatVersions::from([1, 2, 3]).is_default());
     }
 
     #[test]

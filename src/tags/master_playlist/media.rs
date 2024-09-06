@@ -37,7 +37,7 @@ pub struct ExtXMedia<'a> {
     /// - This field is required, if the [`ExtXMedia::media_type`] is
     ///   [`MediaType::Subtitles`].
     /// - This field is not allowed, if the [`ExtXMedia::media_type`] is
-    /// [`MediaType::ClosedCaptions`].
+    ///   [`MediaType::ClosedCaptions`].
     ///
     /// An absent value indicates that the media data for this rendition is
     /// included in the [`MediaPlaylist`] of any
@@ -138,8 +138,8 @@ pub struct ExtXMedia<'a> {
     /// following characteristics:
     /// - `"public.accessibility.transcribes-spoken-dialog"`,
     /// - `"public.accessibility.describes-music-and-sound"`, and
-    /// - `"public.easy-to-read"` (which indicates that the subtitles have
-    /// been edited for ease of reading).
+    /// - `"public.easy-to-read"` (which indicates that the subtitles have been
+    ///   edited for ease of reading).
     ///
     /// An `ExtXMedia` instance with [`MediaType::Audio`] may include the
     /// following characteristic:
@@ -745,28 +745,18 @@ mod test {
 
     #[test]
     fn test_parser_error() {
-        assert_eq!(ExtXMedia::try_from("").is_err(), true);
-        assert_eq!(ExtXMedia::try_from("garbage").is_err(), true);
+        assert!(ExtXMedia::try_from("").is_err());
+        assert!(ExtXMedia::try_from("garbage").is_err());
 
-        assert_eq!(
-            ExtXMedia::try_from("#EXT-X-MEDIA:TYPE=CLOSED-CAPTIONS,URI=\"http://www.example.com\"")
-                .is_err(),
-            true
-        );
-        assert_eq!(
-            ExtXMedia::try_from("#EXT-X-MEDIA:TYPE=AUDIO,INSTREAM-ID=CC1").is_err(),
-            true
-        );
+        assert!(ExtXMedia::try_from(
+            "#EXT-X-MEDIA:TYPE=CLOSED-CAPTIONS,URI=\"http://www.example.com\""
+        )
+        .is_err());
+        assert!(ExtXMedia::try_from("#EXT-X-MEDIA:TYPE=AUDIO,INSTREAM-ID=CC1").is_err());
 
-        assert_eq!(
-            ExtXMedia::try_from("#EXT-X-MEDIA:TYPE=AUDIO,DEFAULT=YES,AUTOSELECT=NO").is_err(),
-            true
-        );
+        assert!(ExtXMedia::try_from("#EXT-X-MEDIA:TYPE=AUDIO,DEFAULT=YES,AUTOSELECT=NO").is_err());
 
-        assert_eq!(
-            ExtXMedia::try_from("#EXT-X-MEDIA:TYPE=AUDIO,FORCED=YES").is_err(),
-            true
-        );
+        assert!(ExtXMedia::try_from("#EXT-X-MEDIA:TYPE=AUDIO,FORCED=YES").is_err());
     }
 
     #[test]
