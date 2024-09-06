@@ -1,4 +1,4 @@
-#![doc(html_root_url = "https://docs.rs/hls_m3u8/0.4.1")]
+#![doc(html_root_url = "https://docs.rs/hls_m3u8/0.4.2")]
 #![forbid(unsafe_code)]
 #![warn(rust_2018_idioms)]
 #![warn(clippy::cargo, clippy::inline_always)]
