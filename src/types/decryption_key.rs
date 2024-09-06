@@ -122,7 +122,7 @@ impl<'a> DecryptionKey<'a> {
     ///     .format(KeyFormat::Identity)
     ///     .versions(&[1, 2, 3, 4, 5])
     ///     .build()?;
-    /// # Ok::<(), String>(())
+    /// # Ok::<(), Box<dyn std::error::Error>>(())
     /// ```
     #[must_use]
     #[inline]

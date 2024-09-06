@@ -121,7 +121,7 @@ impl<'a> ExtXSessionData<'a> {
     ///     .data(SessionData::Value("some data".into()))
     ///     .language("en")
     ///     .build()?;
-    /// # Ok::<(), String>(())
+    /// # Ok::<(), Box<dyn std::error::Error>>(())
     /// ```
     #[must_use]
     pub fn builder() -> ExtXSessionDataBuilder<'a> { ExtXSessionDataBuilder::default() }

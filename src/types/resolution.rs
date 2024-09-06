@@ -10,7 +10,7 @@ use crate::Error;
 ///
 /// For example Full HD has a resolution of 1920x1080.
 #[derive(ShortHand, Ord, PartialOrd, Debug, Clone, Copy, PartialEq, Eq, Hash, Display)]
-#[display(fmt = "{}x{}", width, height)]
+#[display("{}x{}", width, height)]
 #[shorthand(enable(must_use))]
 pub struct Resolution {
     /// Horizontal pixel dimension.

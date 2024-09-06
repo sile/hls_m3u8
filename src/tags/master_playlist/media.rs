@@ -283,7 +283,7 @@ impl<'a> ExtXMedia<'a> {
     ///         "public.accessibility.describes-music-and-sound"
     ///     ))
     ///     .build()?;
-    /// # Ok::<(), String>(())
+    /// # Ok::<(), Box<dyn std::error::Error>>(())
     /// ```
     #[must_use]
     #[inline]
