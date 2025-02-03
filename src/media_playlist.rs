@@ -398,7 +398,9 @@ impl<'a> MediaPlaylist<'a> {
     /// Returns a builder for [`MediaPlaylist`].
     #[must_use]
     #[inline]
-    pub fn builder() -> MediaPlaylistBuilder<'a> { MediaPlaylistBuilder::default() }
+    pub fn builder() -> MediaPlaylistBuilder<'a> {
+        MediaPlaylistBuilder::default()
+    }
 
     /// Computes the `Duration` of the [`MediaPlaylist`], by adding each segment
     /// duration together.

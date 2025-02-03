@@ -312,7 +312,9 @@ let date_range = ExtXDateRange::builder()
     )]
     #[must_use]
     #[inline]
-    pub fn builder() -> ExtXDateRangeBuilder<'a> { ExtXDateRangeBuilder::default() }
+    pub fn builder() -> ExtXDateRangeBuilder<'a> {
+        ExtXDateRangeBuilder::default()
+    }
 
     /// Makes the struct independent of its lifetime, by taking ownership of all
     /// internal [`Cow`]s.
@@ -351,7 +353,9 @@ let date_range = ExtXDateRange::builder()
 
 /// This tag requires [`ProtocolVersion::V1`].
 impl<'a> RequiredVersion for ExtXDateRange<'a> {
-    fn required_version(&self) -> ProtocolVersion { ProtocolVersion::V1 }
+    fn required_version(&self) -> ProtocolVersion {
+        ProtocolVersion::V1
+    }
 }
 
 impl<'a> TryFrom<&'a str> for ExtXDateRange<'a> {

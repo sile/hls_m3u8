@@ -71,7 +71,9 @@ impl<'a> ExtInf<'a> {
     /// assert_eq!(ext_inf.duration(), Duration::from_secs(5));
     /// ```
     #[must_use]
-    pub const fn duration(&self) -> Duration { self.duration }
+    pub const fn duration(&self) -> Duration {
+        self.duration
+    }
 
     /// Sets the duration of the associated media segment.
     ///
@@ -105,7 +107,9 @@ impl<'a> ExtInf<'a> {
     /// assert_eq!(ext_inf.title(), &Some("title".into()));
     /// ```
     #[must_use]
-    pub const fn title(&self) -> &Option<Cow<'a, str>> { &self.title }
+    pub const fn title(&self) -> &Option<Cow<'a, str>> {
+        &self.title
+    }
 
     /// Sets the title of the associated media segment.
     ///
@@ -189,7 +193,9 @@ impl<'a> TryFrom<&'a str> for ExtInf<'a> {
 }
 
 impl<'a> From<Duration> for ExtInf<'a> {
-    fn from(value: Duration) -> Self { Self::new(value) }
+    fn from(value: Duration) -> Self {
+        Self::new(value)
+    }
 }
 
 #[cfg(test)]

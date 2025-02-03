@@ -254,7 +254,9 @@ impl<'a> StreamData<'a> {
     /// # Ok::<(), Box<dyn ::std::error::Error>>(())
     /// ```
     #[must_use]
-    pub fn builder() -> StreamDataBuilder<'a> { StreamDataBuilder::default() }
+    pub fn builder() -> StreamDataBuilder<'a> {
+        StreamDataBuilder::default()
+    }
 
     /// Makes the struct independent of its lifetime, by taking ownership of all
     /// internal [`Cow`]s.
@@ -354,7 +356,9 @@ impl<'a> TryFrom<&'a str> for StreamData<'a> {
 
 /// This struct requires [`ProtocolVersion::V1`].
 impl<'a> RequiredVersion for StreamData<'a> {
-    fn required_version(&self) -> ProtocolVersion { ProtocolVersion::V1 }
+    fn required_version(&self) -> ProtocolVersion {
+        ProtocolVersion::V1
+    }
 
     fn introduced_version(&self) -> ProtocolVersion {
         if self.video.is_some() {

@@ -28,7 +28,9 @@ impl ExtXVersion {
     /// let version = ExtXVersion::new(ProtocolVersion::V2);
     /// ```
     #[must_use]
-    pub const fn new(version: ProtocolVersion) -> Self { Self(version) }
+    pub const fn new(version: ProtocolVersion) -> Self {
+        Self(version)
+    }
 
     /// Returns the underlying [`ProtocolVersion`].
     ///
@@ -44,12 +46,16 @@ impl ExtXVersion {
     /// );
     /// ```
     #[must_use]
-    pub const fn version(self) -> ProtocolVersion { self.0 }
+    pub const fn version(self) -> ProtocolVersion {
+        self.0
+    }
 }
 
 /// This tag requires [`ProtocolVersion::V1`].
 impl RequiredVersion for ExtXVersion {
-    fn required_version(&self) -> ProtocolVersion { ProtocolVersion::V1 }
+    fn required_version(&self) -> ProtocolVersion {
+        ProtocolVersion::V1
+    }
 }
 
 impl fmt::Display for ExtXVersion {
@@ -60,7 +66,9 @@ impl fmt::Display for ExtXVersion {
 }
 
 impl From<ProtocolVersion> for ExtXVersion {
-    fn from(value: ProtocolVersion) -> Self { Self(value) }
+    fn from(value: ProtocolVersion) -> Self {
+        Self(value)
+    }
 }
 
 impl TryFrom<&str> for ExtXVersion {

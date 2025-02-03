@@ -44,7 +44,9 @@ impl Channels {
     /// ```
     //#[inline]
     #[must_use]
-    pub const fn new(number: u64) -> Self { Self { number } }
+    pub const fn new(number: u64) -> Self {
+        Self { number }
+    }
 }
 
 impl FromStr for Channels {

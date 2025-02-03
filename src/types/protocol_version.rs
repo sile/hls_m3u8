@@ -30,7 +30,9 @@ impl ProtocolVersion {
     /// ```
     #[must_use]
     #[inline]
-    pub const fn latest() -> Self { Self::V7 }
+    pub const fn latest() -> Self {
+        Self::V7
+    }
 }
 
 impl fmt::Display for ProtocolVersion {
@@ -68,7 +70,9 @@ impl FromStr for ProtocolVersion {
 
 /// The default is [`ProtocolVersion::V1`].
 impl Default for ProtocolVersion {
-    fn default() -> Self { Self::V1 }
+    fn default() -> Self {
+        Self::V1
+    }
 }
 
 #[cfg(test)]

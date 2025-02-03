@@ -19,11 +19,15 @@ impl ExtXEndList {
 
 /// This tag requires [`ProtocolVersion::V1`].
 impl RequiredVersion for ExtXEndList {
-    fn required_version(&self) -> ProtocolVersion { ProtocolVersion::V1 }
+    fn required_version(&self) -> ProtocolVersion {
+        ProtocolVersion::V1
+    }
 }
 
 impl fmt::Display for ExtXEndList {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result { Self::PREFIX.fmt(f) }
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        Self::PREFIX.fmt(f)
+    }
 }
 
 impl TryFrom<&str> for ExtXEndList {

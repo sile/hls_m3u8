@@ -41,7 +41,9 @@ impl<'a> ExtXSessionKey<'a> {
     /// ```
     #[must_use]
     #[inline]
-    pub const fn new(inner: DecryptionKey<'a>) -> Self { Self(inner) }
+    pub const fn new(inner: DecryptionKey<'a>) -> Self {
+        Self(inner)
+    }
 
     /// Makes the struct independent of its lifetime, by taking ownership of all
     /// internal [`Cow`]s.
@@ -52,7 +54,9 @@ impl<'a> ExtXSessionKey<'a> {
     ///
     /// [`Cow`]: std::borrow::Cow
     #[must_use]
-    pub fn into_owned(self) -> ExtXSessionKey<'static> { ExtXSessionKey(self.0.into_owned()) }
+    pub fn into_owned(self) -> ExtXSessionKey<'static> {
+        ExtXSessionKey(self.0.into_owned())
+    }
 }
 
 impl<'a> TryFrom<ExtXKey<'a>> for ExtXSessionKey<'a> {
@@ -70,7 +74,9 @@ impl<'a> TryFrom<ExtXKey<'a>> for ExtXSessionKey<'a> {
 /// This tag requires the same [`ProtocolVersion`] that is returned by
 /// `DecryptionKey::required_version`.
 impl<'a> RequiredVersion for ExtXSessionKey<'a> {
-    fn required_version(&self) -> ProtocolVersion { self.0.required_version() }
+    fn required_version(&self) -> ProtocolVersion {
+        self.0.required_version()
+    }
 }
 
 impl<'a> fmt::Display for ExtXSessionKey<'a> {

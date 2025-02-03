@@ -124,7 +124,9 @@ impl<'a> ExtXSessionData<'a> {
     /// # Ok::<(), Box<dyn std::error::Error>>(())
     /// ```
     #[must_use]
-    pub fn builder() -> ExtXSessionDataBuilder<'a> { ExtXSessionDataBuilder::default() }
+    pub fn builder() -> ExtXSessionDataBuilder<'a> {
+        ExtXSessionDataBuilder::default()
+    }
 
     /// Makes a new [`ExtXSessionData`] tag, with the given language.
     ///
@@ -171,7 +173,9 @@ impl<'a> ExtXSessionData<'a> {
 
 /// This tag requires [`ProtocolVersion::V1`].
 impl<'a> RequiredVersion for ExtXSessionData<'a> {
-    fn required_version(&self) -> ProtocolVersion { ProtocolVersion::V1 }
+    fn required_version(&self) -> ProtocolVersion {
+        ProtocolVersion::V1
+    }
 }
 
 impl<'a> fmt::Display for ExtXSessionData<'a> {

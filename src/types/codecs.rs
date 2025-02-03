@@ -41,7 +41,9 @@ impl<'a> Codecs<'a> {
     /// ```
     #[inline]
     #[must_use]
-    pub const fn new() -> Self { Self { list: Vec::new() } }
+    pub const fn new() -> Self {
+        Self { list: Vec::new() }
+    }
 
     /// Makes the struct independent of its lifetime, by taking ownership of all
     /// internal [`Cow`]s.

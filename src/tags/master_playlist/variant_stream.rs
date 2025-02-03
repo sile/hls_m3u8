@@ -221,22 +221,14 @@ impl<'a> VariantStream<'a> {
                 closed_captions,
                 stream_data,
                 ..
-            } => {
-                match media.media_type {
-                    MediaType::Audio => audio.as_ref().map_or(false, |v| v == media.group_id()),
-                    MediaType::Video => {
-                        stream_data.video().map_or(false, |v| v == media.group_id())
-                    }
-                    MediaType::Subtitles => {
-                        subtitles.as_ref().map_or(false, |v| v == media.group_id())
-                    }
-                    MediaType::ClosedCaptions => {
-                        closed_captions
-                            .as_ref()
-                            .map_or(false, |v| v == media.group_id())
-                    }
-                }
-            }
+            } => match media.media_type {
+                MediaType::Audio => audio.as_ref().map_or(false, |v| v == media.group_id()),
+                MediaType::Video => stream_data.video().map_or(false, |v| v == media.group_id()),
+                MediaType::Subtitles => subtitles.as_ref().map_or(false, |v| v == media.group_id()),
+                MediaType::ClosedCaptions => closed_captions
+                    .as_ref()
+                    .map_or(false, |v| v == media.group_id()),
+            },
         }
     }
 
@@ -249,12 +241,10 @@ impl<'a> VariantStream<'a> {
     #[must_use]
     pub fn into_owned(self) -> VariantStream<'static> {
         match self {
-            VariantStream::ExtXIFrame { uri, stream_data } => {
-                VariantStream::ExtXIFrame {
-                    uri: Cow::Owned(uri.into_owned()),
-                    stream_data: stream_data.into_owned(),
-                }
-            }
+            VariantStream::ExtXIFrame { uri, stream_data } => VariantStream::ExtXIFrame {
+                uri: Cow::Owned(uri.into_owned()),
+                stream_data: stream_data.into_owned(),
+            },
             VariantStream::ExtXStreamInf {
                 uri,
                 frame_rate,
@@ -262,23 +252,23 @@ impl<'a> VariantStream<'a> {
                 subtitles,
                 closed_captions,
                 stream_data,
-            } => {
-                VariantStream::ExtXStreamInf {
-                    uri: Cow::Owned(uri.into_owned()),
-                    frame_rate,
-                    audio: audio.map(|v| Cow::Owned(v.into_owned())),
-                    subtitles: subtitles.map(|v| Cow::Owned(v.into_owned())),
-                    closed_captions: closed_captions.map(ClosedCaptions::into_owned),
-                    stream_data: stream_data.into_owned(),
-                }
-            }
+            } => VariantStream::ExtXStreamInf {
+                uri: Cow::Owned(uri.into_owned()),
+                frame_rate,
+                audio: audio.map(|v| Cow::Owned(v.into_owned())),
+                subtitles: subtitles.map(|v| Cow::Owned(v.into_owned())),
+                closed_captions: closed_captions.map(ClosedCaptions::into_owned),
+                stream_data: stream_data.into_owned(),
+            },
         }
     }
 }
 
 /// This tag requires [`ProtocolVersion::V1`].
 impl<'a> RequiredVersion for VariantStream<'a> {
-    fn required_version(&self) -> ProtocolVersion { ProtocolVersion::V1 }
+    fn required_version(&self) -> ProtocolVersion {
+        ProtocolVersion::V1
+    }
 
     fn introduced_version(&self) -> ProtocolVersion {
         match &self {
@@ -411,7 +401,9 @@ impl<'a> Deref for VariantStream<'a> {
 }
 
 impl<'a> PartialEq<&VariantStream<'a>> for VariantStream<'a> {
-    fn eq(&self, other: &&Self) -> bool { self.eq(*other) }
+    fn eq(&self, other: &&Self) -> bool {
+        self.eq(*other)
+    }
 }
 
 #[cfg(test)]

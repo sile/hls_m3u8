@@ -95,7 +95,9 @@ impl ExtXStart {
 
 /// This tag requires [`ProtocolVersion::V1`].
 impl RequiredVersion for ExtXStart {
-    fn required_version(&self) -> ProtocolVersion { ProtocolVersion::V1 }
+    fn required_version(&self) -> ProtocolVersion {
+        ProtocolVersion::V1
+    }
 }
 
 impl fmt::Display for ExtXStart {

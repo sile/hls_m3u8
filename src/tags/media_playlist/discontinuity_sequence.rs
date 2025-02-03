@@ -18,7 +18,9 @@ impl ExtXDiscontinuitySequence {
 
 /// This tag requires [`ProtocolVersion::V1`].
 impl RequiredVersion for ExtXDiscontinuitySequence {
-    fn required_version(&self) -> ProtocolVersion { ProtocolVersion::V1 }
+    fn required_version(&self) -> ProtocolVersion {
+        ProtocolVersion::V1
+    }
 }
 
 impl fmt::Display for ExtXDiscontinuitySequence {

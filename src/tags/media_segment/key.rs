@@ -37,7 +37,9 @@ impl<'a> ExtXKey<'a> {
     /// ```
     #[must_use]
     #[inline]
-    pub const fn new(inner: DecryptionKey<'a>) -> Self { Self(Some(inner)) }
+    pub const fn new(inner: DecryptionKey<'a>) -> Self {
+        Self(Some(inner))
+    }
 
     /// Constructs an empty [`ExtXKey`], which signals that a segment is
     /// unencrypted.
@@ -50,7 +52,9 @@ impl<'a> ExtXKey<'a> {
     /// ```
     #[must_use]
     #[inline]
-    pub const fn empty() -> Self { Self(None) }
+    pub const fn empty() -> Self {
+        Self(None)
+    }
 
     /// Returns `true` if the key is not empty.
     ///
@@ -71,7 +75,9 @@ impl<'a> ExtXKey<'a> {
     /// ```
     #[must_use]
     #[inline]
-    pub fn is_some(&self) -> bool { self.0.is_some() }
+    pub fn is_some(&self) -> bool {
+        self.0.is_some()
+    }
 
     /// Returns `true` if the key is empty.
     ///
@@ -92,7 +98,9 @@ impl<'a> ExtXKey<'a> {
     /// ```
     #[must_use]
     #[inline]
-    pub fn is_none(&self) -> bool { self.0.is_none() }
+    pub fn is_none(&self) -> bool {
+        self.0.is_none()
+    }
 
     /// Returns the underlying [`DecryptionKey`], if there is one.
     ///
@@ -134,7 +142,9 @@ impl<'a> ExtXKey<'a> {
     /// Returns a reference to the underlying [`DecryptionKey`].
     #[must_use]
     #[inline]
-    pub fn as_ref(&self) -> Option<&DecryptionKey<'a>> { self.0.as_ref() }
+    pub fn as_ref(&self) -> Option<&DecryptionKey<'a>> {
+        self.0.as_ref()
+    }
 
     /// Converts an [`ExtXKey`] into an `Option<DecryptionKey>`.
     ///
@@ -160,7 +170,9 @@ impl<'a> ExtXKey<'a> {
     /// ```
     #[must_use]
     #[inline]
-    pub fn into_option(self) -> Option<DecryptionKey<'a>> { self.0 }
+    pub fn into_option(self) -> Option<DecryptionKey<'a>> {
+        self.0
+    }
 
     /// Makes the struct independent of its lifetime, by taking ownership of all
     /// internal [`Cow`]s.
@@ -172,7 +184,9 @@ impl<'a> ExtXKey<'a> {
     /// [`Cow`]: std::borrow::Cow
     #[must_use]
     #[inline]
-    pub fn into_owned(self) -> ExtXKey<'static> { ExtXKey(self.0.map(DecryptionKey::into_owned)) }
+    pub fn into_owned(self) -> ExtXKey<'static> {
+        ExtXKey(self.0.map(DecryptionKey::into_owned))
+    }
 }
 
 /// This tag requires [`ProtocolVersion::V5`], if [`KeyFormat`] or
@@ -203,15 +217,21 @@ impl<'a> TryFrom<&'a str> for ExtXKey<'a> {
 }
 
 impl<'a> From<Option<DecryptionKey<'a>>> for ExtXKey<'a> {
-    fn from(value: Option<DecryptionKey<'a>>) -> Self { Self(value) }
+    fn from(value: Option<DecryptionKey<'a>>) -> Self {
+        Self(value)
+    }
 }
 
 impl<'a> From<DecryptionKey<'a>> for ExtXKey<'a> {
-    fn from(value: DecryptionKey<'a>) -> Self { Self(Some(value)) }
+    fn from(value: DecryptionKey<'a>) -> Self {
+        Self(Some(value))
+    }
 }
 
 impl<'a> From<crate::tags::ExtXSessionKey<'a>> for ExtXKey<'a> {
-    fn from(value: crate::tags::ExtXSessionKey<'a>) -> Self { Self(Some(value.0)) }
+    fn from(value: crate::tags::ExtXSessionKey<'a>) -> Self {
+        Self(Some(value.0))
+    }
 }
 
 impl<'a> fmt::Display for ExtXKey<'a> {

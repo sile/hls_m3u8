@@ -75,7 +75,9 @@ impl ExtXByteRange {
     /// if the `start` is `Some`.
     #[inline]
     #[must_use]
-    pub fn saturating_add(self, num: usize) -> Self { Self(self.0.saturating_add(num)) }
+    pub fn saturating_add(self, num: usize) -> Self {
+        Self(self.0.saturating_add(num))
+    }
 
     /// Subtracts `num` from the `start` and `end` of the range.
     ///
@@ -112,7 +114,9 @@ impl ExtXByteRange {
     /// if the `start` is `Some`.
     #[inline]
     #[must_use]
-    pub fn saturating_sub(self, num: usize) -> Self { Self(self.0.saturating_sub(num)) }
+    pub fn saturating_sub(self, num: usize) -> Self {
+        Self(self.0.saturating_sub(num))
+    }
 
     /// Returns a shared reference to the underlying [`ByteRange`].
     ///
@@ -129,17 +133,23 @@ impl ExtXByteRange {
     /// ```
     #[inline]
     #[must_use]
-    pub const fn as_byte_range(&self) -> &ByteRange { &self.0 }
+    pub const fn as_byte_range(&self) -> &ByteRange {
+        &self.0
+    }
 }
 
 /// This tag requires [`ProtocolVersion::V4`].
 impl RequiredVersion for ExtXByteRange {
-    fn required_version(&self) -> ProtocolVersion { ProtocolVersion::V4 }
+    fn required_version(&self) -> ProtocolVersion {
+        ProtocolVersion::V4
+    }
 }
 
 #[allow(clippy::from_over_into)] // Some magic `From` blanket impl is going on that means this can't be done.
 impl Into<ByteRange> for ExtXByteRange {
-    fn into(self) -> ByteRange { self.0 }
+    fn into(self) -> ByteRange {
+        self.0
+    }
 }
 
 impl<T> Sub<T> for ExtXByteRange
@@ -150,7 +160,9 @@ where
 
     #[must_use]
     #[inline]
-    fn sub(self, rhs: T) -> Self::Output { Self(self.0.sub(rhs)) }
+    fn sub(self, rhs: T) -> Self::Output {
+        Self(self.0.sub(rhs))
+    }
 }
 
 impl<T> SubAssign<T> for ExtXByteRange
@@ -158,7 +170,9 @@ where
     ByteRange: SubAssign<T>,
 {
     #[inline]
-    fn sub_assign(&mut self, other: T) { self.0.sub_assign(other); }
+    fn sub_assign(&mut self, other: T) {
+        self.0.sub_assign(other);
+    }
 }
 
 impl<T> Add<T> for ExtXByteRange
@@ -169,7 +183,9 @@ where
 
     #[must_use]
     #[inline]
-    fn add(self, rhs: T) -> Self::Output { Self(self.0.add(rhs)) }
+    fn add(self, rhs: T) -> Self::Output {
+        Self(self.0.add(rhs))
+    }
 }
 
 impl<T> AddAssign<T> for ExtXByteRange
@@ -177,7 +193,9 @@ where
     ByteRange: AddAssign<T>,
 {
     #[inline]
-    fn add_assign(&mut self, other: T) { self.0.add_assign(other); }
+    fn add_assign(&mut self, other: T) {
+        self.0.add_assign(other);
+    }
 }
 
 impl fmt::Display for ExtXByteRange {

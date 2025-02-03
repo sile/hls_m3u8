@@ -78,13 +78,17 @@ pub struct Error {
 }
 
 impl PartialEq for Error {
-    fn eq(&self, other: &Self) -> bool { self.inner == other.inner }
+    fn eq(&self, other: &Self) -> bool {
+        self.inner == other.inner
+    }
 }
 
 impl std::error::Error for Error {}
 
 impl fmt::Display for Error {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result { self.inner.fmt(f) }
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        self.inner.fmt(f)
+    }
 }
 
 #[allow(clippy::needless_pass_by_value)]
@@ -126,7 +130,9 @@ impl Error {
         })
     }
 
-    pub(crate) fn invalid_input() -> Self { Self::new(ErrorKind::InvalidInput) }
+    pub(crate) fn invalid_input() -> Self {
+        Self::new(ErrorKind::InvalidInput)
+    }
 
     pub(crate) fn parse_int<T: fmt::Display>(input: T, source: ::std::num::ParseIntError) -> Self {
         Self::new(ErrorKind::ParseIntError {
@@ -198,7 +204,9 @@ impl Error {
 
 #[doc(hidden)]
 impl From<::strum::ParseError> for Error {
-    fn from(value: ::strum::ParseError) -> Self { Self::strum(value) }
+    fn from(value: ::strum::ParseError) -> Self {
+        Self::strum(value)
+    }
 }
 
 #[cfg(test)]

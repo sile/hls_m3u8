@@ -61,7 +61,9 @@ impl Float {
     /// assert_eq!(Float::new(1.1_f32).as_f32(), 1.1_f32);
     /// ```
     #[must_use]
-    pub const fn as_f32(self) -> f32 { self.0 }
+    pub const fn as_f32(self) -> f32 {
+        self.0
+    }
 }
 
 impl FromStr for Float {
@@ -105,13 +107,17 @@ implement_from!(i16, u16, i8, u8);
 
 impl PartialEq for Float {
     #[inline]
-    fn eq(&self, other: &Self) -> bool { self.0 == other.0 }
+    fn eq(&self, other: &Self) -> bool {
+        self.0 == other.0
+    }
 }
 
 // convenience implementation to compare f32 with a Float.
 impl PartialEq<f32> for Float {
     #[inline]
-    fn eq(&self, other: &f32) -> bool { &self.0 == other }
+    fn eq(&self, other: &f32) -> bool {
+        &self.0 == other
+    }
 }
 
 // In order to implement `Eq` a struct has to satisfy
@@ -131,7 +137,9 @@ impl Eq for Float {}
 
 impl PartialOrd for Float {
     #[inline]
-    fn partial_cmp(&self, other: &Self) -> Option<Ordering> { Some(self.cmp(other)) }
+    fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
+        Some(self.cmp(other))
+    }
 }
 
 impl Ord for Float {
@@ -277,15 +285,21 @@ mod tests {
 
     #[test]
     #[should_panic = "float must be finite: `inf`"]
-    fn test_new_infinite() { let _ = Float::new(f32::INFINITY); }
+    fn test_new_infinite() {
+        let _ = Float::new(f32::INFINITY);
+    }
 
     #[test]
     #[should_panic = "float must be finite: `-inf`"]
-    fn test_new_neg_infinite() { let _ = Float::new(f32::NEG_INFINITY); }
+    fn test_new_neg_infinite() {
+        let _ = Float::new(f32::NEG_INFINITY);
+    }
 
     #[test]
     #[should_panic = "float must not be `NaN`"]
-    fn test_new_nan() { let _ = Float::new(f32::NAN); }
+    fn test_new_nan() {
+        let _ = Float::new(f32::NAN);
+    }
 
     #[test]
     fn test_as_f32() {

@@ -49,12 +49,16 @@ pub trait Decryptable<'a>: private::Sealed {
     /// Returns the number of keys.
     #[must_use]
     #[inline]
-    fn len(&self) -> usize { <Self as Decryptable>::keys(self).len() }
+    fn len(&self) -> usize {
+        <Self as Decryptable>::keys(self).len()
+    }
 
     /// Returns `true`, if the number of keys is zero.
     #[must_use]
     #[inline]
-    fn is_empty(&self) -> bool { <Self as Decryptable>::len(self) == 0 }
+    fn is_empty(&self) -> bool {
+        <Self as Decryptable>::len(self) == 0
+    }
 }
 
 #[doc(hidden)]
@@ -70,7 +74,9 @@ pub trait RequiredVersion {
 
     /// The protocol version, in which the tag has been introduced.
     #[must_use]
-    fn introduced_version(&self) -> ProtocolVersion { self.required_version() }
+    fn introduced_version(&self) -> ProtocolVersion {
+        self.required_version()
+    }
 }
 
 impl<T: RequiredVersion> RequiredVersion for Vec<T> {
@@ -130,7 +136,9 @@ mod tests {
         struct Example;
 
         impl RequiredVersion for Example {
-            fn required_version(&self) -> ProtocolVersion { ProtocolVersion::V3 }
+            fn required_version(&self) -> ProtocolVersion {
+                ProtocolVersion::V3
+            }
         }
 
         assert_eq!(Example.required_version(), ProtocolVersion::V3);

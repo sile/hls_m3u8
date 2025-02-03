@@ -7,7 +7,9 @@ pub(crate) struct AttributePairs<'a> {
 }
 
 impl<'a> AttributePairs<'a> {
-    pub const fn new(string: &'a str) -> Self { Self { string, index: 0 } }
+    pub const fn new(string: &'a str) -> Self {
+        Self { string, index: 0 }
+    }
 }
 
 impl<'a> Iterator for AttributePairs<'a> {

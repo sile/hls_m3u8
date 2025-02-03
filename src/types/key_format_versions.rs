@@ -61,7 +61,9 @@ impl KeyFormatVersions {
     /// ```
     #[inline]
     #[must_use]
-    pub fn new() -> Self { Self::default() }
+    pub fn new() -> Self {
+        Self::default()
+    }
 
     /// Add a value to the end of [`KeyFormatVersions`].
     ///
@@ -117,7 +119,9 @@ impl KeyFormatVersions {
     /// ```
     #[inline]
     #[must_use]
-    pub fn remaining(&self) -> usize { self.capacity().saturating_sub(self.len()) }
+    pub fn remaining(&self) -> usize {
+        self.capacity().saturating_sub(self.len())
+    }
 
     /// Returns the number of elements.
     ///
@@ -134,7 +138,9 @@ impl KeyFormatVersions {
     /// ```
     #[inline]
     #[must_use]
-    pub const fn len(&self) -> usize { self.len as usize }
+    pub const fn len(&self) -> usize {
+        self.len as usize
+    }
 
     /// Returns the total number of elements that can be stored.
     ///
@@ -144,7 +150,9 @@ impl KeyFormatVersions {
     /// the future this number might increase.
     #[inline]
     #[must_use]
-    pub fn capacity(&self) -> usize { self.buffer.len() }
+    pub fn capacity(&self) -> usize {
+        self.buffer.len()
+    }
 
     /// Shortens the internal array to the provided length.
     ///
@@ -184,7 +192,9 @@ impl KeyFormatVersions {
     /// ```
     #[inline]
     #[must_use]
-    pub const fn is_empty(&self) -> bool { self.len() == 0 }
+    pub const fn is_empty(&self) -> bool {
+        self.len() == 0
+    }
 
     /// Removes the last element and returns it, or `None` if it is empty.
     ///
@@ -253,7 +263,9 @@ impl PartialOrd for KeyFormatVersions {
 
 impl Ord for KeyFormatVersions {
     #[inline]
-    fn cmp(&self, other: &Self) -> Ordering { self.as_ref().cmp(other.as_ref()) }
+    fn cmp(&self, other: &Self) -> Ordering {
+        self.as_ref().cmp(other.as_ref())
+    }
 }
 
 impl Hash for KeyFormatVersions {
@@ -266,7 +278,9 @@ impl Hash for KeyFormatVersions {
 impl AsRef<[u8]> for KeyFormatVersions {
     #[inline]
     #[must_use]
-    fn as_ref(&self) -> &[u8] { &self.buffer[..self.len()] }
+    fn as_ref(&self) -> &[u8] {
+        &self.buffer[..self.len()]
+    }
 }
 
 impl AsMut<[u8]> for KeyFormatVersions {
@@ -303,19 +317,25 @@ impl<I: SliceIndex<[u8]>> Index<I> for KeyFormatVersions {
     type Output = I::Output;
 
     #[inline]
-    fn index(&self, index: I) -> &Self::Output { self.as_ref().index(index) }
+    fn index(&self, index: I) -> &Self::Output {
+        self.as_ref().index(index)
+    }
 }
 
 impl<I: SliceIndex<[u8]>> IndexMut<I> for KeyFormatVersions {
     #[inline]
-    fn index_mut(&mut self, index: I) -> &mut Self::Output { self.as_mut().index_mut(index) }
+    fn index_mut(&mut self, index: I) -> &mut Self::Output {
+        self.as_mut().index_mut(index)
+    }
 }
 
 impl IntoIterator for KeyFormatVersions {
     type IntoIter = IntoIter<u8>;
     type Item = u8;
 
-    fn into_iter(self) -> Self::IntoIter { self.into() }
+    fn into_iter(self) -> Self::IntoIter {
+        self.into()
+    }
 }
 
 impl FromIterator<u8> for KeyFormatVersions {
@@ -352,7 +372,9 @@ impl<'a> FromIterator<&'a u8> for KeyFormatVersions {
 
 /// This tag requires [`ProtocolVersion::V5`].
 impl RequiredVersion for KeyFormatVersions {
-    fn required_version(&self) -> ProtocolVersion { ProtocolVersion::V5 }
+    fn required_version(&self) -> ProtocolVersion {
+        ProtocolVersion::V5
+    }
 }
 
 impl FromStr for KeyFormatVersions {
@@ -403,7 +425,9 @@ impl fmt::Display for KeyFormatVersions {
 }
 
 impl<T: AsRef<[usize]>> From<T> for KeyFormatVersions {
-    fn from(value: T) -> Self { value.as_ref().iter().map(|i| *i as u8).collect() }
+    fn from(value: T) -> Self {
+        value.as_ref().iter().map(|i| *i as u8).collect()
+    }
 }
 
 /// `Iterator` for [`KeyFormatVersions`].
@@ -435,7 +459,9 @@ impl<'a> From<&'a KeyFormatVersions> for IntoIter<u8> {
 }
 
 impl<T: Copy> ExactSizeIterator for IntoIter<T> {
-    fn len(&self) -> usize { self.len.saturating_sub(self.position) }
+    fn len(&self) -> usize {
+        self.len.saturating_sub(self.position)
+    }
 }
 
 impl<T: Copy> ::core::iter::FusedIterator for IntoIter<T> {}
