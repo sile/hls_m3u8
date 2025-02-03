@@ -69,7 +69,7 @@ pub struct DecryptionKey<'a> {
     ///
     /// This field is optional.
     #[builder(setter(into, strip_option), default)]
-    pub format: Option<KeyFormat>,
+    pub format: Option<KeyFormat<'a>>,
     /// A list of numbers that can be used to indicate which version(s)
     /// this instance complies with, if more than one version of a particular
     /// [`KeyFormat`] is defined.
@@ -140,7 +140,7 @@ impl<'a> DecryptionKey<'a> {
             method: self.method,
             uri: Cow::Owned(self.uri.into_owned()),
             iv: self.iv,
-            format: self.format,
+            format: self.format.map(|f| f.into_owned()),
             versions: self.versions,
         }
     }
@@ -184,7 +184,7 @@ impl<'a> TryFrom<&'a str> for DecryptionKey<'a> {
                     }
                 }
                 "IV" => iv = Some(value.parse()?),
-                "KEYFORMAT" => format = Some(value.parse()?),
+                "KEYFORMAT" => format = Some(value.into()),
                 "KEYFORMATVERSIONS" => versions = Some(value.parse()?),
                 _ => {
                     // [6.3.1. General Client Responsibilities]
