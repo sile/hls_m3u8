@@ -41,7 +41,7 @@ pub struct ExtXProgramDateTime<'a> {
     _p: PhantomData<&'a str>,
 }
 
-impl ExtXProgramDateTime<'_> {
+impl<'a> ExtXProgramDateTime<'a> {
     pub(crate) const PREFIX: &'static str = "#EXT-X-PROGRAM-DATE-TIME:";
 
     /// Makes a new [`ExtXProgramDateTime`] tag.
