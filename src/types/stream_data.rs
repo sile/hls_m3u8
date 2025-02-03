@@ -277,7 +277,7 @@ impl<'a> StreamData<'a> {
     }
 }
 
-impl<'a> fmt::Display for StreamData<'a> {
+impl fmt::Display for StreamData<'_> {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(f, "BANDWIDTH={}", self.bandwidth)?;
 
@@ -355,7 +355,7 @@ impl<'a> TryFrom<&'a str> for StreamData<'a> {
 }
 
 /// This struct requires [`ProtocolVersion::V1`].
-impl<'a> RequiredVersion for StreamData<'a> {
+impl RequiredVersion for StreamData<'_> {
     fn required_version(&self) -> ProtocolVersion {
         ProtocolVersion::V1
     }

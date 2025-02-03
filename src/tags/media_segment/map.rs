@@ -115,7 +115,7 @@ impl<'a> Decryptable<'a> for ExtXMap<'a> {
 ///
 /// [`ExtXIFramesOnly`]: crate::tags::ExtXIFramesOnly
 /// [`MediaPlaylist`]: crate::MediaPlaylist
-impl<'a> RequiredVersion for ExtXMap<'a> {
+impl RequiredVersion for ExtXMap<'_> {
     // this should return ProtocolVersion::V5, if it does not contain an
     // EXT-X-I-FRAMES-ONLY!
     // http://alexzambelli.com/blog/2016/05/04/understanding-hls-versions-and-client-compatibility/
@@ -128,7 +128,7 @@ impl<'a> RequiredVersion for ExtXMap<'a> {
     }
 }
 
-impl<'a> fmt::Display for ExtXMap<'a> {
+impl fmt::Display for ExtXMap<'_> {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(f, "{}", Self::PREFIX)?;
         write!(f, "URI={}", quote(&self.uri))?;

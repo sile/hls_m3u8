@@ -73,13 +73,13 @@ impl<'a> TryFrom<ExtXKey<'a>> for ExtXSessionKey<'a> {
 
 /// This tag requires the same [`ProtocolVersion`] that is returned by
 /// `DecryptionKey::required_version`.
-impl<'a> RequiredVersion for ExtXSessionKey<'a> {
+impl RequiredVersion for ExtXSessionKey<'_> {
     fn required_version(&self) -> ProtocolVersion {
         self.0.required_version()
     }
 }
 
-impl<'a> fmt::Display for ExtXSessionKey<'a> {
+impl fmt::Display for ExtXSessionKey<'_> {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(f, "{}{}", Self::PREFIX, self.0)
     }

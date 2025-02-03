@@ -36,7 +36,7 @@ impl<'a> Iterator for Lines<'a> {
     }
 }
 
-impl<'a> FusedIterator for Lines<'a> {}
+impl FusedIterator for Lines<'_> {}
 
 impl<'a> From<&'a str> for Lines<'a> {
     fn from(buffer: &'a str) -> Self {

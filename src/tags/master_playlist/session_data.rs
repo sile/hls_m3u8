@@ -28,7 +28,7 @@ pub enum SessionData<'a> {
     Uri(Cow<'a, str>),
 }
 
-impl<'a> SessionData<'a> {
+impl SessionData<'_> {
     /// Makes the struct independent of its lifetime, by taking ownership of all
     /// internal [`Cow`]s.
     ///
@@ -172,13 +172,13 @@ impl<'a> ExtXSessionData<'a> {
 }
 
 /// This tag requires [`ProtocolVersion::V1`].
-impl<'a> RequiredVersion for ExtXSessionData<'a> {
+impl RequiredVersion for ExtXSessionData<'_> {
     fn required_version(&self) -> ProtocolVersion {
         ProtocolVersion::V1
     }
 }
 
-impl<'a> fmt::Display for ExtXSessionData<'a> {
+impl fmt::Display for ExtXSessionData<'_> {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(f, "{}", Self::PREFIX)?;
         write!(f, "DATA-ID={}", quote(&self.data_id))?;

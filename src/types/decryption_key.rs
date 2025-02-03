@@ -153,7 +153,7 @@ impl<'a> DecryptionKey<'a> {
 /// specified.
 ///
 /// Otherwise [`ProtocolVersion::V1`] is required.
-impl<'a> RequiredVersion for DecryptionKey<'a> {
+impl RequiredVersion for DecryptionKey<'_> {
     fn required_version(&self) -> ProtocolVersion {
         if self.format.is_some() || self.versions.is_some() {
             ProtocolVersion::V5
@@ -210,7 +210,7 @@ impl<'a> TryFrom<&'a str> for DecryptionKey<'a> {
     }
 }
 
-impl<'a> fmt::Display for DecryptionKey<'a> {
+impl fmt::Display for DecryptionKey<'_> {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(f, "METHOD={},URI={}", self.method, quote(&self.uri))?;
 
@@ -232,7 +232,7 @@ impl<'a> fmt::Display for DecryptionKey<'a> {
     }
 }
 
-impl<'a> DecryptionKeyBuilder<'a> {
+impl DecryptionKeyBuilder<'_> {
     fn validate(&self) -> Result<(), String> {
         // a decryption key must contain a uri and a method
         if self.method.is_none() {

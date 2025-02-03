@@ -104,13 +104,13 @@ impl<'a> ExtXProgramDateTime<'a> {
 }
 
 /// This tag requires [`ProtocolVersion::V1`].
-impl<'a> RequiredVersion for ExtXProgramDateTime<'a> {
+impl RequiredVersion for ExtXProgramDateTime<'_> {
     fn required_version(&self) -> ProtocolVersion {
         ProtocolVersion::V1
     }
 }
 
-impl<'a> fmt::Display for ExtXProgramDateTime<'a> {
+impl fmt::Display for ExtXProgramDateTime<'_> {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         let date_time = {
             #[cfg(feature = "chrono")]

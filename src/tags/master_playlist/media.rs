@@ -172,7 +172,7 @@ pub struct ExtXMedia<'a> {
     pub channels: Option<Channels>,
 }
 
-impl<'a> ExtXMediaBuilder<'a> {
+impl ExtXMediaBuilder<'_> {
     fn validate(&self) -> Result<(), String> {
         // A MediaType is always required!
         let media_type = self
@@ -318,14 +318,14 @@ impl<'a> ExtXMedia<'a> {
 
 /// This tag requires either `ProtocolVersion::V1` or if there is an
 /// `instream_id` it requires it's version.
-impl<'a> RequiredVersion for ExtXMedia<'a> {
+impl RequiredVersion for ExtXMedia<'_> {
     fn required_version(&self) -> ProtocolVersion {
         self.instream_id
             .map_or(ProtocolVersion::V1, |i| i.required_version())
     }
 }
 
-impl<'a> fmt::Display for ExtXMedia<'a> {
+impl fmt::Display for ExtXMedia<'_> {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(f, "{}", Self::PREFIX)?;
         write!(f, "TYPE={}", self.media_type)?;

@@ -74,6 +74,7 @@ enum ErrorKind {
 pub struct Error {
     inner: ErrorKind,
     #[cfg(feature = "backtrace")]
+    #[allow(dead_code)]
     backtrace: Backtrace,
 }
 

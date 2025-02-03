@@ -372,7 +372,7 @@ impl<'a> MediaPlaylistBuilder<'a> {
     }
 }
 
-impl<'a> RequiredVersion for MediaPlaylistBuilder<'a> {
+impl RequiredVersion for MediaPlaylistBuilder<'_> {
     fn required_version(&self) -> ProtocolVersion {
         required_version![
             self.target_duration.map(ExtXTargetDuration),
@@ -443,7 +443,7 @@ impl<'a> MediaPlaylist<'a> {
     }
 }
 
-impl<'a> RequiredVersion for MediaPlaylist<'a> {
+impl RequiredVersion for MediaPlaylist<'_> {
     fn required_version(&self) -> ProtocolVersion {
         required_version![
             ExtXTargetDuration(self.target_duration),
@@ -461,7 +461,7 @@ impl<'a> RequiredVersion for MediaPlaylist<'a> {
     }
 }
 
-impl<'a> fmt::Display for MediaPlaylist<'a> {
+impl fmt::Display for MediaPlaylist<'_> {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         writeln!(f, "{}", ExtM3u)?;
 

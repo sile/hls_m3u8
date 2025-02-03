@@ -147,7 +147,7 @@ impl<'a> ExtInf<'a> {
 
 /// This tag requires [`ProtocolVersion::V1`], if the duration does not have
 /// nanoseconds, otherwise it requires [`ProtocolVersion::V3`].
-impl<'a> RequiredVersion for ExtInf<'a> {
+impl RequiredVersion for ExtInf<'_> {
     fn required_version(&self) -> ProtocolVersion {
         if self.duration.subsec_nanos() == 0 {
             ProtocolVersion::V1
@@ -157,7 +157,7 @@ impl<'a> RequiredVersion for ExtInf<'a> {
     }
 }
 
-impl<'a> fmt::Display for ExtInf<'a> {
+impl fmt::Display for ExtInf<'_> {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(f, "{}", Self::PREFIX)?;
         write!(f, "{},", self.duration.as_secs_f64())?;
@@ -192,7 +192,7 @@ impl<'a> TryFrom<&'a str> for ExtInf<'a> {
     }
 }
 
-impl<'a> From<Duration> for ExtInf<'a> {
+impl From<Duration> for ExtInf<'_> {
     fn from(value: Duration) -> Self {
         Self::new(value)
     }
