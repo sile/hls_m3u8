@@ -49,15 +49,21 @@ impl Resolution {
     /// let resolution = Resolution::new(1920, 1080);
     /// ```
     #[must_use]
-    pub const fn new(width: usize, height: usize) -> Self { Self { width, height } }
+    pub const fn new(width: usize, height: usize) -> Self {
+        Self { width, height }
+    }
 }
 
 impl From<(usize, usize)> for Resolution {
-    fn from(value: (usize, usize)) -> Self { Self::new(value.0, value.1) }
+    fn from(value: (usize, usize)) -> Self {
+        Self::new(value.0, value.1)
+    }
 }
 
 impl From<Resolution> for (usize, usize) {
-    fn from(val: Resolution) -> Self { (val.width, val.height) }
+    fn from(val: Resolution) -> Self {
+        (val.width, val.height)
+    }
 }
 
 impl FromStr for Resolution {

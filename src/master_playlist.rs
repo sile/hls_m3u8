@@ -216,7 +216,9 @@ impl<'a> MasterPlaylist<'a> {
     /// ```
     #[must_use]
     #[inline]
-    pub fn builder() -> MasterPlaylistBuilder<'a> { MasterPlaylistBuilder::default() }
+    pub fn builder() -> MasterPlaylistBuilder<'a> {
+        MasterPlaylistBuilder::default()
+    }
 
     /// Returns all streams, which have an audio group id.
     pub fn audio_streams(&self) -> impl Iterator<Item = &VariantStream<'a>> {

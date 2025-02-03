@@ -126,7 +126,9 @@ impl<'a> DecryptionKey<'a> {
     /// ```
     #[must_use]
     #[inline]
-    pub fn builder() -> DecryptionKeyBuilder<'a> { DecryptionKeyBuilder::default() }
+    pub fn builder() -> DecryptionKeyBuilder<'a> {
+        DecryptionKeyBuilder::default()
+    }
 
     /// Makes the struct independent of its lifetime, by taking ownership of all
     /// internal [`Cow`]s.

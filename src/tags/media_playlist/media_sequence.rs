@@ -16,7 +16,9 @@ impl ExtXMediaSequence {
 
 /// This tag requires [`ProtocolVersion::V1`].
 impl RequiredVersion for ExtXMediaSequence {
-    fn required_version(&self) -> ProtocolVersion { ProtocolVersion::V1 }
+    fn required_version(&self) -> ProtocolVersion {
+        ProtocolVersion::V1
+    }
 }
 
 impl fmt::Display for ExtXMediaSequence {

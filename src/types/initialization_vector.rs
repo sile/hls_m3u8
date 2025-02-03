@@ -122,7 +122,9 @@ impl InitializationVector {
     /// ```
     #[must_use]
     #[inline]
-    pub fn is_some(&self) -> bool { *self != Self::Missing }
+    pub fn is_some(&self) -> bool {
+        *self != Self::Missing
+    }
 
     /// Returns `true` if the initialization vector is missing.
     ///
@@ -145,15 +147,21 @@ impl InitializationVector {
     /// ```
     #[must_use]
     #[inline]
-    pub fn is_none(&self) -> bool { *self == Self::Missing }
+    pub fn is_none(&self) -> bool {
+        *self == Self::Missing
+    }
 }
 
 impl Default for InitializationVector {
-    fn default() -> Self { Self::Missing }
+    fn default() -> Self {
+        Self::Missing
+    }
 }
 
 impl From<[u8; 0x10]> for InitializationVector {
-    fn from(value: [u8; 0x10]) -> Self { Self::Aes128(value) }
+    fn from(value: [u8; 0x10]) -> Self {
+        Self::Aes128(value)
+    }
 }
 
 impl From<Option<[u8; 0x10]>> for InitializationVector {

@@ -14,11 +14,15 @@ impl ExtXIFramesOnly {
 
 /// This tag requires [`ProtocolVersion::V4`].
 impl RequiredVersion for ExtXIFramesOnly {
-    fn required_version(&self) -> ProtocolVersion { ProtocolVersion::V4 }
+    fn required_version(&self) -> ProtocolVersion {
+        ProtocolVersion::V4
+    }
 }
 
 impl fmt::Display for ExtXIFramesOnly {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result { Self::PREFIX.fmt(f) }
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        Self::PREFIX.fmt(f)
+    }
 }
 
 impl TryFrom<&str> for ExtXIFramesOnly {

@@ -15,11 +15,15 @@ impl ExtXDiscontinuity {
 
 /// This tag requires [`ProtocolVersion::V1`].
 impl RequiredVersion for ExtXDiscontinuity {
-    fn required_version(&self) -> ProtocolVersion { ProtocolVersion::V1 }
+    fn required_version(&self) -> ProtocolVersion {
+        ProtocolVersion::V1
+    }
 }
 
 impl fmt::Display for ExtXDiscontinuity {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result { Self::PREFIX.fmt(f) }
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        Self::PREFIX.fmt(f)
+    }
 }
 
 impl TryFrom<&str> for ExtXDiscontinuity {

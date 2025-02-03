@@ -52,7 +52,9 @@ impl KeyFormat<'_> {
 }
 
 impl Default for KeyFormat<'_> {
-    fn default() -> Self { Self::Identity }
+    fn default() -> Self {
+        Self::Identity
+    }
 }
 
 impl FromStr for KeyFormat<'static> {
@@ -83,7 +85,9 @@ impl fmt::Display for KeyFormat<'_> {
 
 /// This tag requires [`ProtocolVersion::V5`].
 impl RequiredVersion for KeyFormat<'_> {
-    fn required_version(&self) -> ProtocolVersion { ProtocolVersion::V5 }
+    fn required_version(&self) -> ProtocolVersion {
+        ProtocolVersion::V5
+    }
 }
 
 fn parse_key_format(input: &str) -> KeyFormat<'_> {

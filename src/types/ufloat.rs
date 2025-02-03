@@ -64,7 +64,9 @@ impl UFloat {
     /// assert_eq!(UFloat::new(1.1_f32).as_f32(), 1.1_f32);
     /// ```
     #[must_use]
-    pub const fn as_f32(self) -> f32 { self.0 }
+    pub const fn as_f32(self) -> f32 {
+        self.0
+    }
 }
 
 impl FromStr for UFloat {
@@ -117,13 +119,17 @@ implement_from!(u16, u8);
 // manually and both implementations have to agree according to clippy.
 impl PartialEq for UFloat {
     #[inline]
-    fn eq(&self, other: &Self) -> bool { self.0 == other.0 }
+    fn eq(&self, other: &Self) -> bool {
+        self.0 == other.0
+    }
 }
 
 // convenience implementation to compare f32 with a Float.
 impl PartialEq<f32> for UFloat {
     #[inline]
-    fn eq(&self, other: &f32) -> bool { &self.0 == other }
+    fn eq(&self, other: &f32) -> bool {
+        &self.0 == other
+    }
 }
 
 // In order to implement `Eq` a struct has to satisfy
@@ -143,7 +149,9 @@ impl Eq for UFloat {}
 
 impl PartialOrd for UFloat {
     #[inline]
-    fn partial_cmp(&self, other: &Self) -> Option<Ordering> { Some(self.cmp(other)) }
+    fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
+        Some(self.cmp(other))
+    }
 }
 
 impl Ord for UFloat {
@@ -269,23 +277,33 @@ mod tests {
 
     #[test]
     #[should_panic = "float must be positive: `-1.1`"]
-    fn test_new_negative() { let _ = UFloat::new(-1.1); }
+    fn test_new_negative() {
+        let _ = UFloat::new(-1.1);
+    }
 
     #[test]
     #[should_panic = "float must be positive: `-0`"]
-    fn test_new_negative_zero() { let _ = UFloat::new(-0.0); }
+    fn test_new_negative_zero() {
+        let _ = UFloat::new(-0.0);
+    }
 
     #[test]
     #[should_panic = "float must be finite: `inf`"]
-    fn test_new_infinite() { let _ = UFloat::new(f32::INFINITY); }
+    fn test_new_infinite() {
+        let _ = UFloat::new(f32::INFINITY);
+    }
 
     #[test]
     #[should_panic = "float must be finite: `-inf`"]
-    fn test_new_neg_infinite() { let _ = UFloat::new(f32::NEG_INFINITY); }
+    fn test_new_neg_infinite() {
+        let _ = UFloat::new(f32::NEG_INFINITY);
+    }
 
     #[test]
     #[should_panic = "float must not be `NaN`"]
-    fn test_new_nan() { let _ = UFloat::new(f32::NAN); }
+    fn test_new_nan() {
+        let _ = UFloat::new(f32::NAN);
+    }
 
     #[test]
     fn test_as_f32() {

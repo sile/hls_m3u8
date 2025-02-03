@@ -64,15 +64,21 @@ impl<'a> TryFrom<&'a str> for Value<'a> {
 }
 
 impl<T: Into<Float>> From<T> for Value<'static> {
-    fn from(value: T) -> Self { Self::Float(value.into()) }
+    fn from(value: T) -> Self {
+        Self::Float(value.into())
+    }
 }
 
 impl From<Vec<u8>> for Value<'static> {
-    fn from(value: Vec<u8>) -> Self { Self::Hex(value) }
+    fn from(value: Vec<u8>) -> Self {
+        Self::Hex(value)
+    }
 }
 
 impl From<String> for Value<'static> {
-    fn from(value: String) -> Self { Self::String(Cow::Owned(unquote(&value).into_owned())) }
+    fn from(value: String) -> Self {
+        Self::String(Cow::Owned(unquote(&value).into_owned()))
+    }
 }
 
 #[cfg(test)]

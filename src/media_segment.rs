@@ -174,7 +174,9 @@ impl<'a> MediaSegment<'a> {
     /// ```
     #[must_use]
     #[inline]
-    pub fn builder() -> MediaSegmentBuilder<'static> { MediaSegmentBuilder::default() }
+    pub fn builder() -> MediaSegmentBuilder<'static> {
+        MediaSegmentBuilder::default()
+    }
 
     /// Makes the struct independent of its lifetime, by taking ownership of all
     /// internal [`Cow`]s.

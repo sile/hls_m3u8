@@ -232,7 +232,9 @@ impl ByteRange {
     /// ```
     #[inline]
     #[must_use]
-    pub fn len(&self) -> usize { self.end.saturating_sub(self.start.unwrap_or(0)) }
+    pub fn len(&self) -> usize {
+        self.end.saturating_sub(self.start.unwrap_or(0))
+    }
 
     /// Returns `true` if the length is zero.
     ///
@@ -246,7 +248,9 @@ impl ByteRange {
     /// ```
     #[inline]
     #[must_use]
-    pub fn is_empty(&self) -> bool { self.len() == 0 }
+    pub fn is_empty(&self) -> bool {
+        self.len() == 0
+    }
 }
 
 impl Sub<usize> for ByteRange {
@@ -264,7 +268,9 @@ impl Sub<usize> for ByteRange {
 
 impl SubAssign<usize> for ByteRange {
     #[inline]
-    fn sub_assign(&mut self, other: usize) { *self = <Self as Sub<usize>>::sub(*self, other); }
+    fn sub_assign(&mut self, other: usize) {
+        *self = <Self as Sub<usize>>::sub(*self, other);
+    }
 }
 
 impl Add<usize> for ByteRange {
@@ -282,7 +288,9 @@ impl Add<usize> for ByteRange {
 
 impl AddAssign<usize> for ByteRange {
     #[inline]
-    fn add_assign(&mut self, other: usize) { *self = <Self as Add<usize>>::add(*self, other); }
+    fn add_assign(&mut self, other: usize) {
+        *self = <Self as Add<usize>>::add(*self, other);
+    }
 }
 
 macro_rules! impl_from_ranges {
@@ -359,7 +367,9 @@ impl RangeBounds<usize> for ByteRange {
     }
 
     #[inline]
-    fn end_bound(&self) -> Bound<&usize> { Bound::Excluded(&self.end) }
+    fn end_bound(&self) -> Bound<&usize> {
+        Bound::Excluded(&self.end)
+    }
 }
 
 /// This conversion will fail if the start of the [`ByteRange`] is `Some`.
@@ -445,12 +455,16 @@ mod tests {
     #[test]
     #[should_panic = "the range start (6) must be smaller than the end (0)"]
     #[allow(clippy::reversed_empty_ranges)]
-    fn test_from_range_panic() { let _ = ByteRange::from(6..0); }
+    fn test_from_range_panic() {
+        let _ = ByteRange::from(6..0);
+    }
 
     #[test]
     #[should_panic = "the range start (6) must be smaller than the end (0+1)"]
     #[allow(clippy::reversed_empty_ranges)]
-    fn test_from_range_inclusive_panic() { let _ = ByteRange::from(6..=0); }
+    fn test_from_range_inclusive_panic() {
+        let _ = ByteRange::from(6..=0);
+    }
 
     #[test]
     fn test_from_ranges() {
@@ -512,7 +526,9 @@ mod tests {
 
     #[test]
     #[should_panic = "attempt to make the start (11) larger than the end (10)"]
-    fn test_set_start() { let _ = ByteRange::from(4..10).set_start(Some(11)); }
+    fn test_set_start() {
+        let _ = ByteRange::from(4..10).set_start(Some(11));
+    }
 
     #[test]
     #[allow(clippy::identity_op)]
@@ -528,7 +544,9 @@ mod tests {
 
     #[test]
     #[should_panic = "attempt to add with overflow"]
-    fn test_add_panic() { let _ = ByteRange::from(usize::MAX..usize::MAX) + 1; }
+    fn test_add_panic() {
+        let _ = ByteRange::from(usize::MAX..usize::MAX) + 1;
+    }
 
     #[test]
     #[allow(clippy::identity_op)]
@@ -547,7 +565,9 @@ mod tests {
 
     #[test]
     #[should_panic = "attempt to subtract with overflow"]
-    fn test_sub_panic() { let _ = ByteRange::from(0..0) - 1; }
+    fn test_sub_panic() {
+        let _ = ByteRange::from(0..0) - 1;
+    }
 
     #[test]
     fn test_saturating_add() {

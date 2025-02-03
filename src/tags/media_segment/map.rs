@@ -119,9 +119,13 @@ impl<'a> RequiredVersion for ExtXMap<'a> {
     // this should return ProtocolVersion::V5, if it does not contain an
     // EXT-X-I-FRAMES-ONLY!
     // http://alexzambelli.com/blog/2016/05/04/understanding-hls-versions-and-client-compatibility/
-    fn required_version(&self) -> ProtocolVersion { ProtocolVersion::V6 }
+    fn required_version(&self) -> ProtocolVersion {
+        ProtocolVersion::V6
+    }
 
-    fn introduced_version(&self) -> ProtocolVersion { ProtocolVersion::V5 }
+    fn introduced_version(&self) -> ProtocolVersion {
+        ProtocolVersion::V5
+    }
 }
 
 impl<'a> fmt::Display for ExtXMap<'a> {

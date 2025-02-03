@@ -287,7 +287,9 @@ impl<'a> ExtXMedia<'a> {
     /// ```
     #[must_use]
     #[inline]
-    pub fn builder() -> ExtXMediaBuilder<'a> { ExtXMediaBuilder::default() }
+    pub fn builder() -> ExtXMediaBuilder<'a> {
+        ExtXMediaBuilder::default()
+    }
 
     /// Makes the struct independent of its lifetime, by taking ownership of all
     /// internal [`Cow`]s.

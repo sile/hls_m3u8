@@ -105,7 +105,9 @@ impl<'a> ExtXProgramDateTime<'a> {
 
 /// This tag requires [`ProtocolVersion::V1`].
 impl<'a> RequiredVersion for ExtXProgramDateTime<'a> {
-    fn required_version(&self) -> ProtocolVersion { ProtocolVersion::V1 }
+    fn required_version(&self) -> ProtocolVersion {
+        ProtocolVersion::V1
+    }
 }
 
 impl<'a> fmt::Display for ExtXProgramDateTime<'a> {
