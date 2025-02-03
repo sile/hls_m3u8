@@ -30,7 +30,7 @@ pub struct Codecs<'a> {
     list: Vec<Cow<'a, str>>,
 }
 
-impl<'a> Codecs<'a> {
+impl Codecs<'_> {
     /// Makes a new (empty) [`Codecs`] struct.
     ///
     /// # Example
@@ -121,7 +121,7 @@ implement_from!(
     0x20
 );
 
-impl<'a> fmt::Display for Codecs<'a> {
+impl fmt::Display for Codecs<'_> {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         if let Some(codec) = self.list.first() {
             write!(f, "{}", codec)?;

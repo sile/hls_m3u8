@@ -352,7 +352,7 @@ let date_range = ExtXDateRange::builder()
 }
 
 /// This tag requires [`ProtocolVersion::V1`].
-impl<'a> RequiredVersion for ExtXDateRange<'a> {
+impl RequiredVersion for ExtXDateRange<'_> {
     fn required_version(&self) -> ProtocolVersion {
         ProtocolVersion::V1
     }
@@ -485,7 +485,7 @@ impl<'a> TryFrom<&'a str> for ExtXDateRange<'a> {
     }
 }
 
-impl<'a> fmt::Display for ExtXDateRange<'a> {
+impl fmt::Display for ExtXDateRange<'_> {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(f, "{}", Self::PREFIX)?;
         write!(f, "ID={}", quote(&self.id))?;
@@ -500,7 +500,7 @@ impl<'a> fmt::Display for ExtXDateRange<'a> {
                 write!(
                     f,
                     ",START-DATE={}",
-                    quote(&value.to_rfc3339_opts(SecondsFormat::AutoSi, true))
+                    quote(value.to_rfc3339_opts(SecondsFormat::AutoSi, true))
                 )?;
             }
 
@@ -516,7 +516,7 @@ impl<'a> fmt::Display for ExtXDateRange<'a> {
                 write!(
                     f,
                     ",END-DATE={}",
-                    quote(&value.to_rfc3339_opts(SecondsFormat::AutoSi, true))
+                    quote(value.to_rfc3339_opts(SecondsFormat::AutoSi, true))
                 )?;
             }
 

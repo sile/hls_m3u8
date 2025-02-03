@@ -194,7 +194,7 @@ impl<'a> ExtXKey<'a> {
 /// specified.
 ///
 /// Otherwise [`ProtocolVersion::V1`] is required.
-impl<'a> RequiredVersion for ExtXKey<'a> {
+impl RequiredVersion for ExtXKey<'_> {
     fn required_version(&self) -> ProtocolVersion {
         self.0
             .as_ref()
@@ -234,7 +234,7 @@ impl<'a> From<crate::tags::ExtXSessionKey<'a>> for ExtXKey<'a> {
     }
 }
 
-impl<'a> fmt::Display for ExtXKey<'a> {
+impl fmt::Display for ExtXKey<'_> {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(f, "{}", Self::PREFIX)?;
 

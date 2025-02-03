@@ -18,7 +18,7 @@ pub enum Value<'a> {
     Float(Float),
 }
 
-impl<'a> Value<'a> {
+impl Value<'_> {
     /// Makes the struct independent of its lifetime, by taking ownership of all
     /// internal [`Cow`]s.
     ///
@@ -35,7 +35,7 @@ impl<'a> Value<'a> {
     }
 }
 
-impl<'a> fmt::Display for Value<'a> {
+impl fmt::Display for Value<'_> {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match &self {
             Self::String(value) => write!(f, "{}", quote(value)),

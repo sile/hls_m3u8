@@ -41,7 +41,7 @@ pub struct ExtXProgramDateTime<'a> {
     _p: PhantomData<&'a str>,
 }
 
-impl<'a> ExtXProgramDateTime<'a> {
+impl ExtXProgramDateTime<'_> {
     pub(crate) const PREFIX: &'static str = "#EXT-X-PROGRAM-DATE-TIME:";
 
     /// Makes a new [`ExtXProgramDateTime`] tag.
@@ -104,13 +104,13 @@ impl<'a> ExtXProgramDateTime<'a> {
 }
 
 /// This tag requires [`ProtocolVersion::V1`].
-impl<'a> RequiredVersion for ExtXProgramDateTime<'a> {
+impl RequiredVersion for ExtXProgramDateTime<'_> {
     fn required_version(&self) -> ProtocolVersion {
         ProtocolVersion::V1
     }
 }
 
-impl<'a> fmt::Display for ExtXProgramDateTime<'a> {
+impl fmt::Display for ExtXProgramDateTime<'_> {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         let date_time = {
             #[cfg(feature = "chrono")]

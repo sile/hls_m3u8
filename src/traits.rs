@@ -6,8 +6,8 @@ use crate::types::{DecryptionKey, ProtocolVersion};
 
 mod private {
     pub trait Sealed {}
-    impl<'a> Sealed for crate::MediaSegment<'a> {}
-    impl<'a> Sealed for crate::tags::ExtXMap<'a> {}
+    impl Sealed for crate::MediaSegment<'_> {}
+    impl Sealed for crate::tags::ExtXMap<'_> {}
 }
 
 /// Signals that a type or some of the asssociated data might need to be

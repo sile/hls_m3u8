@@ -168,7 +168,7 @@ pub enum VariantStream<'a> {
     },
 }
 
-impl<'a> VariantStream<'a> {
+impl VariantStream<'_> {
     pub(crate) const PREFIX_EXTXIFRAME: &'static str = "#EXT-X-I-FRAME-STREAM-INF:";
     pub(crate) const PREFIX_EXTXSTREAMINF: &'static str = "#EXT-X-STREAM-INF:";
 
@@ -265,7 +265,7 @@ impl<'a> VariantStream<'a> {
 }
 
 /// This tag requires [`ProtocolVersion::V1`].
-impl<'a> RequiredVersion for VariantStream<'a> {
+impl RequiredVersion for VariantStream<'_> {
     fn required_version(&self) -> ProtocolVersion {
         ProtocolVersion::V1
     }
@@ -291,7 +291,7 @@ impl<'a> RequiredVersion for VariantStream<'a> {
     }
 }
 
-impl<'a> fmt::Display for VariantStream<'a> {
+impl fmt::Display for VariantStream<'_> {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match &self {
             Self::ExtXIFrame { uri, stream_data } => {

@@ -153,7 +153,7 @@ pub struct MediaSegment<'a> {
     uri: Cow<'a, str>,
 }
 
-impl<'a> MediaSegment<'a> {
+impl MediaSegment<'_> {
     /// Returns a builder for a [`MediaSegment`].
     ///
     /// # Example
@@ -227,7 +227,7 @@ impl<'a> MediaSegmentBuilder<'a> {
     }
 }
 
-impl<'a> fmt::Display for MediaSegment<'a> {
+impl fmt::Display for MediaSegment<'_> {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         // NOTE: self.keys will be printed by the `MediaPlaylist` to prevent redundance.
 
@@ -257,7 +257,7 @@ impl<'a> fmt::Display for MediaSegment<'a> {
     }
 }
 
-impl<'a> RequiredVersion for MediaSegment<'a> {
+impl RequiredVersion for MediaSegment<'_> {
     fn required_version(&self) -> ProtocolVersion {
         required_version![
             self.keys,

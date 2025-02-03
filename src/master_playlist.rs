@@ -307,7 +307,7 @@ impl<'a> MasterPlaylist<'a> {
     }
 }
 
-impl<'a> RequiredVersion for MasterPlaylist<'a> {
+impl RequiredVersion for MasterPlaylist<'_> {
     fn required_version(&self) -> ProtocolVersion {
         required_version![
             self.has_independent_segments
@@ -321,7 +321,7 @@ impl<'a> RequiredVersion for MasterPlaylist<'a> {
     }
 }
 
-impl<'a> MasterPlaylistBuilder<'a> {
+impl MasterPlaylistBuilder<'_> {
     fn validate(&self) -> Result<(), String> {
         if let Some(variant_streams) = &self.variant_streams {
             self.validate_variants(variant_streams)
@@ -422,7 +422,7 @@ impl<'a> MasterPlaylistBuilder<'a> {
     }
 }
 
-impl<'a> RequiredVersion for MasterPlaylistBuilder<'a> {
+impl RequiredVersion for MasterPlaylistBuilder<'_> {
     fn required_version(&self) -> ProtocolVersion {
         // TODO: the .flatten() can be removed as soon as `recursive traits` are
         //       supported. (RequiredVersion is implemented for Option<T>, but
@@ -441,7 +441,7 @@ impl<'a> RequiredVersion for MasterPlaylistBuilder<'a> {
     }
 }
 
-impl<'a> fmt::Display for MasterPlaylist<'a> {
+impl fmt::Display for MasterPlaylist<'_> {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         writeln!(f, "{}", ExtM3u)?;
 

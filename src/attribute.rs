@@ -95,8 +95,8 @@ impl<'a> Iterator for AttributePairs<'a> {
     }
 }
 
-impl<'a> ExactSizeIterator for AttributePairs<'a> {}
-impl<'a> FusedIterator for AttributePairs<'a> {}
+impl ExactSizeIterator for AttributePairs<'_> {}
+impl FusedIterator for AttributePairs<'_> {}
 
 #[cfg(test)]
 mod test {

@@ -69,7 +69,7 @@ impl<'a> ClosedCaptions<'a> {
     }
 }
 
-impl<'a, T: PartialEq<str>> PartialEq<T> for ClosedCaptions<'a> {
+impl<T: PartialEq<str>> PartialEq<T> for ClosedCaptions<'_> {
     fn eq(&self, other: &T) -> bool {
         match &self {
             Self::GroupId(value) => other.eq(value),
@@ -78,7 +78,7 @@ impl<'a, T: PartialEq<str>> PartialEq<T> for ClosedCaptions<'a> {
     }
 }
 
-impl<'a> fmt::Display for ClosedCaptions<'a> {
+impl fmt::Display for ClosedCaptions<'_> {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match &self {
             Self::GroupId(value) => write!(f, "{}", quote(value)),
