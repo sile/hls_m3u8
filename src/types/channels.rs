@@ -21,13 +21,17 @@ pub struct Channels {
     ///
     /// ```
     /// # use hls_m3u8::types::Channels;
-    /// let mut channels = Channels::new(6);
+    /// let mut channels = Channels::new(6, false);
     /// # assert_eq!(channels.number(), 6);
+    /// assert_eq!(channels.has_joc_content(), false);
     ///
     /// channels.set_number(5);
+    /// channels.set_has_joc_content(true);
     /// assert_eq!(channels.number(), 5);
+    /// assert_eq!(channels.has_joc_content(), true);
     /// ```
     number: u64,
+    has_joc_content: bool,
 }
 
 impl Channels {
@@ -37,24 +41,44 @@ impl Channels {
     ///
     /// ```
     /// # use hls_m3u8::types::Channels;
-    /// let channels = Channels::new(6);
+    /// let channels = Channels::new(6, false);
     ///
     /// println!("CHANNELS=\"{}\"", channels);
     /// # assert_eq!(format!("CHANNELS=\"{}\"", channels), "CHANNELS=\"6\"".to_string());
     /// ```
-    //#[inline]
     #[must_use]
-    pub const fn new(number: u64) -> Self {
-        Self { number }
+    pub const fn new(number: u64, has_joc_content: bool) -> Self {
+        Self {
+            number,
+            has_joc_content,
+        }
     }
 }
 
 impl FromStr for Channels {
     type Err = Error;
 
+    /// Makes a new [`Channels`] struct from a str.
+    ///
+    /// Has significant extra logic to account for the addition of Enhanced AC-3 audio with JOC, which
+    /// allows for strings like "16/JOC".
+    /// #[inline]
     fn from_str(input: &str) -> Result<Self, Self::Err> {
+        // Lots of extra logic to deal with Dolby Atmos
+        let split: Vec<&str> = input.split("/").collect::<Vec<&str>>();
+        let num_str = split
+            .get(0)
+            .ok_or_else(|| Error::missing_value("Missing Channel value"))?;
+
+        let joc_coding = match split.get(1) {
+            Some(&"JOC") => true,
+            Some(_) => return Err(Error::invalid_input()),
+            None => false,
+        };
+
         Ok(Self::new(
-            input.parse().map_err(|e| Error::parse_int(input, e))?,
+            num_str.parse().map_err(|e| Error::parse_int(num_str, e))?,
+            joc_coding,
         ))
     }
 }
@@ -74,16 +98,25 @@ mod tests {
 
     #[test]
     fn test_display() {
-        assert_eq!(Channels::new(6).to_string(), "6".to_string());
+        assert_eq!(Channels::new(6, false).to_string(), "6".to_string());
 
-        assert_eq!(Channels::new(7).to_string(), "7".to_string());
+        assert_eq!(Channels::new(7, true).to_string(), "7".to_string());
     }
 
     #[test]
     fn test_parser() {
-        assert_eq!(Channels::new(6), Channels::from_str("6").unwrap());
+        assert_eq!(Channels::new(6, false), Channels::from_str("6").unwrap());
 
         assert!(Channels::from_str("garbage").is_err());
         assert!(Channels::from_str("").is_err());
+    }
+
+    #[test]
+    fn test_parser_dolby_atmos() {
+        assert_eq!(
+            Channels::new(16, true),
+            Channels::from_str("16/JOC").unwrap()
+        );
+        assert!(Channels::from_str("16/JOKE").is_err());
     }
 }
