@@ -59,11 +59,6 @@ impl Channels {
 impl FromStr for Channels {
     type Err = Error;
 
-    /// Makes a new [`Channels`] struct from a str.
-    ///
-    /// Has significant extra logic to account for the addition of Enhanced AC-3 audio with JOC, which
-    /// allows for strings like "16/JOC".
-    /// #[inline]
     fn from_str(input: &str) -> Result<Self, Self::Err> {
         // Lots of extra logic to deal with Dolby Atmos
         let split: Vec<&str> = input.splitn(2, "/").collect::<Vec<&str>>();
