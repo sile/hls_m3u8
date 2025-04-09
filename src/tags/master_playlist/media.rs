@@ -675,7 +675,7 @@ mod test {
                 .name("English")
                 .is_autoselect(true)
                 .is_default(true)
-                .channels(Channels::new(2, false))
+                .channels(Channels::new(2))
                 .build()
                 .unwrap(),
             concat!(
