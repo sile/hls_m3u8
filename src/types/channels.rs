@@ -23,11 +23,15 @@ pub struct Channels {
     /// # use hls_m3u8::types::Channels;
     /// let mut channels = Channels::new(6);
     /// # assert_eq!(channels.number(), 6);
+    /// assert_eq!(channels.has_joc_content(), false);
     ///
     /// channels.set_number(5);
+    /// channels.set_has_joc_content(true);
     /// assert_eq!(channels.number(), 5);
+    /// assert_eq!(channels.has_joc_content(), true);
     /// ```
     number: u64,
+    has_joc_content: bool,
 }
 
 impl Channels {
@@ -42,10 +46,13 @@ impl Channels {
     /// println!("CHANNELS=\"{}\"", channels);
     /// # assert_eq!(format!("CHANNELS=\"{}\"", channels), "CHANNELS=\"6\"".to_string());
     /// ```
-    //#[inline]
+    /// #[inline]
     #[must_use]
     pub const fn new(number: u64) -> Self {
-        Self { number }
+        Self {
+            number,
+            has_joc_content: false,
+        }
     }
 }
 
@@ -53,16 +60,31 @@ impl FromStr for Channels {
     type Err = Error;
 
     fn from_str(input: &str) -> Result<Self, Self::Err> {
-        Ok(Self::new(
-            input.parse().map_err(|e| Error::parse_int(input, e))?,
-        ))
+        // Lots of extra logic to deal with Dolby Atmos
+        let split: Vec<&str> = input.splitn(2, "/").collect::<Vec<&str>>();
+        let num_str = split
+            .get(0)
+            .ok_or_else(|| Error::missing_value("Missing Channel value"))?;
+
+        let mut new_channels =
+            Self::new(num_str.parse().map_err(|e| Error::parse_int(num_str, e))?);
+
+        match split.get(1) {
+            Some(&"JOC") => new_channels.set_has_joc_content(true),
+            Some(_) => return Err(Error::invalid_input()),
+            None => &mut new_channels,
+        };
+
+        Ok(new_channels)
     }
 }
 
 impl fmt::Display for Channels {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "{}", self.number)?;
-
+        match self.has_joc_content {
+            true => write!(f, "{}/JOC", self.number)?,
+            false => write!(f, "{}", self.number)?,
+        }
         Ok(())
     }
 }
@@ -76,7 +98,9 @@ mod tests {
     fn test_display() {
         assert_eq!(Channels::new(6).to_string(), "6".to_string());
 
-        assert_eq!(Channels::new(7).to_string(), "7".to_string());
+        let test_channel = Channels::from_str("7/JOC").unwrap();
+
+        assert_eq!(test_channel.to_string(), "7/JOC".to_string());
     }
 
     #[test]
@@ -85,5 +109,16 @@ mod tests {
 
         assert!(Channels::from_str("garbage").is_err());
         assert!(Channels::from_str("").is_err());
+    }
+
+    #[test]
+    fn test_parser_dolby_atmos() {
+        let mut test_channels = Channels::new(16);
+        test_channels.set_has_joc_content(true);
+
+        assert_eq!(test_channels, Channels::from_str("16/JOC").unwrap());
+
+        assert!(Channels::from_str("16/JOKE").is_err());
+        assert!(Channels::from_str("16/JOC/4").is_err());
     }
 }
