@@ -41,6 +41,7 @@ pub struct ExtXProgramDateTime<'a> {
     _p: PhantomData<&'a str>,
 }
 
+#[allow(clippy::needless_lifetimes)]
 impl<'a> ExtXProgramDateTime<'a> {
     pub(crate) const PREFIX: &'static str = "#EXT-X-PROGRAM-DATE-TIME:";
 

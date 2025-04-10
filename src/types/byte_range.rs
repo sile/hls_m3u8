@@ -89,7 +89,7 @@ impl ByteRange {
     /// This function will panic, if the `new_start` is larger, than the
     /// [`end`](ByteRange::end).
     pub fn set_start(&mut self, new_start: Option<usize>) -> &mut Self {
-        if new_start.map_or(false, |s| s > self.end) {
+        if new_start.is_some_and(|s| s > self.end) {
             panic!(
                 "attempt to make the start ({}) larger than the end ({})",
                 new_start.unwrap(),

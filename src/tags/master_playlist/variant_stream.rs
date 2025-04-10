@@ -222,12 +222,12 @@ impl VariantStream<'_> {
                 stream_data,
                 ..
             } => match media.media_type {
-                MediaType::Audio => audio.as_ref().map_or(false, |v| v == media.group_id()),
-                MediaType::Video => stream_data.video().map_or(false, |v| v == media.group_id()),
-                MediaType::Subtitles => subtitles.as_ref().map_or(false, |v| v == media.group_id()),
+                MediaType::Audio => audio.as_ref().is_some_and(|v| v == media.group_id()),
+                MediaType::Video => stream_data.video().is_some_and(|v| v == media.group_id()),
+                MediaType::Subtitles => subtitles.as_ref().is_some_and(|v| v == media.group_id()),
                 MediaType::ClosedCaptions => closed_captions
                     .as_ref()
-                    .map_or(false, |v| v == media.group_id()),
+                    .is_some_and(|v| v == media.group_id()),
             },
         }
     }

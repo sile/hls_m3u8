@@ -23,14 +23,24 @@ pub struct Channels {
     /// # use hls_m3u8::types::Channels;
     /// let mut channels = Channels::new(6);
     /// # assert_eq!(channels.number(), 6);
-    /// assert_eq!(channels.has_joc_content(), false);
     ///
     /// channels.set_number(5);
-    /// channels.set_has_joc_content(true);
     /// assert_eq!(channels.number(), 5);
-    /// assert_eq!(channels.has_joc_content(), true);
     /// ```
     number: u64,
+
+    /// Flag for JOC (Dolby Atmos).
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// # use hls_m3u8::types::Channels;
+    /// let mut channels = Channels::new(6);
+    /// assert_eq!(channels.has_joc_content(), false);
+    ///
+    /// channels.set_has_joc_content(true);
+    /// assert_eq!(channels.has_joc_content(), true);
+    /// ```
     has_joc_content: bool,
 }
 
@@ -46,7 +56,6 @@ impl Channels {
     /// println!("CHANNELS=\"{}\"", channels);
     /// # assert_eq!(format!("CHANNELS=\"{}\"", channels), "CHANNELS=\"6\"".to_string());
     /// ```
-    /// #[inline]
     #[must_use]
     pub const fn new(number: u64) -> Self {
         Self {
@@ -63,7 +72,7 @@ impl FromStr for Channels {
         // Lots of extra logic to deal with Dolby Atmos
         let split: Vec<&str> = input.splitn(2, "/").collect::<Vec<&str>>();
         let num_str = split
-            .get(0)
+            .first()
             .ok_or_else(|| Error::missing_value("Missing Channel value"))?;
 
         let mut new_channels =

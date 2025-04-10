@@ -414,7 +414,7 @@ impl MasterPlaylistBuilder<'_> {
     }
 
     fn check_media_group<T: AsRef<str>>(&self, media_type: MediaType, group_id: T) -> bool {
-        self.media.as_ref().map_or(false, |value| {
+        self.media.as_ref().is_some_and(|value| {
             value.iter().any(|media| {
                 media.media_type == media_type && media.group_id().as_ref() == group_id.as_ref()
             })
