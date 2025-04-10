@@ -69,22 +69,25 @@ impl FromStr for Channels {
     type Err = Error;
 
     fn from_str(input: &str) -> Result<Self, Self::Err> {
-        // Lots of extra logic to deal with Dolby Atmos
-        let split: Vec<&str> = input.splitn(2, "/").collect::<Vec<&str>>();
-        let num_str = split
-            .first()
-            .ok_or_else(|| Error::missing_value("Missing Channel value"))?;
-
-        let mut new_channels =
-            Self::new(num_str.parse().map_err(|e| Error::parse_int(num_str, e))?);
-
-        match split.get(1) {
-            Some(&"JOC") => new_channels.set_has_joc_content(true),
-            Some(_) => return Err(Error::invalid_input()),
-            None => &mut new_channels,
-        };
-
-        Ok(new_channels)
+        match input.split_once('/') {
+            None => {
+                let channels = input.parse().map_err(|e| Error::parse_int(input, e))?;
+                Ok(Self::new(channels))
+            }
+            Some((channels, has_joc_content)) => {
+                let channels = channels
+                    .parse()
+                    .map_err(|e| Error::parse_int(channels, e))?;
+                if has_joc_content == "JOC" {
+                    Ok(Self {
+                        number: channels,
+                        has_joc_content: true,
+                    })
+                } else {
+                    Err(Error::invalid_input())
+                }
+            }
+        }
     }
 }
 
