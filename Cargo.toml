@@ -15,10 +15,6 @@ categories = ["parser-implementations"]
 default = []
 perf = []
 
-[badges]
-codecov = { repository = "sile/hls_m3u8" }
-travis-ci = { repository = "sile/hls_m3u8" }
-
 [dependencies]
 chrono = { version = "0.4", optional = true }
 backtrace = { version = "0.3", features = ["std"], optional = true }

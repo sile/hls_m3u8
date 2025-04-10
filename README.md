@@ -3,8 +3,7 @@ hls_m3u8
 
 [![Crates.io: hls_m3u8](https://img.shields.io/crates/v/hls_m3u8.svg)](https://crates.io/crates/hls_m3u8)
 [![Documentation](https://docs.rs/hls_m3u8/badge.svg)](https://docs.rs/hls_m3u8)
-[![Build Status](https://travis-ci.org/sile/hls_m3u8.svg?branch=master)](https://travis-ci.org/sile/hls_m3u8)
-[![Code Coverage](https://codecov.io/gh/sile/hls_m3u8/branch/master/graph/badge.svg)](https://codecov.io/gh/sile/hls_m3u8/branch/master)
+[![Actions Status](https://github.com/sile/hls_m3u8/workflows/CI/badge.svg)](https://github.com/sile/hls_m3u8/actions)
 ![License](https://img.shields.io/crates/l/hls_m3u8)
 
 [HLS] m3u8 parser/generator.
