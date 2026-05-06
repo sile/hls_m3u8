@@ -207,10 +207,10 @@ impl VariantStream<'_> {
     pub fn is_associated(&self, media: &ExtXMedia<'_>) -> bool {
         match &self {
             Self::ExtXIFrame { stream_data, .. } => {
-                if let MediaType::Video = media.media_type {
-                    if let Some(value) = stream_data.video() {
-                        return value == media.group_id();
-                    }
+                if let MediaType::Video = media.media_type
+                    && let Some(value) = stream_data.video()
+                {
+                    return value == media.group_id();
                 }
 
                 false

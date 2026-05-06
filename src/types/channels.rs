@@ -1,8 +1,6 @@
 use core::fmt;
 use core::str::FromStr;
 
-use shorthand::ShortHand;
-
 use crate::Error;
 
 /// The maximum number of independent, simultaneous audio channels present in
@@ -12,9 +10,13 @@ use crate::Error;
 /// 6.
 ///
 /// [`MediaSegment`]: crate::MediaSegment
-#[derive(ShortHand, Debug, Clone, Copy, Default, Eq, PartialEq, Ord, PartialOrd, Hash)]
-#[shorthand(enable(must_use))]
+#[derive(Debug, Clone, Copy, Default, Eq, PartialEq, Ord, PartialOrd, Hash)]
 pub struct Channels {
+    number: u64,
+    mix_type: Option<MixType>,
+}
+
+impl Channels {
     /// The maximum number of independent simultaneous audio channels.
     ///
     /// # Example
@@ -27,7 +29,16 @@ pub struct Channels {
     /// channels.set_number(5);
     /// assert_eq!(channels.number(), 5);
     /// ```
-    number: u64,
+    #[must_use]
+    pub fn number(&self) -> u64 {
+        self.number
+    }
+
+    /// Sets [`Channels::number`].
+    pub fn set_number(&mut self, value: u64) -> &mut Self {
+        self.number = value;
+        self
+    }
 
     /// Dolby Atmos mix type.
     ///
@@ -41,7 +52,16 @@ pub struct Channels {
     /// channels.set_mix_type(Some(MixType::Joc));
     /// assert_eq!(channels.mix_type(), Some(&MixType::Joc));
     /// ```
-    mix_type: Option<MixType>,
+    #[must_use]
+    pub fn mix_type(&self) -> Option<&MixType> {
+        self.mix_type.as_ref()
+    }
+
+    /// Sets [`Channels::mix_type`].
+    pub fn set_mix_type(&mut self, value: Option<MixType>) -> &mut Self {
+        self.mix_type = value;
+        self
+    }
 }
 
 /// Dolby atmos mix type for a [`Channels`] configuration

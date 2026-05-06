@@ -2,9 +2,6 @@ use std::borrow::Cow;
 use std::convert::TryFrom;
 use std::fmt;
 
-use derive_builder::Builder;
-use shorthand::ShortHand;
-
 use crate::attribute::AttributePairs;
 use crate::types::ProtocolVersion;
 use crate::utils::{quote, tag, unquote};
@@ -47,10 +44,69 @@ impl SessionData<'_> {
 /// Allows arbitrary session data to be carried in a [`MasterPlaylist`].
 ///
 /// [`MasterPlaylist`]: crate::MasterPlaylist
-#[derive(ShortHand, Builder, Hash, Eq, Ord, Debug, PartialEq, Clone, PartialOrd)]
-#[builder(setter(into))]
-#[shorthand(enable(must_use, into))]
+#[derive(Hash, Eq, Ord, Debug, PartialEq, Clone, PartialOrd)]
 pub struct ExtXSessionData<'a> {
+    data_id: Cow<'a, str>,
+    /// The [`SessionData`] associated with the
+    /// [`data_id`](ExtXSessionData::data_id).
+    ///
+    /// # Note
+    ///
+    /// This field is required.
+    pub data: SessionData<'a>,
+    language: Option<Cow<'a, str>>,
+}
+
+/// Builder for [`ExtXSessionData`].
+#[derive(Debug, Clone, Default)]
+pub struct ExtXSessionDataBuilder<'a> {
+    data_id: Option<Cow<'a, str>>,
+    data: Option<SessionData<'a>>,
+    language: Option<Cow<'a, str>>,
+}
+
+impl<'a> ExtXSessionDataBuilder<'a> {
+    /// See [`ExtXSessionData::data_id`].
+    pub fn data_id<V: Into<Cow<'a, str>>>(&mut self, value: V) -> &mut Self {
+        self.data_id = Some(value.into());
+        self
+    }
+
+    /// See [`ExtXSessionData::data`].
+    pub fn data<V: Into<SessionData<'a>>>(&mut self, value: V) -> &mut Self {
+        self.data = Some(value.into());
+        self
+    }
+
+    /// See [`ExtXSessionData::language`].
+    pub fn language<V: Into<Cow<'a, str>>>(&mut self, value: V) -> &mut Self {
+        self.language = Some(value.into());
+        self
+    }
+
+    /// Builds a new [`ExtXSessionData`].
+    ///
+    /// # Errors
+    ///
+    /// If a required field has not been initialized.
+    pub fn build(&self) -> Result<ExtXSessionData<'a>, Error> {
+        Ok(ExtXSessionData {
+            data_id: self
+                .data_id
+                .clone()
+                .ok_or_else(|| Error::missing_field("ExtXSessionData", "data_id"))?,
+            data: self
+                .data
+                .clone()
+                .ok_or_else(|| Error::missing_field("ExtXSessionData", "data"))?,
+            language: self.language.clone(),
+        })
+    }
+}
+
+impl<'a> ExtXSessionData<'a> {
+    pub(crate) const PREFIX: &'static str = "#EXT-X-SESSION-DATA:";
+
     /// This should conform to a [reverse DNS] naming convention, such as
     /// `com.example.movie.title`.
     ///
@@ -62,15 +118,17 @@ pub struct ExtXSessionData<'a> {
     /// This field is required.
     ///
     /// [reverse DNS]: https://en.wikipedia.org/wiki/Reverse_domain_name_notation
-    data_id: Cow<'a, str>,
-    /// The [`SessionData`] associated with the
-    /// [`data_id`](ExtXSessionData::data_id).
-    ///
-    /// # Note
-    ///
-    /// This field is required.
-    #[shorthand(enable(skip))]
-    pub data: SessionData<'a>,
+    #[must_use]
+    pub fn data_id(&self) -> &Cow<'a, str> {
+        &self.data_id
+    }
+
+    /// Sets [`ExtXSessionData::data_id`].
+    pub fn set_data_id<V: Into<Cow<'a, str>>>(&mut self, value: V) -> &mut Self {
+        self.data_id = value.into();
+        self
+    }
+
     /// The `language` attribute identifies the language of the [`SessionData`].
     ///
     /// # Note
@@ -79,12 +137,16 @@ pub struct ExtXSessionData<'a> {
     /// [RFC5646].
     ///
     /// [RFC5646]: https://tools.ietf.org/html/rfc5646
-    #[builder(setter(strip_option), default)]
-    language: Option<Cow<'a, str>>,
-}
+    #[must_use]
+    pub fn language(&self) -> Option<&Cow<'a, str>> {
+        self.language.as_ref()
+    }
 
-impl<'a> ExtXSessionData<'a> {
-    pub(crate) const PREFIX: &'static str = "#EXT-X-SESSION-DATA:";
+    /// Sets [`ExtXSessionData::language`].
+    pub fn set_language<V: Into<Cow<'a, str>>>(&mut self, value: Option<V>) -> &mut Self {
+        self.language = value.map(Into::into);
+        self
+    }
 
     /// Makes a new [`ExtXSessionData`] tag.
     ///

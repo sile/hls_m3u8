@@ -6,8 +6,6 @@ use std::time::Duration;
 
 #[cfg(feature = "chrono")]
 use chrono::{DateTime, FixedOffset, SecondsFormat};
-use derive_builder::Builder;
-use shorthand::ShortHand;
 
 use crate::attribute::AttributePairs;
 use crate::types::{ProtocolVersion, Value};
@@ -16,70 +14,17 @@ use crate::{Error, RequiredVersion};
 
 /// The [`ExtXDateRange`] tag associates a date range (i.e., a range of time
 /// defined by a starting and ending date) with a set of attribute/value pairs.
-#[derive(ShortHand, Builder, Debug, Clone, PartialEq, PartialOrd, Eq, Ord, Hash)]
-#[builder(setter(into))]
-#[shorthand(enable(must_use, into))]
+#[derive(Debug, Clone, PartialEq, PartialOrd, Eq, Ord, Hash)]
 pub struct ExtXDateRange<'a> {
-    /// A string that uniquely identifies an [`ExtXDateRange`] in the playlist.
-    ///
-    /// ## Note
-    ///
-    /// This field is required.
     id: Cow<'a, str>,
-    /// A client-defined string that specifies some set of attributes and their
-    /// associated value semantics. All [`ExtXDateRange`]s with the same class
-    /// attribute value must adhere to these semantics.
-    ///
-    /// ## Note
-    ///
-    /// This field is optional.
-    #[builder(setter(strip_option), default)]
     class: Option<Cow<'a, str>>,
-    /// The date at which the [`ExtXDateRange`] begins.
-    ///
-    /// ## Note
-    ///
-    /// This field is required by the spec wording, but optional in examples
-    /// elsewhere in the same document.  Some implementations omit it in
-    /// practise (e.g. for SCTE 'explicit-IN' markers) so it is optional
-    /// here.
     #[cfg(feature = "chrono")]
-    #[shorthand(enable(copy), disable(into))]
-    #[builder(setter(strip_option), default)]
     start_date: Option<DateTime<FixedOffset>>,
-    /// The date at which the [`ExtXDateRange`] begins.
-    ///
-    /// ## Note
-    ///
-    /// This field is required by the spec wording, but optional in examples
-    /// elsewhere in the same document.  Some implementations omit it in
-    /// practise (e.g. for SCTE 'explicit-IN' markers) so it is optional
-    /// here.
     #[cfg(not(feature = "chrono"))]
-    #[builder(setter(strip_option), default)]
     start_date: Option<Cow<'a, str>>,
-    /// The date at which the [`ExtXDateRange`] ends. It must be equal to or
-    /// later than the value of the [`start-date`] attribute.
-    ///
-    /// ## Note
-    ///
-    /// This field is optional.
-    ///
-    /// [`start-date`]: #method.start_date
     #[cfg(feature = "chrono")]
-    #[shorthand(enable(copy), disable(into))]
-    #[builder(setter(strip_option), default)]
     end_date: Option<DateTime<FixedOffset>>,
-    /// The date at which the [`ExtXDateRange`] ends. It must be equal to or
-    /// later than the value of the start-date field.
-    ///
-    /// ## Note
-    ///
-    /// This field is optional.
-    ///
-    /// [`start-date`]: #method.start_date
     #[cfg(not(feature = "chrono"))]
-    #[builder(setter(strip_option), default)]
     end_date: Option<Cow<'a, str>>,
     /// The duration of the [`ExtXDateRange`]. A single instant in time (e.g.,
     /// crossing a finish line) should be represented with a duration of 0.
@@ -87,8 +32,6 @@ pub struct ExtXDateRange<'a> {
     /// ## Note
     ///
     /// This field is optional.
-    #[builder(setter(strip_option), default)]
-    #[shorthand(enable(skip))]
     pub duration: Option<Duration>,
     /// This field indicates the expected duration of an [`ExtXDateRange`],
     /// whose actual duration is not yet known.
@@ -96,59 +39,9 @@ pub struct ExtXDateRange<'a> {
     /// ## Note
     ///
     /// This field is optional.
-    #[builder(setter(strip_option), default)]
-    #[shorthand(enable(skip))]
     pub planned_duration: Option<Duration>,
-    /// SCTE-35 (ANSI/SCTE 35 2013) is a joint ANSI/Society of Cable and
-    /// Telecommunications Engineers standard that describes the inline
-    /// insertion of cue tones in mpeg-ts streams.
-    ///
-    /// SCTE-35 was originally used in the US to signal a local ad insertion
-    /// opportunity in the transport streams, and in Europe to insert local TV
-    /// programs (e.g. local news transmissions). It is now used to signal all
-    /// kinds of program and ad events in linear transport streams and in newer
-    /// ABR delivery formats such as HLS and DASH.
-    ///
-    /// <https://en.wikipedia.org/wiki/SCTE-35>
-    ///
-    /// ## Note
-    ///
-    /// This field is optional.
-    #[builder(setter(strip_option), default)]
     scte35_cmd: Option<Cow<'a, str>>,
-    /// SCTE-35 (ANSI/SCTE 35 2013) is a joint ANSI/Society of Cable and
-    /// Telecommunications Engineers standard that describes the inline
-    /// insertion of cue tones in mpeg-ts streams.
-    ///
-    /// SCTE-35 was originally used in the US to signal a local ad insertion
-    /// opportunity in the transport streams, and in Europe to insert local TV
-    /// programs (e.g. local news transmissions). It is now used to signal all
-    /// kinds of program and ad events in linear transport streams and in newer
-    /// ABR delivery formats such as HLS and DASH.
-    ///
-    /// <https://en.wikipedia.org/wiki/SCTE-35>
-    ///
-    /// ## Note
-    ///
-    /// This field is optional.
-    #[builder(setter(strip_option), default)]
     scte35_out: Option<Cow<'a, str>>,
-    /// SCTE-35 (ANSI/SCTE 35 2013) is a joint ANSI/Society of Cable and
-    /// Telecommunications Engineers standard that describes the inline
-    /// insertion of cue tones in mpeg-ts streams.
-    ///
-    /// SCTE-35 was originally used in the US to signal a local ad insertion
-    /// opportunity in the transport streams, and in Europe to insert local TV
-    /// programs (e.g. local news transmissions). It is now used to signal all
-    /// kinds of program and ad events in linear transport streams and in newer
-    /// ABR delivery formats such as HLS and DASH.
-    ///
-    /// <https://en.wikipedia.org/wiki/SCTE-35>
-    ///
-    /// ## Note
-    ///
-    /// This field is optional.
-    #[builder(setter(strip_option), default)]
     scte35_in: Option<Cow<'a, str>>,
     /// This field indicates that the [`ExtXDateRange::end_date`] is equal to
     /// the [`ExtXDateRange::start_date`] of the following range.
@@ -160,8 +53,6 @@ pub struct ExtXDateRange<'a> {
     /// ## Note
     ///
     /// This field is optional.
-    #[builder(default)]
-    #[shorthand(enable(skip))]
     pub end_on_next: bool,
     /// The `"X-"` prefix defines a namespace reserved for client-defined
     /// attributes.
@@ -178,28 +69,325 @@ pub struct ExtXDateRange<'a> {
     /// ## Note
     ///
     /// This field is optional.
-    #[builder(default)]
-    #[shorthand(enable(collection_magic), disable(set, get))]
     pub client_attributes: BTreeMap<Cow<'a, str>, Value<'a>>,
 }
 
+/// Builder for [`ExtXDateRange`].
+#[derive(Debug, Clone, Default)]
+pub struct ExtXDateRangeBuilder<'a> {
+    id: Option<Cow<'a, str>>,
+    class: Option<Cow<'a, str>>,
+    #[cfg(feature = "chrono")]
+    start_date: Option<DateTime<FixedOffset>>,
+    #[cfg(not(feature = "chrono"))]
+    start_date: Option<Cow<'a, str>>,
+    #[cfg(feature = "chrono")]
+    end_date: Option<DateTime<FixedOffset>>,
+    #[cfg(not(feature = "chrono"))]
+    end_date: Option<Cow<'a, str>>,
+    duration: Option<Duration>,
+    planned_duration: Option<Duration>,
+    scte35_cmd: Option<Cow<'a, str>>,
+    scte35_out: Option<Cow<'a, str>>,
+    scte35_in: Option<Cow<'a, str>>,
+    end_on_next: Option<bool>,
+    client_attributes: BTreeMap<Cow<'a, str>, Value<'a>>,
+}
+
 impl<'a> ExtXDateRangeBuilder<'a> {
+    /// See [`ExtXDateRange::id`].
+    pub fn id<V: Into<Cow<'a, str>>>(&mut self, value: V) -> &mut Self {
+        self.id = Some(value.into());
+        self
+    }
+
+    /// See [`ExtXDateRange::class`].
+    pub fn class<V: Into<Cow<'a, str>>>(&mut self, value: V) -> &mut Self {
+        self.class = Some(value.into());
+        self
+    }
+
+    /// See [`ExtXDateRange::start_date`].
+    #[cfg(feature = "chrono")]
+    pub fn start_date(&mut self, value: DateTime<FixedOffset>) -> &mut Self {
+        self.start_date = Some(value);
+        self
+    }
+
+    /// See [`ExtXDateRange::start_date`].
+    #[cfg(not(feature = "chrono"))]
+    pub fn start_date<V: Into<Cow<'a, str>>>(&mut self, value: V) -> &mut Self {
+        self.start_date = Some(value.into());
+        self
+    }
+
+    /// See [`ExtXDateRange::end_date`].
+    #[cfg(feature = "chrono")]
+    pub fn end_date(&mut self, value: DateTime<FixedOffset>) -> &mut Self {
+        self.end_date = Some(value);
+        self
+    }
+
+    /// See [`ExtXDateRange::end_date`].
+    #[cfg(not(feature = "chrono"))]
+    pub fn end_date<V: Into<Cow<'a, str>>>(&mut self, value: V) -> &mut Self {
+        self.end_date = Some(value.into());
+        self
+    }
+
+    /// See [`ExtXDateRange::duration`].
+    pub fn duration(&mut self, value: Duration) -> &mut Self {
+        self.duration = Some(value);
+        self
+    }
+
+    /// See [`ExtXDateRange::planned_duration`].
+    pub fn planned_duration(&mut self, value: Duration) -> &mut Self {
+        self.planned_duration = Some(value);
+        self
+    }
+
+    /// See [`ExtXDateRange::scte35_cmd`].
+    pub fn scte35_cmd<V: Into<Cow<'a, str>>>(&mut self, value: V) -> &mut Self {
+        self.scte35_cmd = Some(value.into());
+        self
+    }
+
+    /// See [`ExtXDateRange::scte35_out`].
+    pub fn scte35_out<V: Into<Cow<'a, str>>>(&mut self, value: V) -> &mut Self {
+        self.scte35_out = Some(value.into());
+        self
+    }
+
+    /// See [`ExtXDateRange::scte35_in`].
+    pub fn scte35_in<V: Into<Cow<'a, str>>>(&mut self, value: V) -> &mut Self {
+        self.scte35_in = Some(value.into());
+        self
+    }
+
+    /// See [`ExtXDateRange::end_on_next`].
+    pub fn end_on_next(&mut self, value: bool) -> &mut Self {
+        self.end_on_next = Some(value);
+        self
+    }
+
+    /// See [`ExtXDateRange::client_attributes`].
+    pub fn client_attributes(&mut self, value: BTreeMap<Cow<'a, str>, Value<'a>>) -> &mut Self {
+        self.client_attributes = value;
+        self
+    }
+
     /// Inserts a key value pair.
     pub fn insert_client_attribute<K: Into<Cow<'a, str>>, V: Into<Value<'a>>>(
         &mut self,
         key: K,
         value: V,
     ) -> &mut Self {
-        let attrs = self.client_attributes.get_or_insert_with(BTreeMap::new);
-
-        attrs.insert(key.into(), value.into());
-
+        self.client_attributes.insert(key.into(), value.into());
         self
+    }
+
+    /// Builds a new [`ExtXDateRange`].
+    ///
+    /// # Errors
+    ///
+    /// If a required field has not been initialized.
+    pub fn build(&self) -> Result<ExtXDateRange<'a>, Error> {
+        Ok(ExtXDateRange {
+            id: self
+                .id
+                .clone()
+                .ok_or_else(|| Error::missing_field("ExtXDateRange", "id"))?,
+            class: self.class.clone(),
+            #[cfg(feature = "chrono")]
+            start_date: self.start_date,
+            #[cfg(not(feature = "chrono"))]
+            start_date: self.start_date.clone(),
+            #[cfg(feature = "chrono")]
+            end_date: self.end_date,
+            #[cfg(not(feature = "chrono"))]
+            end_date: self.end_date.clone(),
+            duration: self.duration,
+            planned_duration: self.planned_duration,
+            scte35_cmd: self.scte35_cmd.clone(),
+            scte35_out: self.scte35_out.clone(),
+            scte35_in: self.scte35_in.clone(),
+            end_on_next: self.end_on_next.unwrap_or(false),
+            client_attributes: self.client_attributes.clone(),
+        })
     }
 }
 
 impl<'a> ExtXDateRange<'a> {
     pub(crate) const PREFIX: &'static str = "#EXT-X-DATERANGE:";
+
+    /// A string that uniquely identifies an [`ExtXDateRange`] in the playlist.
+    ///
+    /// ## Note
+    ///
+    /// This field is required.
+    #[must_use]
+    pub fn id(&self) -> &Cow<'a, str> {
+        &self.id
+    }
+
+    /// Sets [`ExtXDateRange::id`].
+    pub fn set_id<V: Into<Cow<'a, str>>>(&mut self, value: V) -> &mut Self {
+        self.id = value.into();
+        self
+    }
+
+    /// A client-defined string that specifies some set of attributes and their
+    /// associated value semantics. All [`ExtXDateRange`]s with the same class
+    /// attribute value must adhere to these semantics.
+    ///
+    /// ## Note
+    ///
+    /// This field is optional.
+    #[must_use]
+    pub fn class(&self) -> Option<&Cow<'a, str>> {
+        self.class.as_ref()
+    }
+
+    /// Sets [`ExtXDateRange::class`].
+    pub fn set_class<V: Into<Cow<'a, str>>>(&mut self, value: Option<V>) -> &mut Self {
+        self.class = value.map(Into::into);
+        self
+    }
+
+    /// The date at which the [`ExtXDateRange`] begins.
+    ///
+    /// ## Note
+    ///
+    /// This field is required by the spec wording, but optional in examples
+    /// elsewhere in the same document.  Some implementations omit it in
+    /// practise (e.g. for SCTE 'explicit-IN' markers) so it is optional
+    /// here.
+    #[cfg(feature = "chrono")]
+    #[must_use]
+    pub fn start_date(&self) -> Option<DateTime<FixedOffset>> {
+        self.start_date
+    }
+
+    /// Sets [`ExtXDateRange::start_date`].
+    #[cfg(feature = "chrono")]
+    pub fn set_start_date(&mut self, value: Option<DateTime<FixedOffset>>) -> &mut Self {
+        self.start_date = value;
+        self
+    }
+
+    /// The date at which the [`ExtXDateRange`] begins.
+    ///
+    /// ## Note
+    ///
+    /// This field is required by the spec wording, but optional in examples
+    /// elsewhere in the same document.  Some implementations omit it in
+    /// practise (e.g. for SCTE 'explicit-IN' markers) so it is optional
+    /// here.
+    #[cfg(not(feature = "chrono"))]
+    #[must_use]
+    pub fn start_date(&self) -> Option<&Cow<'a, str>> {
+        self.start_date.as_ref()
+    }
+
+    /// Sets [`ExtXDateRange::start_date`].
+    #[cfg(not(feature = "chrono"))]
+    pub fn set_start_date<V: Into<Cow<'a, str>>>(&mut self, value: Option<V>) -> &mut Self {
+        self.start_date = value.map(Into::into);
+        self
+    }
+
+    /// The date at which the [`ExtXDateRange`] ends. It must be equal to or
+    /// later than the value of the [`ExtXDateRange::start_date`] attribute.
+    ///
+    /// ## Note
+    ///
+    /// This field is optional.
+    #[cfg(feature = "chrono")]
+    #[must_use]
+    pub fn end_date(&self) -> Option<DateTime<FixedOffset>> {
+        self.end_date
+    }
+
+    /// Sets [`ExtXDateRange::end_date`].
+    #[cfg(feature = "chrono")]
+    pub fn set_end_date(&mut self, value: Option<DateTime<FixedOffset>>) -> &mut Self {
+        self.end_date = value;
+        self
+    }
+
+    /// The date at which the [`ExtXDateRange`] ends. It must be equal to or
+    /// later than the value of the [`ExtXDateRange::start_date`] attribute.
+    ///
+    /// ## Note
+    ///
+    /// This field is optional.
+    #[cfg(not(feature = "chrono"))]
+    #[must_use]
+    pub fn end_date(&self) -> Option<&Cow<'a, str>> {
+        self.end_date.as_ref()
+    }
+
+    /// Sets [`ExtXDateRange::end_date`].
+    #[cfg(not(feature = "chrono"))]
+    pub fn set_end_date<V: Into<Cow<'a, str>>>(&mut self, value: Option<V>) -> &mut Self {
+        self.end_date = value.map(Into::into);
+        self
+    }
+
+    /// SCTE-35 (ANSI/SCTE 35 2013) is a joint ANSI/Society of Cable and
+    /// Telecommunications Engineers standard that describes the inline
+    /// insertion of cue tones in mpeg-ts streams.
+    ///
+    /// <https://en.wikipedia.org/wiki/SCTE-35>
+    ///
+    /// ## Note
+    ///
+    /// This field is optional.
+    #[must_use]
+    pub fn scte35_cmd(&self) -> Option<&Cow<'a, str>> {
+        self.scte35_cmd.as_ref()
+    }
+
+    /// Sets [`ExtXDateRange::scte35_cmd`].
+    pub fn set_scte35_cmd<V: Into<Cow<'a, str>>>(&mut self, value: Option<V>) -> &mut Self {
+        self.scte35_cmd = value.map(Into::into);
+        self
+    }
+
+    /// See [`ExtXDateRange::scte35_cmd`].
+    #[must_use]
+    pub fn scte35_out(&self) -> Option<&Cow<'a, str>> {
+        self.scte35_out.as_ref()
+    }
+
+    /// Sets [`ExtXDateRange::scte35_out`].
+    pub fn set_scte35_out<V: Into<Cow<'a, str>>>(&mut self, value: Option<V>) -> &mut Self {
+        self.scte35_out = value.map(Into::into);
+        self
+    }
+
+    /// See [`ExtXDateRange::scte35_cmd`].
+    #[must_use]
+    pub fn scte35_in(&self) -> Option<&Cow<'a, str>> {
+        self.scte35_in.as_ref()
+    }
+
+    /// Sets [`ExtXDateRange::scte35_in`].
+    pub fn set_scte35_in<V: Into<Cow<'a, str>>>(&mut self, value: Option<V>) -> &mut Self {
+        self.scte35_in = value.map(Into::into);
+        self
+    }
+
+    /// Inserts a key/value pair into [`ExtXDateRange::client_attributes`].
+    pub fn insert_client_attributes<K: Into<Cow<'a, str>>, V: Into<Value<'a>>>(
+        &mut self,
+        key: K,
+        value: V,
+    ) -> &mut Self {
+        self.client_attributes.insert(key.into(), value.into());
+        self
+    }
 
     /// Makes a new [`ExtXDateRange`] tag.
     ///
@@ -460,12 +648,11 @@ impl<'a> TryFrom<&'a str> for ExtXDateRange<'a> {
                 start_date,
                 duration.map(chrono::Duration::from_std),
                 &end_date,
-            ) {
-                if start_date + duration != *end_date {
-                    return Err(Error::custom(
-                        "end_date must be equal to start_date + duration",
-                    ));
-                }
+            ) && start_date + duration != *end_date
+            {
+                return Err(Error::custom(
+                    "end_date must be equal to start_date + duration",
+                ));
             }
         }
 
