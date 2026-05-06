@@ -14,13 +14,14 @@ const PLAYREADY: &str = "com.microsoft.playready";
 /// Specifies how the key is represented in the resource identified by the
 /// `URI`.
 #[non_exhaustive]
-#[derive(Clone, Eq, PartialEq, Ord, PartialOrd, Hash, Debug)]
+#[derive(Clone, Eq, PartialEq, Ord, PartialOrd, Hash, Debug, Default)]
 pub enum KeyFormat<'a> {
     /// An [`EncryptionMethod::Aes128`] uses 16-octet (16 byte/128 bit) keys. If
     /// the format is [`KeyFormat::Identity`], the key file is a single packed
     /// array of 16 octets (16 byte/128 bit) in binary format.
     ///
     /// [`EncryptionMethod::Aes128`]: crate::types::EncryptionMethod::Aes128
+    #[default]
     Identity,
     /// The keyformat used by FairPlay.
     FairPlay,
@@ -48,12 +49,6 @@ impl KeyFormat<'_> {
             KeyFormat::PlayReady => KeyFormat::PlayReady,
             KeyFormat::Other(cow) => KeyFormat::Other(Cow::Owned(cow.into_owned())),
         }
-    }
-}
-
-impl Default for KeyFormat<'_> {
-    fn default() -> Self {
-        Self::Identity
     }
 }
 

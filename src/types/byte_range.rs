@@ -256,7 +256,6 @@ impl ByteRange {
 impl Sub<usize> for ByteRange {
     type Output = Self;
 
-    #[must_use]
     #[inline]
     fn sub(self, rhs: usize) -> Self::Output {
         Self {
@@ -276,7 +275,6 @@ impl SubAssign<usize> for ByteRange {
 impl Add<usize> for ByteRange {
     type Output = Self;
 
-    #[must_use]
     #[inline]
     fn add(self, rhs: usize) -> Self::Output {
         Self {

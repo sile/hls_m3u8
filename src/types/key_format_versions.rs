@@ -277,7 +277,6 @@ impl Hash for KeyFormatVersions {
 
 impl AsRef<[u8]> for KeyFormatVersions {
     #[inline]
-    #[must_use]
     fn as_ref(&self) -> &[u8] {
         &self.buffer[..self.len()]
     }
@@ -285,7 +284,6 @@ impl AsRef<[u8]> for KeyFormatVersions {
 
 impl AsMut<[u8]> for KeyFormatVersions {
     #[inline]
-    #[must_use]
     fn as_mut(&mut self) -> &mut [u8] {
         // this temporary variable is required, because the compiler does not resolve
         // the borrow to it's value immediately, so there is a shared borrow and

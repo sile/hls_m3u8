@@ -13,7 +13,7 @@ use crate::Error;
 /// could assume that the corresponding sequences in the message were also
 /// identical. The IV prevents the appearance of corresponding duplicate
 /// character sequences in the ciphertext.
-#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, Default)]
 #[non_exhaustive]
 pub enum InitializationVector {
     /// An IV for use with Aes128.
@@ -27,6 +27,7 @@ pub enum InitializationVector {
     /// [`MediaSegment::number`]: crate::MediaSegment::number
     Number(u128),
     /// Signals that an IV is missing.
+    #[default]
     Missing,
 }
 
@@ -149,12 +150,6 @@ impl InitializationVector {
     #[inline]
     pub fn is_none(&self) -> bool {
         *self == Self::Missing
-    }
-}
-
-impl Default for InitializationVector {
-    fn default() -> Self {
-        Self::Missing
     }
 }
 

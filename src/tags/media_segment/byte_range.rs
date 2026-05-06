@@ -158,7 +158,6 @@ where
 {
     type Output = Self;
 
-    #[must_use]
     #[inline]
     fn sub(self, rhs: T) -> Self::Output {
         Self(self.0.sub(rhs))
@@ -181,7 +180,6 @@ where
 {
     type Output = Self;
 
-    #[must_use]
     #[inline]
     fn add(self, rhs: T) -> Self::Output {
         Self(self.0.add(rhs))
