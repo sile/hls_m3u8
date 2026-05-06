@@ -177,7 +177,7 @@ impl<'a> TryFrom<&'a str> for DecryptionKey<'a> {
 
         for (key, value) in AttributePairs::new(input) {
             match key {
-                "METHOD" => method = Some(value.parse().map_err(Error::strum)?),
+                "METHOD" => method = Some(value.parse()?),
                 "URI" => {
                     let unquoted_uri = unquote(value);
 

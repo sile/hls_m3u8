@@ -330,7 +330,7 @@ impl<'a> TryFrom<&'a str> for StreamData<'a> {
                 "CODECS" => codecs = Some(TryFrom::try_from(unquote(value))?),
                 "RESOLUTION" => resolution = Some(value.parse()?),
                 "HDCP-LEVEL" => {
-                    hdcp_level = Some(value.parse::<HdcpLevel>().map_err(Error::strum)?);
+                    hdcp_level = Some(value.parse::<HdcpLevel>()?);
                 }
                 "VIDEO" => video = Some(unquote(value)),
                 _ => {

@@ -1,5 +1,7 @@
-use strum::{Display, EnumString};
+use std::fmt;
+use std::str::FromStr;
 
+use crate::Error;
 use crate::traits::RequiredVersion;
 use crate::types::ProtocolVersion;
 
@@ -19,8 +21,7 @@ use crate::types::ProtocolVersion;
 /// [`MediaPlaylist`]: crate::MediaPlaylist
 #[non_exhaustive]
 #[expect(missing_docs)]
-#[derive(Ord, PartialOrd, Debug, Clone, Copy, PartialEq, Eq, Hash, Display, EnumString)]
-#[strum(serialize_all = "UPPERCASE")]
+#[derive(Ord, PartialOrd, Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum InStreamId {
     Cc1,
     Cc2,
@@ -89,6 +90,99 @@ pub enum InStreamId {
     Service61,
     Service62,
     Service63,
+}
+
+macro_rules! in_stream_id_string_table {
+    ($($variant:ident => $name:literal),* $(,)?) => {
+        impl fmt::Display for InStreamId {
+            fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+                f.write_str(match self {
+                    $(Self::$variant => $name,)*
+                })
+            }
+        }
+
+        impl FromStr for InStreamId {
+            type Err = Error;
+
+            fn from_str(input: &str) -> Result<Self, Self::Err> {
+                match input {
+                    $($name => Ok(Self::$variant),)*
+                    _ => Err(Error::custom(format!("invalid in-stream id: {input:?}"))),
+                }
+            }
+        }
+    };
+}
+
+in_stream_id_string_table! {
+    Cc1 => "CC1",
+    Cc2 => "CC2",
+    Cc3 => "CC3",
+    Cc4 => "CC4",
+    Service1 => "SERVICE1",
+    Service2 => "SERVICE2",
+    Service3 => "SERVICE3",
+    Service4 => "SERVICE4",
+    Service5 => "SERVICE5",
+    Service6 => "SERVICE6",
+    Service7 => "SERVICE7",
+    Service8 => "SERVICE8",
+    Service9 => "SERVICE9",
+    Service10 => "SERVICE10",
+    Service11 => "SERVICE11",
+    Service12 => "SERVICE12",
+    Service13 => "SERVICE13",
+    Service14 => "SERVICE14",
+    Service15 => "SERVICE15",
+    Service16 => "SERVICE16",
+    Service17 => "SERVICE17",
+    Service18 => "SERVICE18",
+    Service19 => "SERVICE19",
+    Service20 => "SERVICE20",
+    Service21 => "SERVICE21",
+    Service22 => "SERVICE22",
+    Service23 => "SERVICE23",
+    Service24 => "SERVICE24",
+    Service25 => "SERVICE25",
+    Service26 => "SERVICE26",
+    Service27 => "SERVICE27",
+    Service28 => "SERVICE28",
+    Service29 => "SERVICE29",
+    Service30 => "SERVICE30",
+    Service31 => "SERVICE31",
+    Service32 => "SERVICE32",
+    Service33 => "SERVICE33",
+    Service34 => "SERVICE34",
+    Service35 => "SERVICE35",
+    Service36 => "SERVICE36",
+    Service37 => "SERVICE37",
+    Service38 => "SERVICE38",
+    Service39 => "SERVICE39",
+    Service40 => "SERVICE40",
+    Service41 => "SERVICE41",
+    Service42 => "SERVICE42",
+    Service43 => "SERVICE43",
+    Service44 => "SERVICE44",
+    Service45 => "SERVICE45",
+    Service46 => "SERVICE46",
+    Service47 => "SERVICE47",
+    Service48 => "SERVICE48",
+    Service49 => "SERVICE49",
+    Service50 => "SERVICE50",
+    Service51 => "SERVICE51",
+    Service52 => "SERVICE52",
+    Service53 => "SERVICE53",
+    Service54 => "SERVICE54",
+    Service55 => "SERVICE55",
+    Service56 => "SERVICE56",
+    Service57 => "SERVICE57",
+    Service58 => "SERVICE58",
+    Service59 => "SERVICE59",
+    Service60 => "SERVICE60",
+    Service61 => "SERVICE61",
+    Service62 => "SERVICE62",
+    Service63 => "SERVICE63",
 }
 
 /// The variants [`InStreamId::Cc1`], [`InStreamId::Cc2`], [`InStreamId::Cc3`]

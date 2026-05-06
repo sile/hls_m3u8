@@ -209,17 +209,6 @@ impl Error {
     pub(crate) fn invalid_hex<T: fmt::Display>(reason: T) -> Self {
         Self::new(ErrorKind::InvalidHex(reason.to_string()))
     }
-
-    pub(crate) fn strum(value: strum::ParseError) -> Self {
-        Self::new(ErrorKind::Custom(value.to_string()))
-    }
-}
-
-#[doc(hidden)]
-impl From<strum::ParseError> for Error {
-    fn from(value: strum::ParseError) -> Self {
-        Self::strum(value)
-    }
 }
 
 #[cfg(test)]

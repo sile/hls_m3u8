@@ -18,12 +18,8 @@ perf = []
 
 [dependencies]
 chrono = { version = "0.4", optional = true }
-
 derive_builder = "0.20"
-
 shorthand = "0.1"
-strum = { version = "0.26.3", features = ["derive"] }
-
 stable-vec = { version = "0.4" }
 
 [dev-dependencies]
