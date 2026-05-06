@@ -1,9 +1,5 @@
 #![forbid(unsafe_code)]
-#![expect(
-    clippy::infallible_try_from,
-    clippy::large_enum_variant,
-    clippy::module_name_repetitions
-)]
+#![expect(clippy::infallible_try_from, clippy::large_enum_variant)]
 #![warn(
     missing_docs,
     missing_copy_implementations,

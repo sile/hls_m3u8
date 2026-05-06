@@ -540,12 +540,11 @@ impl<'a> TryFrom<&'a str> for ExtXDateRange<'a> {
                 start_date,
                 duration.map(chrono::Duration::from_std),
                 &end_date,
-            ) {
-                if start_date + duration != *end_date {
-                    return Err(Error::custom(
-                        "end_date must be equal to start_date + duration",
-                    ));
-                }
+            ) && start_date + duration != *end_date
+            {
+                return Err(Error::custom(
+                    "end_date must be equal to start_date + duration",
+                ));
             }
         }
 
