@@ -40,8 +40,6 @@
 //!
 //! The following crate feature flags are available:
 //!
-//! - `backtrace` (optional)
-//!   - Enables the backtrace feature for the [`Error`] type.
 //! - `chrono` (optional)
 //!   - Enables parsing dates and verifying them.
 //!   - The following things will change:

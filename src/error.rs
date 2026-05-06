@@ -1,81 +1,98 @@
 use std::fmt;
 
-#[cfg(feature = "backtrace")]
-use backtrace::Backtrace;
-use thiserror::Error;
-
-//use crate::types::ProtocolVersion;
-
 /// This crate specific `Result` type.
 pub type Result<T> = std::result::Result<T, Error>;
 
-#[derive(Debug, Error, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq)]
 #[non_exhaustive]
 enum ErrorKind {
-    #[error("a value is missing for the attribute {value}")]
-    MissingValue { value: String },
-
-    #[error("invalid input")]
+    MissingValue {
+        value: String,
+    },
     InvalidInput,
-
-    #[error("{source}: {input:?}")]
     ParseIntError {
         input: String,
-        source: ::std::num::ParseIntError,
+        source: std::num::ParseIntError,
     },
-
-    #[error("{source}: {input:?}")]
     ParseFloatError {
         input: String,
-        source: ::std::num::ParseFloatError,
+        source: std::num::ParseFloatError,
     },
-
-    #[error("expected `{tag}` at the start of {input:?}")]
     MissingTag {
-        /// The required tag.
         tag: String,
-        /// The unparsed input data.
         input: String,
     },
-
-    #[error("{0}")]
     Custom(String),
-
-    #[error("unmatched group: {0:?}")]
     UnmatchedGroup(String),
-
-    #[error("unknown protocol version {0:?}")]
     UnknownProtocolVersion(String),
-
-    // #[error("required_version: {:?}, specified_version: {:?}", _0, _1)]
-    // VersionError(ProtocolVersion, ProtocolVersion),
-    #[error("missing attribute: {attribute:?}")]
-    MissingAttribute { attribute: String },
-
-    #[error("unexpected attribute: {attribute:?}")]
-    UnexpectedAttribute { attribute: String },
-
-    #[error("unexpected tag: {tag:?}")]
-    UnexpectedTag { tag: String },
-
-    #[error("{source}")]
+    MissingAttribute {
+        attribute: String,
+    },
+    UnexpectedAttribute {
+        attribute: String,
+    },
+    UnexpectedTag {
+        tag: String,
+    },
     #[cfg(feature = "chrono")]
-    Chrono { source: chrono::ParseError },
+    Chrono {
+        source: chrono::ParseError,
+    },
+    Builder {
+        message: String,
+    },
+    Hex {
+        source: hex::FromHexError,
+    },
+}
 
-    #[error("builder error: {message}")]
-    Builder { message: String },
+impl fmt::Display for ErrorKind {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match self {
+            Self::MissingValue { value } => {
+                write!(f, "a value is missing for the attribute {value}")
+            }
+            Self::InvalidInput => write!(f, "invalid input"),
+            Self::ParseIntError { input, source } => write!(f, "{source}: {input:?}"),
+            Self::ParseFloatError { input, source } => write!(f, "{source}: {input:?}"),
+            Self::MissingTag { tag, input } => {
+                write!(f, "expected `{tag}` at the start of {input:?}")
+            }
+            Self::Custom(message) => write!(f, "{message}"),
+            Self::UnmatchedGroup(group) => write!(f, "unmatched group: {group:?}"),
+            Self::UnknownProtocolVersion(version) => {
+                write!(f, "unknown protocol version {version:?}")
+            }
+            Self::MissingAttribute { attribute } => write!(f, "missing attribute: {attribute:?}"),
+            Self::UnexpectedAttribute { attribute } => {
+                write!(f, "unexpected attribute: {attribute:?}")
+            }
+            Self::UnexpectedTag { tag } => write!(f, "unexpected tag: {tag:?}"),
+            #[cfg(feature = "chrono")]
+            Self::Chrono { source } => write!(f, "{source}"),
+            Self::Builder { message } => write!(f, "builder error: {message}"),
+            Self::Hex { source } => write!(f, "{source}"),
+        }
+    }
+}
 
-    #[error("{source}")]
-    Hex { source: hex::FromHexError },
+impl std::error::Error for ErrorKind {
+    fn source(&self) -> Option<&(dyn std::error::Error + 'static)> {
+        match self {
+            Self::ParseIntError { source, .. } => Some(source),
+            Self::ParseFloatError { source, .. } => Some(source),
+            #[cfg(feature = "chrono")]
+            Self::Chrono { source } => Some(source),
+            Self::Hex { source } => Some(source),
+            _ => None,
+        }
+    }
 }
 
 /// The Error type of this library.
 #[derive(Debug)]
 pub struct Error {
     inner: ErrorKind,
-    #[cfg(feature = "backtrace")]
-    #[expect(dead_code)]
-    backtrace: Backtrace,
 }
 
 impl PartialEq for Error {
@@ -84,7 +101,11 @@ impl PartialEq for Error {
     }
 }
 
-impl std::error::Error for Error {}
+impl std::error::Error for Error {
+    fn source(&self) -> Option<&(dyn std::error::Error + 'static)> {
+        self.inner.source()
+    }
+}
 
 impl fmt::Display for Error {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
@@ -92,14 +113,9 @@ impl fmt::Display for Error {
     }
 }
 
-#[expect(clippy::needless_pass_by_value)]
 impl Error {
     fn new(inner: ErrorKind) -> Self {
-        Self {
-            inner,
-            #[cfg(feature = "backtrace")]
-            backtrace: Backtrace::new(),
-        }
+        Self { inner }
     }
 
     pub(crate) fn custom<T: fmt::Display>(value: T) -> Self {
@@ -135,7 +151,7 @@ impl Error {
         Self::new(ErrorKind::InvalidInput)
     }
 
-    pub(crate) fn parse_int<T: fmt::Display>(input: T, source: ::std::num::ParseIntError) -> Self {
+    pub(crate) fn parse_int<T: fmt::Display>(input: T, source: std::num::ParseIntError) -> Self {
         Self::new(ErrorKind::ParseIntError {
             input: input.to_string(),
             source,
@@ -144,7 +160,7 @@ impl Error {
 
     pub(crate) fn parse_float<T: fmt::Display>(
         input: T,
-        source: ::std::num::ParseFloatError,
+        source: std::num::ParseFloatError,
     ) -> Self {
         Self::new(ErrorKind::ParseFloatError {
             input: input.to_string(),
@@ -194,7 +210,6 @@ impl Error {
     }
 
     pub(crate) fn hex(source: hex::FromHexError) -> Self {
-        //
         Self::new(ErrorKind::Hex { source })
     }
 
@@ -204,8 +219,8 @@ impl Error {
 }
 
 #[doc(hidden)]
-impl From<::strum::ParseError> for Error {
-    fn from(value: ::strum::ParseError) -> Self {
+impl From<strum::ParseError> for Error {
+    fn from(value: strum::ParseError) -> Self {
         Self::strum(value)
     }
 }
