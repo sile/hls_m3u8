@@ -22,9 +22,3 @@ derive_builder = "0.20"
 shorthand = "0.1"
 stable-vec = { version = "0.4" }
 
-[dev-dependencies]
-criterion = "0.5.1"
-
-[[bench]]
-name = "bench_main"
-harness = false
