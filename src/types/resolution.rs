@@ -1,40 +1,15 @@
 use std::fmt;
 use std::str::FromStr;
 
-use shorthand::ShortHand;
-
 use crate::Error;
 
 /// The number of distinct pixels in each dimension that can be displayed (e.g.
 /// 1920x1080).
 ///
 /// For example Full HD has a resolution of 1920x1080.
-#[derive(ShortHand, Ord, PartialOrd, Debug, Clone, Copy, PartialEq, Eq, Hash)]
-#[shorthand(enable(must_use))]
+#[derive(Ord, PartialOrd, Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct Resolution {
-    /// Horizontal pixel dimension.
-    ///
-    /// # Example
-    ///
-    /// ```
-    /// # use hls_m3u8::types::Resolution;
-    /// let mut resolution = Resolution::new(1280, 720);
-    ///
-    /// resolution.set_width(1000);
-    /// assert_eq!(resolution.width(), 1000);
-    /// ```
     width: usize,
-    /// Vertical pixel dimension.
-    ///
-    /// # Example
-    ///
-    /// ```
-    /// # use hls_m3u8::types::Resolution;
-    /// let mut resolution = Resolution::new(1280, 720);
-    ///
-    /// resolution.set_height(800);
-    /// assert_eq!(resolution.height(), 800);
-    /// ```
     height: usize,
 }
 
@@ -50,6 +25,50 @@ impl Resolution {
     #[must_use]
     pub const fn new(width: usize, height: usize) -> Self {
         Self { width, height }
+    }
+
+    /// Horizontal pixel dimension.
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// # use hls_m3u8::types::Resolution;
+    /// let mut resolution = Resolution::new(1280, 720);
+    ///
+    /// resolution.set_width(1000);
+    /// assert_eq!(resolution.width(), 1000);
+    /// ```
+    #[must_use]
+    pub fn width(&self) -> usize {
+        self.width
+    }
+
+    /// Sets [`Resolution::width`].
+    pub fn set_width(&mut self, value: usize) -> &mut Self {
+        self.width = value;
+        self
+    }
+
+    /// Vertical pixel dimension.
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// # use hls_m3u8::types::Resolution;
+    /// let mut resolution = Resolution::new(1280, 720);
+    ///
+    /// resolution.set_height(800);
+    /// assert_eq!(resolution.height(), 800);
+    /// ```
+    #[must_use]
+    pub fn height(&self) -> usize {
+        self.height
+    }
+
+    /// Sets [`Resolution::height`].
+    pub fn set_height(&mut self, value: usize) -> &mut Self {
+        self.height = value;
+        self
     }
 }
 

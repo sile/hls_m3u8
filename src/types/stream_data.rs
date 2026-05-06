@@ -3,7 +3,6 @@ use core::fmt;
 use std::borrow::Cow;
 
 use derive_builder::Builder;
-use shorthand::ShortHand;
 
 use crate::attribute::AttributePairs;
 use crate::types::{Codecs, HdcpLevel, ProtocolVersion, Resolution};
@@ -14,10 +13,9 @@ use crate::{Error, RequiredVersion};
 /// variants of the [`VariantStream`].
 ///
 /// [`VariantStream`]: crate::tags::VariantStream
-#[derive(ShortHand, Builder, PartialOrd, Debug, Clone, PartialEq, Eq, Hash, Ord)]
+#[derive(Builder, PartialOrd, Debug, Clone, PartialEq, Eq, Hash, Ord)]
 #[builder(setter(strip_option))]
 #[builder(derive(Debug, PartialEq, PartialOrd, Ord, Eq, Hash))]
-#[shorthand(enable(must_use, into))]
 pub struct StreamData<'a> {
     /// The peak segment bitrate of the [`VariantStream`] in bits per second.
     ///
@@ -53,7 +51,6 @@ pub struct StreamData<'a> {
     /// [`MediaSegment`]: crate::MediaSegment
     /// [`MasterPlaylist`]: crate::MasterPlaylist
     /// [`MediaPlaylist`]: crate::MediaPlaylist
-    #[shorthand(disable(into))]
     bandwidth: u64,
     /// The average bandwidth of the stream in bits per second.
     ///
@@ -92,7 +89,6 @@ pub struct StreamData<'a> {
     /// [`MediaPlaylist`]: crate::MediaPlaylist
     /// [`VariantStream`]: crate::tags::VariantStream
     #[builder(default)]
-    #[shorthand(enable(copy), disable(into, option_as_ref))]
     average_bandwidth: Option<u64>,
     /// A list of formats, where each format specifies a media sample type that
     /// is present in one or more renditions specified by the [`VariantStream`].
@@ -158,7 +154,6 @@ pub struct StreamData<'a> {
     ///
     /// [`VariantStream`]: crate::tags::VariantStream
     #[builder(default, setter(into))]
-    #[shorthand(enable(copy))]
     resolution: Option<Resolution>,
     /// High-bandwidth Digital Content Protection level of the
     /// [`VariantStream`].
@@ -181,7 +176,6 @@ pub struct StreamData<'a> {
     ///
     /// [`VariantStream`]: crate::tags::VariantStream
     #[builder(default)]
-    #[shorthand(enable(copy), disable(into))]
     hdcp_level: Option<HdcpLevel>,
     /// It indicates the set of video renditions, that should be used when
     /// playing the presentation.
@@ -234,6 +228,102 @@ impl<'a> StreamData<'a> {
             hdcp_level: None,
             video: None,
         }
+    }
+
+    /// The peak segment bitrate of the [`VariantStream`] in bits per second.
+    ///
+    /// [`VariantStream`]: crate::tags::VariantStream
+    #[must_use]
+    pub fn bandwidth(&self) -> u64 {
+        self.bandwidth
+    }
+
+    /// Sets [`StreamData::bandwidth`].
+    pub fn set_bandwidth(&mut self, value: u64) -> &mut Self {
+        self.bandwidth = value;
+        self
+    }
+
+    /// The average bandwidth of the stream in bits per second.
+    ///
+    /// # Note
+    ///
+    /// This field is optional.
+    #[must_use]
+    pub fn average_bandwidth(&self) -> Option<u64> {
+        self.average_bandwidth
+    }
+
+    /// Sets [`StreamData::average_bandwidth`].
+    pub fn set_average_bandwidth(&mut self, value: Option<u64>) -> &mut Self {
+        self.average_bandwidth = value;
+        self
+    }
+
+    /// A list of formats, where each format specifies a media sample type that
+    /// is present in one or more renditions specified by the [`VariantStream`].
+    ///
+    /// [`VariantStream`]: crate::tags::VariantStream
+    #[must_use]
+    pub fn codecs(&self) -> Option<&Codecs<'a>> {
+        self.codecs.as_ref()
+    }
+
+    /// Sets [`StreamData::codecs`].
+    pub fn set_codecs<V: Into<Codecs<'a>>>(&mut self, value: Option<V>) -> &mut Self {
+        self.codecs = value.map(Into::into);
+        self
+    }
+
+    /// The resolution of the stream.
+    ///
+    /// # Note
+    ///
+    /// This field is optional, but it is recommended if the [`VariantStream`]
+    /// includes video.
+    ///
+    /// [`VariantStream`]: crate::tags::VariantStream
+    #[must_use]
+    pub fn resolution(&self) -> Option<Resolution> {
+        self.resolution
+    }
+
+    /// Sets [`StreamData::resolution`].
+    pub fn set_resolution<V: Into<Resolution>>(&mut self, value: Option<V>) -> &mut Self {
+        self.resolution = value.map(Into::into);
+        self
+    }
+
+    /// High-bandwidth Digital Content Protection level of the
+    /// [`VariantStream`].
+    ///
+    /// [`VariantStream`]: crate::tags::VariantStream
+    #[must_use]
+    pub fn hdcp_level(&self) -> Option<HdcpLevel> {
+        self.hdcp_level
+    }
+
+    /// Sets [`StreamData::hdcp_level`].
+    pub fn set_hdcp_level(&mut self, value: Option<HdcpLevel>) -> &mut Self {
+        self.hdcp_level = value;
+        self
+    }
+
+    /// It indicates the set of video renditions, that should be used when
+    /// playing the presentation.
+    ///
+    /// # Note
+    ///
+    /// This field is optional.
+    #[must_use]
+    pub fn video(&self) -> Option<&Cow<'a, str>> {
+        self.video.as_ref()
+    }
+
+    /// Sets [`StreamData::video`].
+    pub fn set_video<V: Into<Cow<'a, str>>>(&mut self, value: Option<V>) -> &mut Self {
+        self.video = value.map(Into::into);
+        self
     }
 
     /// Returns a builder for [`StreamData`].

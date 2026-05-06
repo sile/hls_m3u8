@@ -6,8 +6,6 @@ use core::ops::{
 };
 use std::borrow::Cow;
 
-use shorthand::ShortHand;
-
 use crate::Error;
 
 /// A range of bytes, which can be seen as either `..end` or `start..end`.
@@ -20,9 +18,13 @@ use crate::Error;
 /// let range = ByteRange::from(10..20);
 /// let range = ByteRange::from(..20);
 /// ```
-#[derive(ShortHand, Copy, Hash, Eq, Ord, Debug, PartialEq, Clone, PartialOrd)]
-#[shorthand(enable(must_use, copy), disable(option_as_ref, set))]
+#[derive(Copy, Hash, Eq, Ord, Debug, PartialEq, Clone, PartialOrd)]
 pub struct ByteRange {
+    start: Option<usize>,
+    end: usize,
+}
+
+impl ByteRange {
     /// Returns the `start` of the [`ByteRange`], if there is one.
     ///
     /// # Example
@@ -32,7 +34,11 @@ pub struct ByteRange {
     /// assert_eq!(ByteRange::from(0..5).start(), Some(0));
     /// assert_eq!(ByteRange::from(..5).start(), None);
     /// ```
-    start: Option<usize>,
+    #[must_use]
+    pub fn start(&self) -> Option<usize> {
+        self.start
+    }
+
     /// Returns the `end` of the [`ByteRange`].
     ///
     /// # Example
@@ -42,10 +48,11 @@ pub struct ByteRange {
     /// assert_eq!(ByteRange::from(0..5).end(), 5);
     /// assert_eq!(ByteRange::from(..=5).end(), 6);
     /// ```
-    end: usize,
-}
+    #[must_use]
+    pub fn end(&self) -> usize {
+        self.end
+    }
 
-impl ByteRange {
     /// Changes the length of the [`ByteRange`].
     ///
     /// # Example

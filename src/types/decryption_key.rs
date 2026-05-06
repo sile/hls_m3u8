@@ -3,7 +3,6 @@ use std::convert::TryFrom;
 use std::fmt;
 
 use derive_builder::Builder;
-use shorthand::ShortHand;
 
 use crate::attribute::AttributePairs;
 use crate::types::{
@@ -13,9 +12,8 @@ use crate::utils::{quote, unquote};
 use crate::{Error, RequiredVersion};
 
 /// Specifies how to decrypt encrypted data from the server.
-#[derive(ShortHand, Builder, Debug, Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]
+#[derive(Builder, Debug, Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]
 #[builder(setter(into), build_fn(validate = "Self::validate"))]
-#[shorthand(enable(skip, must_use, into))]
 #[non_exhaustive]
 pub struct DecryptionKey<'a> {
     /// The encryption method, which has been used to encrypt the data.
@@ -45,7 +43,6 @@ pub struct DecryptionKey<'a> {
     ///
     /// This field is required.
     #[builder(setter(into, strip_option), default)]
-    #[shorthand(disable(skip))]
     pub(crate) uri: Cow<'a, str>,
     /// An initialization vector (IV) is a fixed size input that can be used
     /// along with a secret key for data encryption.
@@ -103,6 +100,22 @@ impl<'a> DecryptionKey<'a> {
             format: None,
             versions: None,
         }
+    }
+
+    /// This uri points to a key file, which contains the cipher key.
+    ///
+    /// ## Note
+    ///
+    /// This field is required.
+    #[must_use]
+    pub fn uri(&self) -> &Cow<'a, str> {
+        &self.uri
+    }
+
+    /// Sets [`DecryptionKey::uri`].
+    pub fn set_uri<V: Into<Cow<'a, str>>>(&mut self, value: V) -> &mut Self {
+        self.uri = value.into();
+        self
     }
 
     /// Returns a builder for a `DecryptionKey`.

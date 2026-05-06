@@ -1,8 +1,6 @@
 use std::convert::TryFrom;
 use std::fmt;
 
-use shorthand::ShortHand;
-
 use crate::attribute::AttributePairs;
 use crate::types::{Float, ProtocolVersion};
 use crate::utils::{parse_yes_or_no, tag};
@@ -13,9 +11,15 @@ use crate::{Error, RequiredVersion};
 ///
 /// By default, clients should start playback at this point when beginning a
 /// playback session.
-#[derive(ShortHand, PartialOrd, Debug, Clone, Copy, PartialEq, Eq, Ord, Hash)]
-#[shorthand(enable(must_use))]
+#[derive(PartialOrd, Debug, Clone, Copy, PartialEq, Eq, Ord, Hash)]
 pub struct ExtXStart {
+    time_offset: Float,
+    is_precise: bool,
+}
+
+impl ExtXStart {
+    pub(crate) const PREFIX: &'static str = "#EXT-X-START:";
+
     /// The time offset of the [`MediaSegment`]s in the playlist.
     ///
     /// # Example
@@ -32,8 +36,17 @@ pub struct ExtXStart {
     /// ```
     ///
     /// [`MediaSegment`]: crate::MediaSegment
-    #[shorthand(enable(copy))]
-    time_offset: Float,
+    #[must_use]
+    pub fn time_offset(&self) -> Float {
+        self.time_offset
+    }
+
+    /// Sets [`ExtXStart::time_offset`].
+    pub fn set_time_offset(&mut self, value: Float) -> &mut Self {
+        self.time_offset = value;
+        self
+    }
+
     /// Whether clients should not render media stream whose presentation times
     /// are prior to the specified time offset.
     ///
@@ -49,11 +62,16 @@ pub struct ExtXStart {
     ///
     /// assert_eq!(start.is_precise(), true);
     /// ```
-    is_precise: bool,
-}
+    #[must_use]
+    pub fn is_precise(&self) -> bool {
+        self.is_precise
+    }
 
-impl ExtXStart {
-    pub(crate) const PREFIX: &'static str = "#EXT-X-START:";
+    /// Sets [`ExtXStart::is_precise`].
+    pub fn set_is_precise(&mut self, value: bool) -> &mut Self {
+        self.is_precise = value;
+        self
+    }
 
     /// Makes a new [`ExtXStart`] tag.
     ///

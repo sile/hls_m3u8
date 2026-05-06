@@ -3,7 +3,6 @@ use std::convert::TryFrom;
 use std::fmt;
 
 use derive_builder::Builder;
-use shorthand::ShortHand;
 
 use crate::attribute::AttributePairs;
 use crate::types::ProtocolVersion;
@@ -47,10 +46,26 @@ impl SessionData<'_> {
 /// Allows arbitrary session data to be carried in a [`MasterPlaylist`].
 ///
 /// [`MasterPlaylist`]: crate::MasterPlaylist
-#[derive(ShortHand, Builder, Hash, Eq, Ord, Debug, PartialEq, Clone, PartialOrd)]
+#[derive(Builder, Hash, Eq, Ord, Debug, PartialEq, Clone, PartialOrd)]
 #[builder(setter(into))]
-#[shorthand(enable(must_use, into))]
 pub struct ExtXSessionData<'a> {
+    /// See [`ExtXSessionData::data_id`].
+    data_id: Cow<'a, str>,
+    /// The [`SessionData`] associated with the
+    /// [`data_id`](ExtXSessionData::data_id).
+    ///
+    /// # Note
+    ///
+    /// This field is required.
+    pub data: SessionData<'a>,
+    /// See [`ExtXSessionData::language`].
+    #[builder(setter(strip_option), default)]
+    language: Option<Cow<'a, str>>,
+}
+
+impl<'a> ExtXSessionData<'a> {
+    pub(crate) const PREFIX: &'static str = "#EXT-X-SESSION-DATA:";
+
     /// This should conform to a [reverse DNS] naming convention, such as
     /// `com.example.movie.title`.
     ///
@@ -62,15 +77,17 @@ pub struct ExtXSessionData<'a> {
     /// This field is required.
     ///
     /// [reverse DNS]: https://en.wikipedia.org/wiki/Reverse_domain_name_notation
-    data_id: Cow<'a, str>,
-    /// The [`SessionData`] associated with the
-    /// [`data_id`](ExtXSessionData::data_id).
-    ///
-    /// # Note
-    ///
-    /// This field is required.
-    #[shorthand(enable(skip))]
-    pub data: SessionData<'a>,
+    #[must_use]
+    pub fn data_id(&self) -> &Cow<'a, str> {
+        &self.data_id
+    }
+
+    /// Sets [`ExtXSessionData::data_id`].
+    pub fn set_data_id<V: Into<Cow<'a, str>>>(&mut self, value: V) -> &mut Self {
+        self.data_id = value.into();
+        self
+    }
+
     /// The `language` attribute identifies the language of the [`SessionData`].
     ///
     /// # Note
@@ -79,12 +96,16 @@ pub struct ExtXSessionData<'a> {
     /// [RFC5646].
     ///
     /// [RFC5646]: https://tools.ietf.org/html/rfc5646
-    #[builder(setter(strip_option), default)]
-    language: Option<Cow<'a, str>>,
-}
+    #[must_use]
+    pub fn language(&self) -> Option<&Cow<'a, str>> {
+        self.language.as_ref()
+    }
 
-impl<'a> ExtXSessionData<'a> {
-    pub(crate) const PREFIX: &'static str = "#EXT-X-SESSION-DATA:";
+    /// Sets [`ExtXSessionData::language`].
+    pub fn set_language<V: Into<Cow<'a, str>>>(&mut self, value: Option<V>) -> &mut Self {
+        self.language = value.map(Into::into);
+        self
+    }
 
     /// Makes a new [`ExtXSessionData`] tag.
     ///

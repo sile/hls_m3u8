@@ -3,8 +3,7 @@
     clippy::collapsible_if,
     clippy::infallible_try_from,
     clippy::large_enum_variant,
-    clippy::module_name_repetitions,
-    clippy::unnecessary_operation
+    clippy::module_name_repetitions
 )]
 #![warn(
     missing_docs,

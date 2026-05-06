@@ -2,8 +2,6 @@ use std::borrow::Cow;
 use std::convert::{TryFrom, TryInto};
 use std::fmt;
 
-use shorthand::ShortHand;
-
 use crate::attribute::AttributePairs;
 use crate::tags::ExtXKey;
 use crate::types::{ByteRange, DecryptionKey, ProtocolVersion};
@@ -32,21 +30,40 @@ use crate::{Decryptable, Error, RequiredVersion};
 /// [`ExtXDiscontinuity`]: crate::tags::ExtXDiscontinuity
 /// [`EncryptionMethod::Aes128`]: crate::types::EncryptionMethod::Aes128
 /// [`MediaPlaylist`]: crate::MediaPlaylist
-#[derive(ShortHand, Debug, Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]
-#[shorthand(enable(must_use, into))]
+#[derive(Debug, Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]
 pub struct ExtXMap<'a> {
-    /// The `URI` that identifies a resource, that contains the media
-    /// initialization section.
     uri: Cow<'a, str>,
-    /// The range of the media initialization section.
-    #[shorthand(enable(copy))]
     range: Option<ByteRange>,
-    #[shorthand(enable(skip))]
     pub(crate) keys: Vec<ExtXKey<'a>>,
 }
 
 impl<'a> ExtXMap<'a> {
     pub(crate) const PREFIX: &'static str = "#EXT-X-MAP:";
+
+    /// The `URI` that identifies a resource, that contains the media
+    /// initialization section.
+    #[must_use]
+    pub fn uri(&self) -> &Cow<'a, str> {
+        &self.uri
+    }
+
+    /// Sets [`ExtXMap::uri`].
+    pub fn set_uri<V: Into<Cow<'a, str>>>(&mut self, value: V) -> &mut Self {
+        self.uri = value.into();
+        self
+    }
+
+    /// The range of the media initialization section.
+    #[must_use]
+    pub fn range(&self) -> Option<ByteRange> {
+        self.range
+    }
+
+    /// Sets [`ExtXMap::range`].
+    pub fn set_range<V: Into<ByteRange>>(&mut self, value: Option<V>) -> &mut Self {
+        self.range = value.map(Into::into);
+        self
+    }
 
     /// Makes a new [`ExtXMap`] tag.
     ///

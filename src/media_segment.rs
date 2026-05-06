@@ -2,7 +2,6 @@ use std::borrow::Cow;
 use std::fmt;
 
 use derive_builder::Builder;
-use shorthand::ShortHand;
 
 use crate::tags::{
     ExtInf, ExtXByteRange, ExtXDateRange, ExtXDiscontinuity, ExtXKey, ExtXMap, ExtXProgramDateTime,
@@ -32,9 +31,8 @@ use crate::{Decryptable, RequiredVersion};
 /// IDR will be downloaded but possibly discarded.
 ///
 /// [`MediaPlaylist`]: crate::MediaPlaylist
-#[derive(ShortHand, Debug, Clone, Builder, PartialEq, Eq, PartialOrd, Ord, Hash)]
+#[derive(Debug, Clone, Builder, PartialEq, Eq, PartialOrd, Ord, Hash)]
 #[builder(setter(strip_option))]
-#[shorthand(enable(must_use, skip))]
 pub struct MediaSegment<'a> {
     /// Each [`MediaSegment`] has a number, which allows synchronization between
     /// different variants.
@@ -54,7 +52,6 @@ pub struct MediaSegment<'a> {
     /// [`ExtXMediaSequence`]: crate::tags::ExtXMediaSequence
     /// [`ExtXDiscontinuitySequence`]: crate::tags::ExtXDiscontinuitySequence
     #[builder(default, setter(custom))]
-    #[shorthand(disable(set, skip))]
     pub(crate) number: usize,
     #[builder(default, setter(custom))]
     pub(crate) explicit_number: bool,
@@ -143,14 +140,33 @@ pub struct MediaSegment<'a> {
     /// This field is required.
     #[builder(setter(into))]
     pub duration: ExtInf<'a>,
+    /// See [`MediaSegment::uri`].
+    #[builder(setter(into))]
+    uri: Cow<'a, str>,
+}
+
+impl<'a> MediaSegment<'a> {
+    /// The number assigned to this segment.
+    #[must_use]
+    pub fn number(&self) -> usize {
+        self.number
+    }
+
     /// The URI of a media segment.
     ///
     /// ## Note
     ///
     /// This field is required.
-    #[builder(setter(into))]
-    #[shorthand(enable(into), disable(skip))]
-    uri: Cow<'a, str>,
+    #[must_use]
+    pub fn uri(&self) -> &Cow<'a, str> {
+        &self.uri
+    }
+
+    /// Sets [`MediaSegment::uri`].
+    pub fn set_uri<V: Into<Cow<'a, str>>>(&mut self, value: V) -> &mut Self {
+        self.uri = value.into();
+        self
+    }
 }
 
 impl MediaSegment<'_> {

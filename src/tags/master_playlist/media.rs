@@ -3,7 +3,6 @@ use std::convert::TryFrom;
 use std::fmt;
 
 use derive_builder::Builder;
-use shorthand::ShortHand;
 
 use crate::attribute::AttributePairs;
 use crate::types::{Channels, InStreamId, MediaType, ProtocolVersion};
@@ -18,8 +17,7 @@ use crate::{Error, RequiredVersion};
 ///
 /// [`MediaPlaylist`]: crate::MediaPlaylist
 /// [`VariantStream`]: crate::tags::VariantStream
-#[derive(ShortHand, Builder, Debug, Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]
-#[shorthand(enable(must_use, into))]
+#[derive(Builder, Debug, Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]
 #[builder(setter(into))]
 #[builder(build_fn(validate = "Self::validate"))]
 pub struct ExtXMedia<'a> {
@@ -28,66 +26,19 @@ pub struct ExtXMedia<'a> {
     /// ### Note
     ///
     /// This field is required.
-    #[shorthand(enable(skip))]
     pub media_type: MediaType,
-    /// An `URI` to a [`MediaPlaylist`].
-    ///
-    /// ### Note
-    ///
-    /// - This field is required, if the [`ExtXMedia::media_type`] is
-    ///   [`MediaType::Subtitles`].
-    /// - This field is not allowed, if the [`ExtXMedia::media_type`] is
-    ///   [`MediaType::ClosedCaptions`].
-    ///
-    /// An absent value indicates that the media data for this rendition is
-    /// included in the [`MediaPlaylist`] of any
-    /// [`VariantStream::ExtXStreamInf`] tag with the same `group_id` of
-    /// this [`ExtXMedia`] instance.
-    ///
-    /// [`MediaPlaylist`]: crate::MediaPlaylist
-    /// [`VariantStream::ExtXStreamInf`]:
-    /// crate::tags::VariantStream::ExtXStreamInf
+    /// See [`ExtXMedia::uri`].
     #[builder(setter(strip_option), default)]
     uri: Option<Cow<'a, str>>,
-    /// The identifier that specifies the group to which the rendition
-    /// belongs.
-    ///
-    /// ### Note
-    ///
-    /// This field is required.
+    /// See [`ExtXMedia::group_id`].
     group_id: Cow<'a, str>,
-    /// The name of the primary language used in the rendition.
-    /// The value has to conform to [`RFC5646`].
-    ///
-    /// ### Note
-    ///
-    /// This field is optional.
-    ///
-    /// [`RFC5646`]: https://tools.ietf.org/html/rfc5646
+    /// See [`ExtXMedia::language`].
     #[builder(setter(strip_option), default)]
     language: Option<Cow<'a, str>>,
-    /// The name of a language associated with the rendition.
-    /// An associated language is often used in a different role, than the
-    /// language specified by the [`language`] field (e.g., written versus
-    /// spoken, or a fallback dialect).
-    ///
-    /// ### Note
-    ///
-    /// This field is optional.
-    ///
-    /// [`language`]: #method.language
+    /// See [`ExtXMedia::assoc_language`].
     #[builder(setter(strip_option), default)]
     assoc_language: Option<Cow<'a, str>>,
-    /// A human-readable description of the rendition.
-    ///
-    /// ### Note
-    ///
-    /// This field is required.
-    ///
-    /// If the [`language`] field is present, this field should be in
-    /// that language.
-    ///
-    /// [`language`]: #method.language
+    /// See [`ExtXMedia::name`].
     name: Cow<'a, str>,
     /// The value of the `default` flag.
     /// A value of `true` indicates, that the client should play
@@ -99,7 +50,6 @@ pub struct ExtXMedia<'a> {
     /// This field is optional, its absence indicates an implicit value
     /// of `false`.
     #[builder(default)]
-    #[shorthand(enable(skip))]
     pub is_default: bool,
     /// Whether the client may choose to play this rendition in the absence of
     /// explicit user preference.
@@ -109,12 +59,10 @@ pub struct ExtXMedia<'a> {
     /// This field is optional, its absence indicates an implicit value
     /// of `false`.
     #[builder(default)]
-    #[shorthand(enable(skip))]
     pub is_autoselect: bool,
     /// Whether the rendition contains content that is considered
     /// essential to play.
     #[builder(default)]
-    #[shorthand(enable(skip))]
     pub is_forced: bool,
     /// An [`InStreamId`] identifies a rendition within the
     /// [`MediaSegment`]s in a [`MediaPlaylist`].
@@ -128,30 +76,8 @@ pub struct ExtXMedia<'a> {
     /// [`MediaPlaylist`]: crate::MediaPlaylist
     /// [`MediaSegment`]: crate::MediaSegment
     #[builder(setter(strip_option), default)]
-    #[shorthand(enable(skip))]
     pub instream_id: Option<InStreamId>,
-    /// The characteristics field contains one or more Uniform Type
-    /// Identifiers ([`UTI`]) separated by a comma.
-    /// Each [`UTI`] indicates an individual characteristic of the Rendition.
-    ///
-    /// An `ExtXMedia` instance with [`MediaType::Subtitles`] may include the
-    /// following characteristics:
-    /// - `"public.accessibility.transcribes-spoken-dialog"`,
-    /// - `"public.accessibility.describes-music-and-sound"`, and
-    /// - `"public.easy-to-read"` (which indicates that the subtitles have been
-    ///   edited for ease of reading).
-    ///
-    /// An `ExtXMedia` instance with [`MediaType::Audio`] may include the
-    /// following characteristic:
-    /// - `"public.accessibility.describes-video"`
-    ///
-    /// The characteristics field may include private UTIs.
-    ///
-    /// ### Note
-    ///
-    /// This field is optional.
-    ///
-    /// [`UTI`]: https://tools.ietf.org/html/draft-pantos-hls-rfc8216bis-05#ref-UTI
+    /// See [`ExtXMedia::characteristics`].
     #[builder(setter(strip_option), default)]
     characteristics: Option<Cow<'a, str>>,
     /// A count of audio channels indicating the maximum number of independent,
@@ -168,7 +94,6 @@ pub struct ExtXMedia<'a> {
     /// [`MediaSegment`]: crate::MediaSegment
     /// [`MasterPlaylist`]: crate::MasterPlaylist
     #[builder(setter(strip_option), default)]
-    #[shorthand(enable(skip))]
     pub channels: Option<Channels>,
 }
 
@@ -222,6 +147,141 @@ impl ExtXMediaBuilder<'_> {
 
 impl<'a> ExtXMedia<'a> {
     pub(crate) const PREFIX: &'static str = "#EXT-X-MEDIA:";
+
+    /// An `URI` to a [`MediaPlaylist`].
+    ///
+    /// ### Note
+    ///
+    /// - This field is required, if the [`ExtXMedia::media_type`] is
+    ///   [`MediaType::Subtitles`].
+    /// - This field is not allowed, if the [`ExtXMedia::media_type`] is
+    ///   [`MediaType::ClosedCaptions`].
+    ///
+    /// An absent value indicates that the media data for this rendition is
+    /// included in the [`MediaPlaylist`] of any
+    /// [`VariantStream::ExtXStreamInf`] tag with the same `group_id` of
+    /// this [`ExtXMedia`] instance.
+    ///
+    /// [`MediaPlaylist`]: crate::MediaPlaylist
+    /// [`VariantStream::ExtXStreamInf`]:
+    /// crate::tags::VariantStream::ExtXStreamInf
+    #[must_use]
+    pub fn uri(&self) -> Option<&Cow<'a, str>> {
+        self.uri.as_ref()
+    }
+
+    /// Sets [`ExtXMedia::uri`].
+    pub fn set_uri<V: Into<Cow<'a, str>>>(&mut self, value: Option<V>) -> &mut Self {
+        self.uri = value.map(Into::into);
+        self
+    }
+
+    /// The identifier that specifies the group to which the rendition
+    /// belongs.
+    ///
+    /// ### Note
+    ///
+    /// This field is required.
+    #[must_use]
+    pub fn group_id(&self) -> &Cow<'a, str> {
+        &self.group_id
+    }
+
+    /// Sets [`ExtXMedia::group_id`].
+    pub fn set_group_id<V: Into<Cow<'a, str>>>(&mut self, value: V) -> &mut Self {
+        self.group_id = value.into();
+        self
+    }
+
+    /// The name of the primary language used in the rendition.
+    /// The value has to conform to [`RFC5646`].
+    ///
+    /// ### Note
+    ///
+    /// This field is optional.
+    ///
+    /// [`RFC5646`]: https://tools.ietf.org/html/rfc5646
+    #[must_use]
+    pub fn language(&self) -> Option<&Cow<'a, str>> {
+        self.language.as_ref()
+    }
+
+    /// Sets [`ExtXMedia::language`].
+    pub fn set_language<V: Into<Cow<'a, str>>>(&mut self, value: Option<V>) -> &mut Self {
+        self.language = value.map(Into::into);
+        self
+    }
+
+    /// The name of a language associated with the rendition.
+    /// An associated language is often used in a different role, than the
+    /// language specified by the [`ExtXMedia::language`] field (e.g., written
+    /// versus spoken, or a fallback dialect).
+    ///
+    /// ### Note
+    ///
+    /// This field is optional.
+    #[must_use]
+    pub fn assoc_language(&self) -> Option<&Cow<'a, str>> {
+        self.assoc_language.as_ref()
+    }
+
+    /// Sets [`ExtXMedia::assoc_language`].
+    pub fn set_assoc_language<V: Into<Cow<'a, str>>>(&mut self, value: Option<V>) -> &mut Self {
+        self.assoc_language = value.map(Into::into);
+        self
+    }
+
+    /// A human-readable description of the rendition.
+    ///
+    /// ### Note
+    ///
+    /// This field is required.
+    ///
+    /// If the [`ExtXMedia::language`] field is present, this field should be
+    /// in that language.
+    #[must_use]
+    pub fn name(&self) -> &Cow<'a, str> {
+        &self.name
+    }
+
+    /// Sets [`ExtXMedia::name`].
+    pub fn set_name<V: Into<Cow<'a, str>>>(&mut self, value: V) -> &mut Self {
+        self.name = value.into();
+        self
+    }
+
+    /// The characteristics field contains one or more Uniform Type
+    /// Identifiers ([`UTI`]) separated by a comma.
+    /// Each [`UTI`] indicates an individual characteristic of the Rendition.
+    ///
+    /// An `ExtXMedia` instance with [`MediaType::Subtitles`] may include the
+    /// following characteristics:
+    /// - `"public.accessibility.transcribes-spoken-dialog"`,
+    /// - `"public.accessibility.describes-music-and-sound"`, and
+    /// - `"public.easy-to-read"` (which indicates that the subtitles have been
+    ///   edited for ease of reading).
+    ///
+    /// An `ExtXMedia` instance with [`MediaType::Audio`] may include the
+    /// following characteristic:
+    /// - `"public.accessibility.describes-video"`
+    ///
+    /// The characteristics field may include private UTIs.
+    ///
+    /// ### Note
+    ///
+    /// This field is optional.
+    ///
+    /// [`UTI`]: https://tools.ietf.org/html/draft-pantos-hls-rfc8216bis-05#ref-UTI
+    #[must_use]
+    pub fn characteristics(&self) -> Option<&Cow<'a, str>> {
+        self.characteristics.as_ref()
+    }
+
+    /// Sets [`ExtXMedia::characteristics`].
+    pub fn set_characteristics<V: Into<Cow<'a, str>>>(&mut self, value: Option<V>) -> &mut Self {
+        self.characteristics = value.map(Into::into);
+        self
+    }
 
     /// Makes a new [`ExtXMedia`] tag with the associated [`MediaType`], the
     /// identifier that specifies the group to which the rendition belongs
