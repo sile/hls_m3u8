@@ -41,9 +41,7 @@ enum ErrorKind {
     Builder {
         message: String,
     },
-    Hex {
-        source: crate::hex::DecodeError,
-    },
+    InvalidHex(String),
 }
 
 impl fmt::Display for ErrorKind {
@@ -71,7 +69,7 @@ impl fmt::Display for ErrorKind {
             #[cfg(feature = "chrono")]
             Self::Chrono { source } => write!(f, "{source}"),
             Self::Builder { message } => write!(f, "builder error: {message}"),
-            Self::Hex { source } => write!(f, "{source}"),
+            Self::InvalidHex(reason) => write!(f, "invalid hex: {reason}"),
         }
     }
 }
@@ -83,7 +81,6 @@ impl std::error::Error for ErrorKind {
             Self::ParseFloatError { source, .. } => Some(source),
             #[cfg(feature = "chrono")]
             Self::Chrono { source } => Some(source),
-            Self::Hex { source } => Some(source),
             _ => None,
         }
     }
@@ -209,8 +206,8 @@ impl Error {
         Self::new(ErrorKind::Chrono { source })
     }
 
-    pub(crate) fn hex(source: crate::hex::DecodeError) -> Self {
-        Self::new(ErrorKind::Hex { source })
+    pub(crate) fn invalid_hex<T: fmt::Display>(reason: T) -> Self {
+        Self::new(ErrorKind::InvalidHex(reason.to_string()))
     }
 
     pub(crate) fn strum(value: strum::ParseError) -> Self {

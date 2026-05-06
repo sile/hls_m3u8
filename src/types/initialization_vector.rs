@@ -205,7 +205,7 @@ impl FromStr for InitializationVector {
 
         let mut result = [0; 16];
 
-        crate::hex::decode_to_slice(&input.as_bytes()[2..], &mut result).map_err(Error::hex)?;
+        crate::hex::decode_to_slice(&input.as_bytes()[2..], &mut result)?;
 
         Ok(Self::Aes128(result))
     }

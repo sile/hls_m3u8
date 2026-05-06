@@ -56,10 +56,9 @@ impl<'a> TryFrom<&'a str> for Value<'a> {
 
     fn try_from(input: &'a str) -> Result<Self, Self::Error> {
         if input.starts_with("0x") || input.starts_with("0X") {
-            Ok(Self::Hex(
-                crate::hex::decode(input.trim_start_matches("0x").trim_start_matches("0X"))
-                    .map_err(Error::hex)?,
-            ))
+            Ok(Self::Hex(crate::hex::decode(
+                input.trim_start_matches("0x").trim_start_matches("0X"),
+            )?))
         } else {
             match input.parse() {
                 Ok(value) => Ok(Self::Float(value)),
