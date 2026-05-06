@@ -750,10 +750,10 @@ mod test {
         assert!(ExtXMedia::try_from("").is_err());
         assert!(ExtXMedia::try_from("garbage").is_err());
 
-        assert!(ExtXMedia::try_from(
-            "#EXT-X-MEDIA:TYPE=CLOSED-CAPTIONS,URI=\"http://www.example.com\""
-        )
-        .is_err());
+        assert!(
+            ExtXMedia::try_from("#EXT-X-MEDIA:TYPE=CLOSED-CAPTIONS,URI=\"http://www.example.com\"")
+                .is_err()
+        );
         assert!(ExtXMedia::try_from("#EXT-X-MEDIA:TYPE=AUDIO,INSTREAM-ID=CC1").is_err());
 
         assert!(ExtXMedia::try_from("#EXT-X-MEDIA:TYPE=AUDIO,DEFAULT=YES,AUTOSELECT=NO").is_err());

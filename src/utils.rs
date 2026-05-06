@@ -25,20 +25,12 @@ pub(crate) trait BoolExt {
 impl BoolExt for bool {
     #[inline]
     fn athen_some<T>(self, t: T) -> Option<T> {
-        if self {
-            Some(t)
-        } else {
-            None
-        }
+        if self { Some(t) } else { None }
     }
 
     #[inline]
     fn athen<T, F: FnOnce() -> T>(self, f: F) -> Option<T> {
-        if self {
-            Some(f())
-        } else {
-            None
-        }
+        if self { Some(f()) } else { None }
     }
 }
 

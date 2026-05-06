@@ -294,7 +294,9 @@ mod test {
             DecryptionKey::builder()
                 .method(EncryptionMethod::Aes128)
                 .uri("https://www.example.com/")
-                .iv([16, 239, 143, 117, 140, 165, 85, 17, 85, 132, 187, 91, 60, 104, 127, 82])
+                .iv([
+                    16, 239, 143, 117, 140, 165, 85, 17, 85, 132, 187, 91, 60, 104, 127, 82
+                ])
                 .format(KeyFormat::Identity)
                 .versions(vec![1, 2, 3, 4, 5])
                 .build()
@@ -303,10 +305,12 @@ mod test {
         );
 
         assert!(DecryptionKey::builder().build().is_err());
-        assert!(DecryptionKey::builder()
-            .method(EncryptionMethod::Aes128)
-            .build()
-            .is_err());
+        assert!(
+            DecryptionKey::builder()
+                .method(EncryptionMethod::Aes128)
+                .build()
+                .is_err()
+        );
     }
 
     generate_tests! {

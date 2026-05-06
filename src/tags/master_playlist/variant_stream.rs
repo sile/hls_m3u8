@@ -3,12 +3,12 @@ use core::fmt;
 use core::ops::Deref;
 use std::borrow::Cow;
 
+use crate::Error;
 use crate::attribute::AttributePairs;
 use crate::tags::ExtXMedia;
 use crate::traits::RequiredVersion;
 use crate::types::{ClosedCaptions, MediaType, ProtocolVersion, StreamData, UFloat};
 use crate::utils::{quote, tag, unquote};
-use crate::Error;
 
 /// A server may offer multiple [`MediaPlaylist`] files to provide different
 /// encodings of the same presentation.
@@ -443,34 +443,40 @@ mod tests {
                 .unwrap(),
         };
 
-        assert!(variant_stream.is_associated(
-            &ExtXMedia::builder()
-                .media_type(MediaType::Audio)
-                .group_id("ag1")
-                .name("audio example")
-                .build()
-                .unwrap(),
-        ));
+        assert!(
+            variant_stream.is_associated(
+                &ExtXMedia::builder()
+                    .media_type(MediaType::Audio)
+                    .group_id("ag1")
+                    .name("audio example")
+                    .build()
+                    .unwrap(),
+            )
+        );
 
-        assert!(variant_stream.is_associated(
-            &ExtXMedia::builder()
-                .media_type(MediaType::Subtitles)
-                .uri("https://www.example.com/sg1.ssa")
-                .group_id("sg1")
-                .name("subtitle example")
-                .build()
-                .unwrap(),
-        ));
+        assert!(
+            variant_stream.is_associated(
+                &ExtXMedia::builder()
+                    .media_type(MediaType::Subtitles)
+                    .uri("https://www.example.com/sg1.ssa")
+                    .group_id("sg1")
+                    .name("subtitle example")
+                    .build()
+                    .unwrap(),
+            )
+        );
 
-        assert!(variant_stream.is_associated(
-            &ExtXMedia::builder()
-                .media_type(MediaType::ClosedCaptions)
-                .group_id("cc1")
-                .name("closed captions example")
-                .instream_id(InStreamId::Cc1)
-                .build()
-                .unwrap(),
-        ));
+        assert!(
+            variant_stream.is_associated(
+                &ExtXMedia::builder()
+                    .media_type(MediaType::ClosedCaptions)
+                    .group_id("cc1")
+                    .name("closed captions example")
+                    .instream_id(InStreamId::Cc1)
+                    .build()
+                    .unwrap(),
+            )
+        );
 
         if let VariantStream::ExtXStreamInf {
             closed_captions, ..
@@ -479,23 +485,27 @@ mod tests {
             *closed_captions = Some(ClosedCaptions::None);
         }
 
-        assert!(variant_stream.is_associated(
-            &ExtXMedia::builder()
-                .media_type(MediaType::ClosedCaptions)
-                .group_id("NONE")
-                .name("closed captions example")
-                .instream_id(InStreamId::Cc1)
-                .build()
-                .unwrap(),
-        ));
+        assert!(
+            variant_stream.is_associated(
+                &ExtXMedia::builder()
+                    .media_type(MediaType::ClosedCaptions)
+                    .group_id("NONE")
+                    .name("closed captions example")
+                    .instream_id(InStreamId::Cc1)
+                    .build()
+                    .unwrap(),
+            )
+        );
 
-        assert!(variant_stream.is_associated(
-            &ExtXMedia::builder()
-                .media_type(MediaType::Video)
-                .group_id("vg1")
-                .name("video example")
-                .build()
-                .unwrap(),
-        ));
+        assert!(
+            variant_stream.is_associated(
+                &ExtXMedia::builder()
+                    .media_type(MediaType::Video)
+                    .group_id("vg1")
+                    .name("video example")
+                    .build()
+                    .unwrap(),
+            )
+        );
     }
 }

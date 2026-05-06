@@ -3,9 +3,9 @@ use core::iter::FusedIterator;
 
 use derive_more::Display;
 
+use crate::Error;
 use crate::tags;
 use crate::types::PlaylistType;
-use crate::Error;
 
 #[derive(Debug, Clone)]
 pub(crate) struct Lines<'a> {

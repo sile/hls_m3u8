@@ -11,7 +11,7 @@ use crate::tags::{
     ExtXVersion, VariantStream,
 };
 use crate::types::{ClosedCaptions, MediaType, ProtocolVersion};
-use crate::utils::{tag, BoolExt};
+use crate::utils::{BoolExt, tag};
 use crate::{Error, RequiredVersion};
 
 /// The master playlist describes all of the available variants for your

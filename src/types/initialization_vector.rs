@@ -295,14 +295,18 @@ mod tests {
         );
 
         // missing `0x` at the start:
-        assert!("0FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF"
-            .parse::<InitializationVector>()
-            .is_err());
+        assert!(
+            "0FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF"
+                .parse::<InitializationVector>()
+                .is_err()
+        );
         // too small:
         assert!("0xFF".parse::<InitializationVector>().is_err());
         // too large:
-        assert!("0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF"
-            .parse::<InitializationVector>()
-            .is_err());
+        assert!(
+            "0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF"
+                .parse::<InitializationVector>()
+                .is_err()
+        );
     }
 }

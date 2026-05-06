@@ -1,8 +1,8 @@
 use std::convert::TryFrom;
 
+use hls_m3u8::MasterPlaylist;
 use hls_m3u8::tags::{ExtXMedia, VariantStream};
 use hls_m3u8::types::{MediaType, StreamData};
-use hls_m3u8::MasterPlaylist;
 
 use pretty_assertions::assert_eq;
 

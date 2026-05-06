@@ -1,24 +1,12 @@
-#![doc(html_root_url = "https://docs.rs/hls_m3u8/0.6.0")]
 #![forbid(unsafe_code)]
-#![warn(rust_2018_idioms)]
-#![warn(clippy::cargo, clippy::inline_always)]
 #![allow(
-    clippy::non_ascii_literal,
-    clippy::redundant_pub_crate,
-    clippy::multiple_crate_versions,
+    clippy::collapsible_if,
+    clippy::infallible_try_from,
+    clippy::large_enum_variant,
     clippy::module_name_repetitions,
     clippy::default_trait_access,
-    clippy::unnecessary_operation // temporary until derive-builder uses #[allow(clippy::all)]
+    clippy::unnecessary_operation
 )]
-#![warn(
-    clippy::clone_on_ref_ptr,
-    clippy::decimal_literal_representation,
-    clippy::get_unwrap,
-    clippy::unneeded_field_pattern,
-    clippy::wrong_self_convention
-)]
-#![cfg_attr(not(test), warn(clippy::expect_used))]
-// those should not be present in production code:
 #![deny(
     clippy::print_stdout,
     clippy::todo,
@@ -39,7 +27,6 @@
 //!
 //! ```
 //! use hls_m3u8::MediaPlaylist;
-//! use std::convert::TryFrom;
 //!
 //! let m3u8 = MediaPlaylist::try_from(concat!(
 //!     "#EXTM3U\n",
@@ -57,18 +44,14 @@
 //! assert!(m3u8.is_ok());
 //! ```
 //!
-//! ## Crate Feature Flags
+//! # Crate Feature Flags
 //!
 //! The following crate feature flags are available:
 //!
-//! - [`backtrace`] (optional)
-//!   - Enables the backtrace feature for the `Error` type.
-//!   - This feature depends on the following dependencies:
-//!     - [`backtrace`]
-//! - [`chrono`] (optional)
+//! - `backtrace` (optional)
+//!   - Enables the backtrace feature for the [`Error`] type.
+//! - `chrono` (optional)
 //!   - Enables parsing dates and verifying them.
-//!   - This feature depends on the following dependencies:
-//!     - [`chrono`]
 //!   - The following things will change:
 //!     - [`ExtXProgramDateTime::date_time`] will change from [`String`] to
 //!       `DateTime<FixedOffset>`
@@ -77,20 +60,12 @@
 //!     - [`ExtXDateRange::end_date`] will change from [`String`] to
 //!       `DateTime<FixedOffset>`
 //!
-//! They are configured in your `Cargo.toml` and can be enabled like this
-//!
-//! ```toml
-//! hls_m3u8 = { version = "0.3", features = ["chrono", "backtrace"] }
-//! ```
-//!
 //! [`ExtXProgramDateTime::date_time`]:
 //! crate::tags::ExtXProgramDateTime::date_time
 //! [`ExtXDateRange::start_date`]:
 //! crate::tags::ExtXDateRange::start_date
 //! [`ExtXDateRange::end_date`]:
 //! crate::tags::ExtXDateRange::end_date
-//! [`chrono`]: https://github.com/chronotope/chrono
-//! [`backtrace`]: https://github.com/rust-lang/backtrace-rs
 //! [HLS]: https://tools.ietf.org/html/rfc8216
 
 pub use error::Error;
