@@ -165,7 +165,6 @@ mod test {
     use chrono::{Datelike, TimeZone};
     #[cfg(feature = "chrono")]
     use core::ops::DerefMut;
-    use pretty_assertions::assert_eq;
 
     #[cfg(feature = "chrono")]
     const HOURS_IN_SECS: i32 = 3600; // 1 hour = 3600 seconds

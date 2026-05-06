@@ -23,7 +23,6 @@ shorthand = "0.1"
 stable-vec = { version = "0.4" }
 
 [dev-dependencies]
-pretty_assertions = "1.4.0"
 criterion = "0.5.1"
 
 [[bench]]

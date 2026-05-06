@@ -496,7 +496,6 @@ impl<'a> TryFrom<Cow<'a, str>> for ByteRange {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use pretty_assertions::assert_eq;
 
     #[test]
     #[should_panic = "the range start (6) must be smaller than the end (0)"]

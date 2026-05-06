@@ -250,7 +250,6 @@ impl<'a> TryFrom<&'a str> for ExtXSessionData<'a> {
 #[cfg(test)]
 mod test {
     use super::*;
-    use pretty_assertions::assert_eq;
 
     macro_rules! generate_tests {
         ( $( { $struct:expr, $str:expr } ),+ $(,)* ) => {

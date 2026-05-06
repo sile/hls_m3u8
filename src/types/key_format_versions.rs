@@ -480,7 +480,6 @@ impl<T: Copy> Iterator for IntoIter<T> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use pretty_assertions::assert_eq;
 
     #[test]
     #[expect(clippy::unit_cmp)] // fucked test

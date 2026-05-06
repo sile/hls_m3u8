@@ -2,11 +2,9 @@
 // https://github.com/sile/hls_m3u8/issues/55
 use std::convert::TryFrom;
 
+use hls_m3u8::MasterPlaylist;
 use hls_m3u8::tags::{ExtXMedia, VariantStream};
 use hls_m3u8::types::{MediaType, StreamData, UFloat};
-use hls_m3u8::MasterPlaylist;
-
-use pretty_assertions::assert_eq;
 
 #[test]
 fn parse() {

@@ -113,7 +113,6 @@ impl<'a> TryFrom<&'a str> for ExtXSessionKey<'a> {
 mod test {
     use super::*;
     use crate::types::{EncryptionMethod, KeyFormat};
-    use pretty_assertions::assert_eq;
 
     macro_rules! generate_tests {
         ( $( { $struct:expr, $str:expr } ),+ $(,)* ) => {

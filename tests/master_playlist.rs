@@ -4,8 +4,6 @@ use hls_m3u8::MasterPlaylist;
 use hls_m3u8::tags::{ExtXMedia, VariantStream};
 use hls_m3u8::types::{MediaType, StreamData};
 
-use pretty_assertions::assert_eq;
-
 macro_rules! generate_tests {
     ( $( $fnname:ident => { $struct:expr, $str:expr }),+ $(,)* ) => {
         $(

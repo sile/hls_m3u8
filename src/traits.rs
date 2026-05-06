@@ -129,7 +129,6 @@ impl<T: RequiredVersion> RequiredVersion for StableVec<T> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use pretty_assertions::assert_eq;
 
     #[test]
     fn test_required_version_trait() {

@@ -50,7 +50,6 @@ pub(crate) fn decode_to_slice(input: &[u8], out: &mut [u8]) -> Result<(), Error>
 #[cfg(test)]
 mod tests {
     use super::*;
-    use pretty_assertions::assert_eq;
 
     #[test]
     fn test_decode() {

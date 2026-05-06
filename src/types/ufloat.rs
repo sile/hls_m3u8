@@ -229,7 +229,6 @@ impl ::core::hash::Hash for UFloat {
 mod tests {
     use super::*;
     use core::hash::{Hash, Hasher};
-    use pretty_assertions::assert_eq;
 
     #[expect(clippy::unreadable_literal)]
     const PI: f32 = 3.14159265359;
