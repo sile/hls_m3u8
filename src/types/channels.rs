@@ -38,8 +38,8 @@ pub struct Channels {
     /// let mut channels = Channels::new(16);
     /// assert_eq!(channels.mix_type(), None);
     ///
-    /// channels.set_mix_type(Some(MixType::JOC));
-    /// assert_eq!(channels.mix_type(), Some(&MixType::JOC));
+    /// channels.set_mix_type(Some(MixType::Joc));
+    /// assert_eq!(channels.mix_type(), Some(&MixType::Joc));
     /// ```
     mix_type: Option<MixType>,
 }
@@ -48,7 +48,7 @@ pub struct Channels {
 #[derive(Debug, Clone, Copy, Eq, PartialEq, Ord, PartialOrd, Hash)]
 pub enum MixType {
     /// JOC mix
-    JOC,
+    Joc,
     /// Binaural mix
     Binaural,
     /// Downmixed content
@@ -58,7 +58,7 @@ pub enum MixType {
 impl fmt::Display for MixType {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
-            MixType::JOC => write!(f, "JOC"),
+            MixType::Joc => write!(f, "JOC"),
             MixType::Binaural => write!(f, "-/BINAURAL"),
             MixType::Downmix => write!(f, "-/DOWNMIX"),
         }
@@ -111,7 +111,7 @@ impl FromStr for Channels {
                         _ => return Err(Error::invalid_input()),
                     }
                 } else if mix_type == "JOC" {
-                    MixType::JOC
+                    MixType::Joc
                 } else {
                     return Err(Error::invalid_input());
                 };
@@ -160,7 +160,7 @@ mod tests {
     #[test]
     fn test_parser_dolby_atmos() {
         let mut test_channels = Channels::new(16);
-        test_channels.set_mix_type(Some(MixType::JOC));
+        test_channels.set_mix_type(Some(MixType::Joc));
 
         assert_eq!(test_channels, Channels::from_str("16/JOC").unwrap());
 
