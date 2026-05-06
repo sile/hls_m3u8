@@ -2,8 +2,6 @@ use std::borrow::Cow;
 use std::convert::TryFrom;
 use std::fmt;
 
-use derive_builder::Builder;
-
 use crate::attribute::AttributePairs;
 use crate::types::{Channels, InStreamId, MediaType, ProtocolVersion};
 use crate::utils::{parse_yes_or_no, quote, tag, unquote};
@@ -17,9 +15,7 @@ use crate::{Error, RequiredVersion};
 ///
 /// [`MediaPlaylist`]: crate::MediaPlaylist
 /// [`VariantStream`]: crate::tags::VariantStream
-#[derive(Builder, Debug, Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]
-#[builder(setter(into))]
-#[builder(build_fn(validate = "Self::validate"))]
+#[derive(Debug, Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]
 pub struct ExtXMedia<'a> {
     /// The [`MediaType`] associated with this tag.
     ///
@@ -27,18 +23,10 @@ pub struct ExtXMedia<'a> {
     ///
     /// This field is required.
     pub media_type: MediaType,
-    /// See [`ExtXMedia::uri`].
-    #[builder(setter(strip_option), default)]
     uri: Option<Cow<'a, str>>,
-    /// See [`ExtXMedia::group_id`].
     group_id: Cow<'a, str>,
-    /// See [`ExtXMedia::language`].
-    #[builder(setter(strip_option), default)]
     language: Option<Cow<'a, str>>,
-    /// See [`ExtXMedia::assoc_language`].
-    #[builder(setter(strip_option), default)]
     assoc_language: Option<Cow<'a, str>>,
-    /// See [`ExtXMedia::name`].
     name: Cow<'a, str>,
     /// The value of the `default` flag.
     /// A value of `true` indicates, that the client should play
@@ -49,7 +37,6 @@ pub struct ExtXMedia<'a> {
     ///
     /// This field is optional, its absence indicates an implicit value
     /// of `false`.
-    #[builder(default)]
     pub is_default: bool,
     /// Whether the client may choose to play this rendition in the absence of
     /// explicit user preference.
@@ -58,11 +45,9 @@ pub struct ExtXMedia<'a> {
     ///
     /// This field is optional, its absence indicates an implicit value
     /// of `false`.
-    #[builder(default)]
     pub is_autoselect: bool,
     /// Whether the rendition contains content that is considered
     /// essential to play.
-    #[builder(default)]
     pub is_forced: bool,
     /// An [`InStreamId`] identifies a rendition within the
     /// [`MediaSegment`]s in a [`MediaPlaylist`].
@@ -75,10 +60,7 @@ pub struct ExtXMedia<'a> {
     ///
     /// [`MediaPlaylist`]: crate::MediaPlaylist
     /// [`MediaSegment`]: crate::MediaSegment
-    #[builder(setter(strip_option), default)]
     pub instream_id: Option<InStreamId>,
-    /// See [`ExtXMedia::characteristics`].
-    #[builder(setter(strip_option), default)]
     characteristics: Option<Cow<'a, str>>,
     /// A count of audio channels indicating the maximum number of independent,
     /// simultaneous audio channels present in any [`MediaSegment`] in the
@@ -93,40 +75,126 @@ pub struct ExtXMedia<'a> {
     ///
     /// [`MediaSegment`]: crate::MediaSegment
     /// [`MasterPlaylist`]: crate::MasterPlaylist
-    #[builder(setter(strip_option), default)]
     pub channels: Option<Channels>,
 }
 
-impl ExtXMediaBuilder<'_> {
-    fn validate(&self) -> Result<(), String> {
-        // A MediaType is always required!
+/// Builder for [`ExtXMedia`].
+#[derive(Debug, Clone, Default)]
+pub struct ExtXMediaBuilder<'a> {
+    media_type: Option<MediaType>,
+    uri: Option<Cow<'a, str>>,
+    group_id: Option<Cow<'a, str>>,
+    language: Option<Cow<'a, str>>,
+    assoc_language: Option<Cow<'a, str>>,
+    name: Option<Cow<'a, str>>,
+    is_default: Option<bool>,
+    is_autoselect: Option<bool>,
+    is_forced: Option<bool>,
+    instream_id: Option<InStreamId>,
+    characteristics: Option<Cow<'a, str>>,
+    channels: Option<Channels>,
+}
+
+impl<'a> ExtXMediaBuilder<'a> {
+    /// See [`ExtXMedia::media_type`].
+    pub fn media_type(&mut self, value: MediaType) -> &mut Self {
+        self.media_type = Some(value);
+        self
+    }
+
+    /// See [`ExtXMedia::uri`].
+    pub fn uri<V: Into<Cow<'a, str>>>(&mut self, value: V) -> &mut Self {
+        self.uri = Some(value.into());
+        self
+    }
+
+    /// See [`ExtXMedia::group_id`].
+    pub fn group_id<V: Into<Cow<'a, str>>>(&mut self, value: V) -> &mut Self {
+        self.group_id = Some(value.into());
+        self
+    }
+
+    /// See [`ExtXMedia::language`].
+    pub fn language<V: Into<Cow<'a, str>>>(&mut self, value: V) -> &mut Self {
+        self.language = Some(value.into());
+        self
+    }
+
+    /// See [`ExtXMedia::assoc_language`].
+    pub fn assoc_language<V: Into<Cow<'a, str>>>(&mut self, value: V) -> &mut Self {
+        self.assoc_language = Some(value.into());
+        self
+    }
+
+    /// See [`ExtXMedia::name`].
+    pub fn name<V: Into<Cow<'a, str>>>(&mut self, value: V) -> &mut Self {
+        self.name = Some(value.into());
+        self
+    }
+
+    /// See [`ExtXMedia::is_default`].
+    pub fn is_default(&mut self, value: bool) -> &mut Self {
+        self.is_default = Some(value);
+        self
+    }
+
+    /// See [`ExtXMedia::is_autoselect`].
+    pub fn is_autoselect(&mut self, value: bool) -> &mut Self {
+        self.is_autoselect = Some(value);
+        self
+    }
+
+    /// See [`ExtXMedia::is_forced`].
+    pub fn is_forced(&mut self, value: bool) -> &mut Self {
+        self.is_forced = Some(value);
+        self
+    }
+
+    /// See [`ExtXMedia::instream_id`].
+    pub fn instream_id(&mut self, value: InStreamId) -> &mut Self {
+        self.instream_id = Some(value);
+        self
+    }
+
+    /// See [`ExtXMedia::characteristics`].
+    pub fn characteristics<V: Into<Cow<'a, str>>>(&mut self, value: V) -> &mut Self {
+        self.characteristics = Some(value.into());
+        self
+    }
+
+    /// See [`ExtXMedia::channels`].
+    pub fn channels(&mut self, value: Channels) -> &mut Self {
+        self.channels = Some(value);
+        self
+    }
+
+    fn validate(&self) -> Result<MediaType, Error> {
         let media_type = self
             .media_type
-            .ok_or_else(|| Error::missing_attribute("MEDIA-TYPE").to_string())?;
+            .ok_or_else(|| Error::missing_attribute("MEDIA-TYPE"))?;
 
         if media_type == MediaType::Subtitles && self.uri.is_none() {
-            return Err(Error::missing_attribute("URI").to_string());
+            return Err(Error::missing_attribute("URI"));
         }
 
         if media_type == MediaType::ClosedCaptions {
             if self.uri.is_some() {
-                return Err(Error::unexpected_attribute("URI").to_string());
+                return Err(Error::unexpected_attribute("URI"));
             }
             if self.instream_id.is_none() {
-                return Err(Error::missing_attribute("INSTREAM-ID").to_string());
+                return Err(Error::missing_attribute("INSTREAM-ID"));
             }
         } else if self.instream_id.is_some() {
             return Err(Error::custom(
-                "InStreamId should only be specified for an ExtXMedia tag with `MediaType::ClosedCaptions`"
-            ).to_string());
+                "InStreamId should only be specified for an ExtXMedia tag with `MediaType::ClosedCaptions`",
+            ));
         }
 
         if self.is_default.unwrap_or(false) && self.is_autoselect.is_some_and(|b| !b) {
             return Err(Error::custom(format!(
                 "If `DEFAULT` is true, `AUTOSELECT` has to be true too, if present. Default: {:?}, Autoselect: {:?}!",
-                self.is_default, self.is_autoselect
-            ))
-            .to_string());
+                self.is_default, self.is_autoselect,
+            )));
         }
 
         if media_type != MediaType::Subtitles && self.is_forced.unwrap_or(false) {
@@ -136,12 +204,41 @@ impl ExtXMediaBuilder<'_> {
                     "unless the media_type is `MediaType::Subtitles`: ",
                     "media_type: {:?}, is_forced: {:?}"
                 ),
-                media_type, self.is_forced
-            ))
-            .to_string());
+                media_type, self.is_forced,
+            )));
         }
 
-        Ok(())
+        Ok(media_type)
+    }
+
+    /// Builds a new [`ExtXMedia`].
+    ///
+    /// # Errors
+    ///
+    /// If a required field has not been initialized or validation fails.
+    pub fn build(&self) -> Result<ExtXMedia<'a>, Error> {
+        let media_type = self.validate()?;
+
+        Ok(ExtXMedia {
+            media_type,
+            uri: self.uri.clone(),
+            group_id: self
+                .group_id
+                .clone()
+                .ok_or_else(|| Error::missing_field("ExtXMedia", "group_id"))?,
+            language: self.language.clone(),
+            assoc_language: self.assoc_language.clone(),
+            name: self
+                .name
+                .clone()
+                .ok_or_else(|| Error::missing_field("ExtXMedia", "name"))?,
+            is_default: self.is_default.unwrap_or(false),
+            is_autoselect: self.is_autoselect.unwrap_or(false),
+            is_forced: self.is_forced.unwrap_or(false),
+            instream_id: self.instream_id,
+            characteristics: self.characteristics.clone(),
+            channels: self.channels,
+        })
     }
 }
 
@@ -487,7 +584,7 @@ impl<'a> TryFrom<&'a str> for ExtXMedia<'a> {
             }
         }
 
-        builder.build().map_err(Error::builder)
+        builder.build()
     }
 }
 

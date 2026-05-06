@@ -5,7 +5,6 @@ use std::fmt;
 use std::str::FromStr;
 use std::time::Duration;
 
-use derive_builder::Builder;
 use stable_vec::StableVec;
 
 use crate::line::{Line, Lines, Tag};
@@ -22,8 +21,7 @@ use crate::utils::{BoolExt, tag};
 use crate::{Error, RequiredVersion};
 
 /// Media playlist.
-#[derive(Builder, Debug, Clone, PartialEq, Eq)]
-#[builder(build_fn(skip), setter(strip_option))]
+#[derive(Debug, Clone, PartialEq, Eq)]
 #[non_exhaustive]
 pub struct MediaPlaylist<'a> {
     /// Specifies the maximum [`MediaSegment::duration`]. A typical target
@@ -39,7 +37,6 @@ pub struct MediaPlaylist<'a> {
     /// ### Note
     ///
     /// This field is optional and by default a value of 0 is assumed.
-    #[builder(default)]
     pub media_sequence: usize,
     /// Allows synchronization between different renditions of the same
     /// [`VariantStream`].
@@ -49,7 +46,6 @@ pub struct MediaPlaylist<'a> {
     /// This field is optional and by default a vaule of 0 is assumed.
     ///
     /// [`VariantStream`]: crate::tags::VariantStream
-    #[builder(default)]
     pub discontinuity_sequence: usize,
     /// Provides mutability information about a [`MediaPlaylist`].
     ///
@@ -61,7 +57,6 @@ pub struct MediaPlaylist<'a> {
     /// ### Note
     ///
     /// This field is optional.
-    #[builder(default, setter(into))]
     pub playlist_type: Option<PlaylistType>,
     /// Indicates that each [`MediaSegment`] in the playlist describes a single
     /// I-frame. I-frames are encoded video frames, whose decoding does not
@@ -71,7 +66,6 @@ pub struct MediaPlaylist<'a> {
     /// ### Note
     ///
     /// This field is optional.
-    #[builder(default)]
     pub has_i_frames_only: bool,
     /// This indicates that all media samples in a [`MediaSegment`] can be
     /// decoded without information from other segments.
@@ -80,7 +74,6 @@ pub struct MediaPlaylist<'a> {
     ///
     /// This field is optional and by default `false`. If the value is `true` it
     /// applies to every [`MediaSegment`] in this [`MediaPlaylist`].
-    #[builder(default)]
     pub has_independent_segments: bool,
     /// Indicates a preferred point at which to start playing a playlist. By
     /// default, clients should start playback at this point when beginning a
@@ -89,7 +82,6 @@ pub struct MediaPlaylist<'a> {
     /// ### Note
     ///
     /// This field is optional.
-    #[builder(default, setter(into))]
     pub start: Option<ExtXStart>,
     /// Indicates that no more [`MediaSegment`]s will be added to the
     /// [`MediaPlaylist`] file.
@@ -100,14 +92,12 @@ pub struct MediaPlaylist<'a> {
     /// A `false` indicates that the client should reload the [`MediaPlaylist`]
     /// from the server, until a playlist is encountered, where this field is
     /// `true`.
-    #[builder(default)]
     pub has_end_list: bool,
     /// A list of all [`MediaSegment`]s.
     ///
     /// ### Note
     ///
     /// This field is required.
-    #[builder(setter(custom))]
     pub segments: StableVec<MediaSegment<'a>>,
     /// The allowable excess duration of each media segment in the
     /// associated playlist.
@@ -123,22 +113,95 @@ pub struct MediaPlaylist<'a> {
     ///
     /// This field is optional and the default value is
     /// `Duration::from_secs(0)`.
-    #[builder(default = "Duration::from_secs(0)")]
     pub allowable_excess_duration: Duration,
     /// A list of unknown tags.
     ///
     /// ### Note
     ///
     /// This field is optional.
-    #[builder(default, setter(into))]
     pub unknown: Vec<Cow<'a, str>>,
 }
 
+/// Builder for [`MediaPlaylist`].
+#[derive(Debug, Clone, Default)]
+pub struct MediaPlaylistBuilder<'a> {
+    target_duration: Option<Duration>,
+    media_sequence: Option<usize>,
+    discontinuity_sequence: Option<usize>,
+    playlist_type: Option<PlaylistType>,
+    has_i_frames_only: Option<bool>,
+    has_independent_segments: Option<bool>,
+    start: Option<ExtXStart>,
+    has_end_list: Option<bool>,
+    segments: Option<StableVec<MediaSegment<'a>>>,
+    allowable_excess_duration: Option<Duration>,
+    unknown: Option<Vec<Cow<'a, str>>>,
+}
+
 impl<'a> MediaPlaylistBuilder<'a> {
-    fn validate(&self) -> Result<(), String> {
+    /// See [`MediaPlaylist::target_duration`].
+    pub fn target_duration(&mut self, value: Duration) -> &mut Self {
+        self.target_duration = Some(value);
+        self
+    }
+
+    /// See [`MediaPlaylist::media_sequence`].
+    pub fn media_sequence(&mut self, value: usize) -> &mut Self {
+        self.media_sequence = Some(value);
+        self
+    }
+
+    /// See [`MediaPlaylist::discontinuity_sequence`].
+    pub fn discontinuity_sequence(&mut self, value: usize) -> &mut Self {
+        self.discontinuity_sequence = Some(value);
+        self
+    }
+
+    /// See [`MediaPlaylist::playlist_type`].
+    pub fn playlist_type<V: Into<PlaylistType>>(&mut self, value: V) -> &mut Self {
+        self.playlist_type = Some(value.into());
+        self
+    }
+
+    /// See [`MediaPlaylist::has_i_frames_only`].
+    pub fn has_i_frames_only(&mut self, value: bool) -> &mut Self {
+        self.has_i_frames_only = Some(value);
+        self
+    }
+
+    /// See [`MediaPlaylist::has_independent_segments`].
+    pub fn has_independent_segments(&mut self, value: bool) -> &mut Self {
+        self.has_independent_segments = Some(value);
+        self
+    }
+
+    /// See [`MediaPlaylist::start`].
+    pub fn start<V: Into<ExtXStart>>(&mut self, value: V) -> &mut Self {
+        self.start = Some(value.into());
+        self
+    }
+
+    /// See [`MediaPlaylist::has_end_list`].
+    pub fn has_end_list(&mut self, value: bool) -> &mut Self {
+        self.has_end_list = Some(value);
+        self
+    }
+
+    /// See [`MediaPlaylist::allowable_excess_duration`].
+    pub fn allowable_excess_duration(&mut self, value: Duration) -> &mut Self {
+        self.allowable_excess_duration = Some(value);
+        self
+    }
+
+    /// See [`MediaPlaylist::unknown`].
+    pub fn unknown<V: Into<Vec<Cow<'a, str>>>>(&mut self, value: V) -> &mut Self {
+        self.unknown = Some(value.into());
+        self
+    }
+
+    fn validate(&self) -> Result<(), Error> {
         if let Some(target_duration) = &self.target_duration {
-            self.validate_media_segments(*target_duration)
-                .map_err(|e| e.to_string())?;
+            self.validate_media_segments(*target_duration)?;
         }
 
         Ok(())
@@ -280,7 +343,7 @@ impl<'a> MediaPlaylistBuilder<'a> {
     /// # Errors
     ///
     /// If a required field has not been initialized.
-    pub fn build(&self) -> Result<MediaPlaylist<'a>, String> {
+    pub fn build(&self) -> Result<MediaPlaylist<'a>, Error> {
         // validate builder
         self.validate()?;
 
@@ -289,17 +352,17 @@ impl<'a> MediaPlaylistBuilder<'a> {
         let mut segments = self
             .segments
             .clone()
-            .ok_or_else(|| "missing field `segments`".to_string())?;
+            .ok_or_else(|| Error::missing_field("MediaPlaylist", "segments"))?;
 
         // no segment should exist before the sequence_number
         if let Some(first_segment) = segments.find_first()
             && sequence_number > first_segment.number
             && first_segment.explicit_number
         {
-            return Err(format!(
+            return Err(Error::custom(format!(
                 "there should be no segment ({}) before the sequence_number ({})",
                 first_segment, sequence_number,
-            ));
+            )));
         }
 
         let mut previous_range: Option<ExtXByteRange> = None;
@@ -340,27 +403,20 @@ impl<'a> MediaPlaylistBuilder<'a> {
             }
         }
 
-        // TODO: can segments be missing?
         if !segments.is_compact() {
-            // find the missing segment by iterating through all segments:
-            // let missing = segments
-            //     .iter()
-            //     .enumerate()
-            //     .find_map(|(i, e)| e.is_none().athen(i))
-            //     .unwrap();
-            return Err("a segment is missing".to_string());
+            return Err(Error::custom("a segment is missing"));
         }
 
         Ok(MediaPlaylist {
             target_duration: self
                 .target_duration
-                .ok_or_else(|| "missing field `target_duration`".to_string())?,
+                .ok_or_else(|| Error::missing_field("MediaPlaylist", "target_duration"))?,
             media_sequence: self.media_sequence.unwrap_or(0),
             discontinuity_sequence: self.discontinuity_sequence.unwrap_or(0),
-            playlist_type: self.playlist_type.unwrap_or(None),
+            playlist_type: self.playlist_type,
             has_i_frames_only: self.has_i_frames_only.unwrap_or(false),
             has_independent_segments: self.has_independent_segments.unwrap_or(false),
-            start: self.start.unwrap_or(None),
+            start: self.start,
             has_end_list: self.has_end_list.unwrap_or(false),
             segments,
             allowable_excess_duration: self
@@ -709,7 +765,7 @@ fn parse_media_playlist<'a>(
             Line::Uri(uri) => {
                 segment.uri(uri);
                 segment.keys(available_keys.iter().cloned().collect::<Vec<_>>());
-                segments.push(segment.build().map_err(Error::builder)?);
+                segments.push(segment.build()?);
 
                 segment = MediaSegment::builder();
                 has_partial_segment = false;
@@ -724,7 +780,7 @@ fn parse_media_playlist<'a>(
 
     builder.unknown(unknown);
     builder.segments(segments);
-    builder.build().map_err(Error::builder)
+    builder.build()
 }
 
 impl FromStr for MediaPlaylist<'static> {

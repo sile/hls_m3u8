@@ -38,9 +38,6 @@ enum ErrorKind {
     Chrono {
         source: chrono::ParseError,
     },
-    Builder {
-        message: String,
-    },
     InvalidHex(String),
 }
 
@@ -68,7 +65,6 @@ impl fmt::Display for ErrorKind {
             Self::UnexpectedTag { tag } => write!(f, "unexpected tag: {tag:?}"),
             #[cfg(feature = "chrono")]
             Self::Chrono { source } => write!(f, "{source}"),
-            Self::Builder { message } => write!(f, "builder error: {message}"),
             Self::InvalidHex(reason) => write!(f, "invalid hex: {reason}"),
         }
     }
@@ -182,12 +178,6 @@ impl Error {
 
     pub(crate) fn unknown_protocol_version<T: ToString>(value: T) -> Self {
         Self::new(ErrorKind::UnknownProtocolVersion(value.to_string()))
-    }
-
-    pub(crate) fn builder<T: ToString>(value: T) -> Self {
-        Self::new(ErrorKind::Builder {
-            message: value.to_string(),
-        })
     }
 
     pub(crate) fn missing_attribute<T: ToString>(value: T) -> Self {

@@ -1,13 +1,11 @@
 use std::borrow::Cow;
 use std::fmt;
 
-use derive_builder::Builder;
-
 use crate::tags::{
     ExtInf, ExtXByteRange, ExtXDateRange, ExtXDiscontinuity, ExtXKey, ExtXMap, ExtXProgramDateTime,
 };
 use crate::types::{DecryptionKey, ProtocolVersion};
-use crate::{Decryptable, RequiredVersion};
+use crate::{Decryptable, Error, RequiredVersion};
 
 /// A video is split into smaller chunks called [`MediaSegment`]s, which are
 /// specified by a uri and optionally a byte range.
@@ -31,29 +29,9 @@ use crate::{Decryptable, RequiredVersion};
 /// IDR will be downloaded but possibly discarded.
 ///
 /// [`MediaPlaylist`]: crate::MediaPlaylist
-#[derive(Debug, Clone, Builder, PartialEq, Eq, PartialOrd, Ord, Hash)]
-#[builder(setter(strip_option))]
+#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub struct MediaSegment<'a> {
-    /// Each [`MediaSegment`] has a number, which allows synchronization between
-    /// different variants.
-    ///
-    /// ## Note
-    ///
-    /// This number must not be specified, because it will be assigned
-    /// automatically by [`MediaPlaylistBuilder::segments`]. The first
-    /// [`MediaSegment::number`] in a [`MediaPlaylist`] will either be 0 or the
-    /// number returned by the [`ExtXDiscontinuitySequence`] if one is
-    /// provided.
-    /// The following segments will be the previous segment number + 1.
-    ///
-    /// [`MediaPlaylistBuilder::segments`]:
-    /// crate::builder::MediaPlaylistBuilder::segments
-    /// [`MediaPlaylist`]: crate::MediaPlaylist
-    /// [`ExtXMediaSequence`]: crate::tags::ExtXMediaSequence
-    /// [`ExtXDiscontinuitySequence`]: crate::tags::ExtXDiscontinuitySequence
-    #[builder(default, setter(custom))]
     pub(crate) number: usize,
-    #[builder(default, setter(custom))]
     pub(crate) explicit_number: bool,
     /// This field specifies how to decrypt a [`MediaSegment`], which can only
     /// be encrypted with one [`EncryptionMethod`], using one [`DecryptionKey`]
@@ -77,7 +55,6 @@ pub struct MediaSegment<'a> {
     /// [`ExtXMap`]: crate::tags::ExtXMap
     /// [`KeyFormat`]: crate::types::KeyFormat
     /// [`EncryptionMethod`]: crate::types::EncryptionMethod
-    #[builder(default, setter(into))]
     pub keys: Vec<ExtXKey<'a>>,
     /// This field specifies how to obtain the Media Initialization Section
     /// required to parse the applicable `MediaSegment`s.
@@ -91,7 +68,6 @@ pub struct MediaSegment<'a> {
     /// Media Initialization Section at the beginning of its resource.
     ///
     /// [`ExtXIFramesOnly`]: crate::tags::ExtXIFramesOnly
-    #[builder(default)]
     pub map: Option<ExtXMap<'a>>,
     /// This field indicates that a `MediaSegment` is a sub-range of the
     /// resource identified by its URI.
@@ -99,7 +75,6 @@ pub struct MediaSegment<'a> {
     /// ## Note
     ///
     /// This field is optional.
-    #[builder(default, setter(into))]
     pub byte_range: Option<ExtXByteRange>,
     /// This field associates a date-range (i.e., a range of time defined by a
     /// starting and ending date) with a set of attribute/value pairs.
@@ -107,7 +82,6 @@ pub struct MediaSegment<'a> {
     /// ## Note
     ///
     /// This field is optional.
-    #[builder(default)]
     pub date_range: Option<ExtXDateRange<'a>>,
     /// This field indicates a discontinuity between the `MediaSegment` that
     /// follows it and the one that preceded it.
@@ -123,7 +97,6 @@ pub struct MediaSegment<'a> {
     /// change:
     /// - encoding parameters
     /// - encoding sequence
-    #[builder(default)]
     pub has_discontinuity: bool,
     /// This field associates the first sample of a media segment with an
     /// absolute date and/or time.
@@ -131,18 +104,29 @@ pub struct MediaSegment<'a> {
     /// ## Note
     ///
     /// This field is optional.
-    #[builder(default)]
     pub program_date_time: Option<ExtXProgramDateTime<'a>>,
     /// This field indicates the duration of a media segment.
     ///
     /// ## Note
     ///
     /// This field is required.
-    #[builder(setter(into))]
     pub duration: ExtInf<'a>,
-    /// See [`MediaSegment::uri`].
-    #[builder(setter(into))]
     uri: Cow<'a, str>,
+}
+
+/// Builder for a [`MediaSegment`].
+#[derive(Debug, Clone, Default)]
+pub struct MediaSegmentBuilder<'a> {
+    number: Option<usize>,
+    explicit_number: Option<bool>,
+    keys: Option<Vec<ExtXKey<'a>>>,
+    map: Option<ExtXMap<'a>>,
+    byte_range: Option<ExtXByteRange>,
+    date_range: Option<ExtXDateRange<'a>>,
+    has_discontinuity: Option<bool>,
+    program_date_time: Option<ExtXProgramDateTime<'a>>,
+    duration: Option<ExtInf<'a>>,
+    uri: Option<Cow<'a, str>>,
 }
 
 impl<'a> MediaSegment<'a> {
@@ -219,17 +203,6 @@ impl MediaSegment<'_> {
 }
 
 impl<'a> MediaSegmentBuilder<'a> {
-    /// Pushes an [`ExtXKey`] tag.
-    pub fn push_key<VALUE: Into<ExtXKey<'a>>>(&mut self, value: VALUE) -> &mut Self {
-        if let Some(keys) = &mut self.keys {
-            keys.push(value.into());
-        } else {
-            self.keys = Some(vec![value.into()]);
-        }
-
-        self
-    }
-
     /// The number of a [`MediaSegment`]. Normally this should not be set
     /// explicitly, because the [`MediaPlaylist::builder`] will automatically
     /// apply the correct number.
@@ -238,8 +211,90 @@ impl<'a> MediaSegmentBuilder<'a> {
     pub fn number(&mut self, value: Option<usize>) -> &mut Self {
         self.number = value;
         self.explicit_number = Some(value.is_some());
-
         self
+    }
+
+    /// See [`MediaSegment::keys`].
+    pub fn keys<V: Into<Vec<ExtXKey<'a>>>>(&mut self, value: V) -> &mut Self {
+        self.keys = Some(value.into());
+        self
+    }
+
+    /// Pushes an [`ExtXKey`] tag.
+    pub fn push_key<V: Into<ExtXKey<'a>>>(&mut self, value: V) -> &mut Self {
+        self.keys.get_or_insert_with(Vec::new).push(value.into());
+        self
+    }
+
+    /// See [`MediaSegment::map`].
+    pub fn map(&mut self, value: ExtXMap<'a>) -> &mut Self {
+        self.map = Some(value);
+        self
+    }
+
+    /// See [`MediaSegment::byte_range`].
+    pub fn byte_range<V: Into<ExtXByteRange>>(&mut self, value: V) -> &mut Self {
+        self.byte_range = Some(value.into());
+        self
+    }
+
+    /// See [`MediaSegment::date_range`].
+    pub fn date_range(&mut self, value: ExtXDateRange<'a>) -> &mut Self {
+        self.date_range = Some(value);
+        self
+    }
+
+    /// See [`MediaSegment::has_discontinuity`].
+    pub fn has_discontinuity(&mut self, value: bool) -> &mut Self {
+        self.has_discontinuity = Some(value);
+        self
+    }
+
+    /// See [`MediaSegment::program_date_time`].
+    pub fn program_date_time(&mut self, value: ExtXProgramDateTime<'a>) -> &mut Self {
+        self.program_date_time = Some(value);
+        self
+    }
+
+    /// See [`MediaSegment::duration`].
+    pub fn duration<V: Into<ExtInf<'a>>>(&mut self, value: V) -> &mut Self {
+        self.duration = Some(value.into());
+        self
+    }
+
+    /// See [`MediaSegment::uri`].
+    pub fn uri<V: Into<Cow<'a, str>>>(&mut self, value: V) -> &mut Self {
+        self.uri = Some(value.into());
+        self
+    }
+
+    /// Builds a new [`MediaSegment`].
+    ///
+    /// # Errors
+    ///
+    /// If a required field has not been initialized.
+    pub fn build(&self) -> Result<MediaSegment<'a>, Error> {
+        Ok(MediaSegment {
+            number: self.number.unwrap_or(0),
+            explicit_number: self.explicit_number.unwrap_or(false),
+            keys: self.keys.clone().unwrap_or_default(),
+            map: self.map.clone(),
+            byte_range: self.byte_range,
+            date_range: self.date_range.clone(),
+            has_discontinuity: self.has_discontinuity.unwrap_or(false),
+            #[cfg(feature = "chrono")]
+            program_date_time: self.program_date_time,
+            #[cfg(not(feature = "chrono"))]
+            program_date_time: self.program_date_time.clone(),
+            duration: self
+                .duration
+                .clone()
+                .ok_or_else(|| Error::missing_field("MediaSegment", "duration"))?,
+            uri: self
+                .uri
+                .clone()
+                .ok_or_else(|| Error::missing_field("MediaSegment", "uri"))?,
+        })
     }
 }
 

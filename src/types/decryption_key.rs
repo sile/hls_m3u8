@@ -2,8 +2,6 @@ use std::borrow::Cow;
 use std::convert::TryFrom;
 use std::fmt;
 
-use derive_builder::Builder;
-
 use crate::attribute::AttributePairs;
 use crate::types::{
     EncryptionMethod, InitializationVector, KeyFormat, KeyFormatVersions, ProtocolVersion,
@@ -12,8 +10,7 @@ use crate::utils::{quote, unquote};
 use crate::{Error, RequiredVersion};
 
 /// Specifies how to decrypt encrypted data from the server.
-#[derive(Builder, Debug, Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]
-#[builder(setter(into), build_fn(validate = "Self::validate"))]
+#[derive(Debug, Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]
 #[non_exhaustive]
 pub struct DecryptionKey<'a> {
     /// The encryption method, which has been used to encrypt the data.
@@ -42,7 +39,6 @@ pub struct DecryptionKey<'a> {
     /// ## Note
     ///
     /// This field is required.
-    #[builder(setter(into, strip_option), default)]
     pub(crate) uri: Cow<'a, str>,
     /// An initialization vector (IV) is a fixed size input that can be used
     /// along with a secret key for data encryption.
@@ -53,7 +49,6 @@ pub struct DecryptionKey<'a> {
     /// [`MediaSegment::number`] should be used instead.
     ///
     /// [`MediaSegment::number`]: crate::MediaSegment::number
-    #[builder(setter(into, strip_option), default)]
     pub iv: InitializationVector,
     /// A server may offer multiple ways to retrieve a key by providing multiple
     /// [`DecryptionKey`]s with different [`KeyFormat`] values.
@@ -65,7 +60,6 @@ pub struct DecryptionKey<'a> {
     /// ## Note
     ///
     /// This field is optional.
-    #[builder(setter(into, strip_option), default)]
     pub format: Option<KeyFormat<'a>>,
     /// A list of numbers that can be used to indicate which version(s)
     /// this instance complies with, if more than one version of a particular
@@ -74,8 +68,69 @@ pub struct DecryptionKey<'a> {
     /// ## Note
     ///
     /// This field is optional.
-    #[builder(setter(into, strip_option), default)]
     pub versions: Option<KeyFormatVersions>,
+}
+
+/// Builder for [`DecryptionKey`].
+#[derive(Debug, Clone, Default)]
+pub struct DecryptionKeyBuilder<'a> {
+    method: Option<EncryptionMethod>,
+    uri: Option<Cow<'a, str>>,
+    iv: Option<InitializationVector>,
+    format: Option<KeyFormat<'a>>,
+    versions: Option<KeyFormatVersions>,
+}
+
+impl<'a> DecryptionKeyBuilder<'a> {
+    /// See [`DecryptionKey::method`].
+    pub fn method<V: Into<EncryptionMethod>>(&mut self, value: V) -> &mut Self {
+        self.method = Some(value.into());
+        self
+    }
+
+    /// See [`DecryptionKey::uri`].
+    pub fn uri<V: Into<Cow<'a, str>>>(&mut self, value: V) -> &mut Self {
+        self.uri = Some(value.into());
+        self
+    }
+
+    /// See [`DecryptionKey::iv`].
+    pub fn iv<V: Into<InitializationVector>>(&mut self, value: V) -> &mut Self {
+        self.iv = Some(value.into());
+        self
+    }
+
+    /// See [`DecryptionKey::format`].
+    pub fn format<V: Into<KeyFormat<'a>>>(&mut self, value: V) -> &mut Self {
+        self.format = Some(value.into());
+        self
+    }
+
+    /// See [`DecryptionKey::versions`].
+    pub fn versions<V: Into<KeyFormatVersions>>(&mut self, value: V) -> &mut Self {
+        self.versions = Some(value.into());
+        self
+    }
+
+    /// Builds a new [`DecryptionKey`].
+    ///
+    /// # Errors
+    ///
+    /// If a required field has not been initialized.
+    pub fn build(&self) -> Result<DecryptionKey<'a>, Error> {
+        Ok(DecryptionKey {
+            method: self
+                .method
+                .ok_or_else(|| Error::missing_field("DecryptionKey", "method"))?,
+            uri: self
+                .uri
+                .clone()
+                .ok_or_else(|| Error::missing_field("DecryptionKey", "uri"))?,
+            iv: self.iv.unwrap_or_default(),
+            format: self.format.clone(),
+            versions: self.versions,
+        })
+    }
 }
 
 impl<'a> DecryptionKey<'a> {
@@ -239,19 +294,6 @@ impl fmt::Display for DecryptionKey<'_> {
             && !value.is_default()
         {
             write!(f, ",KEYFORMATVERSIONS={}", value)?;
-        }
-
-        Ok(())
-    }
-}
-
-impl DecryptionKeyBuilder<'_> {
-    fn validate(&self) -> Result<(), String> {
-        // a decryption key must contain a uri and a method
-        if self.method.is_none() {
-            return Err(Error::missing_field("DecryptionKey", "method").to_string());
-        } else if self.uri.is_none() {
-            return Err(Error::missing_field("DecryptionKey", "uri").to_string());
         }
 
         Ok(())

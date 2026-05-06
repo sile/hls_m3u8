@@ -2,8 +2,6 @@ use std::borrow::Cow;
 use std::convert::TryFrom;
 use std::fmt;
 
-use derive_builder::Builder;
-
 use crate::attribute::AttributePairs;
 use crate::types::ProtocolVersion;
 use crate::utils::{quote, tag, unquote};
@@ -46,10 +44,8 @@ impl SessionData<'_> {
 /// Allows arbitrary session data to be carried in a [`MasterPlaylist`].
 ///
 /// [`MasterPlaylist`]: crate::MasterPlaylist
-#[derive(Builder, Hash, Eq, Ord, Debug, PartialEq, Clone, PartialOrd)]
-#[builder(setter(into))]
+#[derive(Hash, Eq, Ord, Debug, PartialEq, Clone, PartialOrd)]
 pub struct ExtXSessionData<'a> {
-    /// See [`ExtXSessionData::data_id`].
     data_id: Cow<'a, str>,
     /// The [`SessionData`] associated with the
     /// [`data_id`](ExtXSessionData::data_id).
@@ -58,9 +54,54 @@ pub struct ExtXSessionData<'a> {
     ///
     /// This field is required.
     pub data: SessionData<'a>,
-    /// See [`ExtXSessionData::language`].
-    #[builder(setter(strip_option), default)]
     language: Option<Cow<'a, str>>,
+}
+
+/// Builder for [`ExtXSessionData`].
+#[derive(Debug, Clone, Default)]
+pub struct ExtXSessionDataBuilder<'a> {
+    data_id: Option<Cow<'a, str>>,
+    data: Option<SessionData<'a>>,
+    language: Option<Cow<'a, str>>,
+}
+
+impl<'a> ExtXSessionDataBuilder<'a> {
+    /// See [`ExtXSessionData::data_id`].
+    pub fn data_id<V: Into<Cow<'a, str>>>(&mut self, value: V) -> &mut Self {
+        self.data_id = Some(value.into());
+        self
+    }
+
+    /// See [`ExtXSessionData::data`].
+    pub fn data<V: Into<SessionData<'a>>>(&mut self, value: V) -> &mut Self {
+        self.data = Some(value.into());
+        self
+    }
+
+    /// See [`ExtXSessionData::language`].
+    pub fn language<V: Into<Cow<'a, str>>>(&mut self, value: V) -> &mut Self {
+        self.language = Some(value.into());
+        self
+    }
+
+    /// Builds a new [`ExtXSessionData`].
+    ///
+    /// # Errors
+    ///
+    /// If a required field has not been initialized.
+    pub fn build(&self) -> Result<ExtXSessionData<'a>, Error> {
+        Ok(ExtXSessionData {
+            data_id: self
+                .data_id
+                .clone()
+                .ok_or_else(|| Error::missing_field("ExtXSessionData", "data_id"))?,
+            data: self
+                .data
+                .clone()
+                .ok_or_else(|| Error::missing_field("ExtXSessionData", "data"))?,
+            language: self.language.clone(),
+        })
+    }
 }
 
 impl<'a> ExtXSessionData<'a> {

@@ -6,7 +6,6 @@ use std::time::Duration;
 
 #[cfg(feature = "chrono")]
 use chrono::{DateTime, FixedOffset, SecondsFormat};
-use derive_builder::Builder;
 
 use crate::attribute::AttributePairs;
 use crate::types::{ProtocolVersion, Value};
@@ -15,29 +14,17 @@ use crate::{Error, RequiredVersion};
 
 /// The [`ExtXDateRange`] tag associates a date range (i.e., a range of time
 /// defined by a starting and ending date) with a set of attribute/value pairs.
-#[derive(Builder, Debug, Clone, PartialEq, PartialOrd, Eq, Ord, Hash)]
-#[builder(setter(into))]
+#[derive(Debug, Clone, PartialEq, PartialOrd, Eq, Ord, Hash)]
 pub struct ExtXDateRange<'a> {
-    /// See [`ExtXDateRange::id`].
     id: Cow<'a, str>,
-    /// See [`ExtXDateRange::class`].
-    #[builder(setter(strip_option), default)]
     class: Option<Cow<'a, str>>,
-    /// See [`ExtXDateRange::start_date`].
     #[cfg(feature = "chrono")]
-    #[builder(setter(strip_option), default)]
     start_date: Option<DateTime<FixedOffset>>,
-    /// See [`ExtXDateRange::start_date`].
     #[cfg(not(feature = "chrono"))]
-    #[builder(setter(strip_option), default)]
     start_date: Option<Cow<'a, str>>,
-    /// See [`ExtXDateRange::end_date`].
     #[cfg(feature = "chrono")]
-    #[builder(setter(strip_option), default)]
     end_date: Option<DateTime<FixedOffset>>,
-    /// See [`ExtXDateRange::end_date`].
     #[cfg(not(feature = "chrono"))]
-    #[builder(setter(strip_option), default)]
     end_date: Option<Cow<'a, str>>,
     /// The duration of the [`ExtXDateRange`]. A single instant in time (e.g.,
     /// crossing a finish line) should be represented with a duration of 0.
@@ -45,7 +32,6 @@ pub struct ExtXDateRange<'a> {
     /// ## Note
     ///
     /// This field is optional.
-    #[builder(setter(strip_option), default)]
     pub duration: Option<Duration>,
     /// This field indicates the expected duration of an [`ExtXDateRange`],
     /// whose actual duration is not yet known.
@@ -53,16 +39,9 @@ pub struct ExtXDateRange<'a> {
     /// ## Note
     ///
     /// This field is optional.
-    #[builder(setter(strip_option), default)]
     pub planned_duration: Option<Duration>,
-    /// See [`ExtXDateRange::scte35_cmd`].
-    #[builder(setter(strip_option), default)]
     scte35_cmd: Option<Cow<'a, str>>,
-    /// See [`ExtXDateRange::scte35_out`].
-    #[builder(setter(strip_option), default)]
     scte35_out: Option<Cow<'a, str>>,
-    /// See [`ExtXDateRange::scte35_in`].
-    #[builder(setter(strip_option), default)]
     scte35_in: Option<Cow<'a, str>>,
     /// This field indicates that the [`ExtXDateRange::end_date`] is equal to
     /// the [`ExtXDateRange::start_date`] of the following range.
@@ -74,7 +53,6 @@ pub struct ExtXDateRange<'a> {
     /// ## Note
     ///
     /// This field is optional.
-    #[builder(default)]
     pub end_on_next: bool,
     /// The `"X-"` prefix defines a namespace reserved for client-defined
     /// attributes.
@@ -91,22 +69,152 @@ pub struct ExtXDateRange<'a> {
     /// ## Note
     ///
     /// This field is optional.
-    #[builder(default)]
     pub client_attributes: BTreeMap<Cow<'a, str>, Value<'a>>,
 }
 
+/// Builder for [`ExtXDateRange`].
+#[derive(Debug, Clone, Default)]
+pub struct ExtXDateRangeBuilder<'a> {
+    id: Option<Cow<'a, str>>,
+    class: Option<Cow<'a, str>>,
+    #[cfg(feature = "chrono")]
+    start_date: Option<DateTime<FixedOffset>>,
+    #[cfg(not(feature = "chrono"))]
+    start_date: Option<Cow<'a, str>>,
+    #[cfg(feature = "chrono")]
+    end_date: Option<DateTime<FixedOffset>>,
+    #[cfg(not(feature = "chrono"))]
+    end_date: Option<Cow<'a, str>>,
+    duration: Option<Duration>,
+    planned_duration: Option<Duration>,
+    scte35_cmd: Option<Cow<'a, str>>,
+    scte35_out: Option<Cow<'a, str>>,
+    scte35_in: Option<Cow<'a, str>>,
+    end_on_next: Option<bool>,
+    client_attributes: BTreeMap<Cow<'a, str>, Value<'a>>,
+}
+
 impl<'a> ExtXDateRangeBuilder<'a> {
+    /// See [`ExtXDateRange::id`].
+    pub fn id<V: Into<Cow<'a, str>>>(&mut self, value: V) -> &mut Self {
+        self.id = Some(value.into());
+        self
+    }
+
+    /// See [`ExtXDateRange::class`].
+    pub fn class<V: Into<Cow<'a, str>>>(&mut self, value: V) -> &mut Self {
+        self.class = Some(value.into());
+        self
+    }
+
+    /// See [`ExtXDateRange::start_date`].
+    #[cfg(feature = "chrono")]
+    pub fn start_date(&mut self, value: DateTime<FixedOffset>) -> &mut Self {
+        self.start_date = Some(value);
+        self
+    }
+
+    /// See [`ExtXDateRange::start_date`].
+    #[cfg(not(feature = "chrono"))]
+    pub fn start_date<V: Into<Cow<'a, str>>>(&mut self, value: V) -> &mut Self {
+        self.start_date = Some(value.into());
+        self
+    }
+
+    /// See [`ExtXDateRange::end_date`].
+    #[cfg(feature = "chrono")]
+    pub fn end_date(&mut self, value: DateTime<FixedOffset>) -> &mut Self {
+        self.end_date = Some(value);
+        self
+    }
+
+    /// See [`ExtXDateRange::end_date`].
+    #[cfg(not(feature = "chrono"))]
+    pub fn end_date<V: Into<Cow<'a, str>>>(&mut self, value: V) -> &mut Self {
+        self.end_date = Some(value.into());
+        self
+    }
+
+    /// See [`ExtXDateRange::duration`].
+    pub fn duration(&mut self, value: Duration) -> &mut Self {
+        self.duration = Some(value);
+        self
+    }
+
+    /// See [`ExtXDateRange::planned_duration`].
+    pub fn planned_duration(&mut self, value: Duration) -> &mut Self {
+        self.planned_duration = Some(value);
+        self
+    }
+
+    /// See [`ExtXDateRange::scte35_cmd`].
+    pub fn scte35_cmd<V: Into<Cow<'a, str>>>(&mut self, value: V) -> &mut Self {
+        self.scte35_cmd = Some(value.into());
+        self
+    }
+
+    /// See [`ExtXDateRange::scte35_out`].
+    pub fn scte35_out<V: Into<Cow<'a, str>>>(&mut self, value: V) -> &mut Self {
+        self.scte35_out = Some(value.into());
+        self
+    }
+
+    /// See [`ExtXDateRange::scte35_in`].
+    pub fn scte35_in<V: Into<Cow<'a, str>>>(&mut self, value: V) -> &mut Self {
+        self.scte35_in = Some(value.into());
+        self
+    }
+
+    /// See [`ExtXDateRange::end_on_next`].
+    pub fn end_on_next(&mut self, value: bool) -> &mut Self {
+        self.end_on_next = Some(value);
+        self
+    }
+
+    /// See [`ExtXDateRange::client_attributes`].
+    pub fn client_attributes(&mut self, value: BTreeMap<Cow<'a, str>, Value<'a>>) -> &mut Self {
+        self.client_attributes = value;
+        self
+    }
+
     /// Inserts a key value pair.
     pub fn insert_client_attribute<K: Into<Cow<'a, str>>, V: Into<Value<'a>>>(
         &mut self,
         key: K,
         value: V,
     ) -> &mut Self {
-        let attrs = self.client_attributes.get_or_insert_with(BTreeMap::new);
-
-        attrs.insert(key.into(), value.into());
-
+        self.client_attributes.insert(key.into(), value.into());
         self
+    }
+
+    /// Builds a new [`ExtXDateRange`].
+    ///
+    /// # Errors
+    ///
+    /// If a required field has not been initialized.
+    pub fn build(&self) -> Result<ExtXDateRange<'a>, Error> {
+        Ok(ExtXDateRange {
+            id: self
+                .id
+                .clone()
+                .ok_or_else(|| Error::missing_field("ExtXDateRange", "id"))?,
+            class: self.class.clone(),
+            #[cfg(feature = "chrono")]
+            start_date: self.start_date,
+            #[cfg(not(feature = "chrono"))]
+            start_date: self.start_date.clone(),
+            #[cfg(feature = "chrono")]
+            end_date: self.end_date,
+            #[cfg(not(feature = "chrono"))]
+            end_date: self.end_date.clone(),
+            duration: self.duration,
+            planned_duration: self.planned_duration,
+            scte35_cmd: self.scte35_cmd.clone(),
+            scte35_out: self.scte35_out.clone(),
+            scte35_in: self.scte35_in.clone(),
+            end_on_next: self.end_on_next.unwrap_or(false),
+            client_attributes: self.client_attributes.clone(),
+        })
     }
 }
 

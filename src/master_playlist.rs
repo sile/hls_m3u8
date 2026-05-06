@@ -3,8 +3,6 @@ use std::collections::HashSet;
 use std::convert::TryFrom;
 use std::fmt;
 
-use derive_builder::Builder;
-
 use crate::line::{Line, Lines, Tag};
 use crate::tags::{
     ExtM3u, ExtXIndependentSegments, ExtXMedia, ExtXSessionData, ExtXSessionKey, ExtXStart,
@@ -94,9 +92,7 @@ use crate::{Error, RequiredVersion};
 /// ```
 ///
 /// [`MediaPlaylist`]: crate::MediaPlaylist
-#[derive(Builder, Default, Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
-#[builder(build_fn(validate = "Self::validate"))]
-#[builder(setter(into, strip_option))]
+#[derive(Default, Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
 #[non_exhaustive]
 pub struct MasterPlaylist<'a> {
     /// Indicates that all media samples in a [`MediaSegment`] can be
@@ -110,7 +106,6 @@ pub struct MasterPlaylist<'a> {
     ///
     /// [`MediaSegment`]: crate::MediaSegment
     /// [`MediaPlaylist`]: crate::MediaPlaylist
-    #[builder(default)]
     pub has_independent_segments: bool,
     /// A preferred point at which to start playing a playlist.
     ///
@@ -118,7 +113,6 @@ pub struct MasterPlaylist<'a> {
     ///
     /// This field is optional and by default the playlist should be played from
     /// the start.
-    #[builder(default)]
     pub start: Option<ExtXStart>,
     /// A list of all [`ExtXMedia`] tags, which describe an alternative
     /// rendition.
@@ -134,14 +128,12 @@ pub struct MasterPlaylist<'a> {
     /// This field is optional.
     ///
     /// [`MediaPlaylist`]: crate::MediaPlaylist
-    #[builder(default)]
     pub media: Vec<ExtXMedia<'a>>,
     /// A list of all streams of this [`MasterPlaylist`].
     ///
     /// ### Note
     ///
     /// This field is optional.
-    #[builder(default)]
     pub variant_streams: Vec<VariantStream<'a>>,
     /// The [`ExtXSessionData`] tag allows arbitrary session data to be
     /// carried in a [`MasterPlaylist`].
@@ -149,7 +141,6 @@ pub struct MasterPlaylist<'a> {
     /// ### Note
     ///
     /// This field is optional.
-    #[builder(default)]
     pub session_data: Vec<ExtXSessionData<'a>>,
     /// A list of [`ExtXSessionKey`]s, that allows the client to preload
     /// these keys without having to read the [`MediaPlaylist`]s first.
@@ -159,15 +150,25 @@ pub struct MasterPlaylist<'a> {
     /// This field is optional.
     ///
     /// [`MediaPlaylist`]: crate::MediaPlaylist
-    #[builder(default)]
     pub session_keys: Vec<ExtXSessionKey<'a>>,
     /// A list of all tags that could not be identified while parsing the input.
     ///
     /// ### Note
     ///
     /// This field is optional.
-    #[builder(default)]
     pub unknown_tags: Vec<Cow<'a, str>>,
+}
+
+/// Builder for [`MasterPlaylist`].
+#[derive(Debug, Clone, Default)]
+pub struct MasterPlaylistBuilder<'a> {
+    has_independent_segments: Option<bool>,
+    start: Option<ExtXStart>,
+    media: Option<Vec<ExtXMedia<'a>>>,
+    variant_streams: Option<Vec<VariantStream<'a>>>,
+    session_data: Option<Vec<ExtXSessionData<'a>>>,
+    session_keys: Option<Vec<ExtXSessionKey<'a>>>,
+    unknown_tags: Option<Vec<Cow<'a, str>>>,
 }
 
 impl<'a> MasterPlaylist<'a> {
@@ -321,15 +322,55 @@ impl RequiredVersion for MasterPlaylist<'_> {
     }
 }
 
-impl MasterPlaylistBuilder<'_> {
-    fn validate(&self) -> Result<(), String> {
+impl<'a> MasterPlaylistBuilder<'a> {
+    /// See [`MasterPlaylist::has_independent_segments`].
+    pub fn has_independent_segments(&mut self, value: bool) -> &mut Self {
+        self.has_independent_segments = Some(value);
+        self
+    }
+
+    /// See [`MasterPlaylist::start`].
+    pub fn start<V: Into<ExtXStart>>(&mut self, value: V) -> &mut Self {
+        self.start = Some(value.into());
+        self
+    }
+
+    /// See [`MasterPlaylist::media`].
+    pub fn media<V: Into<Vec<ExtXMedia<'a>>>>(&mut self, value: V) -> &mut Self {
+        self.media = Some(value.into());
+        self
+    }
+
+    /// See [`MasterPlaylist::variant_streams`].
+    pub fn variant_streams<V: Into<Vec<VariantStream<'a>>>>(&mut self, value: V) -> &mut Self {
+        self.variant_streams = Some(value.into());
+        self
+    }
+
+    /// See [`MasterPlaylist::session_data`].
+    pub fn session_data<V: Into<Vec<ExtXSessionData<'a>>>>(&mut self, value: V) -> &mut Self {
+        self.session_data = Some(value.into());
+        self
+    }
+
+    /// See [`MasterPlaylist::session_keys`].
+    pub fn session_keys<V: Into<Vec<ExtXSessionKey<'a>>>>(&mut self, value: V) -> &mut Self {
+        self.session_keys = Some(value.into());
+        self
+    }
+
+    /// See [`MasterPlaylist::unknown_tags`].
+    pub fn unknown_tags<V: Into<Vec<Cow<'a, str>>>>(&mut self, value: V) -> &mut Self {
+        self.unknown_tags = Some(value.into());
+        self
+    }
+
+    fn validate(&self) -> crate::Result<()> {
         if let Some(variant_streams) = &self.variant_streams {
-            self.validate_variants(variant_streams)
-                .map_err(|e| e.to_string())?;
+            self.validate_variants(variant_streams)?;
         }
 
-        self.validate_session_data_tags()
-            .map_err(|e| e.to_string())?;
+        self.validate_session_data_tags()?;
 
         Ok(())
     }
@@ -420,19 +461,34 @@ impl MasterPlaylistBuilder<'_> {
             })
         })
     }
+
+    /// Builds a new [`MasterPlaylist`].
+    ///
+    /// # Errors
+    ///
+    /// If validation fails.
+    pub fn build(&self) -> Result<MasterPlaylist<'a>, Error> {
+        self.validate()?;
+
+        Ok(MasterPlaylist {
+            has_independent_segments: self.has_independent_segments.unwrap_or(false),
+            start: self.start,
+            media: self.media.clone().unwrap_or_default(),
+            variant_streams: self.variant_streams.clone().unwrap_or_default(),
+            session_data: self.session_data.clone().unwrap_or_default(),
+            session_keys: self.session_keys.clone().unwrap_or_default(),
+            unknown_tags: self.unknown_tags.clone().unwrap_or_default(),
+        })
+    }
 }
 
 impl RequiredVersion for MasterPlaylistBuilder<'_> {
     fn required_version(&self) -> ProtocolVersion {
-        // TODO: the .flatten() can be removed as soon as `recursive traits` are
-        //       supported. (RequiredVersion is implemented for Option<T>, but
-        //       not for Option<Option<T>>)
-        // https://github.com/rust-lang/chalk/issues/12
         required_version![
             self.has_independent_segments
                 .unwrap_or(false)
                 .athen_some(ExtXIndependentSegments),
-            self.start.flatten(),
+            self.start,
             self.media,
             self.variant_streams,
             self.session_data,
@@ -557,7 +613,7 @@ impl<'a> TryFrom<&'a str> for MasterPlaylist<'a> {
         builder.session_keys(session_keys);
         builder.unknown_tags(unknown_tags);
 
-        builder.build().map_err(Error::builder)
+        builder.build()
     }
 }
 
