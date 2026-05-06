@@ -24,7 +24,6 @@ stable-vec = { version = "0.4" }
 
 [dev-dependencies]
 pretty_assertions = "1.4.0"
-automod = "1.0.14"
 criterion = "0.5.1"
 
 [[bench]]
