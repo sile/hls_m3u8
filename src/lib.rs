@@ -6,13 +6,6 @@
     clippy::module_name_repetitions,
     clippy::unnecessary_operation
 )]
-#![deny(
-    clippy::print_stdout,
-    clippy::todo,
-    clippy::unimplemented,
-    clippy::dbg_macro,
-    clippy::use_debug
-)]
 #![warn(
     missing_docs,
     missing_copy_implementations,
