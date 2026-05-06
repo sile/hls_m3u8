@@ -1,9 +1,7 @@
 use std::convert::TryFrom;
 use std::fmt;
 
-use core::ops::{Add, AddAssign, Sub, SubAssign};
-
-use derive_more::{AsMut, AsRef, Deref, DerefMut, From};
+use core::ops::{Add, AddAssign, Deref, DerefMut, Sub, SubAssign};
 
 use crate::types::{ByteRange, ProtocolVersion};
 use crate::utils::tag;
@@ -31,11 +29,43 @@ use crate::{Error, RequiredVersion};
 /// ```
 ///
 /// [`MediaSegment`]: crate::MediaSegment
-#[derive(
-    AsRef, AsMut, From, Deref, DerefMut, Debug, Clone, Copy, PartialEq, Eq, Hash, PartialOrd, Ord,
-)]
-#[from(forward)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, PartialOrd, Ord)]
 pub struct ExtXByteRange(ByteRange);
+
+impl AsRef<ByteRange> for ExtXByteRange {
+    fn as_ref(&self) -> &ByteRange {
+        &self.0
+    }
+}
+
+impl AsMut<ByteRange> for ExtXByteRange {
+    fn as_mut(&mut self) -> &mut ByteRange {
+        &mut self.0
+    }
+}
+
+impl Deref for ExtXByteRange {
+    type Target = ByteRange;
+
+    fn deref(&self) -> &Self::Target {
+        &self.0
+    }
+}
+
+impl DerefMut for ExtXByteRange {
+    fn deref_mut(&mut self) -> &mut Self::Target {
+        &mut self.0
+    }
+}
+
+impl<T> From<T> for ExtXByteRange
+where
+    ByteRange: From<T>,
+{
+    fn from(value: T) -> Self {
+        Self(ByteRange::from(value))
+    }
+}
 
 impl ExtXByteRange {
     pub(crate) const PREFIX: &'static str = "#EXT-X-BYTERANGE:";
@@ -217,7 +247,6 @@ impl TryFrom<&str> for ExtXByteRange {
 #[cfg(test)]
 mod test {
     use super::*;
-    use pretty_assertions::assert_eq;
 
     #[test]
     fn test_display() {

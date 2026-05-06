@@ -172,10 +172,10 @@ impl fmt::Display for InitializationVector {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match &self {
             Self::Aes128(buffer) => {
-                let mut result = [0; 0x10 * 2];
-                ::hex::encode_to_slice(buffer, &mut result).unwrap();
-
-                write!(f, "0x{}", ::core::str::from_utf8(&result).unwrap())?;
+                f.write_str("0x")?;
+                for byte in buffer {
+                    write!(f, "{byte:02x}")?;
+                }
             }
             Self::Number(num) => {
                 write!(f, "InitializationVector::Number({})", num)?;
@@ -205,7 +205,7 @@ impl FromStr for InitializationVector {
 
         let mut result = [0; 16];
 
-        ::hex::decode_to_slice(&input.as_bytes()[2..], &mut result).map_err(Error::hex)?;
+        crate::hex::decode_to_slice(&input.as_bytes()[2..], &mut result)?;
 
         Ok(Self::Aes128(result))
     }
@@ -214,7 +214,6 @@ impl FromStr for InitializationVector {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use pretty_assertions::assert_eq;
 
     #[test]
     fn test_default() {

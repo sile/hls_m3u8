@@ -1,8 +1,8 @@
 use core::cmp::Ordering;
 use core::convert::TryFrom;
+use core::fmt;
+use core::ops::Deref;
 use core::str::FromStr;
-
-use derive_more::{AsRef, Deref, Display};
 
 use crate::Error;
 
@@ -13,8 +13,28 @@ use crate::Error;
 /// [`NaN`]: core::f32::NAN
 /// [`INFINITY`]: core::f32::INFINITY
 /// [`NEG_INFINITY`]: core::f32::NEG_INFINITY
-#[derive(AsRef, Deref, Default, Debug, Copy, Clone, Display)]
+#[derive(Default, Debug, Copy, Clone)]
 pub struct UFloat(f32);
+
+impl AsRef<f32> for UFloat {
+    fn as_ref(&self) -> &f32 {
+        &self.0
+    }
+}
+
+impl Deref for UFloat {
+    type Target = f32;
+
+    fn deref(&self) -> &Self::Target {
+        &self.0
+    }
+}
+
+impl fmt::Display for UFloat {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        self.0.fmt(f)
+    }
+}
 
 impl UFloat {
     /// Makes a new [`UFloat`] from an [`f32`].
@@ -209,7 +229,6 @@ impl ::core::hash::Hash for UFloat {
 mod tests {
     use super::*;
     use core::hash::{Hash, Hasher};
-    use pretty_assertions::assert_eq;
 
     #[expect(clippy::unreadable_literal)]
     const PI: f32 = 3.14159265359;

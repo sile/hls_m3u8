@@ -1,6 +1,6 @@
+use std::fmt;
 use std::str::FromStr;
 
-use derive_more::Display;
 use shorthand::ShortHand;
 
 use crate::Error;
@@ -9,8 +9,7 @@ use crate::Error;
 /// 1920x1080).
 ///
 /// For example Full HD has a resolution of 1920x1080.
-#[derive(ShortHand, Ord, PartialOrd, Debug, Clone, Copy, PartialEq, Eq, Hash, Display)]
-#[display("{}x{}", width, height)]
+#[derive(ShortHand, Ord, PartialOrd, Debug, Clone, Copy, PartialEq, Eq, Hash)]
 #[shorthand(enable(must_use))]
 pub struct Resolution {
     /// Horizontal pixel dimension.
@@ -54,6 +53,12 @@ impl Resolution {
     }
 }
 
+impl fmt::Display for Resolution {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "{}x{}", self.width, self.height)
+    }
+}
+
 impl From<(usize, usize)> for Resolution {
     fn from(value: (usize, usize)) -> Self {
         Self::new(value.0, value.1)
@@ -89,7 +94,6 @@ impl FromStr for Resolution {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use pretty_assertions::assert_eq;
 
     #[test]
     fn test_display() {

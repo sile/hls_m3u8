@@ -1,8 +1,7 @@
 use core::convert::TryFrom;
 use core::fmt;
+use core::ops::{Deref, DerefMut};
 use std::borrow::Cow;
-
-use derive_more::{AsMut, AsRef, Deref, DerefMut};
 
 use crate::Error;
 
@@ -23,11 +22,35 @@ use crate::Error;
 ///
 /// [RFC6381]: https://tools.ietf.org/html/rfc6381
 /// [`VariantStream`]: crate::tags::VariantStream
-#[derive(
-    AsMut, AsRef, Deref, DerefMut, Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash, Default,
-)]
+#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash, Default)]
 pub struct Codecs<'a> {
     list: Vec<Cow<'a, str>>,
+}
+
+impl<'a> AsRef<Vec<Cow<'a, str>>> for Codecs<'a> {
+    fn as_ref(&self) -> &Vec<Cow<'a, str>> {
+        &self.list
+    }
+}
+
+impl<'a> AsMut<Vec<Cow<'a, str>>> for Codecs<'a> {
+    fn as_mut(&mut self) -> &mut Vec<Cow<'a, str>> {
+        &mut self.list
+    }
+}
+
+impl<'a> Deref for Codecs<'a> {
+    type Target = Vec<Cow<'a, str>>;
+
+    fn deref(&self) -> &Self::Target {
+        &self.list
+    }
+}
+
+impl DerefMut for Codecs<'_> {
+    fn deref_mut(&mut self) -> &mut Self::Target {
+        &mut self.list
+    }
 }
 
 impl Codecs<'_> {

@@ -410,7 +410,6 @@ impl<'a> PartialEq<&VariantStream<'a>> for VariantStream<'a> {
 mod tests {
     use super::*;
     use crate::types::InStreamId;
-    use pretty_assertions::assert_eq;
 
     #[test]
     fn test_required_version() {

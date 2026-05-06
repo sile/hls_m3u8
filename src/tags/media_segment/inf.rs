@@ -3,8 +3,6 @@ use std::convert::TryFrom;
 use std::fmt;
 use std::time::Duration;
 
-use derive_more::AsRef;
-
 use crate::types::ProtocolVersion;
 use crate::utils::tag;
 use crate::{Error, RequiredVersion};
@@ -12,11 +10,16 @@ use crate::{Error, RequiredVersion};
 /// Specifies the duration of a [`Media Segment`].
 ///
 /// [`Media Segment`]: crate::media_segment::MediaSegment
-#[derive(AsRef, Default, Debug, Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]
+#[derive(Default, Debug, Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]
 pub struct ExtInf<'a> {
-    #[as_ref]
     duration: Duration,
     title: Option<Cow<'a, str>>,
+}
+
+impl AsRef<Duration> for ExtInf<'_> {
+    fn as_ref(&self) -> &Duration {
+        &self.duration
+    }
 }
 
 impl<'a> ExtInf<'a> {
@@ -201,7 +204,6 @@ impl From<Duration> for ExtInf<'_> {
 #[cfg(test)]
 mod test {
     use super::*;
-    use pretty_assertions::assert_eq;
 
     #[test]
     fn test_display() {

@@ -39,7 +39,13 @@ impl fmt::Display for Value<'_> {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match &self {
             Self::String(value) => write!(f, "{}", quote(value)),
-            Self::Hex(value) => write!(f, "0x{}", hex::encode_upper(value)),
+            Self::Hex(value) => {
+                f.write_str("0x")?;
+                for byte in value {
+                    write!(f, "{byte:02X}")?;
+                }
+                Ok(())
+            }
             Self::Float(value) => write!(f, "{}", value),
         }
     }
@@ -50,10 +56,9 @@ impl<'a> TryFrom<&'a str> for Value<'a> {
 
     fn try_from(input: &'a str) -> Result<Self, Self::Error> {
         if input.starts_with("0x") || input.starts_with("0X") {
-            Ok(Self::Hex(
-                hex::decode(input.trim_start_matches("0x").trim_start_matches("0X"))
-                    .map_err(Error::hex)?,
-            ))
+            Ok(Self::Hex(crate::hex::decode(
+                input.trim_start_matches("0x").trim_start_matches("0X"),
+            )?))
         } else {
             match input.parse() {
                 Ok(value) => Ok(Self::Float(value)),
@@ -84,7 +89,6 @@ impl From<String> for Value<'static> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use pretty_assertions::assert_eq;
 
     #[test]
     fn test_display() {

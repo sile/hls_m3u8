@@ -1,7 +1,6 @@
 use core::convert::TryFrom;
+use core::fmt;
 use core::iter::FusedIterator;
-
-use derive_more::Display;
 
 use crate::Error;
 use crate::tags;
@@ -55,8 +54,7 @@ pub(crate) enum Line<'a> {
     Uri(&'a str),
 }
 
-#[derive(Debug, Clone, PartialEq, Display)]
-#[display("{_variant}")]
+#[derive(Debug, Clone, PartialEq)]
 pub(crate) enum Tag<'a> {
     ExtXVersion(tags::ExtXVersion),
     ExtInf(tags::ExtInf<'a>),
@@ -79,6 +77,34 @@ pub(crate) enum Tag<'a> {
     ExtXStart(tags::ExtXStart),
     VariantStream(tags::VariantStream<'a>),
     Unknown(&'a str),
+}
+
+impl fmt::Display for Tag<'_> {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match self {
+            Self::ExtXVersion(t) => write!(f, "{t}"),
+            Self::ExtInf(t) => write!(f, "{t}"),
+            Self::ExtXByteRange(t) => write!(f, "{t}"),
+            Self::ExtXDiscontinuity(t) => write!(f, "{t}"),
+            Self::ExtXKey(t) => write!(f, "{t}"),
+            Self::ExtXMap(t) => write!(f, "{t}"),
+            Self::ExtXProgramDateTime(t) => write!(f, "{t}"),
+            Self::ExtXDateRange(t) => write!(f, "{t}"),
+            Self::ExtXTargetDuration(t) => write!(f, "{t}"),
+            Self::ExtXMediaSequence(t) => write!(f, "{t}"),
+            Self::ExtXDiscontinuitySequence(t) => write!(f, "{t}"),
+            Self::ExtXEndList(t) => write!(f, "{t}"),
+            Self::PlaylistType(t) => write!(f, "{t}"),
+            Self::ExtXIFramesOnly(t) => write!(f, "{t}"),
+            Self::ExtXMedia(t) => write!(f, "{t}"),
+            Self::ExtXSessionData(t) => write!(f, "{t}"),
+            Self::ExtXSessionKey(t) => write!(f, "{t}"),
+            Self::ExtXIndependentSegments(t) => write!(f, "{t}"),
+            Self::ExtXStart(t) => write!(f, "{t}"),
+            Self::VariantStream(t) => write!(f, "{t}"),
+            Self::Unknown(t) => write!(f, "{t}"),
+        }
+    }
 }
 
 impl<'a> TryFrom<&'a str> for Tag<'a> {

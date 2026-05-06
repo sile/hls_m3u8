@@ -250,7 +250,6 @@ impl fmt::Display for ExtXKey<'_> {
 mod test {
     use super::*;
     use crate::types::{EncryptionMethod, KeyFormat};
-    use pretty_assertions::assert_eq;
 
     macro_rules! generate_tests {
         ( $( { $struct:expr, $str:expr } ),+ $(,)* ) => {

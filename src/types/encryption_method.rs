@@ -1,9 +1,11 @@
-use strum::{Display, EnumString};
+use std::fmt;
+use std::str::FromStr;
+
+use crate::Error;
 
 /// The encryption method.
 #[non_exhaustive]
-#[derive(Ord, PartialOrd, Debug, Clone, Copy, PartialEq, Eq, Hash, Display, EnumString)]
-#[strum(serialize_all = "SCREAMING-KEBAB-CASE")]
+#[derive(Ord, PartialOrd, Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum EncryptionMethod {
     /// The [`MediaSegment`]s are completely encrypted using the Advanced
     /// Encryption Standard ([AES-128]) with a 128-bit key, Cipher Block
@@ -23,7 +25,6 @@ pub enum EncryptionMethod {
     /// [`MediaSegment`]: crate::MediaSegment
     /// [AES-128]: http://nvlpubs.nist.gov/nistpubs/FIPS/NIST.FIPS.197.pdf
     /// [Public-Key Cryptography Standards #7 (PKCS7)]: https://tools.ietf.org/html/rfc5652
-    #[strum(serialize = "AES-128")]
     Aes128,
     /// The [`MediaSegment`]s contain media samples, such as audio or video,
     /// that are encrypted using the Advanced Encryption Standard ([`AES-128`]).
@@ -48,10 +49,32 @@ pub enum EncryptionMethod {
     SampleAes,
 }
 
+impl fmt::Display for EncryptionMethod {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        f.write_str(match self {
+            Self::Aes128 => "AES-128",
+            Self::SampleAes => "SAMPLE-AES",
+        })
+    }
+}
+
+impl FromStr for EncryptionMethod {
+    type Err = Error;
+
+    fn from_str(input: &str) -> Result<Self, Self::Err> {
+        match input {
+            "AES-128" => Ok(Self::Aes128),
+            "SAMPLE-AES" => Ok(Self::SampleAes),
+            _ => Err(Error::custom(format!(
+                "invalid encryption method: {input:?}"
+            ))),
+        }
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
-    use pretty_assertions::assert_eq;
 
     #[test]
     fn test_display() {

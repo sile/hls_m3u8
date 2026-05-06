@@ -1,8 +1,6 @@
 use core::convert::TryFrom;
 use std::fmt;
 
-use derive_more::{AsMut, AsRef, From};
-
 use crate::tags::ExtXKey;
 use crate::types::{DecryptionKey, ProtocolVersion};
 use crate::utils::tag;
@@ -20,8 +18,26 @@ use crate::{Error, RequiredVersion};
 /// [`MediaPlaylist`]: crate::MediaPlaylist
 /// [`MasterPlaylist`]: crate::MasterPlaylist
 /// [`ExtXKey`]: crate::tags::ExtXKey
-#[derive(AsRef, AsMut, From, Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
+#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub struct ExtXSessionKey<'a>(pub DecryptionKey<'a>);
+
+impl<'a> AsRef<DecryptionKey<'a>> for ExtXSessionKey<'a> {
+    fn as_ref(&self) -> &DecryptionKey<'a> {
+        &self.0
+    }
+}
+
+impl<'a> AsMut<DecryptionKey<'a>> for ExtXSessionKey<'a> {
+    fn as_mut(&mut self) -> &mut DecryptionKey<'a> {
+        &mut self.0
+    }
+}
+
+impl<'a> From<DecryptionKey<'a>> for ExtXSessionKey<'a> {
+    fn from(value: DecryptionKey<'a>) -> Self {
+        Self(value)
+    }
+}
 
 impl<'a> ExtXSessionKey<'a> {
     pub(crate) const PREFIX: &'static str = "#EXT-X-SESSION-KEY:";
@@ -97,7 +113,6 @@ impl<'a> TryFrom<&'a str> for ExtXSessionKey<'a> {
 mod test {
     use super::*;
     use crate::types::{EncryptionMethod, KeyFormat};
-    use pretty_assertions::assert_eq;
 
     macro_rules! generate_tests {
         ( $( { $struct:expr, $str:expr } ),+ $(,)* ) => {

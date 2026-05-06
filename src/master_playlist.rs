@@ -565,7 +565,6 @@ impl<'a> TryFrom<&'a str> for MasterPlaylist<'a> {
 mod tests {
     use super::*;
     use crate::types::StreamData;
-    use pretty_assertions::assert_eq;
 
     #[test]
     fn test_audio_streams() {

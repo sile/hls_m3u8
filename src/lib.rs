@@ -40,8 +40,6 @@
 //!
 //! The following crate feature flags are available:
 //!
-//! - `backtrace` (optional)
-//!   - Enables the backtrace feature for the [`Error`] type.
 //! - `chrono` (optional)
 //!   - Enables parsing dates and verifying them.
 //!   - The following things will change:
@@ -96,6 +94,7 @@ pub mod types;
 mod utils;
 mod attribute;
 mod error;
+mod hex;
 mod line;
 mod master_playlist;
 mod media_playlist;

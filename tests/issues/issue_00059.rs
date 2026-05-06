@@ -4,8 +4,6 @@ use std::convert::TryFrom;
 
 use hls_m3u8::MediaPlaylist;
 
-use pretty_assertions::assert_eq;
-
 #[test]
 fn parse() {
     let playlist = concat!(

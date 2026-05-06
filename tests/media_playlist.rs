@@ -9,7 +9,6 @@ use std::time::Duration;
 use hls_m3u8::tags::{ExtInf, ExtXByteRange};
 use hls_m3u8::types::PlaylistType;
 use hls_m3u8::{MediaPlaylist, MediaSegment};
-use pretty_assertions::assert_eq;
 
 macro_rules! generate_tests {
     ( $( $fnname:ident => { $struct:expr, $str:expr }),+ $(,)* ) => {

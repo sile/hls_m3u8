@@ -177,7 +177,7 @@ impl<'a> TryFrom<&'a str> for DecryptionKey<'a> {
 
         for (key, value) in AttributePairs::new(input) {
             match key {
-                "METHOD" => method = Some(value.parse().map_err(Error::strum)?),
+                "METHOD" => method = Some(value.parse()?),
                 "URI" => {
                     let unquoted_uri = unquote(value);
 
@@ -249,7 +249,6 @@ impl DecryptionKeyBuilder<'_> {
 mod test {
     use super::*;
     use crate::types::{EncryptionMethod, KeyFormat};
-    use pretty_assertions::assert_eq;
 
     macro_rules! generate_tests {
         ( $( { $struct:expr, $str:expr } ),+ $(,)* ) => {
