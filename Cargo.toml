@@ -21,13 +21,6 @@ chrono = { version = "0.4", optional = true }
 
 derive_builder = "0.20"
 
-derive_more = { version = "1", features = [
-    "display",
-    "as_ref",
-    "from",
-    "deref",
-    "deref_mut",
-] }
 shorthand = "0.1"
 strum = { version = "0.26.3", features = ["derive"] }
 

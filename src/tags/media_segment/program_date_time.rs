@@ -6,8 +6,6 @@ use std::marker::PhantomData;
 
 #[cfg(feature = "chrono")]
 use chrono::{DateTime, FixedOffset, SecondsFormat};
-#[cfg(feature = "chrono")]
-use derive_more::{Deref, DerefMut};
 
 use crate::types::ProtocolVersion;
 use crate::utils::tag;
@@ -28,17 +26,32 @@ use crate::{Error, RequiredVersion};
 ///
 /// [`MediaSegment`]: crate::MediaSegment
 #[derive(Debug, Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]
-#[cfg_attr(feature = "chrono", derive(Deref, DerefMut, Copy))]
+#[cfg_attr(feature = "chrono", derive(Copy))]
 #[non_exhaustive]
 pub struct ExtXProgramDateTime<'a> {
     /// The date-time of the first sample of the associated media segment.
     #[cfg(feature = "chrono")]
-    #[cfg_attr(feature = "chrono", deref_mut, deref)]
     pub date_time: DateTime<FixedOffset>,
     /// The date-time of the first sample of the associated media segment.
     #[cfg(not(feature = "chrono"))]
     pub date_time: Cow<'a, str>,
     _p: PhantomData<&'a str>,
+}
+
+#[cfg(feature = "chrono")]
+impl core::ops::Deref for ExtXProgramDateTime<'_> {
+    type Target = DateTime<FixedOffset>;
+
+    fn deref(&self) -> &Self::Target {
+        &self.date_time
+    }
+}
+
+#[cfg(feature = "chrono")]
+impl core::ops::DerefMut for ExtXProgramDateTime<'_> {
+    fn deref_mut(&mut self) -> &mut Self::Target {
+        &mut self.date_time
+    }
 }
 
 impl<'a> ExtXProgramDateTime<'a> {
