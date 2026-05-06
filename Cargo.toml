@@ -12,10 +12,6 @@ edition = "2024"
 rust-version = "1.88"
 categories = ["parser-implementations"]
 
-[features]
-default = []
-perf = []
-
 [dependencies]
 chrono = { version = "0.4", optional = true }
 derive_builder = "0.20"
