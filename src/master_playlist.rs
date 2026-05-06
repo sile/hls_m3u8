@@ -346,22 +346,22 @@ impl MasterPlaylistBuilder<'_> {
                     stream_data,
                     ..
                 } => {
-                    if let Some(group_id) = &audio {
-                        if !self.check_media_group(MediaType::Audio, group_id) {
-                            return Err(Error::unmatched_group(group_id));
-                        }
+                    if let Some(group_id) = &audio
+                        && !self.check_media_group(MediaType::Audio, group_id)
+                    {
+                        return Err(Error::unmatched_group(group_id));
                     }
 
-                    if let Some(group_id) = &stream_data.video() {
-                        if !self.check_media_group(MediaType::Video, group_id) {
-                            return Err(Error::unmatched_group(group_id));
-                        }
+                    if let Some(group_id) = &stream_data.video()
+                        && !self.check_media_group(MediaType::Video, group_id)
+                    {
+                        return Err(Error::unmatched_group(group_id));
                     }
 
-                    if let Some(group_id) = &subtitles {
-                        if !self.check_media_group(MediaType::Subtitles, group_id) {
-                            return Err(Error::unmatched_group(group_id));
-                        }
+                    if let Some(group_id) = &subtitles
+                        && !self.check_media_group(MediaType::Subtitles, group_id)
+                    {
+                        return Err(Error::unmatched_group(group_id));
                     }
 
                     if let Some(closed_captions) = &closed_captions {
@@ -385,10 +385,10 @@ impl MasterPlaylistBuilder<'_> {
                 }
 
                 VariantStream::ExtXIFrame { stream_data, .. } => {
-                    if let Some(group_id) = stream_data.video() {
-                        if !self.check_media_group(MediaType::Video, group_id) {
-                            return Err(Error::unmatched_group(group_id));
-                        }
+                    if let Some(group_id) = stream_data.video()
+                        && !self.check_media_group(MediaType::Video, group_id)
+                    {
+                        return Err(Error::unmatched_group(group_id));
                     }
                 }
             }

@@ -235,10 +235,10 @@ impl fmt::Display for DecryptionKey<'_> {
             write!(f, ",KEYFORMAT={}", quote(value))?;
         }
 
-        if let Some(value) = &self.versions {
-            if !value.is_default() {
-                write!(f, ",KEYFORMATVERSIONS={}", value)?;
-            }
+        if let Some(value) = &self.versions
+            && !value.is_default()
+        {
+            write!(f, ",KEYFORMATVERSIONS={}", value)?;
         }
 
         Ok(())

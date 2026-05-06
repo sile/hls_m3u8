@@ -292,13 +292,14 @@ impl<'a> MediaPlaylistBuilder<'a> {
             .ok_or_else(|| "missing field `segments`".to_string())?;
 
         // no segment should exist before the sequence_number
-        if let Some(first_segment) = segments.find_first() {
-            if sequence_number > first_segment.number && first_segment.explicit_number {
-                return Err(format!(
-                    "there should be no segment ({}) before the sequence_number ({})",
-                    first_segment, sequence_number,
-                ));
-            }
+        if let Some(first_segment) = segments.find_first()
+            && sequence_number > first_segment.number
+            && first_segment.explicit_number
+        {
+            return Err(format!(
+                "there should be no segment ({}) before the sequence_number ({})",
+                first_segment, sequence_number,
+            ));
         }
 
         let mut previous_range: Option<ExtXByteRange> = None;
@@ -314,13 +315,11 @@ impl<'a> MediaPlaylistBuilder<'a> {
                 if let ExtXKey(Some(DecryptionKey {
                     method, iv, format, ..
                 })) = key
+                    && *method == EncryptionMethod::Aes128
+                    && *iv == InitializationVector::Missing
+                    && (format.is_none() || &mut Some(KeyFormat::Identity) == format)
                 {
-                    if *method == EncryptionMethod::Aes128
-                        && *iv == InitializationVector::Missing
-                        && (format.is_none() || &mut Some(KeyFormat::Identity) == format)
-                    {
-                        *iv = InitializationVector::Number(segment.number as u128);
-                    }
+                    *iv = InitializationVector::Number(segment.number as u128);
                 }
             }
 
