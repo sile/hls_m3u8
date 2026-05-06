@@ -145,7 +145,7 @@ impl RequiredVersion for ExtXByteRange {
     }
 }
 
-#[allow(clippy::from_over_into)] // Some magic `From` blanket impl is going on that means this can't be done.
+#[expect(clippy::from_over_into)] // Some magic `From` blanket impl is going on that means this can't be done.
 impl Into<ByteRange> for ExtXByteRange {
     fn into(self) -> ByteRange {
         self.0

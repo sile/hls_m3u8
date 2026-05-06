@@ -79,7 +79,7 @@ pub(crate) fn unquote(value: &str) -> Cow<'_, str> {
 }
 
 /// Puts a string inside quotes.
-#[allow(clippy::needless_pass_by_value)]
+#[expect(clippy::needless_pass_by_value)]
 pub(crate) fn quote<T: ToString>(value: T) -> String {
     // the replace is for the case, that quote is called on an already quoted
     // string, which could cause problems!

@@ -483,7 +483,7 @@ mod tests {
     use pretty_assertions::assert_eq;
 
     #[test]
-    #[allow(clippy::unit_cmp)] // fucked test
+    #[expect(clippy::unit_cmp)] // fucked test
     fn test_hash() {
         let mut hasher_left = std::collections::hash_map::DefaultHasher::new();
         let mut hasher_right = std::collections::hash_map::DefaultHasher::new();

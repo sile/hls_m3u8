@@ -2,7 +2,7 @@ use strum::{Display, EnumString};
 
 /// Specifies the media type.
 #[non_exhaustive]
-#[allow(missing_docs)]
+#[expect(missing_docs)]
 #[derive(Ord, PartialOrd, Display, EnumString, Debug, Clone, Copy, PartialEq, Eq, Hash)]
 #[strum(serialize_all = "SCREAMING-KEBAB-CASE")]
 pub enum MediaType {

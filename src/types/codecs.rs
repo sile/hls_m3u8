@@ -74,52 +74,21 @@ where
     }
 }
 
-// TODO: this should be implemented with const generics in the future!
-macro_rules! implement_from {
-    ($($size:expr),*) => {
-        $(
-            #[allow(clippy::reversed_empty_ranges)]
-            impl<'a> From<[&'a str; $size]> for Codecs<'a> {
-                fn from(value: [&'a str; $size]) -> Self {
-                    Self {
-                        list: {
-                            let mut result = Vec::with_capacity($size);
-
-                            for i in 0..$size {
-                                result.push(Cow::Borrowed(value[i]))
-                            }
-
-                            result
-                        },
-                    }
-                }
-            }
-
-            #[allow(clippy::reversed_empty_ranges)]
-            impl<'a> From<&[&'a str; $size]> for Codecs<'a> {
-                fn from(value: &[&'a str; $size]) -> Self {
-                    Self {
-                        list: {
-                            let mut result = Vec::with_capacity($size);
-
-                            for i in 0..$size {
-                                result.push(Cow::Borrowed(value[i]))
-                            }
-
-                            result
-                        },
-                    }
-                }
-            }
-        )*
-    };
+impl<'a, const N: usize> From<[&'a str; N]> for Codecs<'a> {
+    fn from(value: [&'a str; N]) -> Self {
+        Self {
+            list: value.iter().map(|s| Cow::Borrowed(*s)).collect(),
+        }
+    }
 }
 
-implement_from!(
-    0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09, 0x0A, 0x0B, 0x0C, 0x0D, 0x0E, 0x0F,
-    0x10, 0x11, 0x12, 0x13, 0x14, 0x15, 0x16, 0x17, 0x18, 0x19, 0x1A, 0x1B, 0x1C, 0x1D, 0x1E, 0x1F,
-    0x20
-);
+impl<'a, const N: usize> From<&[&'a str; N]> for Codecs<'a> {
+    fn from(value: &[&'a str; N]) -> Self {
+        Self {
+            list: value.iter().map(|s| Cow::Borrowed(*s)).collect(),
+        }
+    }
+}
 
 impl fmt::Display for Codecs<'_> {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {

@@ -201,7 +201,7 @@ mod tests {
     use core::hash::{Hash, Hasher};
     use pretty_assertions::assert_eq;
 
-    #[allow(clippy::all, clippy::unreadable_literal)]
+    #[expect(clippy::unreadable_literal)]
     const PI: f32 = 3.14159265359;
 
     #[test]
@@ -228,7 +228,7 @@ mod tests {
     }
 
     #[test]
-    #[allow(clippy::unit_cmp)] // fucked test
+    #[expect(clippy::unit_cmp)] // fucked test
     fn test_hash() {
         let mut hasher_left = std::collections::hash_map::DefaultHasher::new();
         let mut hasher_right = std::collections::hash_map::DefaultHasher::new();

@@ -277,7 +277,7 @@ impl<'a> MasterPlaylist<'a> {
     ///
     /// This is a relatively expensive operation.
     #[must_use]
-    #[allow(clippy::redundant_closure_for_method_calls)]
+    #[expect(clippy::redundant_closure_for_method_calls)]
     pub fn into_owned(self) -> MasterPlaylist<'static> {
         MasterPlaylist {
             has_independent_segments: self.has_independent_segments,

@@ -6,7 +6,7 @@ use crate::Error;
 /// The [`ProtocolVersion`] specifies which `m3u8` revision is required, to
 /// parse a certain tag correctly.
 #[non_exhaustive]
-#[allow(missing_docs)]
+#[expect(missing_docs)]
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub enum ProtocolVersion {
     V1,

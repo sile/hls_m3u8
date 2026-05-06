@@ -1,10 +1,9 @@
 #![forbid(unsafe_code)]
-#![allow(
+#![expect(
     clippy::collapsible_if,
     clippy::infallible_try_from,
     clippy::large_enum_variant,
     clippy::module_name_repetitions,
-    clippy::default_trait_access,
     clippy::unnecessary_operation
 )]
 #![deny(
