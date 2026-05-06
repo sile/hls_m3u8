@@ -1,19 +1,18 @@
 hls_m3u8
-=========
+========
 
-[![Crates.io: hls_m3u8](https://img.shields.io/crates/v/hls_m3u8.svg)](https://crates.io/crates/hls_m3u8)
+[![hls_m3u8](https://img.shields.io/crates/v/hls_m3u8.svg)](https://crates.io/crates/hls_m3u8)
 [![Documentation](https://docs.rs/hls_m3u8/badge.svg)](https://docs.rs/hls_m3u8)
 [![Actions Status](https://github.com/sile/hls_m3u8/workflows/CI/badge.svg)](https://github.com/sile/hls_m3u8/actions)
 ![License](https://img.shields.io/crates/l/hls_m3u8)
 
 [HLS] m3u8 parser/generator.
 
-[Documentation](https://docs.rs/hls_m3u8)
-
 [HLS]: https://tools.ietf.org/html/rfc8216
 
+
 Examples
----------
+--------
 
 ```rust
 use hls_m3u8::MediaPlaylist;
@@ -32,18 +31,20 @@ http://media.example.com/third.ts
 assert!(m3u8.parse::<MediaPlaylist>().is_ok());
 ```
 
-## License
+
+License
+-------
 
 Licensed under either of
 
-- Apache License, Version 2.0
-  ([LICENSE-APACHE](LICENSE-APACHE) or http://www.apache.org/licenses/LICENSE-2.0)
-- MIT license
-  ([LICENSE-MIT](LICENSE-MIT) or http://opensource.org/licenses/MIT)
+- Apache License, Version 2.0 ([LICENSE-APACHE](LICENSE-APACHE) or http://www.apache.org/licenses/LICENSE-2.0)
+- MIT license ([LICENSE-MIT](LICENSE-MIT) or http://opensource.org/licenses/MIT)
 
 at your option.
 
-## Contribution
+
+Contribution
+------------
 
 Unless you explicitly state otherwise, any contribution intentionally submitted
 for inclusion in the work by you, as defined in the Apache-2.0 license, shall be
