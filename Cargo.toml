@@ -20,7 +20,6 @@ perf = []
 chrono = { version = "0.4", optional = true }
 
 derive_builder = "0.20"
-hex = "0.4"
 
 derive_more = { version = "1", features = [
     "display",

@@ -34,19 +34,12 @@ fn create_manifest_data() -> Vec<u8> {
                     .duration(Duration::from_secs_f64(65.2))
                     .insert_client_attribute(
                         "SCTE35-OUT",
-                        Value::Hex(
-                            hex::decode(concat!(
-                                "FC30250000",
-                                "0000000000",
-                                "FFF0140500",
-                                "001C207FEF",
-                                "FE0030E3A0",
-                                "FE005989E0",
-                                "0001000000",
-                                "0070BA5ABF"
-                            ))
-                            .unwrap(),
-                        ),
+                        Value::Hex(vec![
+                            0xFC, 0x30, 0x25, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0xFF,
+                            0xF0, 0x14, 0x05, 0x00, 0x00, 0x1C, 0x20, 0x7F, 0xEF, 0xFE, 0x00, 0x30,
+                            0xE3, 0xA0, 0xFE, 0x00, 0x59, 0x89, 0xE0, 0x00, 0x01, 0x00, 0x00, 0x00,
+                            0x00, 0x70, 0xBA, 0x5A, 0xBF,
+                        ]),
                     )
                     .build()
                     .unwrap(),

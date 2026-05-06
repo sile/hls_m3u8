@@ -94,6 +94,7 @@ pub mod types;
 mod utils;
 mod attribute;
 mod error;
+mod hex;
 mod line;
 mod master_playlist;
 mod media_playlist;

@@ -42,7 +42,7 @@ enum ErrorKind {
         message: String,
     },
     Hex {
-        source: hex::FromHexError,
+        source: crate::hex::DecodeError,
     },
 }
 
@@ -209,7 +209,7 @@ impl Error {
         Self::new(ErrorKind::Chrono { source })
     }
 
-    pub(crate) fn hex(source: hex::FromHexError) -> Self {
+    pub(crate) fn hex(source: crate::hex::DecodeError) -> Self {
         Self::new(ErrorKind::Hex { source })
     }
 
