@@ -29,24 +29,19 @@ pub struct Channels {
     /// ```
     number: u64,
 
-    /// Dolby Atmos mix type
+    /// Dolby Atmos mix type.
     ///
     /// # Example
     ///
+    /// ```
+    /// # use hls_m3u8::types::{Channels, MixType};
+    /// let mut channels = Channels::new(16);
+    /// assert_eq!(channels.mix_type(), None);
+    ///
+    /// channels.set_mix_type(Some(MixType::JOC));
+    /// assert_eq!(channels.mix_type(), Some(&MixType::JOC));
+    /// ```
     mix_type: Option<MixType>,
-    // /// Flag for JOC (Dolby Atmos).
-    // ///
-    // /// # Example
-    // ///
-    // /// ```
-    // /// # use hls_m3u8::types::Channels;
-    // /// let mut channels = Channels::new(6);
-    // /// assert_eq!(channels.has_joc_content(), false);
-    // ///
-    // /// channels.set_has_joc_content(true);
-    // /// assert_eq!(channels.has_joc_content(), true);
-    // /// ```
-    // has_joc_content: bool,
 }
 
 /// Dolby atmos mix type for a [`Channels`] configuration
