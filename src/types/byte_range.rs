@@ -291,10 +291,61 @@ impl AddAssign<usize> for ByteRange {
     }
 }
 
+impl From<Range<usize>> for ByteRange {
+    fn from(range: Range<usize>) -> Self {
+        if range.start > range.end {
+            panic!(
+                "the range start ({}) must be smaller than the end ({})",
+                range.start, range.end
+            );
+        }
+
+        Self {
+            start: Some(range.start),
+            end: range.end,
+        }
+    }
+}
+
+impl From<RangeInclusive<usize>> for ByteRange {
+    fn from(range: RangeInclusive<usize>) -> Self {
+        let (start, end) = range.into_inner();
+
+        if start > end {
+            panic!(
+                "the range start ({}) must be smaller than the end ({}+1)",
+                start, end
+            );
+        }
+
+        Self {
+            start: Some(start),
+            end: end.saturating_add(1),
+        }
+    }
+}
+
+impl From<RangeTo<usize>> for ByteRange {
+    fn from(range: RangeTo<usize>) -> Self {
+        Self {
+            start: None,
+            end: range.end,
+        }
+    }
+}
+
+impl From<RangeToInclusive<usize>> for ByteRange {
+    fn from(range: RangeToInclusive<usize>) -> Self {
+        Self {
+            start: None,
+            end: range.end.saturating_add(1),
+        }
+    }
+}
+
 macro_rules! impl_from_ranges {
     ( $( $type:tt ),* ) => {
         $(
-            #[allow(trivial_numeric_casts, clippy::fallible_impl_from)]
             impl From<Range<$type>> for ByteRange {
                 fn from(range: Range<$type>) -> Self {
                     if range.start > range.end {
@@ -311,7 +362,6 @@ macro_rules! impl_from_ranges {
                 }
             }
 
-            #[allow(trivial_numeric_casts, clippy::fallible_impl_from)]
             impl From<RangeInclusive<$type>> for ByteRange {
                 fn from(range: RangeInclusive<$type>) -> Self {
                     let (start, end) = range.into_inner();
@@ -330,7 +380,6 @@ macro_rules! impl_from_ranges {
                 }
             }
 
-            #[allow(trivial_numeric_casts, clippy::fallible_impl_from)]
             impl From<RangeTo<$type>> for ByteRange {
                 fn from(range: RangeTo<$type>) -> Self {
                     Self {
@@ -340,7 +389,6 @@ macro_rules! impl_from_ranges {
                 }
             }
 
-            #[allow(trivial_numeric_casts, clippy::fallible_impl_from)]
             impl From<RangeToInclusive<$type>> for ByteRange {
                 fn from(range: RangeToInclusive<$type>) -> Self {
                     Self {
@@ -355,7 +403,7 @@ macro_rules! impl_from_ranges {
 
 // TODO: replace with generics as soon as overlapping trait implementations are
 // stable (`Into<i64> for usize` is reserved for upstream crates ._.)
-impl_from_ranges![u64, u32, u16, u8, usize, i32];
+impl_from_ranges![u64, u32, u16, u8, i32];
 
 impl RangeBounds<usize> for ByteRange {
     fn start_bound(&self) -> Bound<&usize> {
@@ -452,14 +500,14 @@ mod tests {
 
     #[test]
     #[should_panic = "the range start (6) must be smaller than the end (0)"]
-    #[allow(clippy::reversed_empty_ranges)]
+    #[expect(clippy::reversed_empty_ranges)]
     fn test_from_range_panic() {
         let _ = ByteRange::from(6..0);
     }
 
     #[test]
     #[should_panic = "the range start (6) must be smaller than the end (0+1)"]
-    #[allow(clippy::reversed_empty_ranges)]
+    #[expect(clippy::reversed_empty_ranges)]
     fn test_from_range_inclusive_panic() {
         let _ = ByteRange::from(6..=0);
     }
@@ -529,7 +577,7 @@ mod tests {
     }
 
     #[test]
-    #[allow(clippy::identity_op)]
+    #[expect(clippy::identity_op)]
     fn test_add() {
         // normal addition
         assert_eq!(ByteRange::from(5..10) + 5, ByteRange::from(10..15));
@@ -547,7 +595,7 @@ mod tests {
     }
 
     #[test]
-    #[allow(clippy::identity_op)]
+    #[expect(clippy::identity_op)]
     fn test_sub() {
         // normal subtraction
         assert_eq!(ByteRange::from(5..10) - 4, ByteRange::from(1..6));

@@ -74,7 +74,7 @@ enum ErrorKind {
 pub struct Error {
     inner: ErrorKind,
     #[cfg(feature = "backtrace")]
-    #[allow(dead_code)]
+    #[expect(dead_code)]
     backtrace: Backtrace,
 }
 
@@ -92,7 +92,7 @@ impl fmt::Display for Error {
     }
 }
 
-#[allow(clippy::needless_pass_by_value)]
+#[expect(clippy::needless_pass_by_value)]
 impl Error {
     fn new(inner: ErrorKind) -> Self {
         Self {

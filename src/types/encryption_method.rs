@@ -2,7 +2,6 @@ use strum::{Display, EnumString};
 
 /// The encryption method.
 #[non_exhaustive]
-#[allow(missing_docs)]
 #[derive(Ord, PartialOrd, Debug, Clone, Copy, PartialEq, Eq, Hash, Display, EnumString)]
 #[strum(serialize_all = "SCREAMING-KEBAB-CASE")]
 pub enum EncryptionMethod {

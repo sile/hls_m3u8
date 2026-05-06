@@ -1,6 +1,6 @@
 [package]
 name = "hls_m3u8"
-version = "0.6.0" # remember to update html_root_url
+version = "0.6.0"
 authors = ["Takeru Ohta <phjgt308@gmail.com>", "Luro02 <24826124+Luro02@users.noreply.github.com>"]
 description = "HLS m3u8 parser/generator"
 homepage = "https://github.com/sile/hls_m3u8"
@@ -8,7 +8,8 @@ repository = "https://github.com/sile/hls_m3u8"
 readme = "README.md"
 license = "MIT OR Apache-2.0"
 keywords = ["hls", "m3u8"]
-edition = "2018"
+edition = "2024"
+rust-version = "1.88"
 categories = ["parser-implementations"]
 
 [features]
@@ -37,7 +38,6 @@ stable-vec = { version = "0.4" }
 
 [dev-dependencies]
 pretty_assertions = "1.4.0"
-version-sync = "0.9"
 automod = "1.0.14"
 criterion = "0.5.1"
 

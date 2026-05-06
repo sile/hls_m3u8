@@ -3,9 +3,9 @@ use core::iter::FusedIterator;
 
 use derive_more::Display;
 
+use crate::Error;
 use crate::tags;
 use crate::types::PlaylistType;
-use crate::Error;
 
 #[derive(Debug, Clone)]
 pub(crate) struct Lines<'a> {
@@ -55,7 +55,6 @@ pub(crate) enum Line<'a> {
     Uri(&'a str),
 }
 
-#[allow(clippy::large_enum_variant)]
 #[derive(Debug, Clone, PartialEq, Display)]
 #[display("{_variant}")]
 pub(crate) enum Tag<'a> {

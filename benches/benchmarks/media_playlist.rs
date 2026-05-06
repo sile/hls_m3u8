@@ -2,7 +2,7 @@ use std::convert::TryFrom;
 use std::str::FromStr;
 use std::time::Duration;
 
-use criterion::{black_box, criterion_group, Criterion, Throughput};
+use criterion::{Criterion, Throughput, black_box, criterion_group};
 
 use hls_m3u8::tags::{ExtXDateRange, ExtXProgramDateTime};
 use hls_m3u8::types::Value;

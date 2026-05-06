@@ -2,9 +2,9 @@ use std::borrow::Cow;
 use std::convert::TryFrom;
 use std::fmt;
 
+use crate::Error;
 use crate::types::Float;
 use crate::utils::{quote, unquote};
-use crate::Error;
 
 /// A `Value`.
 #[non_exhaustive]

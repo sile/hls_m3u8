@@ -25,20 +25,12 @@ pub(crate) trait BoolExt {
 impl BoolExt for bool {
     #[inline]
     fn athen_some<T>(self, t: T) -> Option<T> {
-        if self {
-            Some(t)
-        } else {
-            None
-        }
+        if self { Some(t) } else { None }
     }
 
     #[inline]
     fn athen<T, F: FnOnce() -> T>(self, f: F) -> Option<T> {
-        if self {
-            Some(f())
-        } else {
-            None
-        }
+        if self { Some(f()) } else { None }
     }
 }
 
@@ -87,7 +79,7 @@ pub(crate) fn unquote(value: &str) -> Cow<'_, str> {
 }
 
 /// Puts a string inside quotes.
-#[allow(clippy::needless_pass_by_value)]
+#[expect(clippy::needless_pass_by_value)]
 pub(crate) fn quote<T: ToString>(value: T) -> String {
     // the replace is for the case, that quote is called on an already quoted
     // string, which could cause problems!

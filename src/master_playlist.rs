@@ -11,7 +11,7 @@ use crate::tags::{
     ExtXVersion, VariantStream,
 };
 use crate::types::{ClosedCaptions, MediaType, ProtocolVersion};
-use crate::utils::{tag, BoolExt};
+use crate::utils::{BoolExt, tag};
 use crate::{Error, RequiredVersion};
 
 /// The master playlist describes all of the available variants for your
@@ -277,7 +277,7 @@ impl<'a> MasterPlaylist<'a> {
     ///
     /// This is a relatively expensive operation.
     #[must_use]
-    #[allow(clippy::redundant_closure_for_method_calls)]
+    #[expect(clippy::redundant_closure_for_method_calls)]
     pub fn into_owned(self) -> MasterPlaylist<'static> {
         MasterPlaylist {
             has_independent_segments: self.has_independent_segments,

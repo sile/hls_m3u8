@@ -18,7 +18,7 @@ use crate::tags::{
 use crate::types::{
     DecryptionKey, EncryptionMethod, InitializationVector, KeyFormat, PlaylistType, ProtocolVersion,
 };
-use crate::utils::{tag, BoolExt};
+use crate::utils::{BoolExt, tag};
 use crate::{Error, RequiredVersion};
 
 /// Media playlist.
@@ -663,13 +663,17 @@ fn parse_media_playlist<'a>(
                         // this tag must appear before the first MediaSegment in the playlist
                         // https://tools.ietf.org/html/rfc8216#section-4.3.3.3
                         if !segments.is_empty() {
-                            return Err(Error::custom("discontinuity sequence tag must appear before the first media segment in the playlist"));
+                            return Err(Error::custom(
+                                "discontinuity sequence tag must appear before the first media segment in the playlist",
+                            ));
                         }
 
                         // this tag must appear before any ExtXDiscontinuity tag
                         // https://tools.ietf.org/html/rfc8216#section-4.3.3.3
                         if has_discontinuity_tag {
-                            return Err(Error::custom("discontinuity sequence tag must appear before any `ExtXDiscontinuity` tag"));
+                            return Err(Error::custom(
+                                "discontinuity sequence tag must appear before any `ExtXDiscontinuity` tag",
+                            ));
                         }
 
                         builder.discontinuity_sequence(t.0);
@@ -764,10 +768,12 @@ mod tests {
         assert!(MediaPlaylist::try_from(playlist).is_err());
 
         // Error (allowable segment duration = 9)
-        assert!(MediaPlaylist::builder()
-            .allowable_excess_duration(Duration::from_secs(1))
-            .parse(playlist)
-            .is_err());
+        assert!(
+            MediaPlaylist::builder()
+                .allowable_excess_duration(Duration::from_secs(1))
+                .parse(playlist)
+                .is_err()
+        );
 
         // Ok (allowable segment duration = 10)
         assert_eq!(

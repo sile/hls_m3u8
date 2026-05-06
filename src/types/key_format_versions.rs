@@ -6,10 +6,10 @@ use std::ops::{Index, IndexMut};
 use std::slice::SliceIndex;
 use std::str::FromStr;
 
-use crate::types::ProtocolVersion;
-use crate::utils::{quote, unquote};
 use crate::Error;
 use crate::RequiredVersion;
+use crate::types::ProtocolVersion;
+use crate::utils::{quote, unquote};
 
 /// A list of numbers that can be used to indicate which version(s)
 /// this instance complies with, if more than one version of a particular
@@ -483,7 +483,7 @@ mod tests {
     use pretty_assertions::assert_eq;
 
     #[test]
-    #[allow(clippy::unit_cmp)] // fucked test
+    #[expect(clippy::unit_cmp)] // fucked test
     fn test_hash() {
         let mut hasher_left = std::collections::hash_map::DefaultHasher::new();
         let mut hasher_right = std::collections::hash_map::DefaultHasher::new();
